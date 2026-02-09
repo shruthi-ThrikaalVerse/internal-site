@@ -1,0 +1,523 @@
+import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import * as LucideIcons from 'lucide-react';
+import { useHRMS } from '../../context/HRMSContext.tsx';
+import { useAuth } from '../../context/AuthContext.tsx';
+import { mockDepartmentHeadcount } from '../../mockData.ts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { ParticipationStatus, PayslipData } from '../../types.ts';
+
+const Icon = ({ name, className }: { name: string; className?: string }) => {
+  const LucideIcon = (LucideIcons as any)[name];
+  return LucideIcon ? <LucideIcon className={className} /> : null;
+};
+
+const StatsCard = ({ title, value, icon, color, subValue, trend }: any) => (
+  <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group overflow-hidden relative">
+    <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:scale-150 transition-transform">
+      <Icon name={icon} className="w-32 h-32" />
+    </div>
+    <div className="flex items-center justify-between mb-4">
+      <div className={`p-3 rounded-2xl ${color} bg-opacity-10 group-hover:scale-110 transition-transform`}>
+        <Icon name={icon} className={`w-6 h-6 ${color.replace('bg-', 'text-')}`} />
+      </div>
+      {trend && (
+        <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${trend > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+          {trend > 0 ? '+' : ''}{trend}% this month
+        </span>
+      )}
+    </div>
+    <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-widest">{title}</h3>
+    <div className="flex items-baseline gap-2 mt-1">
+      <p className="text-3xl font-black text-slate-800">{value}</p>
+      {subValue && <span className="text-xs font-bold text-slate-400">{subValue}</span>}
+    </div>
+  </div>
+);
+
+const Dashboard: React.FC = () => {
+  const { employees, activities, leaves, attendance, updateLeaveStatus, events, toggleEventParticipation, payslips, notify } = useHRMS();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [eventFilter, setEventFilter] = useState<'all' | 'mine'>('all');
+  const [activityFilter, setActivityFilter] = useState<string>('all');
+  const [showActivityFilter, setShowActivityFilter] = useState(false);
+
+  const pendingLeaves = leaves.filter(l => l.status === 'pending');
+  const activeCount = employees.filter(e => e.status === 'active').length;
+  const inactiveCount = employees.length - activeCount;
+
+  const today = '2024-05-15';
+  const presentCount = attendance.filter(a => a.date === today && (a.status === 'present' || a.status === 'late')).length;
+  const presenceRate = employees.length > 0 ? Math.round((presentCount / employees.length) * 100) : 0;
+
+  const currentEmployee = employees.find(e => e.email === user?.email);
+
+  const displayEvents = useMemo(() => {
+    let list = events.filter(e => e.isPublished && e.status === 'upcoming');
+    if (eventFilter === 'mine' && currentEmployee) {
+      list = list.filter(e =>
+        e.audience === 'all' ||
+        (e.audience === 'selected' && e.targetEmployeeIds.includes(currentEmployee.id)) ||
+        (e.audience === 'department' && e.targetDepartment === currentEmployee.department)
+      );
+    }
+    return list.slice(0, 4);
+  }, [events, eventFilter, currentEmployee]);
+
+  const userPayslips = useMemo(() => {
+    if (!currentEmployee) return [];
+    return payslips.filter(p => (p.employeeId === currentEmployee.employeeId || p.employeeId === currentEmployee.id) && p.status === 'sent');
+  }, [payslips, currentEmployee]);
+
+  const activityTypes = [
+    { id: 'all', label: 'All Activities', icon: 'List' },
+    { id: 'checkin', label: 'Check-ins', icon: 'Zap' },
+    { id: 'checkout', label: 'Check-outs', icon: 'LogOut' },
+    { id: 'leave', label: 'Leave Requests', icon: 'Calendar' },
+    { id: 'document', label: 'Documents', icon: 'FileText' },
+    { id: 'update', label: 'Profile Updates', icon: 'UserCog' },
+  ];
+
+  const filteredActivities = useMemo(() => {
+    let filtered = [...activities];
+
+    if (activityFilter !== 'all') {
+      filtered = filtered.filter(activity => activity.type === activityFilter);
+    }
+
+    return filtered
+      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+      .slice(0, 5);
+  }, [activities, activityFilter]);
+
+  const handleTraceActivity = (type: string, name: string) => {
+    notify(`Tracing ${type} record for ${name}...`, 'info');
+
+    switch (type) {
+      case 'checkin':
+      case 'checkout':
+        navigate('/admin/attendance');
+        break;
+      case 'leave':
+        navigate('/admin/leave');
+        break;
+      case 'document':
+        navigate('/admin/documents');
+        break;
+      case 'update':
+        navigate('/admin/employees');
+        break;
+      default:
+        navigate('/admin/employees');
+    }
+  };
+
+  const handleToggleParticipation = (evtId: string, status: ParticipationStatus) => {
+    if (!user) return;
+    toggleEventParticipation(evtId, user.email, status);
+  };
+
+  const handleDownloadPayslip = (p: PayslipData) => {
+    notify(`Preparing payslip for ${p.month} ${p.year}...`, 'info');
+    setTimeout(() => {
+      notify(`Payslip for ${p.month} ${p.year} downloaded!`, 'success');
+    }, 1000);
+  };
+
+  const clearActivityFilter = () => {
+    setActivityFilter('all');
+    setShowActivityFilter(false);
+  };
+
+  return (
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Executive Dashboard</h1>
+          <p className="text-slate-500 text-sm font-medium">Global system overview and administrative health metrics.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-xs font-bold text-slate-600 uppercase tracking-widest">System Operational</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Primary Dashboard Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatsCard
+          title="Total Users"
+          value={employees.length}
+          icon="Users"
+          color="bg-indigo-500"
+          trend={employees.length > 20 ? 5.4 : 0}
+          subValue="Staff"
+        />
+        <StatsCard
+          title="Employees Present Today"
+          value={`${presenceRate}%`}
+          icon="CalendarCheck"
+          color="bg-blue-500"
+          subValue={`${presentCount} / ${employees.length}`}
+        />
+        <StatsCard
+          title="Active Directory"
+          value={activeCount}
+          icon="ShieldCheck"
+          color="bg-emerald-500"
+          subValue={`/ ${inactiveCount} Inactive`}
+        />
+        <StatsCard
+          title="Open Requests"
+          value={pendingLeaves.length}
+          icon="Bell"
+          color="bg-rose-500"
+          subValue="Action Needed"
+        />
+      </div>
+
+      {/* Main Insight Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        {/* Left Col: Headcount + Live Activity */}
+        <div className="lg:col-span-2 space-y-8">
+          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Distribution by Department</h2>
+                <p className="text-xs text-slate-400 font-medium">Staffing density across key modules.</p>
+              </div>
+            </div>
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <BarChart data={mockDepartmentHeadcount}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="department" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} />
+                  <Tooltip
+                    cursor={{ fill: '#f8fafc' }}
+                    contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="count" radius={[10, 10, 0, 0]} barSize={40}>
+                    {mockDepartmentHeadcount.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="p-8 border-b flex items-center justify-between relative">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Live Activity Feed</h2>
+                <p className="text-xs text-slate-400 font-medium">Real-time sync from across the organization.</p>
+              </div>
+
+              <div className="relative">
+                <button
+                  onClick={() => setShowActivityFilter(!showActivityFilter)}
+                  className={`p-3 rounded-2xl transition-all flex items-center gap-2 ${showActivityFilter || activityFilter !== 'all'
+                    ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                    : 'bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600'
+                    }`}
+                >
+                  <Icon name="Filter" className="w-5 h-5" />
+                  {activityFilter !== 'all' && (
+                    <span className="w-2 h-2 bg-indigo-600 rounded-full"></span>
+                  )}
+                </button>
+
+                {/* Filter Popover */}
+                {showActivityFilter && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowActivityFilter(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-2 z-20 bg-white rounded-2xl border border-slate-200 shadow-xl p-4 min-w-[220px]">
+                      <div className="mb-3">
+                        <p className="text-xs font-black text-slate-900 uppercase tracking-widest mb-3">Filter Activities</p>
+                        <div className="space-y-1">
+                          {activityTypes.map((type) => (
+                            <button
+                              key={type.id}
+                              onClick={() => {
+                                setActivityFilter(type.id);
+                                setShowActivityFilter(false);
+                              }}
+                              className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-left transition-colors ${activityFilter === type.id
+                                ? 'bg-indigo-50 text-indigo-600'
+                                : 'hover:bg-slate-50 text-slate-700'
+                                }`}
+                            >
+                              <Icon name={type.icon} className="w-4 h-4" />
+                              <span className="text-xs font-medium">{type.label}</span>
+                              {activityFilter === type.id && (
+                                <Icon name="Check" className="w-4 h-4 ml-auto text-indigo-600" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {activityFilter !== 'all' && (
+                        <button
+                          onClick={clearActivityFilter}
+                          className="w-full py-2.5 text-center text-xs font-bold text-slate-500 hover:text-indigo-600 border-t border-slate-100 pt-3"
+                        >
+                          <Icon name="X" className="w-3 h-3 inline mr-2" />
+                          Clear Filter
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Active Filter Badge */}
+              {activityFilter !== 'all' && (
+                <div className="absolute bottom-3 left-8">
+                  <span className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                    <Icon name={activityTypes.find(t => t.id === activityFilter)?.icon || 'Filter'} className="w-3 h-3" />
+                    {activityTypes.find(t => t.id === activityFilter)?.label}
+                    <button
+                      onClick={clearActivityFilter}
+                      className="ml-1 hover:text-indigo-800"
+                    >
+                      <Icon name="X" className="w-3 h-3" />
+                    </button>
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Scrollable container with invisible scrollbar */}
+            <div
+              className="divide-y divide-slate-50 max-h-[500px] overflow-y-auto"
+              style={{
+                scrollbarWidth: 'none', /* Firefox */
+                msOverflowStyle: 'none', /* IE/Edge */
+              }}
+            >
+              <style>
+                {`
+                  .divide-y > *::-webkit-scrollbar {
+                    display: none; /* Chrome, Safari, Opera */
+                  }
+                `}
+              </style>
+              {filteredActivities.length > 0 ? filteredActivities.map((activity) => (
+                <div key={activity.id} className="p-6 hover:bg-slate-50 transition-colors flex items-center gap-6 group">
+                  <div className={`p-4 rounded-2xl transition-all group-hover:scale-110 group-hover:shadow-lg ${activity.type === 'checkin' || activity.type === 'checkout' ? 'bg-emerald-50 text-emerald-600' :
+                    activity.type === 'leave' ? 'bg-amber-50 text-amber-600' :
+                      activity.type === 'document' ? 'bg-blue-50 text-blue-600' :
+                        'bg-indigo-50 text-indigo-600'
+                    }`}>
+                    <Icon name={
+                      activity.type === 'checkin' ? 'Zap' :
+                        activity.type === 'checkout' ? 'LogOut' :
+                          activity.type === 'leave' ? 'Calendar' :
+                            activity.type === 'document' ? 'FileText' :
+                              'UserCog'
+                    } className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-slate-700">
+                      <span className="text-slate-900 font-black">{activity.employeeName}</span>
+                      <span className="text-slate-500 font-medium"> {activity.details}</span>
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Icon name="Clock" className="w-3 h-3 text-slate-300" />
+                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{activity.time}</p>
+                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter bg-slate-100 text-slate-500">
+                        {activity.type}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all">
+                    <button
+                      onClick={() => handleTraceActivity(activity.type, activity.employeeName)}
+                      className="p-2 text-indigo-400 hover:text-indigo-600 font-black text-xs uppercase tracking-widest flex items-center gap-1"
+                    >
+                      Trace <Icon name="ChevronRight" className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )) : (
+                <div className="p-10 text-center">
+                  <div className="inline-flex p-4 bg-slate-50 rounded-2xl mb-4">
+                    <Icon name="FilterX" className="w-8 h-8 text-slate-300" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-400 mb-1">No activities found</p>
+                  <p className="text-xs text-slate-300">
+                    {activityFilter !== 'all'
+                      ? `No ${activityTypes.find(t => t.id === activityFilter)?.label.toLowerCase()} in the feed`
+                      : 'No recent activities to display'}
+                  </p>
+                  {activityFilter !== 'all' && (
+                    <button
+                      onClick={clearActivityFilter}
+                      className="mt-4 px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-colors"
+                    >
+                      Show All Activities
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Col: Task Queue + Upcoming Events */}
+        <div className="space-y-8">
+
+          {/* Organization Calendar Widget */}
+          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Icon name="CalendarDays" className="text-indigo-600" />
+                Events Hub
+              </h2>
+              <div className="flex bg-slate-50 p-1 rounded-xl">
+                <button
+                  onClick={() => setEventFilter('all')}
+                  className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all ${eventFilter === 'all' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400'}`}
+                >All</button>
+                <button
+                  onClick={() => setEventFilter('mine')}
+                  className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all ${eventFilter === 'mine' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400'}`}
+                >For Me</button>
+              </div>
+            </div>
+            <div className="space-y-4 flex-1">
+              {displayEvents.length > 0 ? displayEvents.map(evt => {
+                const userPart = evt.participations.find(p => p.employeeEmail === user?.email);
+                return (
+                  <div key={evt.id} className="p-5 bg-white border border-slate-100 rounded-2xl hover:border-indigo-200 transition-all group">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex flex-col items-center justify-center text-indigo-600 border border-slate-100 group-hover:bg-indigo-50 transition-colors">
+                        <span className="text-[8px] font-black uppercase leading-none">{evt.startDate.split('-')[1]}</span>
+                        <span className="text-sm font-black leading-tight">{evt.startDate.split('-')[2]}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-black text-slate-800 truncate group-hover:text-indigo-600 transition-colors">{evt.title}</h4>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{evt.startTime} • {evt.isOnline ? 'Virtual' : 'On-Site'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => handleToggleParticipation(evt.id, 'attending')}
+                        className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${userPart?.status === 'attending' ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+                      >Attending</button>
+                      <button
+                        onClick={() => handleToggleParticipation(evt.id, 'interested')}
+                        className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${userPart?.status === 'interested' ? 'bg-amber-500 text-white' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+                      >Maybe</button>
+                    </div>
+                  </div>
+                );
+              }) : (
+                <div className="py-12 text-center opacity-30">
+                  <Icon name="Inbox" className="w-10 h-10 mx-auto mb-2" />
+                  <p className="text-xs font-bold uppercase">No upcoming events</p>
+                </div>
+              )}
+              <button
+                onClick={() => navigate('/admin/events')}
+                className="w-full py-3 bg-indigo-50 text-indigo-600 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-100 transition-all"
+              >View Events Hub</button>
+            </div>
+          </div>
+
+          {/* My Payslips Widget */}
+          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Icon name="ReceiptText" className="text-emerald-500" />
+                My Payslips
+              </h2>
+              <span className="text-[9px] font-black uppercase text-slate-400">Ledger Index</span>
+            </div>
+            <div className="space-y-3">
+              {userPayslips.length > 0 ? userPayslips.slice(0, 3).map(ps => (
+                <div key={ps.id} className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 hover:bg-white hover:border-emerald-200 transition-all group flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-black text-slate-800">{ps.month} {ps.year}</p>
+                    <p className="text-[10px] font-bold text-emerald-600 mt-0.5">₹{ps.netPay.toLocaleString()}</p>
+                  </div>
+                  <button
+                    title={`Download payslip ${ps.month} ${ps.year}`}
+                    aria-label={`Download payslip for ${ps.month} ${ps.year}`}
+                    onClick={() => handleDownloadPayslip(ps)}
+                    className="p-2 text-slate-300 hover:text-emerald-600 transition-colors"
+                  >
+                    <Icon name="Download" className="w-4 h-4" />
+                  </button>
+                </div>
+              )) : (
+                <div className="py-8 text-center opacity-30">
+                  <p className="text-[10px] font-black uppercase tracking-widest">No payslips issued yet</p>
+                </div>
+              )}
+              {userPayslips.length > 0 && (
+                <button className="w-full py-2.5 text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 transition-colors">
+                  View Full History
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-slate-900">Request Queue</h2>
+              <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">{pendingLeaves.length} NEW</span>
+            </div>
+            <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
+              {pendingLeaves.length > 0 ? pendingLeaves.map((item) => (
+                <div key={item.id} className="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-indigo-200 hover:bg-white transition-all group">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center font-bold text-slate-400 text-xs shadow-sm">
+                        {item.employeeName.charAt(0)}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-black text-slate-900 leading-none">{item.employeeName}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">{item.leaveType} REQUEST</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mb-4 line-clamp-2 leading-relaxed italic">"{item.reason}"</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateLeaveStatus(item.id, 'approved')}
+                      className="flex-1 py-2 bg-indigo-600 text-white text-[10px] font-black rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all uppercase tracking-widest"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => updateLeaveStatus(item.id, 'rejected')}
+                      className="flex-1 py-2 bg-white border border-slate-200 text-slate-700 text-[10px] font-black rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest"
+                    >
+                      Ignore
+                    </button>
+                  </div>
+                </div>
+              )) : (
+                <div className="h-full flex flex-col items-center justify-center text-center py-10 opacity-40">
+                  <Icon name="Inbox" className="w-12 h-12 text-slate-300 mb-2" />
+                  <p className="text-sm text-slate-400 font-bold">Queue Empty</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
