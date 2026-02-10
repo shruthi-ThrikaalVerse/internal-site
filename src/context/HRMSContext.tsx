@@ -216,12 +216,23 @@ export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const addLog = useCallback((action: string, module: string, details: string) => {
+    // Derive a sensible log level from the action when possible, otherwise default to INFO
+    const derivedLevel = /delete|remove|terminate/i.test(action) ? 'WARN'
+      : /error|fail/i.test(action) ? 'ERROR'
+      : /create|add|register/i.test(action) ? 'INFO'
+      : /update|modify/i.test(action) ? 'INFO'
+      : 'INFO';
+
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
       timestamp: new Date().toLocaleString(),
+      level: derivedLevel,
       user: 'Super Admin',
       action,
+      message: typeof details === 'string' ? details : String(details),
       module,
+      // Use module as the entity when a more specific entity is not provided
+      entity: module || 'General',
       details,
       ipAddress: '192.168.1.1'
     };

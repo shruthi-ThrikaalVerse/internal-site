@@ -105,9 +105,31 @@ const AppRouter: React.FC = () => {
   if (auth?.isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
-        <div className="text-center">
-          <div className="w-12 h-12 text-indigo-600 animate-spin mx-auto mb-4">Verifying session...</div>
-          <p className="text-slate-600 font-medium">Checking authentication...</p>
+        <div className="w-full max-w-5xl px-6">
+          <div className="animate-pulse">
+            <div className="h-6 bg-slate-200 rounded mb-6" />
+
+            <div className="flex gap-6">
+              <div className="w-64 space-y-4">
+                <div className="h-4 bg-slate-200 rounded" />
+                <div className="h-4 bg-slate-200 rounded w-5/6" />
+                <div className="h-48 bg-slate-200 rounded mt-4" />
+              </div>
+
+              <div className="flex-1 space-y-4">
+                <div className="h-6 bg-slate-200 rounded w-3/4" />
+                <div className="h-4 bg-slate-200 rounded" />
+                <div className="h-4 bg-slate-200 rounded" />
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  <div className="h-24 bg-slate-200 rounded" />
+                  <div className="h-24 bg-slate-200 rounded" />
+                  <div className="h-24 bg-slate-200 rounded" />
+                </div>
+                <div className="h-4 bg-slate-200 rounded mt-6" />
+                <div className="h-4 bg-slate-200 rounded w-2/3" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
