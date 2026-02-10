@@ -1,7 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import * as LucideIcons from 'lucide-react';
-import { useHRMS } from '../../context/HRMSContext.tsx';
-import { AdminNotification, AdminNotificationType, AdminNotificationPriority, AdminNotificationStatus } from '../../types.ts';
+import { getAllEmployees } from '../../api/users.ts';
+import {
+  getNotifications,
+  createNotification,
+  updateNotification,
+  deleteNotification,
+} from '../../api/notifications.ts';
 
 const Icon = ({ name, className }: { name: string; className?: string }) => {
   const LucideIcon = (LucideIcons as any)[name];
@@ -27,56 +32,126 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
 };
 
 const NotificationsAdmin: React.FC = () => {
-  const { adminNotifications, addAdminNotification, updateAdminNotification, deleteAdminNotification, employees, notify } = useHRMS();
+  interface Notification {
+    id: number;
+    title: string;
+    message: string;
+    targetSelection: 'GLOBAL' | 'TARGET';
+    priority: 'NORMAL' | 'HIGH' | 'URGENT';
+    active: boolean;
+    createdAt: string;
+    employeeCount: number;
+  }
+
+  interface Employee {
+    id: string;
+    employeeId: string;
+    fullName: string;
+    email?: string;
+    department?: string;
+    avatar?: string;
+  }
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [empSearch, setEmpSearch] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [formData, setFormData] = useState<Partial<AdminNotification>>({
+  const [formData, setFormData] = useState<any>({
     title: '',
     message: '',
-    type: 'global',
-    targetEmployeeIds: [],
-    priority: 'normal',
-    status: 'active',
-    dateTime: new Date().toLocaleString()
+    targetSelection: 'GLOBAL',
+    employeeIds: [],
+    priority: 'NORMAL',
   });
 
+  const notify = (msg: string, type: 'success' | 'error' | 'warning' = 'success') => {
+    console.log(`[${type.toUpperCase()}] ${msg}`);
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    fetchEmployees();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const data = await getNotifications();
+      setNotifications(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      notify(err?.message || 'Failed to fetch notifications', 'error');
+      setNotifications([]);
+    }
+  };
+
+  const fetchEmployees = async () => {
+    try {
+      const data = await getAllEmployees();
+      setEmployees(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      notify(err?.message || 'Failed to fetch employees', 'error');
+      setEmployees([]);
+    }
+  };
+
   const filteredNotifications = useMemo(() => {
-    return adminNotifications.filter(n =>
+    return notifications.filter(n =>
       n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       n.message.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [adminNotifications, searchTerm]);
+  }, [notifications, searchTerm]);
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(e =>
-      e.fullName.toLowerCase().includes(empSearch.toLowerCase()) ||
-      e.employeeId.toLowerCase().includes(empSearch.toLowerCase())
+      (e.fullName || '').toLowerCase().includes(empSearch.toLowerCase()) ||
+      (e.employeeId || '').toLowerCase().includes(empSearch.toLowerCase())
     );
   }, [employees, empSearch]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.message) {
+    if (!formData.title?.trim() || !formData.message?.trim()) {
       notify('Title and message are required.', 'warning');
       return;
     }
 
-    if (formData.type === 'selected' && (!formData.targetEmployeeIds || formData.targetEmployeeIds.length === 0)) {
+    if (formData.targetSelection === 'TARGET' && (!formData.employeeIds || formData.employeeIds.length === 0)) {
       notify('Please select at least one employee.', 'warning');
       return;
     }
 
-    if (editingId) {
-      updateAdminNotification(editingId, formData);
-    } else {
-      addAdminNotification({ ...formData, dateTime: new Date().toLocaleString() });
-    }
+    setIsLoading(true);
+    try {
+      const payload: any = {
+        title: formData.title,
+        message: formData.message,
+        priority: formData.priority,
+        targetSelection: formData.targetSelection,
+      };
 
-    setIsModalOpen(false);
-    resetForm();
+      if (formData.targetSelection === 'TARGET') {
+        payload.employeeIds = formData.employeeIds;
+      }
+
+      if (editingId) {
+        await updateNotification(editingId, payload);
+        notify('Notification updated successfully!', 'success');
+      } else {
+        await createNotification(payload);
+        notify('Notification created successfully!', 'success');
+      }
+
+      setIsModalOpen(false);
+      resetForm();
+      await fetchNotifications();
+    } catch (err: any) {
+      notify(err?.message || 'Failed to save notification', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const resetForm = () => {
@@ -84,42 +159,43 @@ const NotificationsAdmin: React.FC = () => {
     setFormData({
       title: '',
       message: '',
-      type: 'global',
-      targetEmployeeIds: [],
-      priority: 'normal',
-      status: 'active',
-      dateTime: new Date().toLocaleString()
+      targetSelection: 'GLOBAL',
+      employeeIds: [],
+      priority: 'NORMAL',
     });
     setEmpSearch('');
   };
 
-  const handleEdit = (n: AdminNotification) => {
+  const handleEdit = (n: Notification) => {
     setEditingId(n.id);
     setFormData({
       title: n.title,
       message: n.message,
-      type: n.type,
-      targetEmployeeIds: n.targetEmployeeIds,
+      targetSelection: n.targetSelection,
+      employeeIds: [],
       priority: n.priority,
-      status: n.status,
-      dateTime: n.dateTime
     });
     setIsModalOpen(true);
   };
 
-  const toggleStatus = (n: AdminNotification) => {
-    const nextStatus = n.status === 'active' ? 'inactive' : 'active';
-    updateAdminNotification(n.id, { status: nextStatus });
-    notify(`Notification marked as ${nextStatus}.`);
+  const handleDelete = async (n: Notification) => {
+    if (!window.confirm(`Delete "${n.title}"?`)) return;
+    try {
+      await deleteNotification(n.id);
+      notify('Notification deleted successfully!', 'success');
+      await fetchNotifications();
+    } catch (err: any) {
+      notify(err?.message || 'Failed to delete notification', 'error');
+    }
   };
 
   const toggleEmployeeSelection = (id: string) => {
     setFormData(prev => {
-      const current = prev.targetEmployeeIds || [];
+      const current = prev.employeeIds || [];
       const next = current.includes(id)
         ? current.filter(cid => cid !== id)
         : [...current, id];
-      return { ...prev, targetEmployeeIds: next };
+      return { ...prev, employeeIds: next };
     });
   };
 
@@ -171,20 +247,20 @@ const NotificationsAdmin: React.FC = () => {
                     <div className="max-w-xs">
                       <p className="text-sm font-black text-slate-800 truncate">{n.title}</p>
                       <p className="text-xs text-slate-400 line-clamp-1 mt-1">{n.message}</p>
-                      <p className="text-[9px] font-bold text-slate-300 uppercase mt-1.5">{n.dateTime}</p>
+                      <p className="text-[9px] font-bold text-slate-300 uppercase mt-1.5">{n.createdAt}</p>
                     </div>
                   </td>
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-2">
-                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${n.type === 'global' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${n.targetSelection === 'GLOBAL' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-blue-50 text-blue-600 border-blue-100'
                         }`}>
-                        {n.type === 'global' ? 'Global' : 'Selected'}
+                        {n.targetSelection === 'GLOBAL' ? 'Global' : 'Selected'}
                       </span>
                     </div>
                   </td>
                   <td className="px-8 py-6 text-center">
-                    <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${n.priority === 'urgent' ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                      n.priority === 'high' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                    <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${n.priority === 'URGENT' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                      n.priority === 'HIGH' ? 'bg-amber-50 text-amber-700 border-amber-100' :
                         'bg-slate-50 text-slate-400 border-slate-100'
                       }`}>
                       {n.priority}
@@ -192,14 +268,14 @@ const NotificationsAdmin: React.FC = () => {
                   </td>
                   <td className="px-8 py-6 text-center">
                     <div className="flex flex-col items-center">
-                      <span className="text-xs font-black text-slate-800">{n.type === 'global' ? 'All Staff' : `${n.targetEmployeeIds.length} Targeted`}</span>
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{n.readBy.length} Read</span>
+                      <span className="text-xs font-black text-slate-800">{n.targetSelection === 'GLOBAL' ? 'All Staff' : `${n.employeeCount} Targeted`}</span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{n.active ? 'Active' : 'Inactive'}</span>
                     </div>
                   </td>
                   <td className="px-8 py-6 text-right">
                     <div className="flex justify-end gap-2">
                       <button aria-label={`Edit notification ${n.title}`} onClick={() => handleEdit(n)} className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-xl shadow-sm border border-transparent transition-all"><Icon name="Edit3" className="w-4 h-4" /></button>
-                      <button aria-label={`Delete notification ${n.title}`} onClick={() => deleteAdminNotification(n.id)} className="p-2 text-slate-300 hover:text-rose-500 hover:bg-white rounded-xl shadow-sm border border-transparent transition-all"><Icon name="Trash2" className="w-4 h-4" /></button>
+                      <button aria-label={`Delete notification ${n.title}`} onClick={() => handleDelete(n)} className="p-2 text-slate-300 hover:text-rose-500 hover:bg-white rounded-xl shadow-sm border border-transparent transition-all"><Icon name="Trash2" className="w-4 h-4" /></button>
                     </div>
                   </td>
                 </tr>
@@ -246,15 +322,15 @@ const NotificationsAdmin: React.FC = () => {
             <div className="space-y-4">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Deployment Scope</label>
               <div className="flex gap-2">
-                {(['global', 'selected'] as const).map(type => (
+                {(['GLOBAL', 'TARGET'] as const).map(type => (
                   <button
                     key={type}
                     type="button"
-                    onClick={() => setFormData({ ...formData, type, targetEmployeeIds: [] })}
-                    className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.type === type ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:bg-slace-50'
+                    onClick={() => setFormData({ ...formData, targetSelection: type, employeeIds: [] })}
+                    className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.targetSelection === type ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'
                       }`}
                   >
-                    {type === 'global' ? 'Global Staff' : 'Target Selection'}
+                    {type === 'GLOBAL' ? 'Global Staff' : 'Target Selection'}
                   </button>
                 ))}
               </div>
@@ -263,7 +339,7 @@ const NotificationsAdmin: React.FC = () => {
             <div className="space-y-4">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Criticality Level</label>
               <div className="flex gap-2">
-                {(['normal', 'high', 'urgent'] as AdminNotificationPriority[]).map(p => (
+                {(['NORMAL', 'HIGH', 'URGENT'] as const).map(p => (
                   <button
                     key={p}
                     type="button"
@@ -277,11 +353,11 @@ const NotificationsAdmin: React.FC = () => {
             </div>
           </div>
 
-          {formData.type === 'selected' && (
+          {formData.targetSelection === 'TARGET' && (
             <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Audience Targeting</label>
-                <span className="text-[10px] font-black text-indigo-600 uppercase bg-indigo-50 px-2 py-0.5 rounded-lg">{formData.targetEmployeeIds?.length} Selected</span>
+                <span className="text-[10px] font-black text-indigo-600 uppercase bg-indigo-50 px-2 py-0.5 rounded-lg">{formData.employeeIds?.length} Selected</span>
               </div>
               <div className="relative group">
                 <Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
@@ -320,9 +396,9 @@ const NotificationsAdmin: React.FC = () => {
           )}
 
           <div className="pt-6 border-t border-slate-100 flex gap-4">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all">Discard</button>
-            <button type="submit" className="flex-1 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95">
-              {editingId ? "Update System Alert" : "Commit Announcement"}
+            <button type="button" onClick={() => setIsModalOpen(false)} disabled={isLoading} className="flex-1 py-4 text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all disabled:opacity-50">Discard</button>
+            <button type="submit" disabled={isLoading} className="flex-1 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50">
+              {isLoading ? 'Saving...' : editingId ? "Update System Alert" : "Commit Announcement"}
             </button>
           </div>
         </form>
