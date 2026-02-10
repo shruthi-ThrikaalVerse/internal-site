@@ -305,6 +305,8 @@ export interface AppEvent {
   attachments: { name: string; url: string }[];
   participations: EventParticipation[];
   participants?: string[];
+  meetingType?: 'VIRTUAL' | 'PHYSICAL' | string;
+  meetingLink?: string;
   createdAt: string;
   updatedAt?: string;
   organizer?: string;
