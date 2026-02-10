@@ -16,7 +16,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const auth = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +24,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
     try {
       // Use AuthContext login method which handles both token persistence and session verification
-      await login(email, password);
+      await auth?.login(email, password);
 
       // Initialize per-user storage buckets
       try {
@@ -43,7 +43,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       // notify App that user has logged in so routes update
       onLogin?.();
 
-      navigate('/employee/dashboard');
+      // Wait briefly for AuthContext / localStorage to be populated so route guards allow navigation
+      const waitForAuth = async () => {
+        for (let i = 0; i < 20; i++) {
+          if (auth?.isAuthenticated || localStorage.getItem('user')) return;
+          // wait 100ms
+          // eslint-disable-next-line no-await-in-loop
+          await new Promise((r) => setTimeout(r, 100));
+        }
+      };
+      await waitForAuth();
+
+      navigate('/employee/dashboard', { replace: true });
     } catch (err: any) {
       toast.error(err?.message || 'Login failed. Please check your credentials and try again.', {
         position: 'top-right',

@@ -6,7 +6,7 @@ export interface User {
   id: string;
   fullName: string;
   email: string;
-  role: 'admin' | 'manager' | 'auditor';
+  role: 'admin' | 'manager' | 'auditor' | 'employee';
   avatar: string;
 }
 
@@ -15,6 +15,9 @@ const normalizeRole = (role: any): User['role'] => {
   const r = String(role || 'auditor').toLowerCase();
   if (r.includes('admin')) return 'admin';
   if (r.includes('manager')) return 'manager';
+  if (r.includes('employee')) return 'employee';
+  if (r.includes('auditor')) return 'auditor';
+  // fallback: treat unknown roles as 'auditor' to avoid granting admin/manager access
   return 'auditor';
 };
 
@@ -40,7 +43,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      
+
       // Add token to Authorization header if available
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -62,10 +65,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.email}`,
         };
         setUser(user);
+        try { localStorage.setItem('user', JSON.stringify(user)); } catch { }
         return user;
       } else {
         setUser(null);
         localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
         return null;
       }
     } catch (error) {
@@ -117,6 +122,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.email}`,
         };
         setUser(parsedUser);
+        try { localStorage.setItem('user', JSON.stringify(parsedUser)); } catch { }
         return parsedUser;
       }
 
@@ -125,9 +131,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!verified) {
         throw new Error('Login succeeded but no session information returned');
       }
-      
+
       return verified;
-      
+
     } catch (error: any) {
       throw error;
     }
@@ -166,7 +172,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('Logout error:', error);
     } finally {
       setUser(null);
-      localStorage.removeItem('authToken');
+      try { localStorage.removeItem('authToken'); } catch { }
+      try { localStorage.removeItem('user'); } catch { }
     }
   };
 
@@ -192,14 +199,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated: !!user, 
-      isLoading, 
-      login, 
-      register, 
-      logout, 
-      updateAvatar 
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated: !!user,
+      isLoading,
+      login,
+      register,
+      logout,
+      updateAvatar
     }}>
       {children}
     </AuthContext.Provider>
