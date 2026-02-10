@@ -108,6 +108,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   id="email"
                   type="email"
                   required
+                  autoComplete="off"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all sm:text-sm"
@@ -129,6 +130,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   required
+                  autoComplete="off"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-11 pr-11 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all sm:text-sm"
