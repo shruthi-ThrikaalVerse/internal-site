@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { initializeUserData } from '../../utils/storage.ts';
