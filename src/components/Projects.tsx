@@ -1,11 +1,11 @@
 // @ts-nocheck
 import React from 'react';
 import { motion } from 'framer-motion';
-import { PROJECTS } from '../constants.ts';
+import { PROJECTS } from '../constants';
 
 const Projects = () => {
   return (
-    <div className="container mx-auto px-6">
+    <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
       <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-4">
         <div>
           <h2 className="text-sm font-bold text-teal-500 uppercase tracking-[0.4em] mb-4">Portfolio</h2>
@@ -24,17 +24,17 @@ const Projects = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: index * 0.1 }}
             viewport={{ once: true }}
-            whileHover={{ 
+            whileHover={{
               scale: 1.02,
               rotateX: 2,
               rotateY: 2,
               boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
             }}
-            className="group relative h-[400px] overflow-hidden rounded-2xl bg-[#1a1a1a] cursor-pointer"
+            className="group relative sm:h-64 md:h-[400px] overflow-hidden rounded-2xl bg-[#1a1a1a] cursor-pointer"
           >
             <img src={project.image} alt={project.title} className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity duration-700 group-hover:scale-110" />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-            
+
             <div className="absolute bottom-0 left-0 right-0 p-8 transform group-hover:-translate-y-2 transition-transform duration-500">
               <span className="inline-block px-3 py-1 bg-orange-500 text-black text-[10px] font-black uppercase tracking-widest rounded-full mb-4">{project.category}</span>
               <h4 className="text-3xl font-bold mb-2">{project.title}</h4>
@@ -46,7 +46,7 @@ const Projects = () => {
           </motion.div>
         ))}
       </div>
-      
+
       <div className="mt-16 text-center">
         <button className="px-10 py-4 border border-white/10 hover:border-teal-500 text-white rounded-full transition-all bg-white/5 hover:bg-teal-500/10">View All Projects</button>
       </div>

@@ -20,19 +20,22 @@ const GlobalSearch: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const filteredEmployees = (globalSearchTerm || '').length > 1
+  // trim and normalize search term so suggestions appear after the first meaningful character
+  const term = (globalSearchTerm || '').trim();
+
+  const filteredEmployees = term.length > 0
     ? (employees || []).filter(e =>
-      e.fullName.toLowerCase().includes(globalSearchTerm.toLowerCase()) ||
-      e.employeeId.toLowerCase().includes(globalSearchTerm.toLowerCase())
+      e.fullName.toLowerCase().includes(term.toLowerCase()) ||
+      e.employeeId.toLowerCase().includes(term.toLowerCase())
     ).slice(0, 4)
     : [];
 
-  const filteredModules = (globalSearchTerm || '').length > 1
-    ? (NAV_ITEMS || []).filter(item => item.label.toLowerCase().includes(globalSearchTerm.toLowerCase()))
+  const filteredModules = term.length > 0
+    ? (NAV_ITEMS || []).filter(item => item.label.toLowerCase().includes(term.toLowerCase()))
     : [];
 
-  const filteredActivities = (globalSearchTerm || '').length > 1
-    ? (activities || []).filter(act => act.details.toLowerCase().includes(globalSearchTerm.toLowerCase())).slice(0, 3)
+  const filteredActivities = term.length > 0
+    ? (activities || []).filter(act => act.details.toLowerCase().includes(term.toLowerCase())).slice(0, 3)
     : [];
 
   const hasResults = filteredEmployees.length > 0 || filteredModules.length > 0 || filteredActivities.length > 0;
@@ -55,8 +58,8 @@ const GlobalSearch: React.FC = () => {
         />
       </div>
 
-      {showResults && (globalSearchTerm || '').length > 1 && (
-        <div className="absolute top-full left-0 right-0 mt-3 bg-white/90 backdrop-blur-xl border border-gray-100 rounded-3xl shadow-2xl shadow-indigo-500/10 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+      {showResults && term.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-gray-200 rounded-3xl shadow-2xl shadow-gray-400/20 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="p-2 space-y-1">
             {hasResults ? (
               <>

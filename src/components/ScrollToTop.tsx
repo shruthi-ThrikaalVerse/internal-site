@@ -1,20 +1,20 @@
 // @ts-nocheck
 import React, { useState } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent } from 'framer-motion';
-import { useTheme } from './ThemeContext.tsx';
- 
+import { useTheme } from './ThemeContext.js';
+
 const ScrollToTop = () => {
   const { scrollY, scrollYProgress } = useScroll();
   const [isVisible, setIsVisible] = useState(false);
   const [percent, setPercent] = useState(0);
   const [scrollDirection, setScrollDirection] = useState('up');
   const { mode, accentHex } = useTheme();
- 
+
   const rotateProgress = useTransform(scrollYProgress, [0, 1], [0, 360]);
- 
+
   useMotionValueEvent(scrollY, "change", (latest) => {
     const prev = scrollY.getPrevious() || 0;
- 
+
     if (latest > prev && latest > 50) {
       setScrollDirection('down');
     } else if (latest < prev) {
@@ -80,5 +80,5 @@ const ScrollToTop = () => {
     </AnimatePresence>
   );
 };
- 
+
 export default ScrollToTop;

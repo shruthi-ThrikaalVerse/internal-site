@@ -1,11 +1,11 @@
 // @ts-nocheck
 import React from 'react';
 import { motion } from 'framer-motion';
-import { JOBS } from '../constants.ts';
+import { JOBS } from '../constants';
 
 const Career = () => {
   return (
-    <div className="container mx-auto" id="career" >
+    <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl" id="career" >
       <div className="flex flex-col items-center text-center mb-20 pt-24">
         <motion.h3 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-4xl md:text-6xl font-black mb-8 max-w-3xl">Build the <span style={{ color: 'var(--current-accent)' }}>Future</span> with Continuity</motion.h3>
         <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-[var(--text-secondary)] text-lg max-w-2xl">At Thrikaal Verse, we don't just hire employees; we recruit visionaries ready to tackle the greatest challenges of the 21st century.</motion.p>
@@ -23,9 +23,9 @@ const Career = () => {
                 </div>
                 <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest">{job.type}</span>
               </div>
-              
+
               <p className="text-[var(--text-secondary)] mb-8 flex-grow leading-relaxed">{job.description}</p>
-              
+
               <div className="flex items-center justify-between pt-6 border-t border-white/5">
                 <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>

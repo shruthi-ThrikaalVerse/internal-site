@@ -20,6 +20,7 @@ import Contact from './components/Contact.tsx';
 import Career from './components/career.tsx';
 import ScrollToTop from './components/ScrollToTop.tsx';
 import LoginSelection from './components/LoginSelection.tsx';
+import Footer from './components/Footer.tsx';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard.tsx';
@@ -61,27 +62,27 @@ import LoginPageEmployee from './pages/employee/Login.tsx';
 import EmployeeLayout from './components/employee/Layout.tsx';
 
 // ============= Layout Wrappers with Logout Handlers =============
-const AdminLayoutWrapper: React.FC<{ children: React.ReactNode; onLogout: () => Promise<void> }> = ({ 
-  children, 
-  onLogout: handleLogout 
+const AdminLayoutWrapper: React.FC<{ children: React.ReactNode; onLogout: () => Promise<void> }> = ({
+  children,
+  onLogout: handleLogout
 }) => {
   React.useEffect(() => {
     // Make logout available globally for components
     (window as any).__handleLogout = handleLogout;
   }, [handleLogout]);
-  
+
   return <LayoutWrapper>{children}</LayoutWrapper>;
 };
 
-const EmployeeLayoutWrapper: React.FC<{ children: React.ReactNode; onLogout: () => Promise<void> }> = ({ 
-  children, 
-  onLogout: handleLogout 
+const EmployeeLayoutWrapper: React.FC<{ children: React.ReactNode; onLogout: () => Promise<void> }> = ({
+  children,
+  onLogout: handleLogout
 }) => {
   React.useEffect(() => {
     // Make logout available globally for components
     (window as any).__handleLogout = handleLogout;
   }, [handleLogout]);
-  
+
   return (
     <EmployeeLayout onLogout={handleLogout}>
       {children}
@@ -131,41 +132,36 @@ const AppRouter: React.FC = () => {
       )}
 
       <Routes>
-        {/* Public Landing Page */}
+        {/* Public Landing Page - Always accessible */}
         <Route
           path="/"
           element={
-            !auth?.isAuthenticated ? (
-              <div className="relative min-h-screen transition-colors duration-500 bg-[var(--bg-primary)] text-[var(--text-primary)]">
-                <main>
-                  <section id="home">
-                    <Hero3D />
-                  </section>
-                  <section id="about" className="py-24 bg-gradient-to-b from-[var(--bg-primary)] to-[var(--bg-secondary)]">
-                    <About />
-                  </section>
-                  <section id="projects" className="py-24 bg-[var(--bg-secondary)]">
-                    <Projects />
-                  </section>
-                  <section id="team" className="py-24 bg-gradient-to-b from-[var(--bg-secondary)] to-[var(--bg-primary)]">
-                    <Team />
-                  </section>
-                  <section id="media" className="py-24 bg-[var(--bg-primary)]">
-                    <Media />
-                  </section>
-                  <section id="career" className="py-24 bg-[var(--bg-primary)]">
-                    <Career />
-                  </section>
-                  <section id="contact" className="py-24 bg-gradient-to-t from-[var(--bg-secondary)] to-[var(--bg-primary)]">
-                    <Contact />
-                  </section>
-                </main>
-              </div>
-            ) : auth?.user?.role === 'admin' || auth?.user?.role === 'manager' ? (
-              <Navigate to="/admin/dashboard" />
-            ) : (
-              <Navigate to="/employee/dashboard" />
-            )
+            <div className="relative min-h-screen transition-colors duration-500 bg-[var(--bg-primary)] text-[var(--text-primary)]">
+              <main>
+                <section id="home">
+                  <Hero3D />
+                </section>
+                <section id="about" className="py-24 bg-gradient-to-b from-[var(--bg-primary)] to-[var(--bg-secondary)]">
+                  <About />
+                </section>
+                <section id="projects" className="py-24 bg-[var(--bg-secondary)]">
+                  <Projects />
+                </section>
+                <section id="team" className="py-24 bg-gradient-to-b from-[var(--bg-secondary)] to-[var(--bg-primary)]">
+                  <Team />
+                </section>
+                <section id="media" className="py-24 bg-[var(--bg-primary)]">
+                  <Media />
+                </section>
+                <section id="career" className="py-24 bg-[var(--bg-primary)]">
+                  <Career />
+                </section>
+                <section id="contact" className="py-24 bg-gradient-to-t from-[var(--bg-secondary)] to-[var(--bg-primary)]">
+                  <Contact />
+                </section>
+                <Footer />
+              </main>
+            </div>
           }
         />
 

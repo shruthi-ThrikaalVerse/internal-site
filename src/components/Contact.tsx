@@ -38,7 +38,7 @@ const Contact = () => {
   };
 
   return (
-    <div className="container mx-auto px-6">
+    <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
       <div className="flex flex-col lg:flex-row gap-20">
         <div className="lg:w-1/3">
           <h2 className="text-sm font-bold text-orange-500 uppercase tracking-[0.4em] mb-4">Contact</h2>
@@ -52,7 +52,7 @@ const Contact = () => {
                 <p className="text-sm text-gray-500">H No. 909, SA Society, Khanamet, Madhapur, Hyderabad, Telangana, India, 500081</p>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center flex-shrink-0 text-teal-500"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" strokeWidth={2} /></svg></div>
               <div>
@@ -71,16 +71,16 @@ const Contact = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Full Name</label>
-                      <input required type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-orange-500 outline-none transition-colors" placeholder="John Doe" disabled={isLoading} />
+                      <input required type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-orange-500 outline-none transition-colors" placeholder="John Doe" disabled={isLoading} />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Email Address</label>
-                      <input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-teal-500 outline-none transition-colors" placeholder="john@example.com" disabled={isLoading} />
+                      <input required type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-teal-500 outline-none transition-colors" placeholder="john@example.com" disabled={isLoading} />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Inquiry Details</label>
-                    <textarea required rows={4} value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-orange-500 outline-none transition-colors resize-none" placeholder="How can we help you?" disabled={isLoading} />
+                    <textarea required rows={4} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-orange-500 outline-none transition-colors resize-none" placeholder="How can we help you?" disabled={isLoading} />
                   </div>
                   <button type="submit" disabled={isLoading} className={`w-full py-4 text-white font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 ${isLoading ? 'bg-gray-600 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-500'}`}>
                     {isLoading ? (<div className="flex items-center justify-center"><svg className="animate-spin h-5 w-5 mr-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Sending...</div>) : ('Send Transmission')}
