@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router';
-import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { initializeUserData } from '../../utils/storage.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
@@ -28,7 +28,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       await login(email, password);
 
       // Initialize per-user storage buckets
-      try {
+      try { 
         const currentUser = localStorage.getItem('user');
         if (currentUser) {
           const user = JSON.parse(currentUser);
@@ -59,14 +59,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-inter">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8 sm:p-10">
-          <button
-            onClick={() => navigate('/login-selection')}
-            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors mb-6"
-          >
-            <ArrowLeft size={18} />
-            Back
-          </button>
-
           <div className="text-center mb-10">
             <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-200">
               <span className="text-white text-2xl font-bold">HR</span>
