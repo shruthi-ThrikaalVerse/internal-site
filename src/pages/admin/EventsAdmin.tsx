@@ -21,7 +21,17 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
             <Icon name="X" className="w-6 h-6" />
           </button>
         </div>
-        <div className="p-8 overflow-y-auto custom-scrollbar flex-1">{children}</div>
+        <div className="p-8 overflow-y-auto flex-1 event-form-modal" style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}>
+          <style>{`
+            .event-form-modal::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -197,11 +207,7 @@ const DatePicker = ({
   }, [isOpen]);
 
   return (
-    <div className="space-y-2 relative" ref={datePickerRef}>
-      <label htmlFor={id} className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-        {label} {required && '*'}
-      </label>
-
+    <div className="relative" ref={datePickerRef}>
       <div className="relative">
         <input
           id={id}

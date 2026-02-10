@@ -367,25 +367,23 @@ const AttendanceMonitor: React.FC = () => {
           <button
             key={stat.id}
             onClick={() => setStatusFilter(stat.id as StatusFilter)}
-            className={`bg-white p-5 rounded-2xl border transition-all text-center group ${
-              statusFilter === stat.id
-                ? `border-indigo-200 ring-4 ring-indigo-50 shadow-md scale-105`
-                : 'border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200'
-            }`}
+            className={`bg-white p-5 rounded-2xl border transition-all text-center group ${statusFilter === stat.id
+              ? `border-indigo-200 ring-4 ring-indigo-50 shadow-md scale-105`
+              : 'border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200'
+              }`}
           >
             <p className="text-[10px] font-black uppercase text-gray-400 mb-1 tracking-widest">{stat.label}</p>
             <p
-              className={`text-2xl font-black ${
-                stat.color === 'blue'
-                  ? 'text-indigo-600'
-                  : stat.color === 'green'
-                    ? 'text-emerald-600'
-                    : stat.color === 'red'
-                      ? 'text-rose-600'
-                      : stat.color === 'yellow'
-                        ? 'text-amber-600'
-                        : 'text-purple-600'
-              }`}
+              className={`text-2xl font-black ${stat.color === 'blue'
+                ? 'text-indigo-600'
+                : stat.color === 'green'
+                  ? 'text-emerald-600'
+                  : stat.color === 'red'
+                    ? 'text-rose-600'
+                    : stat.color === 'yellow'
+                      ? 'text-amber-600'
+                      : 'text-purple-600'
+                }`}
             >
               {stat.count}
             </p>
@@ -410,9 +408,8 @@ const AttendanceMonitor: React.FC = () => {
               <button
                 key={f}
                 onClick={() => setStatusFilter(f)}
-                className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                  statusFilter === f ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-                }`}
+                className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === f ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                  }`}
               >
                 {f}
               </button>
@@ -455,15 +452,14 @@ const AttendanceMonitor: React.FC = () => {
 
                     <td className="py-5 px-8">
                       <span
-                        className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border shadow-sm ${
-                          record.status === 'present'
-                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                            : record.status === 'late'
-                              ? 'bg-amber-50 text-amber-600 border-amber-100'
-                              : record.status === 'on-leave'
-                                ? 'bg-purple-50 text-purple-600 border-purple-100'
-                                : 'bg-rose-50 text-rose-600 border-rose-100'
-                        }`}
+                        className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border shadow-sm ${record.status === 'present'
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                          : record.status === 'late'
+                            ? 'bg-amber-50 text-amber-600 border-amber-100'
+                            : record.status === 'on-leave'
+                              ? 'bg-purple-50 text-purple-600 border-purple-100'
+                              : 'bg-rose-50 text-rose-600 border-rose-100'
+                          }`}
                       >
                         {record.status}
                       </span>

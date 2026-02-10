@@ -382,8 +382,16 @@ const AuditLogsPage: React.FC = () => {
                             </div>
 
                             {/* Desktop Table - Fixed table layout */}
-                            <div className="hidden md:block overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
+                            <div className="hidden md:block overflow-x-auto" style={{
+                                scrollbarWidth: 'none',
+                                msOverflowStyle: 'none'
+                            }}>
+                                <style>{`
+                                  .audit-table-scroll::-webkit-scrollbar {
+                                    display: none;
+                                  }
+                                `}</style>
+                                <table className="min-w-full divide-y divide-gray-200 audit-table-scroll">
                                     <thead className="bg-gray-50">
                                         <tr>
                                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 min-w-[150px]" onClick={() => sortToggle('timestamp')}>
@@ -470,9 +478,51 @@ const AuditLogsPage: React.FC = () => {
 
 const DetailPreview: React.FC<{ details?: any }> = ({ details }) => {
     if (!details) return <span className="text-sm text-gray-500">-</span>;
-    const s = typeof details === 'string' ? details : JSON.stringify(details, null, 2);
-    const truncated = s.length > 200 ? `${s.slice(0, 200)}…` : s;
-    return <pre className="whitespace-pre-wrap text-sm text-gray-700 max-h-52 overflow-auto bg-gray-50 p-2 rounded border border-gray-200">{truncated}</pre>;
+
+    // Format details as readable key-value pairs instead of JSON
+    const formatDetails = (obj: any): string => {
+        if (typeof obj === 'string') return obj;
+        if (typeof obj !== 'object') return String(obj);
+
+        const lines: string[] = [];
+        const recurse = (o: any, indent = '') => {
+            if (o === null || o === undefined) return;
+            if (typeof o !== 'object') {
+                lines.push(String(o));
+                return;
+            }
+
+            Object.entries(o).forEach(([key, value]) => {
+                const displayKey = key.replace(/([A-Z])/g, ' $1').trim(); // camelCase to Title Case
+
+                if (value === null || value === undefined) {
+                    lines.push(`${indent}${displayKey}: -`);
+                } else if (typeof value === 'object' && !Array.isArray(value)) {
+                    lines.push(`${indent}${displayKey}:`);
+                    recurse(value, indent + '  ');
+                } else if (Array.isArray(value)) {
+                    lines.push(`${indent}${displayKey}: ${value.join(', ')}`);
+                } else {
+                    lines.push(`${indent}${displayKey}: ${value}`);
+                }
+            });
+        };
+        recurse(obj);
+        return lines.join('\n');
+    };
+
+    const formatted = formatDetails(details);
+    const truncated = formatted.length > 300 ? `${formatted.slice(0, 300)}…` : formatted;
+
+    return (
+        <div className="text-sm text-gray-700 max-h-52 overflow-auto bg-gray-50 p-3 rounded border border-gray-200 font-sans">
+            {truncated.split('\n').map((line, i) => (
+                <div key={i} className="whitespace-pre-wrap break-words text-xs leading-relaxed">
+                    {line}
+                </div>
+            ))}
+        </div>
+    );
 };
 
 const DesktopRow: React.FC<{ log: AuditLog }> = ({ log }) => {
@@ -511,21 +561,21 @@ const MobileRow: React.FC<{ log: AuditLog }> = ({ log }) => {
                         </span>
                         <span className="text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded">{log.action || '-'}</span>
                     </div>
-                    
+
                     <div className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                         <LucideIcons.User size={14} />
                         <span>{log.user || 'System'} {log.role ? `(${log.role})` : ''}</span>
                     </div>
-                    
+
                     <div className="text-sm text-gray-700">{log.message || '-'}</div>
-                    
+
                     <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
                         <div><strong>Module:</strong> {log.module || '-'}</div>
                         <div><strong>Entity:</strong> {log.entity || '-'}</div>
                         <div><strong>Entity ID:</strong> <span className="font-mono">{log.entityId || '-'}</span></div>
                         <div><strong>Service:</strong> {log.serviceName || '-'}</div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                         <LucideIcons.Clock size={14} />
                         <span>{formatLocal(log.timestamp)}</span>
@@ -533,7 +583,7 @@ const MobileRow: React.FC<{ log: AuditLog }> = ({ log }) => {
                         <LucideIcons.Globe size={14} />
                         <span className="font-mono">{log.ipAddress || '-'}</span>
                     </div>
-                    
+
                     {log.details && (
                         <div className="mt-3">
                             <DetailPreview details={log.details} />
