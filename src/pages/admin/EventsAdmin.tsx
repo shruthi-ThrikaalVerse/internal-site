@@ -1,7 +1,14 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import * as LucideIcons from 'lucide-react';
 import { useHRMS } from '../../context/HRMSContext.tsx';
-import { AppEvent, EventType, EventStatus, EventPriority, EventAudience } from '../../types.ts';
+import { AppEvent, EventPriority, EventAudience } from '../../types.ts';
+import {
+  getEvents,
+  createEvent as apiCreateEvent,
+  updateEvent as apiUpdateEvent,
+  deleteEvent as apiDeleteEvent,
+} from '../../api/events.js';
+import { getAllEmployees, getDepartments } from '../../api/users.ts';
 import { DEPARTMENTS } from '../../constants.ts';
 
 const Icon = ({ name, className }: { name: string; className?: string }) => {
@@ -14,7 +21,9 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose}></div>
-      <div className={`bg-white rounded-[32px] w-full max-w-2xl relative shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]`}>
+      <div
+        className={`bg-white rounded-[32px] w-full max-w-2xl relative shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]`}
+      >
         <div className="p-8 border-b flex items-center justify-between bg-white sticky top-0 z-10">
           <h2 className="text-2xl font-black text-slate-900">{title}</h2>
           <button aria-label="Close dialog" onClick={onClose} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors">
@@ -27,14 +36,82 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
   );
 };
 
-// Custom DatePicker Component
+const ConfirmDialog = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+  isDangerous = false,
+  isLoading = false,
+}: any) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose}></div>
+      <div className="bg-white rounded-[24px] w-full max-w-md relative shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col">
+        <div className="p-6 space-y-4">
+          <div className="flex items-start gap-4">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDangerous ? 'bg-rose-100' : 'bg-indigo-100'}`}>
+              <Icon name={isDangerous ? 'AlertTriangle' : 'HelpCircle'} className={`w-6 h-6 ${isDangerous ? 'text-rose-600' : 'text-indigo-600'}`} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-black text-slate-900">{title}</h3>
+              <p className="text-sm text-slate-600 mt-1">{message}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-slate-100 flex gap-3 justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isLoading}
+            className="px-4 py-2 text-slate-600 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-xl transition-all disabled:opacity-50"
+          >
+            {cancelText}
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isLoading}
+            className={`px-4 py-2 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg disabled:opacity-60 ${
+              isDangerous
+                ? 'bg-gradient-to-r from-rose-600 to-red-500 hover:opacity-90 shadow-rose-200'
+                : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 shadow-indigo-200'
+            }`}
+          >
+            {isLoading ? 'Deleting...' : confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/** ✅ Local date helpers (fix IST/UTC shift issues) */
+const toLocalISODate = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+const parseLocalISODate = (iso: string) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+};
+const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+/** Custom DatePicker */
 const DatePicker = ({
   value,
   onChange,
   id,
   label,
   minDate,
-  required = false
+  required = false,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -48,31 +125,22 @@ const DatePicker = ({
   const [view, setView] = useState<'days' | 'months' | 'years'>('days');
   const datePickerRef = useRef<HTMLDivElement>(null);
 
-  // Get current date in YYYY-MM-DD format
-  const getTodayDate = () => new Date().toISOString().split('T')[0];
-
-  // Get max reasonable date (current year + 1 year)
-  const getMaxReasonableDate = () => {
+  const getMaxReasonableDateISO = () => {
     const date = new Date();
     date.setFullYear(date.getFullYear() + 1);
-    return date.toISOString().split('T')[0];
+    return toLocalISODate(date);
   };
 
-  // Safe date parsing
   const safeParseDate = (dateString: string) => {
     try {
-      const date = new Date(dateString);
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        return new Date();
-      }
+      if (!dateString) return new Date();
+      // parse local yyyy-mm-dd
+      const date = parseLocalISODate(dateString);
+      if (isNaN(date.getTime())) return new Date();
 
-      // Check if year is reasonable (between current year -1 and current year + 1)
       const currentYear = new Date().getFullYear();
       const year = date.getFullYear();
-      if (year < currentYear - 1 || year > currentYear + 1) {
-        return new Date();
-      }
+      if (year < currentYear - 1 || year > currentYear + 1) return new Date();
 
       return date;
     } catch {
@@ -82,73 +150,48 @@ const DatePicker = ({
 
   const selectedDate = value ? safeParseDate(value) : null;
   const today = new Date();
-  const maxReasonable = getMaxReasonableDate();
+  const maxReasonableISO = getMaxReasonableDateISO();
 
-  // Get days in month
-  const getDaysInMonth = (year: number, month: number) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
+  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
+  const getMonthName = (month: number) => new Date(2000, month, 1).toLocaleString('default', { month: 'long' });
 
-  // Get month name
-  const getMonthName = (month: number) => {
-    return new Date(2000, month, 1).toLocaleString('default', { month: 'long' });
-  };
-
-  // Get years for year view
   const getYearRange = () => {
     const currentYear = currentDate.getFullYear();
     const startYear = currentYear - 1;
     return Array.from({ length: 3 }, (_, i) => startYear + i);
   };
 
-  // Generate calendar days
   const generateCalendarDays = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const daysInMonth = getDaysInMonth(year, month);
     const firstDay = new Date(year, month, 1).getDay();
 
-    const days = [];
+    const days: { date: Date; isCurrentMonth: boolean; isToday: boolean }[] = [];
 
-    // Previous month days
     const prevMonthDays = getDaysInMonth(year, month - 1);
     for (let i = firstDay - 1; i >= 0; i--) {
-      days.push({
-        date: new Date(year, month - 1, prevMonthDays - i),
-        isCurrentMonth: false,
-        isToday: false
-      });
+      days.push({ date: new Date(year, month - 1, prevMonthDays - i), isCurrentMonth: false, isToday: false });
     }
 
-    // Current month days
-    const todayStr = today.toISOString().split('T')[0];
+    const todayISO = toLocalISODate(today);
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
-      const dateStr = date.toISOString().split('T')[0];
-      days.push({
-        date,
-        isCurrentMonth: true,
-        isToday: dateStr === todayStr
-      });
+      const dateISO = toLocalISODate(date);
+      days.push({ date, isCurrentMonth: true, isToday: dateISO === todayISO });
     }
 
-    // Next month days
-    const totalCells = 42; // 6 weeks
+    const totalCells = 42;
     const nextMonthDays = totalCells - days.length;
     for (let day = 1; day <= nextMonthDays; day++) {
-      days.push({
-        date: new Date(year, month + 1, day),
-        isCurrentMonth: false,
-        isToday: false
-      });
+      days.push({ date: new Date(year, month + 1, day), isCurrentMonth: false, isToday: false });
     }
-
     return days;
   };
 
   const handleDateSelect = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    onChange(dateStr);
+    const iso = toLocalISODate(date);
+    onChange(iso);
     setIsOpen(false);
     setView('days');
   };
@@ -163,22 +206,12 @@ const DatePicker = ({
     setView('months');
   };
 
-  // Format date for display
   const formatDisplayDate = (dateStr: string) => {
     if (!dateStr) return '';
-    try {
-      const date = safeParseDate(dateStr);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    } catch {
-      return '';
-    }
+    const d = safeParseDate(dateStr);
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
-  // Click outside to close
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) {
@@ -187,13 +220,8 @@ const DatePicker = ({
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
   return (
@@ -229,13 +257,9 @@ const DatePicker = ({
             <button
               type="button"
               onClick={() => {
-                if (view === 'days') {
-                  setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-                } else if (view === 'months') {
-                  setCurrentDate(new Date(currentDate.getFullYear() - 1, currentDate.getMonth(), 1));
-                } else {
-                  setCurrentDate(new Date(currentDate.getFullYear() - 3, currentDate.getMonth(), 1));
-                }
+                if (view === 'days') setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+                else if (view === 'months') setCurrentDate(new Date(currentDate.getFullYear() - 1, currentDate.getMonth(), 1));
+                else setCurrentDate(new Date(currentDate.getFullYear() - 3, currentDate.getMonth(), 1));
               }}
               className="p-2 hover:bg-slate-50 rounded-xl transition-colors"
             >
@@ -245,11 +269,8 @@ const DatePicker = ({
             <button
               type="button"
               onClick={() => {
-                if (view === 'days') {
-                  setView('months');
-                } else if (view === 'months') {
-                  setView('years');
-                }
+                if (view === 'days') setView('months');
+                else if (view === 'months') setView('years');
               }}
               className="px-4 py-2 font-black text-sm hover:bg-slate-50 rounded-xl transition-colors"
             >
@@ -258,24 +279,20 @@ const DatePicker = ({
                   {getMonthName(currentDate.getMonth())} {currentDate.getFullYear()}
                 </>
               )}
-              {view === 'months' && (
-                <>{currentDate.getFullYear()}</>
-              )}
+              {view === 'months' && <>{currentDate.getFullYear()}</>}
               {view === 'years' && (
-                <>{getYearRange()[0]} - {getYearRange()[2]}</>
+                <>
+                  {getYearRange()[0]} - {getYearRange()[2]}
+                </>
               )}
             </button>
 
             <button
               type="button"
               onClick={() => {
-                if (view === 'days') {
-                  setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-                } else if (view === 'months') {
-                  setCurrentDate(new Date(currentDate.getFullYear() + 1, currentDate.getMonth(), 1));
-                } else {
-                  setCurrentDate(new Date(currentDate.getFullYear() + 3, currentDate.getMonth(), 1));
-                }
+                if (view === 'days') setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+                else if (view === 'months') setCurrentDate(new Date(currentDate.getFullYear() + 1, currentDate.getMonth(), 1));
+                else setCurrentDate(new Date(currentDate.getFullYear() + 3, currentDate.getMonth(), 1));
               }}
               className="p-2 hover:bg-slate-50 rounded-xl transition-colors"
             >
@@ -296,10 +313,13 @@ const DatePicker = ({
 
               <div className="grid grid-cols-7 gap-1">
                 {generateCalendarDays().map((dayObj, index) => {
-                  const dayStr = dayObj.date.toISOString().split('T')[0];
-                  const isSelected = selectedDate && selectedDate.toISOString().split('T')[0] === dayStr;
-                  const isPastDate = dayObj.date < today;
-                  const isValidDate = !isPastDate && dayObj.date <= new Date(maxReasonable);
+                  const dayISO = toLocalISODate(dayObj.date);
+
+                  const min = minDate ? startOfDay(parseLocalISODate(minDate)) : startOfDay(new Date());
+                  const max = startOfDay(parseLocalISODate(maxReasonableISO));
+
+                  const isSelected = selectedDate ? toLocalISODate(selectedDate) === dayISO : false;
+                  const isValidDate = startOfDay(dayObj.date) >= min && startOfDay(dayObj.date) <= max;
 
                   return (
                     <button
@@ -326,7 +346,7 @@ const DatePicker = ({
               <div className="mt-4 pt-4 border-t border-slate-100 flex justify-center">
                 <button
                   type="button"
-                  onClick={() => handleDateSelect(today)}
+                  onClick={() => handleDateSelect(new Date())}
                   className="px-4 py-2 bg-slate-50 text-slate-600 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-100 transition-colors"
                 >
                   Today
@@ -340,9 +360,7 @@ const DatePicker = ({
             <div className="grid grid-cols-3 gap-2">
               {Array.from({ length: 12 }, (_, i) => i).map((monthIndex) => {
                 const monthDate = new Date(currentDate.getFullYear(), monthIndex, 1);
-                const isSelected = selectedDate &&
-                  selectedDate.getFullYear() === monthDate.getFullYear() &&
-                  selectedDate.getMonth() === monthIndex;
+                const isSelected = selectedDate && selectedDate.getFullYear() === monthDate.getFullYear() && selectedDate.getMonth() === monthIndex;
 
                 return (
                   <button
@@ -365,7 +383,6 @@ const DatePicker = ({
           {view === 'years' && (
             <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto invisible-scrollbar">
               {getYearRange().map((year) => {
-                const yearDate = new Date(year, 0, 1);
                 const isSelected = selectedDate && selectedDate.getFullYear() === year;
 
                 return (
@@ -391,66 +408,70 @@ const DatePicker = ({
   );
 };
 
-// Colorful gradient backgrounds for each event type
-const EVENT_GRADIENTS = {
+const EVENT_GRADIENTS: any = {
   holiday: 'bg-gradient-to-br from-rose-500/20 via-pink-400/15 to-red-400/10 border-rose-200/60 shadow-rose-100/30',
   training: 'bg-gradient-to-br from-indigo-500/20 via-purple-400/15 to-violet-400/10 border-indigo-200/60 shadow-indigo-100/30',
   meeting: 'bg-gradient-to-br from-blue-500/20 via-cyan-400/15 to-teal-400/10 border-blue-200/60 shadow-blue-100/30',
   company: 'bg-gradient-to-br from-emerald-500/20 via-green-400/15 to-lime-400/10 border-emerald-200/60 shadow-emerald-100/30',
-  team: 'bg-gradient-to-br from-amber-500/20 via-orange-400/15 to-yellow-400/10 border-amber-200/60 shadow-amber-100/30'
+  team: 'bg-gradient-to-br from-amber-500/20 via-orange-400/15 to-yellow-400/10 border-amber-200/60 shadow-amber-100/30',
 };
 
-// Badge colors for each event type
-const EVENT_BADGE_STYLES = {
+const EVENT_BADGE_STYLES: any = {
   holiday: 'bg-gradient-to-r from-rose-600 via-pink-500 to-rose-500 text-white border-rose-400/40',
   training: 'bg-gradient-to-r from-indigo-600 via-purple-500 to-indigo-500 text-white border-indigo-400/40',
   meeting: 'bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-500 text-white border-blue-400/40',
   company: 'bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-500 text-white border-emerald-400/40',
-  team: 'bg-gradient-to-r from-amber-600 via-orange-500 to-amber-500 text-white border-amber-400/40'
+  team: 'bg-gradient-to-r from-amber-600 via-orange-500 to-amber-500 text-white border-amber-400/40',
 };
 
-// Time badge colors
-const TIME_BADGE_STYLES = {
+const TIME_BADGE_STYLES: any = {
   holiday: 'bg-gradient-to-r from-rose-500/30 to-pink-400/30 text-rose-800 border-rose-300/60',
   training: 'bg-gradient-to-r from-indigo-500/30 to-purple-400/30 text-indigo-800 border-indigo-300/60',
   meeting: 'bg-gradient-to-r from-blue-500/30 to-cyan-400/30 text-blue-800 border-blue-300/60',
   company: 'bg-gradient-to-r from-emerald-500/30 to-green-400/30 text-emerald-800 border-emerald-300/60',
-  team: 'bg-gradient-to-r from-amber-500/30 to-orange-400/30 text-amber-800 border-amber-300/60'
+  team: 'bg-gradient-to-r from-amber-500/30 to-orange-400/30 text-amber-800 border-amber-300/60',
 };
 
-// Status colors
-const STATUS_COLORS = {
+const STATUS_COLORS: any = {
   upcoming: 'bg-gradient-to-r from-emerald-500/20 to-green-400/20 text-emerald-700 border-emerald-400/40',
   ongoing: 'bg-gradient-to-r from-blue-500/20 to-cyan-400/20 text-blue-700 border-blue-400/40',
   completed: 'bg-gradient-to-r from-slate-500/20 to-slate-400/20 text-slate-700 border-slate-400/40',
-  cancelled: 'bg-gradient-to-r from-rose-500/20 to-pink-400/20 text-rose-700 border-rose-400/40'
+  cancelled: 'bg-gradient-to-r from-rose-500/20 to-pink-400/20 text-rose-700 border-rose-400/40',
 };
 
-// Priority colors
-const PRIORITY_BADGE_STYLES = {
+const PRIORITY_BADGE_STYLES: any = {
   normal: 'bg-gradient-to-r from-slate-500/20 to-slate-400/20 text-slate-700 border-slate-400/40',
   important: 'bg-gradient-to-r from-amber-500/20 to-orange-400/20 text-amber-700 border-amber-400/40',
-  critical: 'bg-gradient-to-r from-rose-500/20 to-red-400/20 text-rose-700 border-rose-400/40'
+  critical: 'bg-gradient-to-r from-rose-500/20 to-red-400/20 text-rose-700 border-rose-400/40',
 };
 
-// Emojis for event types
-const EVENT_EMOJIS = {
+const EVENT_EMOJIS: any = {
   holiday: '🎉',
   training: '📚',
   meeting: '🤝',
   company: '🏢',
-  team: '👥'
+  team: '👥',
 };
 
 const EventsAdmin: React.FC = () => {
-  const { events, addEvent, updateEvent, deleteEvent, employees, notify } = useHRMS();
+  const { notify } = useHRMS();
+
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [eventsLocal, setEventsLocal] = useState<AppEvent[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [empSearch, setEmpSearch] = useState('');
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewTab, setViewTab] = useState<'board' | 'list'>('board');
 
-  const todayISO = new Date().toISOString().split('T')[0];
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [departments, setDepartments] = useState<any[]>([]);
+
+  const todayISO = toLocalISODate(new Date());
 
   const [formData, setFormData] = useState<Partial<AppEvent>>({
     title: '',
@@ -470,130 +491,66 @@ const EventsAdmin: React.FC = () => {
     isPublished: true,
   });
 
-  // Safe date parsing for display
-  const safeParseDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return new Date();
-      }
-      return date;
-    } catch {
-      return new Date();
-    }
-  };
-
-  // Format date for display
   const formatDisplayDate = (dateString: string) => {
-    const date = safeParseDate(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    const d = parseLocalISODate(dateString);
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   const filteredEvents = useMemo(() => {
-    return events.filter(e =>
-      e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      e.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [events, searchTerm]);
+    return eventsLocal.filter((e: any) => {
+      const t = (e.title || '').toLowerCase();
+      const d = (e.description || '').toLowerCase();
+      const s = searchTerm.toLowerCase();
+      return t.includes(s) || d.includes(s);
+    });
+  }, [eventsLocal, searchTerm]);
 
   const filteredEmployees = useMemo(() => {
-    return employees.filter(e =>
-      e.fullName.toLowerCase().includes(empSearch.toLowerCase()) ||
-      e.employeeId.toLowerCase().includes(empSearch.toLowerCase())
-    );
+    return employees.filter((e: any) => {
+      const n = (e.fullName || '').toLowerCase();
+      const id = (e.employeeId || '').toLowerCase();
+      const s = empSearch.toLowerCase();
+      return n.includes(s) || id.includes(s);
+    });
   }, [employees, empSearch]);
 
-  // Handle form submission with validation
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validation
-    if (!formData.title?.trim()) {
-      notify('Event title is required.', 'warning');
-      return;
+  const fetchEvents = async () => {
+    try {
+      const data = await getEvents();
+      setEventsLocal(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      notify(err?.message || 'Failed to fetch events', 'error');
+      setEventsLocal([]);
     }
-
-    if (!formData.description?.trim()) {
-      notify('Event description is required.', 'warning');
-      return;
-    }
-
-    // Validate start date
-    if (!formData.startDate) {
-      notify('Start date is required.', 'warning');
-      return;
-    }
-
-    const today = new Date();
-    const selectedStartDate = new Date(formData.startDate);
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-
-    // Check if date is valid
-    if (isNaN(selectedStartDate.getTime())) {
-      notify('Invalid start date selected.', 'warning');
-      return;
-    }
-
-    // Check if date is in the future (or today)
-    if (selectedStartDate < todayStart) {
-      notify('Start date cannot be in the past.', 'warning');
-      return;
-    }
-
-    // Check if date is reasonable (not too far in the future)
-    const maxDate = new Date();
-    maxDate.setFullYear(today.getFullYear() + 1);
-    if (selectedStartDate > maxDate) {
-      notify('Start date cannot be more than 1 year in the future.', 'warning');
-      return;
-    }
-
-    // Validate end date if provided
-    if (formData.endDate) {
-      const selectedEndDate = new Date(formData.endDate);
-      if (isNaN(selectedEndDate.getTime())) {
-        notify('Invalid end date selected.', 'warning');
-        return;
-      }
-
-      if (selectedEndDate < selectedStartDate) {
-        notify('End date cannot be before start date.', 'warning');
-        return;
-      }
-    }
-
-    // Validate audience selection
-    if (formData.audience === 'selected' && (!formData.targetEmployeeIds || formData.targetEmployeeIds.length === 0)) {
-      notify('Please select at least one employee for targeted events.', 'warning');
-      return;
-    }
-
-    if (formData.audience === 'department' && !formData.targetDepartment) {
-      notify('Please select a department for department-based events.', 'warning');
-      return;
-    }
-
-    if (editingId) {
-      updateEvent(editingId, formData);
-      notify('Event updated successfully!', 'success');
-    } else {
-      addEvent({
-        ...formData,
-        createdAt: new Date().toISOString(),
-        participations: [],
-        updatedAt: new Date().toISOString()
-      } as AppEvent);
-      notify('Event created successfully!', 'success');
-    }
-
-    setIsModalOpen(false);
-    resetForm();
   };
+
+  const fetchEmployees = async () => {
+    try {
+      const data = await getAllEmployees();
+      // if your API already returns array -> set it. if not -> empty
+      setEmployees(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      notify(err?.message || 'Failed to fetch employees', 'error');
+      setEmployees([]);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const data = await getDepartments();
+      setDepartments(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      notify(err?.message || 'Failed to fetch departments', 'error');
+      setDepartments([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchEvents();
+    fetchEmployees();
+    fetchDepartments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const resetForm = () => {
     setEditingId(null);
@@ -617,34 +574,167 @@ const EventsAdmin: React.FC = () => {
   };
 
   const handleEdit = (evt: AppEvent) => {
-    setEditingId(evt.id);
+    setEditingId((evt as any).id);
     setFormData(evt);
     setIsModalOpen(true);
   };
 
+  const handleDeleteClick = (id: string) => {
+    setEventToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmOpen(false);
+    setEventToDelete(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!eventToDelete) return;
+    setIsDeleting(true);
+    try {
+      await apiDeleteEvent(eventToDelete); // ✅ DELETE /api/events/{eventId}
+      notify('Event deleted successfully!', 'success');
+      setDeleteConfirmOpen(false);
+      setEventToDelete(null);
+      await fetchEvents(); // ✅ refresh immediately
+    } catch (err: any) {
+      notify(err?.message || 'Failed to delete event. Please try again.', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const toggleEmployeeSelection = (id: string) => {
-    setFormData(prev => {
-      const current = prev.targetEmployeeIds || [];
-      const next = current.includes(id)
-        ? current.filter(cid => cid !== id)
-        : [...current, id];
+    setFormData((prev) => {
+      const current = (prev.targetEmployeeIds as any[]) || [];
+      const next = current.includes(id) ? current.filter((cid) => cid !== id) : [...current, id];
       return { ...prev, targetEmployeeIds: next };
     });
   };
 
-  // Handle start date change
   const handleStartDateChange = (dateStr: string) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       startDate: dateStr,
-      // Auto-set end date to same as start if not set or if it's before new start date
-      endDate: !formData.endDate || new Date(formData.endDate) < new Date(dateStr) ? dateStr : formData.endDate
-    });
+      endDate: !prev.endDate || parseLocalISODate(prev.endDate) < parseLocalISODate(dateStr) ? dateStr : prev.endDate,
+    }));
   };
 
-  // Handle end date change
   const handleEndDateChange = (dateStr: string) => {
-    setFormData({ ...formData, endDate: dateStr });
+    setFormData((prev) => ({ ...prev, endDate: dateStr }));
+  };
+
+  const to24Hour = (input?: string) => {
+    if (!input) return '';
+    const hmsMatch = input.match(/^(\d{1,2}):(\d{2})(:(\d{2}))?(\s?(AM|PM))?$/i);
+    if (!hmsMatch) return input;
+    let hours = parseInt(hmsMatch[1], 10);
+    const mins = hmsMatch[2];
+    const secs = hmsMatch[4] || '00';
+    const ampm = (hmsMatch[6] || '').toUpperCase();
+    if (ampm === 'PM' && hours < 12) hours += 12;
+    if (ampm === 'AM' && hours === 12) hours = 0;
+    const hh = hours.toString().padStart(2, '0');
+    return `${hh}:${mins}:${secs}`;
+  };
+
+  const normalizeEnum = (val?: string) => (val ? val.toString().toUpperCase() : undefined);
+
+  const buildPayload = () => {
+    // ✅ Explicit: if isOnline is true → VIRTUAL, otherwise → PHYSICAL
+    const isVirtual = formData.isOnline === true;
+
+    const payload: any = {
+      title: formData.title,
+      description: formData.description,
+      startDate: formData.startDate, // yyyy-mm-dd
+      startTime: to24Hour(formData.startTime),
+      endDate: formData.endDate,
+      endTime: to24Hour(formData.endTime),
+      priority: normalizeEnum(formData.priority || 'normal'),
+      category: normalizeEnum(formData.type || 'company'),
+      targetType: normalizeEnum(formData.audience || 'all'),
+      meetingType: isVirtual ? 'VIRTUAL' : 'PHYSICAL',
+    };
+
+    // ✅ map selected employee UI ids → employeeId
+    const selectedIds = ((formData.targetEmployeeIds as any[]) || [])
+      .map((id) => {
+        const emp = employees.find((e: any) => e.id === id);
+        return emp ? emp.employeeId : id;
+      })
+      .filter(Boolean);
+
+    if (selectedIds.length > 0) payload.employeeIds = selectedIds;
+    if (formData.targetDepartment) payload.departments = [formData.targetDepartment];
+
+    // ✅ Always use meetingLink for both VIRTUAL and PHYSICAL
+    // For VIRTUAL: meetingLink = meeting URL
+    // For PHYSICAL: meetingLink = physical location/address
+    if (formData.location?.trim()) {
+      payload.meetingLink = formData.location;
+    }
+
+    return payload;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.title?.trim()) return notify('Event title is required.', 'warning');
+    if (!formData.description?.trim()) return notify('Event description is required.', 'warning');
+    if (!formData.startDate) return notify('Start date is required.', 'warning');
+
+    // ✅ local-date validations
+    const selectedStartDate = parseLocalISODate(formData.startDate);
+    if (isNaN(selectedStartDate.getTime())) return notify('Invalid start date selected.', 'warning');
+
+    const todayStart = startOfDay(new Date());
+    if (startOfDay(selectedStartDate) < todayStart) return notify('Start date cannot be in the past.', 'warning');
+
+    const maxDate = new Date();
+    maxDate.setFullYear(maxDate.getFullYear() + 1);
+    if (startOfDay(selectedStartDate) > startOfDay(maxDate)) return notify('Start date cannot be more than 1 year in the future.', 'warning');
+
+    if (formData.endDate) {
+      const selectedEndDate = parseLocalISODate(formData.endDate);
+      if (isNaN(selectedEndDate.getTime())) return notify('Invalid end date selected.', 'warning');
+      if (startOfDay(selectedEndDate) < startOfDay(selectedStartDate)) return notify('End date cannot be before start date.', 'warning');
+    }
+
+    if (formData.audience === 'selected' && (!formData.targetEmployeeIds || (formData.targetEmployeeIds as any[]).length === 0))
+      return notify('Please select at least one employee for targeted events.', 'warning');
+
+    if (formData.audience === 'department' && !formData.targetDepartment)
+      return notify('Please select a department for department-based events.', 'warning');
+
+    // ✅ if isOnline is disabled (physical event), location is required
+    const hasLocation = !!formData.location?.trim();
+    if (!formData.isOnline && !hasLocation) 
+      return notify('Location is required for physical events.', 'warning');
+
+    (async () => {
+      try {
+        const payload = buildPayload();
+        console.log('Creating/updating event with payload:', payload);
+
+        if (editingId) {
+          await apiUpdateEvent(editingId, payload);
+          notify('Event updated successfully!', 'success');
+        } else {
+          await apiCreateEvent(payload);
+          notify('Event created & notifications sent', 'success');
+        }
+
+        // ✅ close overlay + refresh events hub
+        setIsModalOpen(false);
+        resetForm();
+        await fetchEvents();
+      } catch (err: any) {
+        notify(err?.message || 'Failed to save event', 'error');
+      }
+    })();
   };
 
   return (
@@ -654,23 +744,32 @@ const EventsAdmin: React.FC = () => {
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Organization Events</h1>
           <p className="text-slate-500 text-sm font-medium">Coordinate corporate milestones, training cycles and team meetups.</p>
         </div>
+
         <div className="flex items-center gap-3">
           <div className="flex bg-gradient-to-r from-indigo-100/50 to-purple-100/50 p-1 rounded-2xl border border-indigo-100/30 shadow-sm mr-2">
             <button
               onClick={() => setViewTab('board')}
-              className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${viewTab === 'board' ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg' : 'text-slate-500 hover:text-indigo-600'}`}
+              className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
+                viewTab === 'board' ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg' : 'text-slate-500 hover:text-indigo-600'
+              }`}
             >
               📊 Board
             </button>
             <button
               onClick={() => setViewTab('list')}
-              className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${viewTab === 'list' ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg' : 'text-slate-500 hover:text-indigo-600'}`}
+              className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
+                viewTab === 'list' ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg' : 'text-slate-500 hover:text-indigo-600'
+              }`}
             >
               📅 Upcoming
             </button>
           </div>
+
           <button
-            onClick={() => { resetForm(); setIsModalOpen(true); }}
+            onClick={() => {
+              resetForm();
+              setIsModalOpen(true);
+            }}
             className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-white rounded-2xl hover:opacity-90 hover:shadow-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-purple-200 transition-all active:scale-95"
           >
             <Icon name="Plus" className="w-5 h-5" /> Schedule Event
@@ -693,76 +792,94 @@ const EventsAdmin: React.FC = () => {
 
         {viewTab === 'board' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredEvents.length > 0 ? filteredEvents.map(evt => {
-              const eventGradient = EVENT_GRADIENTS[evt.type] || EVENT_GRADIENTS.company;
-              const eventBadgeStyle = EVENT_BADGE_STYLES[evt.type] || EVENT_BADGE_STYLES.company;
-              const timeBadgeStyle = TIME_BADGE_STYLES[evt.type] || TIME_BADGE_STYLES.company;
+            {filteredEvents.length > 0 ? (
+              filteredEvents.map((evt: any) => {
+                const eventGradient = EVENT_GRADIENTS[evt.type] || EVENT_GRADIENTS.company;
+                const eventBadgeStyle = EVENT_BADGE_STYLES[evt.type] || EVENT_BADGE_STYLES.company;
+                const timeBadgeStyle = TIME_BADGE_STYLES[evt.type] || TIME_BADGE_STYLES.company;
 
-              return (
-                <div key={evt.id} className={`border rounded-[32px] p-6 hover:shadow-2xl hover:scale-[1.02] transition-all group flex flex-col justify-between relative overflow-hidden backdrop-blur-sm ${eventGradient}`}>
-                  {/* Animated pattern overlay */}
-                  <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-current to-transparent rounded-full -translate-y-16 translate-x-16"></div>
-                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-current to-transparent rounded-full translate-y-12 -translate-x-12"></div>
-                  </div>
-
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-md ${eventBadgeStyle}`}>
-                          {EVENT_EMOJIS[evt.type]} {evt.type}
-                        </span>
-                        <span className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border shadow-md ${PRIORITY_BADGE_STYLES[evt.priority || 'normal']}`}>
-                          {evt.priority || 'normal'}
-                        </span>
-                      </div>
-                      <div className="flex gap-1">
-                        <button title={`Edit event ${evt.title}`} aria-label={`Edit event ${evt.title}`} onClick={() => handleEdit(evt)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white/50 transition-all rounded-xl">
-                          <Icon name="Edit3" className="w-4 h-4" />
-                        </button>
-                        <button title={`Delete event ${evt.id}`} aria-label={`Delete event ${evt.id}`} onClick={() => deleteEvent(evt.id)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-white/50 transition-all rounded-xl">
-                          <Icon name="Trash2" className="w-4 h-4" />
-                        </button>
-                      </div>
+                return (
+                  <div
+                    key={evt.id}
+                    className={`border rounded-[32px] p-6 hover:shadow-2xl hover:scale-[1.02] transition-all group flex flex-col justify-between relative overflow-hidden backdrop-blur-sm ${eventGradient}`}
+                  >
+                    {/* ✅ FIX: overlay must NOT block clicks */}
+                    <div className="absolute inset-0 opacity-10 pointer-events-none">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-current to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+                      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-current to-transparent rounded-full translate-y-12 -translate-x-12"></div>
                     </div>
 
-                    <h3 className="text-lg font-black text-slate-900 leading-tight mb-2 truncate">{evt.title}</h3>
-                    <p className="text-xs text-slate-700 font-medium mb-6 line-clamp-2">{evt.description}</p>
-
-                    <div className="space-y-4 mt-auto">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/50 shadow-sm">
-                          <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">📅 Schedule</p>
-                          <p className="text-[10px] font-black text-slate-800">{formatDisplayDate(evt.startDate)}</p>
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-md ${eventBadgeStyle}`}>
+                            {EVENT_EMOJIS[evt.type]} {evt.type}
+                          </span>
+                          <span className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border shadow-md ${PRIORITY_BADGE_STYLES[evt.priority || 'normal']}`}>
+                            {evt.priority || 'normal'}
+                          </span>
                         </div>
-                        <div className={`p-3 rounded-2xl border shadow-sm ${timeBadgeStyle}`}>
-                          <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-1">⏰ Time</p>
-                          <p className="text-[10px] font-black text-slate-900">{evt.startTime}</p>
+
+                        <div className="flex gap-1">
+                          <button
+                            title={`Edit event ${evt.title}`}
+                            aria-label={`Edit event ${evt.title}`}
+                            onClick={() => handleEdit(evt)}
+                            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white/50 transition-all rounded-xl"
+                          >
+                            <Icon name="Edit3" className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            title={`Delete event ${evt.id}`}
+                            aria-label={`Delete event ${evt.id}`}
+                            onClick={() => handleDeleteClick(evt.id)}
+                            className="p-2 text-slate-400 hover:text-rose-500 hover:bg-white/50 transition-all rounded-xl"
+                          >
+                            <Icon name="Trash2" className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 p-3 bg-white/60 backdrop-blur-sm border border-white/50 rounded-2xl shadow-sm">
-                        <Icon name={evt.isOnline ? "Video" : "MapPin"} className={`w-4 h-4 ${evt.isOnline ? 'text-blue-600' : 'text-emerald-600'}`} />
-                        <p className="text-[10px] font-bold text-slate-800 truncate">{evt.location}</p>
-                      </div>
+                      <h3 className="text-lg font-black text-slate-900 leading-tight mb-2 truncate">{evt.title}</h3>
+                      <p className="text-xs text-slate-700 font-medium mb-6 line-clamp-2">{evt.description}</p>
 
-                      <div className="flex items-center justify-between pt-4 border-t border-white/30">
-                        {evt.participations && evt.participations.length > 0 && (
-                          <div className="flex -space-x-2">
-                            <div className="w-8 h-8 rounded-full border-2 border-white bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-[8px] font-black text-white shadow-md">
-                              +{evt.participations.length}
-                            </div>
+                      <div className="space-y-4 mt-auto">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="p-3 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/50 shadow-sm">
+                            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">📅 Schedule</p>
+                            <p className="text-[10px] font-black text-slate-800">{formatDisplayDate(evt.startDate)}</p>
                           </div>
-                        )}
-                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm ${STATUS_COLORS[evt.status] || STATUS_COLORS.upcoming}`}>
-                          {evt.status}
-                        </span>
+                          <div className={`p-3 rounded-2xl border shadow-sm ${timeBadgeStyle}`}>
+                            <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-1">⏰ Time</p>
+                            <p className="text-[10px] font-black text-slate-900">{evt.startTime}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 p-3 bg-white/60 backdrop-blur-sm border border-white/50 rounded-2xl shadow-sm">
+                          <Icon name={evt.isOnline ? 'Video' : 'MapPin'} className={`w-4 h-4 ${evt.isOnline ? 'text-blue-600' : 'text-emerald-600'}`} />
+                          <p className="text-[10px] font-bold text-slate-800 truncate">{evt.location}</p>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-white/30">
+                          {evt.participations && evt.participations.length > 0 && (
+                            <div className="flex -space-x-2">
+                              <div className="w-8 h-8 rounded-full border-2 border-white bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-[8px] font-black text-white shadow-md">
+                                +{evt.participations.length}
+                              </div>
+                            </div>
+                          )}
+                          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm ${STATUS_COLORS[evt.status] || STATUS_COLORS.upcoming}`}>
+                            {evt.status}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            }) : (
+                );
+              })
+            ) : (
               <div className="col-span-full py-24 text-center">
                 <div className="w-24 h-24 bg-gradient-to-br from-indigo-100/50 to-purple-100/50 rounded-[32px] flex items-center justify-center mx-auto mb-6">
                   <Icon name="CalendarOff" className="w-12 h-12 text-indigo-300" />
@@ -783,39 +900,39 @@ const EventsAdmin: React.FC = () => {
                   <th className="px-8 py-5 text-[10px] font-black text-slate-600 uppercase tracking-widest text-right">⚡ Actions</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-slate-50/50">
-                {filteredEvents.map(evt => {
+                {filteredEvents.map((evt: any) => {
                   const eventColor = EVENT_BADGE_STYLES[evt.type] || EVENT_BADGE_STYLES.company;
 
                   return (
                     <tr key={evt.id} className="hover:bg-white/50 transition-colors group">
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-3">
-                          <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shadow-md ${eventColor}`}>
-                            {EVENT_EMOJIS[evt.type]}
-                          </span>
+                          <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shadow-md ${eventColor}`}>{EVENT_EMOJIS[evt.type]}</span>
                           <div>
                             <p className="text-sm font-black text-slate-800">{evt.title}</p>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase">{formatDisplayDate(evt.startDate)} • {evt.startTime}</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase">
+                              {formatDisplayDate(evt.startDate)} • {evt.startTime}
+                            </p>
                           </div>
                         </div>
                       </td>
+
                       <td className="px-8 py-6">
-                        <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm ${eventColor}`}>
-                          {evt.audience}
-                        </span>
+                        <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm ${eventColor}`}>{evt.audience}</span>
                       </td>
+
                       <td className="px-8 py-6">
-                        <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm ${STATUS_COLORS[evt.status] || STATUS_COLORS.upcoming}`}>
-                          {evt.status}
-                        </span>
+                        <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm ${STATUS_COLORS[evt.status] || STATUS_COLORS.upcoming}`}>{evt.status}</span>
                       </td>
+
                       <td className="px-8 py-6 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button aria-label={`Edit event ${evt.title}`} onClick={() => handleEdit(evt)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/50 rounded-xl transition-all">
                             <Icon name="Settings" className="w-4 h-4" />
                           </button>
-                          <button aria-label={`Delete event ${evt.id}`} onClick={() => deleteEvent(evt.id)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50/50 rounded-xl transition-all">
+                          <button type="button" aria-label={`Delete event ${evt.id}`} onClick={() => handleDeleteClick(evt.id)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50/50 rounded-xl transition-all">
                             <Icon name="Trash2" className="w-4 h-4" />
                           </button>
                         </div>
@@ -829,7 +946,7 @@ const EventsAdmin: React.FC = () => {
         )}
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? "Modify Schedule" : "New Organization Event"}>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? 'Modify Schedule' : 'New Organization Event'}>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">🎯 Event Title</label>
@@ -837,8 +954,8 @@ const EventsAdmin: React.FC = () => {
               required
               className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-slate-700 shadow-inner"
               placeholder="e.g. Q4 Townhall Meeting"
-              value={formData.title}
-              onChange={e => setFormData({ ...formData, title: e.target.value })}
+              value={formData.title || ''}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             />
           </div>
 
@@ -848,8 +965,8 @@ const EventsAdmin: React.FC = () => {
               required
               className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-slate-700 min-h-[100px] shadow-inner"
               placeholder="Details about the agenda, speakers, or objective..."
-              value={formData.description}
-              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              value={formData.description || ''}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
           </div>
 
@@ -858,8 +975,8 @@ const EventsAdmin: React.FC = () => {
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">🏷️ Category</label>
               <select
                 className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-600 shadow-inner"
-                value={formData.type}
-                onChange={e => setFormData({ ...formData, type: e.target.value as any })}
+                value={formData.type as any}
+                onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
                 title="Select event category"
               >
                 <option value="company">🏢 Company Event</option>
@@ -869,15 +986,18 @@ const EventsAdmin: React.FC = () => {
                 <option value="holiday">🎉 Holiday</option>
               </select>
             </div>
+
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">⚠️ Criticality</label>
               <div className="flex gap-2">
-                {(['normal', 'important', 'critical'] as EventPriority[]).map(p => (
+                {(['normal', 'important', 'critical'] as EventPriority[]).map((p) => (
                   <button
                     key={p}
                     type="button"
                     onClick={() => setFormData({ ...formData, priority: p })}
-                    className={`flex-1 py-2.5 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all shadow-sm ${formData.priority === p ? PRIORITY_BADGE_STYLES[p] : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}
+                    className={`flex-1 py-2.5 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all shadow-sm ${
+                      formData.priority === p ? PRIORITY_BADGE_STYLES[p] : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'
+                    }`}
                   >
                     {p}
                   </button>
@@ -889,14 +1009,7 @@ const EventsAdmin: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">📅 Start Date</label>
-              <DatePicker
-                id="startDate"
-                label="Select Start Date"
-                value={formData.startDate || todayISO}
-                onChange={handleStartDateChange}
-                minDate={todayISO}
-                required={true}
-              />
+              <DatePicker id="startDate" label="Select Start Date" value={(formData.startDate as any) || todayISO} onChange={handleStartDateChange} minDate={todayISO} required />
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">⏰ Start Time</label>
@@ -905,8 +1018,8 @@ const EventsAdmin: React.FC = () => {
                 required
                 placeholder="09:00 AM"
                 className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-600 shadow-inner"
-                value={formData.startTime}
-                onChange={e => setFormData({ ...formData, startTime: e.target.value })}
+                value={(formData.startTime as any) || ''}
+                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
               />
             </div>
           </div>
@@ -917,9 +1030,9 @@ const EventsAdmin: React.FC = () => {
               <DatePicker
                 id="endDate"
                 label="Select End Date"
-                value={formData.endDate || todayISO}
+                value={(formData.endDate as any) || todayISO}
                 onChange={handleEndDateChange}
-                minDate={formData.startDate || todayISO}
+                minDate={(formData.startDate as any) || todayISO}
                 required={false}
               />
             </div>
@@ -929,8 +1042,8 @@ const EventsAdmin: React.FC = () => {
                 type="text"
                 placeholder="10:00 AM"
                 className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-600 shadow-inner"
-                value={formData.endTime}
-                onChange={e => setFormData({ ...formData, endTime: e.target.value })}
+                value={(formData.endTime as any) || ''}
+                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
               />
             </div>
           </div>
@@ -950,24 +1063,27 @@ const EventsAdmin: React.FC = () => {
                 </button>
               </div>
             </div>
+
             <input
               required
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-700 shadow-inner"
-              placeholder={formData.isOnline ? "Meeting Link (Zoom/Google Meet)" : "Physical Address / Room No."}
-              value={formData.location}
-              onChange={e => setFormData({ ...formData, location: e.target.value })}
+              placeholder={formData.isOnline ? 'Meeting Link (Zoom/Google Meet)' : 'Physical Address / Room No.'}
+              value={(formData.location as any) || ''}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
             />
           </div>
 
           <div className="space-y-4">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">👥 Audience Scope</label>
             <div className="flex gap-2">
-              {(['all', 'selected', 'department'] as EventAudience[]).map(a => (
+              {(['all', 'selected', 'department'] as EventAudience[]).map((a) => (
                 <button
                   key={a}
                   type="button"
                   onClick={() => setFormData({ ...formData, audience: a, targetEmployeeIds: [], targetDepartment: '' })}
-                  className={`flex-1 py-3 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all shadow-sm ${formData.audience === a ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-transparent text-white shadow-lg' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}
+                  className={`flex-1 py-3 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all shadow-sm ${
+                    formData.audience === a ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-transparent text-white shadow-lg' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'
+                  }`}
                 >
                   {a}
                 </button>
@@ -983,14 +1099,27 @@ const EventsAdmin: React.FC = () => {
                     placeholder="🔍 Filter employees..."
                     className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-bold outline-none shadow-inner"
                     value={empSearch}
-                    onChange={e => setEmpSearch(e.target.value)}
+                    onChange={(e) => setEmpSearch(e.target.value)}
                   />
                 </div>
+
                 <div className="max-h-[150px] overflow-y-auto custom-scrollbar divide-y divide-slate-50 bg-slate-50 rounded-xl border border-slate-100 shadow-inner">
-                  {filteredEmployees.map(emp => (
-                    <div key={emp.id} onClick={() => toggleEmployeeSelection(emp.id)} className="p-2.5 flex items-center justify-between cursor-pointer hover:bg-white transition-colors group">
-                      <span className="text-[10px] font-bold text-slate-700">{emp.fullName} ({emp.employeeId})</span>
-                      <div className={`w-4 h-4 rounded-md border-2 transition-all flex items-center justify-center shadow-sm ${formData.targetEmployeeIds?.includes(emp.id) ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-transparent text-white' : 'bg-white border-slate-200 text-transparent group-hover:border-indigo-200'}`}>
+                  {filteredEmployees.map((emp: any) => (
+                    <div
+                      key={emp.id}
+                      onClick={() => toggleEmployeeSelection(emp.id)}
+                      className="p-2.5 flex items-center justify-between cursor-pointer hover:bg-white transition-colors group"
+                    >
+                      <span className="text-[10px] font-bold text-slate-700">
+                        {emp.fullName} ({emp.employeeId})
+                      </span>
+                      <div
+                        className={`w-4 h-4 rounded-md border-2 transition-all flex items-center justify-center shadow-sm ${
+                          (formData.targetEmployeeIds as any[])?.includes(emp.id)
+                            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-transparent text-white'
+                            : 'bg-white border-slate-200 text-transparent group-hover:border-indigo-200'
+                        }`}
+                      >
                         <Icon name="Check" className="w-2.5 h-2.5" />
                       </div>
                     </div>
@@ -1003,23 +1132,44 @@ const EventsAdmin: React.FC = () => {
               <select
                 aria-label="Select target unit"
                 className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-600 shadow-inner"
-                value={formData.targetDepartment}
-                onChange={e => setFormData({ ...formData, targetDepartment: e.target.value })}
+                value={(formData.targetDepartment as any) || ''}
+                onChange={(e) => setFormData({ ...formData, targetDepartment: e.target.value })}
               >
                 <option value="">🎯 Select Target Unit</option>
-                {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                {departments.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
               </select>
             )}
           </div>
 
           <div className="pt-6 border-t border-slate-100 flex gap-4">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all">Discard</button>
-            <button type="submit" className="flex-1 py-4 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-purple-100 hover:opacity-90 transition-all active:scale-95">
+            <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all">
+              Discard
+            </button>
+            <button
+              type="submit"
+              className="flex-1 py-4 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-purple-100 hover:opacity-90 transition-all active:scale-95"
+            >
               📅 Commit To Calendar
             </button>
           </div>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Event"
+        message="Are you sure you want to delete this event? This action will send cancellation notices to all participants and cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDangerous={true}
+        isLoading={isDeleting}
+      />
     </div>
   );
 };
