@@ -4,12 +4,22 @@ import { LogIn, Mail, Lock, AlertCircle, Loader2, ArrowLeft } from 'lucide-react
 import { useAuth } from '../../context/AuthContext.tsx';
 
 const Login: React.FC = () => {
-  const { login, user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { login, user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // On mount, clear any existing token/user so arriving at login (e.g. via back) forces re-authentication
+  useEffect(() => {
+    try { localStorage.removeItem('authToken'); } catch { }
+    try { localStorage.removeItem('user'); } catch { }
+    if (logout) {
+      logout().catch(() => { });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Watch for authentication state changes and redirect accordingly
   useEffect(() => {
@@ -181,3 +191,8 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+
+// Clear token on mount when this login page is shown (ensures back-button clears session)
+// Note: this is intentionally executed on mount to force re-authentication when hitting login via history.
+/* eslint-disable react-hooks/rules-of-hooks */
+// Place a small effect by exporting a helper that callers can optionally invoke; keep file-level effect simple.

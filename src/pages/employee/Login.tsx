@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -54,7 +54,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       };
       await waitForAuth();
 
-      navigate('/employee/dashboard', { replace: true });
+      navigate('/employee/dashboard');
     } catch (err: any) {
       toast.error(err?.message || 'Login failed. Please check your credentials and try again.', {
         position: 'top-right',
@@ -64,6 +64,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       setIsLoading(false);
     }
   };
+
+  // Clear any existing token/user when showing the login page
+  useEffect(() => {
+    try { localStorage.removeItem('authToken'); } catch { }
+    try { localStorage.removeItem('user'); } catch { }
+    // ensure auth state is cleared
+    if (auth?.logout) {
+      // call logout to clear context state without relying on server
+      auth.logout().catch(() => { });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-inter">

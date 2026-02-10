@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
@@ -100,6 +101,17 @@ const AppRouter: React.FC = () => {
   const auth = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  if (auth?.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+        <div className="text-center">
+          <div className="w-12 h-12 text-indigo-600 animate-spin mx-auto mb-4">Verifying session...</div>
+          <p className="text-slate-600 font-medium">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     try {
