@@ -39,6 +39,7 @@ import ProfileAdmin from './pages/admin/Profile.tsx';
 import AuditLogsPage from './pages/admin/AuditLogs.tsx';
 import LoginPageAdmin from './pages/admin/Login.tsx';
 import RegisterPageAdmin from './pages/admin/Register.tsx';
+import AdminRequests from './pages/admin/Requests.tsx';
 
 // Admin Components
 import LayoutWrapper from './components/admin/LayoutWrapper.tsx';
@@ -222,6 +223,7 @@ const AppRouter: React.FC = () => {
                   <Route path="tasks" element={<TasksAdmin />} />
                   <Route path="events" element={<EventsAdmin />} />
                   <Route path="notifications" element={<NotificationsAdmin />} />
+                  <Route path="requests" element={<AdminRequests />} />
                   <Route path="payroll" element={<PayrollProcessing />} />
                   <Route path="payslips" element={<PayslipsAdmin />} />
                   <Route path="performance" element={<PerformanceManagement />} />
