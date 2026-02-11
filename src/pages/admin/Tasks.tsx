@@ -3,6 +3,9 @@ import * as LucideIcons from 'lucide-react';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { Task, AssigneeType, TaskPriority, CustomTeam } from '../../types.ts';
 import { DEPARTMENTS } from '../../constants.ts';
+import { createTask as apiCreateTask, getTasks as apiGetTasks, getTask as apiGetTask, updateTask as apiUpdateTask, deleteTask as apiDeleteTask } from '../../api/tasks.js';
+import { createTeam as apiCreateTeam, getTeams as apiGetTeams, getTeam as apiGetTeam, updateTeam as apiUpdateTeam, deleteTeam as apiDeleteTeam } from '../../api/teams.js';
+import { getAllEmployees } from '../../api/users.js';
 
 const Icon = ({ name, className }: { name: string; className?: string }) => {
   const LucideIcon = (LucideIcons as any)[name];
@@ -435,6 +438,13 @@ const TEAM_GRADIENTS = [
 
 const Tasks: React.FC = () => {
   const { tasks, addTask, updateTaskStatus, deleteTask, customTeams, addCustomTeam, updateCustomTeam, deleteCustomTeam, employees, notify } = useHRMS();
+  
+  // API State
+  const [apiTasks, setApiTasks] = useState<any[]>([]);
+  const [apiTeams, setApiTeams] = useState<any[]>([]);
+  const [apiEmployees, setApiEmployees] = useState<any[]>([]);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  
   const [activeTab, setActiveTab] = useState<'tasks' | 'teams'>('tasks');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
@@ -448,6 +458,9 @@ const Tasks: React.FC = () => {
     memberIds: []
   });
 
+  // Delete confirmation overlay state
+  const [confirmDelete, setConfirmDelete] = useState<{ kind: 'task' | 'team' | null; id?: string; name?: string }>({ kind: null });
+
   const [newTask, setNewTask] = useState<Partial<Task>>({
     title: '',
     description: '',
@@ -456,6 +469,24 @@ const Tasks: React.FC = () => {
     priority: 'p2',
     dueDate: new Date().toISOString().split('T')[0]
   });
+
+  // Fetch tasks, teams, and employees from API on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const [tasksData, teamsData, employeesData] = await Promise.all([
+          apiGetTasks(),
+          apiGetTeams(),
+          getAllEmployees()
+        ]);
+        setApiTasks(Array.isArray(tasksData) ? tasksData : []);
+        setApiTeams(Array.isArray(teamsData) ? teamsData : []);
+        setApiEmployees(Array.isArray(employeesData) ? employeesData : []);
+      } catch (err: any) {
+        console.error('Failed to fetch API data:', err);
+      }
+    })();
+  }, []);
 
   // Calculate SLA due date based on priority
   const calculateSLADueDate = (priority: string) => {
@@ -498,14 +529,15 @@ const Tasks: React.FC = () => {
   };
 
   const filteredTasks = useMemo(() => {
-    return tasks.filter(task => {
+    const displayTasks = apiTasks.length > 0 ? apiTasks : tasks;
+    return displayTasks.filter(task => {
       const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        task.assigneeName.toLowerCase().includes(searchTerm.toLowerCase());
+        (task.employeeId || task.title).toLowerCase().includes(searchTerm.toLowerCase());
       const matchesPriority = filterPriority === 'All' ||
         task.priority === filterPriority;
       return matchesSearch && matchesPriority;
     });
-  }, [tasks, searchTerm, filterPriority]);
+  }, [apiTasks, tasks, searchTerm, filterPriority]);
 
   // Handle form submission with validation
   const handleSubmit = (e: React.FormEvent) => {
@@ -551,34 +583,53 @@ const Tasks: React.FC = () => {
       return;
     }
 
-    let assigneeName = '';
+    // Build API payload
+    const payload: any = {
+      title: newTask.title,
+      description: newTask.description || '',
+      assigneeType: newTask.assigneeType?.toUpperCase() || 'EMPLOYEE',
+      priority: (newTask.priority || 'P1').toUpperCase().replace('P', 'P'),  // P1, P2, P3
+      deadlineAt: new Date(newTask.dueDate).toISOString()
+    };
+
+    // Add assignee based on type
     if (newTask.assigneeType === 'employee') {
-      assigneeName = employees.find(e => e.id === newTask.assignedTo)?.fullName || 'Unknown';
+      payload.employeeId = newTask.assignedTo;
     } else if (newTask.assigneeType === 'team') {
-      assigneeName = customTeams.find(t => t.id === newTask.assignedTo)?.name || 'Unknown Team';
+      payload.teamId = newTask.assignedTo;
     } else {
-      assigneeName = newTask.assignedTo || 'Unknown';
+      payload.department = newTask.assignedTo;
     }
 
-    addTask({
-      ...newTask,
-      assigneeName,
-      status: 'pending',
-      createdAt: new Date().toISOString().split('T')[0],
-      dueDate: newTask.dueDate || calculateSLADueDate(newTask.priority || 'p2')
-    } as Task);
+    // Call API to create or update task
+    (async () => {
+      try {
+        if (editingTaskId) {
+          await apiUpdateTask(editingTaskId, payload);
+          notify('Task updated successfully!', 'success');
+          setEditingTaskId(null);
+        } else {
+          await apiCreateTask(payload);
+          notify('Task created successfully!', 'success');
+        }
 
-    setIsModalOpen(false);
-    setNewTask({
-      title: '',
-      description: '',
-      assigneeType: 'employee',
-      assignedTo: '',
-      priority: 'p2',
-      dueDate: calculateSLADueDate('p2')
-    });
+        // Refresh tasks list
+        const refreshed = await apiGetTasks();
+        setApiTasks(Array.isArray(refreshed) ? refreshed : []);
 
-    notify('Task created successfully!', 'success');
+        setIsModalOpen(false);
+        setNewTask({
+          title: '',
+          description: '',
+          assigneeType: 'employee',
+          assignedTo: '',
+          priority: 'p2',
+          dueDate: calculateSLADueDate('p2')
+        });
+      } catch (err: any) {
+        notify(`Failed to save task: ${err.message || err}`, 'error');
+      }
+    })();
   };
 
   const handleCreateOrUpdateTeam = (e: React.FormEvent) => {
@@ -593,26 +644,41 @@ const Tasks: React.FC = () => {
       return;
     }
 
-    const memberNames = newTeam.memberIds.map(id => employees.find(e => e.id === id)?.fullName || '');
+    // Call API to create or update team
+    (async () => {
+      try {
+        if (editingTeamId) {
+          await apiUpdateTeam(editingTeamId, {
+            name: newTeam.name,
+            employeeIds: newTeam.memberIds
+          });
+          notify('Team updated successfully!', 'success');
+        } else {
+          await apiCreateTeam({
+            name: newTeam.name,
+            employeeIds: newTeam.memberIds
+          });
+          notify('Team created successfully!', 'success');
+        }
 
-    if (editingTeamId) {
-      updateCustomTeam(editingTeamId, { ...newTeam, memberNames });
-      notify('Team updated successfully!', 'success');
-    } else {
-      addCustomTeam({ ...newTeam, memberNames });
-      notify('Team created successfully!', 'success');
-    }
+        // Refresh teams list
+        const refreshed = await apiGetTeams();
+        setApiTeams(Array.isArray(refreshed) ? refreshed : []);
 
-    setIsTeamModalOpen(false);
-    setEditingTeamId(null);
-    setNewTeam({ name: '', memberIds: [] });
+        setIsTeamModalOpen(false);
+        setEditingTeamId(null);
+        setNewTeam({ name: '', memberIds: [] });
+      } catch (err: any) {
+        notify(`Failed to save team: ${err.message || err}`, 'error');
+      }
+    })();
   };
 
-  const handleEditTeam = (team: CustomTeam) => {
-    setEditingTeamId(team.id);
+  const handleEditTeam = (team: any) => {
+    setEditingTeamId(team.id || team.teamId);
     setNewTeam({
       name: team.name,
-      memberIds: team.memberIds
+      memberIds: team.employeeIds || team.memberIds || []
     });
     setIsTeamModalOpen(true);
   };
@@ -621,6 +687,34 @@ const Tasks: React.FC = () => {
     setEditingTeamId(null);
     setNewTeam({ name: '', memberIds: [] });
     setIsTeamModalOpen(true);
+  };
+
+  const handleDeleteTask = async (taskId?: string) => {
+    if (!taskId) {
+      notify('Unable to delete task: missing id', 'error');
+      return;
+    }
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    try {
+      await apiDeleteTask(taskId);
+      notify('Task deleted successfully!', 'success');
+      const refreshed = await apiGetTasks();
+      setApiTasks(Array.isArray(refreshed) ? refreshed : []);
+    } catch (err: any) {
+      notify(`Failed to delete task: ${err.message || err}`, 'error');
+    }
+  };
+
+  const handleDeleteTeam = async (teamId: string) => {
+    if (!window.confirm('Are you sure you want to delete this team?')) return;
+    try {
+      await apiDeleteTeam(teamId);
+      notify('Team deleted successfully!', 'success');
+      const refreshed = await apiGetTeams();
+      setApiTeams(Array.isArray(refreshed) ? refreshed : []);
+    } catch (err: any) {
+      notify(`Failed to delete team: ${err.message || err}`, 'error');
+    }
   };
 
   // Handle priority change
@@ -724,7 +818,7 @@ const Tasks: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredTasks.length > 0 ? filteredTasks.map(task => {
+            {filteredTasks.length > 0 ? filteredTasks.map((task, idx) => {
               const priorityGradient = PRIORITY_GRADIENTS[task.priority as keyof typeof PRIORITY_GRADIENTS] || PRIORITY_GRADIENTS.p2;
               const priorityBadgeStyle = PRIORITY_BADGE_STYLES[task.priority as keyof typeof PRIORITY_BADGE_STYLES] || PRIORITY_BADGE_STYLES.p2;
               const slaBadgeStyle = SLA_BADGE_STYLES[task.priority as keyof typeof SLA_BADGE_STYLES] || SLA_BADGE_STYLES.p2;
@@ -732,7 +826,7 @@ const Tasks: React.FC = () => {
               const isOverdue = daysRemaining < 0;
 
               return (
-                <div key={task.id} className={`border rounded-[32px] p-6 hover:shadow-2xl hover:scale-[1.02] transition-all group flex flex-col justify-between relative overflow-hidden backdrop-blur-sm ${priorityGradient}`}>
+                <div key={task.id ?? task.taskId ?? `task-${idx}`} className={`border rounded-[32px] p-6 hover:shadow-2xl hover:scale-[1.02] transition-all group flex flex-col justify-between relative overflow-hidden backdrop-blur-sm ${priorityGradient}`}>
                   {/* Animated gradient overlay */}
                   <div className="absolute inset-0 opacity-20 animate-gradient">
                     <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-current to-transparent rounded-full -translate-y-20 translate-x-20"></div>
@@ -749,7 +843,7 @@ const Tasks: React.FC = () => {
                           ⏱️ {SLA_CONFIG[task.priority as keyof typeof SLA_CONFIG]?.label || '3 Days'}
                         </span>
                       </div>
-                      <button title={`Delete task ${task.title}`} aria-label={`Delete task ${task.title}`} type="button" onClick={() => deleteTask(task.id)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-white/50 transition-all rounded-xl">
+                      <button title={`Delete task ${task.title}`} aria-label={`Delete task ${task.title}`} type="button" onClick={() => setConfirmDelete({ kind: 'task', id: task.id ?? task.taskId ?? task._id, name: task.title })} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-white/50 transition-all rounded-xl">
                         <Icon name="Trash2" className="w-4 h-4" />
                       </button>
                     </div>
@@ -806,12 +900,12 @@ const Tasks: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {customTeams.length > 0 ? customTeams.map((team, index) => {
+          {(apiTeams.length > 0 ? apiTeams : customTeams).length > 0 ? (apiTeams.length > 0 ? apiTeams : customTeams).map((team, index) => {
             const teamGradient = getTeamGradient(index);
             const avatarGradient = getTeamAvatarGradient(index);
 
             return (
-              <div key={team.id} className={`border rounded-[32px] p-8 hover:shadow-2xl hover:scale-[1.02] transition-all group flex flex-col relative overflow-hidden backdrop-blur-sm ${teamGradient}`}>
+              <div key={team.id ?? team.teamId ?? `team-${index}`} className={`border rounded-[32px] p-8 hover:shadow-2xl hover:scale-[1.02] transition-all group flex flex-col relative overflow-hidden backdrop-blur-sm ${teamGradient}`}>
                 {/* Team card pattern */}
                 <div className="absolute inset-0 opacity-10">
                   <div className="absolute top-0 left-0 w-16 h-16 bg-current rounded-full -translate-x-8 -translate-y-8"></div>
@@ -823,23 +917,26 @@ const Tasks: React.FC = () => {
                     <div className={`w-16 h-16 ${avatarGradient} text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg border border-white/30`}>
                       {team.name.charAt(0)}
                     </div>
-                    <div className="flex gap-1">
+                      <div className="flex gap-1">
                       <button aria-label={`Edit team ${team.name}`} onClick={() => handleEditTeam(team)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white/50 transition-all rounded-xl">
                         <Icon name="Edit3" className="w-5 h-5" />
                       </button>
-                      <button aria-label={`Delete team ${team.id}`} onClick={() => deleteCustomTeam(team.id)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-white/50 transition-all rounded-xl">
+                      <button aria-label={`Delete team ${team.id || team.teamId}`} onClick={() => setConfirmDelete({ kind: 'team', id: team.id ?? team.teamId ?? team._id, name: team.name })} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-white/50 transition-all rounded-xl">
                         <Icon name="Trash2" className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
                   <h3 className="text-xl font-black text-slate-900 mb-2">{team.name}</h3>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">👥 {team.memberIds.length} members</p>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">👥 {(team.employeeIds || team.memberIds || []).length} members</p>
 
                   <div className="space-y-3 flex-1 mb-6">
                     <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">🌟 Team Members:</p>
                     <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
-                      {team.memberNames.map((name, i) => (
-                        <div key={i} className="flex items-center gap-3 p-3 bg-white/50 backdrop-blur-sm rounded-xl border border-white/30">
+                      {((team.employeeIds || team.memberIds || []).map((empId: string) => {
+                        const emp = (apiEmployees.length > 0 ? apiEmployees : employees).find(e => e.employeeId === empId || e.id === empId);
+                        return emp?.fullName || empId;
+                      }) || team.memberNames || []).map((name, i) => (
+                        <div key={`${name}-${i}`} className="flex items-center gap-3 p-3 bg-white/50 backdrop-blur-sm rounded-xl border border-white/30">
                           <div className="w-8 h-8 bg-gradient-to-br from-slate-100 to-slate-50 rounded-lg flex items-center justify-center text-xs font-black text-slate-600 shadow-sm">
                             {name.charAt(0)}
                           </div>
@@ -931,10 +1028,10 @@ const Tasks: React.FC = () => {
               >
                 <option value="">Select {newTask.assigneeType}</option>
                 {newTask.assigneeType === 'employee' && (
-                  employees.map(emp => <option key={emp.id} value={emp.id}>{emp.fullName} ({emp.employeeId})</option>)
+                  (apiEmployees.length > 0 ? apiEmployees : employees).map(emp => <option key={emp.id || emp.employeeId} value={emp.id || emp.employeeId}>{emp.fullName} ({emp.employeeId})</option>)
                 )}
                 {newTask.assigneeType === 'team' && (
-                  customTeams.map(team => <option key={team.id} value={team.id}>{team.name} ({team.memberIds.length} members)</option>)
+                  (apiTeams.length > 0 ? apiTeams : customTeams).map(team => <option key={team.id || team.teamId} value={team.id || team.teamId}>{team.name} ({(team.employeeIds || team.memberIds || []).length} members)</option>)
                 )}
                 {newTask.assigneeType === 'department' && (
                   DEPARTMENTS.map(dept => <option key={dept} value={dept}>{dept}</option>)
@@ -1016,17 +1113,18 @@ const Tasks: React.FC = () => {
             </div>
             <div className="bg-slate-50 rounded-[28px] border border-slate-100 overflow-hidden shadow-inner">
               <div className="max-h-[300px] overflow-y-auto custom-scrollbar divide-y divide-slate-100">
-                {employees.map(emp => {
-                  const isSelected = newTeam.memberIds.includes(emp.id);
+                {(apiEmployees.length > 0 ? apiEmployees : employees).map(emp => {
+                  const empId = emp.id || emp.employeeId;
+                  const isSelected = newTeam.memberIds.includes(empId);
                   return (
                     <div
-                      key={emp.id}
+                      key={empId}
                       onClick={() => {
                         const current = [...newTeam.memberIds];
                         if (isSelected) {
-                          setNewTeam({ ...newTeam, memberIds: current.filter(id => id !== emp.id) });
+                          setNewTeam({ ...newTeam, memberIds: current.filter(id => id !== empId) });
                         } else {
-                          setNewTeam({ ...newTeam, memberIds: [...current, emp.id] });
+                          setNewTeam({ ...newTeam, memberIds: [...current, empId] });
                         }
                       }}
                       className="p-4 flex items-center justify-between cursor-pointer hover:bg-indigo-50/50 transition-colors group"
@@ -1035,7 +1133,7 @@ const Tasks: React.FC = () => {
                         <img src={emp.avatar} className="w-10 h-10 rounded-xl shadow-sm border border-slate-100" alt={`${emp.fullName} avatar`} />
                         <div>
                           <p className="text-sm font-black text-slate-800 leading-tight">{emp.fullName}</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{emp.designation}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{emp.designation || emp.department}</p>
                         </div>
                       </div>
                       <div className={`p-1.5 rounded-lg border-2 transition-all ${isSelected ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-transparent text-white' : 'bg-white border-slate-200 text-transparent group-hover:border-indigo-200'}`}>
@@ -1055,6 +1153,49 @@ const Tasks: React.FC = () => {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* DELETE CONFIRMATION MODAL */}
+      <Modal isOpen={confirmDelete.kind !== null} onClose={() => setConfirmDelete({ kind: null })} title={confirmDelete.kind === 'task' ? 'Confirm Delete Task' : 'Confirm Delete Team'}>
+        <div className="space-y-6">
+          <p className="text-slate-600">Are you sure you want to delete the {confirmDelete.kind === 'task' ? 'task' : 'team'} <strong className="font-black">{confirmDelete.name}</strong>? This action cannot be undone.</p>
+          <div className="flex gap-4 justify-end">
+            <button type="button" onClick={() => setConfirmDelete({ kind: null })} className="py-3 px-6 bg-white text-slate-500 rounded-2xl font-black border border-slate-100 hover:bg-slate-50">Cancel</button>
+            <button type="button" onClick={async () => {
+              if (!confirmDelete.id || !confirmDelete.kind) {
+                notify('Missing id for deletion', 'error');
+                setConfirmDelete({ kind: null });
+                return;
+              }
+              const idToDelete = confirmDelete.id;
+              const kindToDelete = confirmDelete.kind;
+              // optimistic client-side removal
+              if (kindToDelete === 'team') {
+                setApiTeams(prev => prev.filter(t => (t.id || t.teamId || t._id) !== idToDelete));
+              } else {
+                setApiTasks(prev => prev.filter(t => (t.id || t.taskId || t._id) !== idToDelete));
+              }
+
+              try {
+                if (kindToDelete === 'task') {
+                  await apiDeleteTask(idToDelete);
+                  notify('Task deleted successfully!', 'success');
+                  const refreshed = await apiGetTasks();
+                  setApiTasks(Array.isArray(refreshed) ? refreshed : []);
+                } else {
+                  await apiDeleteTeam(idToDelete);
+                  notify('Team deleted successfully!', 'success');
+                  const refreshed = await apiGetTeams();
+                  setApiTeams(Array.isArray(refreshed) ? refreshed : []);
+                }
+              } catch (err: any) {
+                notify(`Failed to delete: ${err.message || err}`, 'error');
+              } finally {
+                setConfirmDelete({ kind: null });
+              }
+            }} className="py-3 px-6 bg-rose-500 text-white rounded-2xl font-black hover:opacity-90">Delete</button>
+          </div>
+        </div>
       </Modal>
     </div>
   );
