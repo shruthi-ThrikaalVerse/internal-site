@@ -360,6 +360,10 @@ const EmployeePerformanceDashboard: React.FC = () => {
   const { employees, attendance, notify, tasks, customTeams, taskReviews, addTaskReview } = useHRMS();
   const [performanceDataState, setPerformanceData] = useState<PerformanceData[]>([]);
   const [departmentStats, setDepartmentStats] = useState<DepartmentStats[]>([]);
+  const [deptApiData, setDeptApiData] = useState<any[]>([]);
+  const [employeePerfApi, setEmployeePerfApi] = useState<any[]>([]);
+  const [topPerformersApi, setTopPerformersApi] = useState<any[]>([]);
+  const [lowPerformersApi, setLowPerformersApi] = useState<any[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentDate] = useState<string>(new Date().toLocaleDateString('en-US', {
@@ -551,7 +555,69 @@ const EmployeePerformanceDashboard: React.FC = () => {
     }, 30000);
 
     return () => clearInterval(interval);
+    // Fetch performance-related API data once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [employees]);
+
+  // Fetch remote performance APIs once on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+
+    const fetchDept = async () => {
+      try {
+        const res = await fetch('http://localhost:8085/api/performance/department-wise', { method: 'GET', credentials: 'include', headers });
+        if (res.ok) {
+          const data = await res.json().catch(() => []);
+          setDeptApiData(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch department-wise performance', err);
+      }
+    };
+
+    const fetchEmployeesPerf = async () => {
+      try {
+        const res = await fetch('http://localhost:8085/api/performance/employees', { method: 'GET', credentials: 'include', headers });
+        if (res.ok) {
+          const data = await res.json().catch(() => []);
+          setEmployeePerfApi(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch employee performance list', err);
+      }
+    };
+
+    const fetchTop = async () => {
+      try {
+        const res = await fetch('http://localhost:8085/api/tasks/top-performers', { method: 'GET', credentials: 'include', headers });
+        if (res.ok) {
+          const data = await res.json().catch(() => []);
+          setTopPerformersApi(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch top performers', err);
+      }
+    };
+
+    const fetchLow = async () => {
+      try {
+        const res = await fetch('http://localhost:8085/api/tasks/low-performers', { method: 'GET', credentials: 'include', headers });
+        if (res.ok) {
+          const data = await res.json().catch(() => []);
+          setLowPerformersApi(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch low performers', err);
+      }
+    };
+
+    fetchDept();
+    fetchEmployeesPerf();
+    fetchTop();
+    fetchLow();
+  }, []);
 
   // Calculate overall stats from real data
   const totalEmployees = employees.length;
@@ -771,19 +837,43 @@ const EmployeePerformanceDashboard: React.FC = () => {
       notify('Please select an employee to review.', 'warning');
       return;
     }
+    // Map numeric rating to enum expected by backend
+    const ratingEnum = reviewRating === 5 ? 'FIVE' : reviewRating === 4 ? 'FOUR' : reviewRating === 3 ? 'THREE' : reviewRating === 2 ? 'TWO' : 'ONE';
 
-    addTaskReview({
-      taskId: selectedTaskForReview.id,
-      employeeId: reviewEmployeeId,
-      reviewer: 'Admin',
-      rating: reviewRating,
-      comment: reviewComment,
-      date: new Date().toISOString().split('T')[0]
-    });
+    const token = localStorage.getItem('token');
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
 
-    // refresh performance data to reflect changes
-    loadPerformanceData();
-    closeReviewModal();
+    (async () => {
+      try {
+        const res = await fetch(`http://localhost:8085/api/tasks/tasks/${encodeURIComponent(selectedTaskForReview.id)}`, {
+          method: 'POST',
+          credentials: 'include',
+          headers,
+          body: JSON.stringify({ rating: ratingEnum, reviewComment: reviewComment })
+        });
+
+        if (res.ok) {
+          const data = await res.json().catch(() => null);
+          addTaskReview({
+            taskId: selectedTaskForReview.id,
+            employeeId: reviewEmployeeId,
+            reviewer: 'Admin',
+            rating: reviewRating,
+            comment: reviewComment,
+            date: new Date().toISOString().split('T')[0]
+          });
+          notify('Review submitted successfully', 'success');
+          loadPerformanceData();
+          closeReviewModal();
+        } else {
+          const err = await res.json().catch(() => ({}));
+          notify(err.message || 'Failed to submit review', 'error');
+        }
+      } catch (err) {
+        console.error('Failed to submit review', err);
+        notify('Network error while submitting review', 'error');
+      }
+    })();
   };
 
   const handleRefreshData = () => {
@@ -816,6 +906,13 @@ const EmployeePerformanceDashboard: React.FC = () => {
       return true;
     });
   }, [tasks, taskTab, taskFilters]);
+
+  // Task summaries for Performance view
+  const teamTasks = useMemo(() => (tasks || []).filter(t => (t.assigneeType || '').toLowerCase() === 'team'), [tasks]);
+  const individualTasks = useMemo(() => (tasks || []).filter(t => (t.assigneeType || '').toLowerCase() === 'employee'), [tasks]);
+  const teamTasksCount = teamTasks.length;
+  const individualTasksCount = individualTasks.length;
+  const totalTasksCount = (tasks || []).length;
 
   return (
     <div className="w-full bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6 font-sans">
@@ -1494,6 +1591,39 @@ const EmployeePerformanceDashboard: React.FC = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tasks Summary Cards (Team / Individual) */}
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs text-gray-500 uppercase font-black tracking-widest">Total Tasks</p>
+            <p className="text-2xl font-extrabold text-gray-900">{totalTasksCount}</p>
+          </div>
+          <div className="text-gray-400">
+            <FileText className="w-8 h-8" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs text-gray-500 uppercase font-black tracking-widest">Team Tasks</p>
+            <p className="text-2xl font-extrabold text-gray-900">{teamTasksCount}</p>
+          </div>
+          <div className="text-gray-400">
+            <UsersIcon className="w-8 h-8" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs text-gray-500 uppercase font-black tracking-widest">Individual Tasks</p>
+            <p className="text-2xl font-extrabold text-gray-900">{individualTasksCount}</p>
+          </div>
+          <div className="text-gray-400">
+            <User className="w-8 h-8" />
           </div>
         </div>
       </div>

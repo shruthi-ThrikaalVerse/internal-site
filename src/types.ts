@@ -120,6 +120,16 @@ export interface EmployeeSummary {
   location: string;
   tags: string[];
   leaveBalance: number;
+  username?: string;
+  profileImage?: string | null;
+  locationName?: string;
+  createdByRole?: string;
+  createdByName?: string;
+  totalLeaveBalance?: number;
+  userType?: string;
+  active?: boolean;
+  terminationReason?: string | null;
+  terminatedAt?: string | null;
   salaryStructure?: SalaryStructure;
   bankDetails?: BankDetails;
   documents?: EmployeeDocument[];

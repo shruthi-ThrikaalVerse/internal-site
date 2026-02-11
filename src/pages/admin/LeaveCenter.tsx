@@ -1,5 +1,5 @@
 // LeaveCenter migrated
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import * as LucideIcons from 'lucide-react';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 
@@ -25,13 +25,104 @@ const SYSTEM_HOLIDAYS = [
 ];
 
 const LeaveCenter: React.FC = () => {
-  const { leaves, updateLeaveStatus } = useHRMS();
+  const { leaves, updateLeaveStatus, updateEmployee, notify, addLog } = useHRMS();
   const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending');
+  const [localLeaves, setLocalLeaves] = useState<any[]>([]);
 
-  const pendingLeaves = leaves.filter(l => l.status === 'pending');
+  const pendingLeaves = localLeaves.length > 0 ? localLeaves : leaves.filter(l => l.status === 'pending');
   const pastLeaves = leaves.filter(l => l.status !== 'pending');
 
   const displayLeaves = activeTab === 'pending' ? pendingLeaves : pastLeaves;
+
+  const fetchLeaveBalances = useCallback(async () => {
+    try {
+      const res = await fetch('http://localhost:8085/leave-requests/leave-balance', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json().catch(() => []);
+        if (Array.isArray(data)) {
+          data.forEach((b: any) => {
+            if (b.employeeId) {
+              // update employee leave balance in context
+              updateEmployee(b.employeeId, { totalLeaveBalance: b.totalLeaveBalance, leaveBalance: b.totalLeaveBalance });
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch leave balances', err);
+    }
+  }, [updateEmployee]);
+
+  const fetchPendingLeaves = useCallback(async () => {
+    try {
+      const res = await fetch('http://localhost:8085/leave-requests/pending', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json().catch(() => []);
+        if (Array.isArray(data)) {
+          const mapped = data.map((r: any) => ({
+            id: String(r.leaveId),
+            employeeId: r.employeeId,
+            employeeName: (r.firstName || r.lastName) ? `${r.firstName || ''} ${r.lastName || ''}`.trim() : r.employeeId,
+            profileImage: r.profileImage || null,
+            leaveType: r.category || r.type || 'Leave',
+            startDate: r.startDate,
+            endDate: r.endDate,
+            days: parseInt((r.duration || '0').toString(), 10) || 0,
+            reason: r.reason || '',
+            status: (r.status || 'pending').toString().toLowerCase(),
+            appliedDate: r.appliedDate || ''
+          }));
+          setLocalLeaves(mapped);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch pending leaves', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Run fetches once on mount. Using empty deps prevents repeated calls caused
+    // by changing function references (e.g. context functions) that would
+    // otherwise retrigger the effect.
+    fetchPendingLeaves();
+    fetchLeaveBalances();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleUpdateStatus = async (id: string, status: 'approved' | 'rejected' | 'pending') => {
+    try {
+      const res = await fetch(`http://localhost:8085/leave-requests/update-status/${encodeURIComponent(id)}?status=${encodeURIComponent(status)}`, {
+        method: 'PUT',
+        credentials: 'include'
+      });
+
+      if (res.ok) {
+        // Update local UI
+        setLocalLeaves(prev => prev.map(l => l.id === id ? { ...l, status } : l).filter(l => status === 'pending' ? true : l.status !== 'pending'));
+        // Sync context
+        updateLeaveStatus(id, status as any);
+        notify('Leave request status updated successfully!', 'success');
+        addLog('Update', 'Leave', `Updated leave ${id} to ${status}`);
+        // Refresh balances and pending list
+        await fetchLeaveBalances();
+        await fetchPendingLeaves();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        notify(err.message || 'Failed to update leave status', 'error');
+      }
+    } catch (err) {
+      console.error('Failed to update leave status', err);
+      notify('Network error while updating leave status', 'error');
+    }
+  };
 
   const formatDateLabel = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -119,13 +210,13 @@ const LeaveCenter: React.FC = () => {
                 {req.status === 'pending' ? (
                   <>
                     <button
-                      onClick={() => updateLeaveStatus(req.id, 'approved')}
+                      onClick={() => handleUpdateStatus(req.id, 'approved')}
                       className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all uppercase text-xs"
                     >
                       Approve Leave
                     </button>
                     <button
-                      onClick={() => updateLeaveStatus(req.id, 'rejected')}
+                      onClick={() => handleUpdateStatus(req.id, 'rejected')}
                       className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all uppercase text-xs"
                     >
                       Reject Request
@@ -133,7 +224,7 @@ const LeaveCenter: React.FC = () => {
                   </>
                 ) : (
                   <button
-                    onClick={() => updateLeaveStatus(req.id, 'pending')}
+                    onClick={() => handleUpdateStatus(req.id, 'pending')}
                     className="flex-1 py-3 bg-white border border-gray-200 text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition-all uppercase text-xs flex items-center justify-center gap-2"
                   >
                     <Icon name="Edit3" className="w-4 h-4" />

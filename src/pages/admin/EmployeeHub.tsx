@@ -481,25 +481,43 @@ const EmployeeHub: React.FC = () => {
         // Map backend response to EmployeeSummary format and populate only with API data
         if (empList.length > 0) {
           empList.forEach((emp: any) => {
+            // Determine status based on active field or terminatedAt
+            let status: 'active' | 'inactive' | 'probation' | 'resigned' = 'active';
+            if (emp.terminatedAt || !emp.active) {
+              status = 'resigned';
+            } else if (!emp.active) {
+              status = 'inactive';
+            }
+
             addEmployee({
-              id: emp.id || emp._id || emp.employeeId || `${emp.email}`,
+              id: emp.id || emp._id || emp.employeeId || emp.email,
               employeeId: emp.employeeId || emp.id || emp._id || emp.email,
-              fullName: emp.fullName || emp.name || `${emp.firstName || ''} ${emp.lastName || ''}`.trim(),
+              fullName: emp.fullName || emp.name || `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username || '',
               email: emp.email || '',
               designation: emp.designation || '',
               department: emp.department || '',
-              avatar: emp.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.fullName || emp.email || 'User')}`,
-              status: 'active' as const,
+              avatar: emp.profileImage || emp.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.fullName || emp.name || emp.username || emp.email || 'User')}`,
+              status,
               dateOfJoining: emp.dateOfJoining || '',
-              location: emp.location || '',
-              reportingManager: emp.reportingManager || 'Unassigned',
+              location: emp.locationName || emp.location || '',
+              reportingManager: emp.reportingManager || emp.createdByName || 'Unassigned',
               phone: emp.phone || emp.phoneNumber || '',
-              leaveBalance: emp.leaveBalance || 20,
+              leaveBalance: emp.totalLeaveBalance || emp.leaveBalance || 20,
               tags: [],
               password: emp.password,
-              employmentType: emp.employmentType || '',
-              role: emp.role,
-              dateOfBirth: emp.dateOfBirth || ''
+              employmentType: emp.userType || emp.employmentType || '',
+              role: emp.role || emp.createdByRole || undefined,
+              dateOfBirth: emp.dateOfBirth || '',
+              username: emp.username || undefined,
+              profileImage: emp.profileImage || null,
+              locationName: emp.locationName || undefined,
+              createdByRole: emp.createdByRole || undefined,
+              createdByName: emp.createdByName || undefined,
+              totalLeaveBalance: emp.totalLeaveBalance || undefined,
+              userType: emp.userType || undefined,
+              active: emp.active !== undefined ? emp.active : true,
+              terminationReason: emp.terminationReason || null,
+              terminatedAt: emp.terminatedAt || null
             });
           });
         }

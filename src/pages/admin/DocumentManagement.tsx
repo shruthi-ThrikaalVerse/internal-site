@@ -1,7 +1,9 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import * as LucideIcons from 'lucide-react';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { EmployeeSummary, EmployeeDocument } from '../../types.ts';
+import { uploadDocument, getDocumentsByEmployee, getDocument, downloadDocument, deleteDocument, getStatusForEmployee } from '../../api/documents.js';
+import { getAllEmployees, getDepartments } from '../../api/users.js';
 import { DEPARTMENTS } from '../../constants.ts';
 
 const Icon = ({ name, className }: { name: string; className?: string }) => {
@@ -40,6 +42,27 @@ const DocumentManagement: React.FC = () => {
   // File upload management
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeUpload, setActiveUpload] = useState<{ empId: string, type: string } | null>(null);
+  const [selectedEmployeeDocs, setSelectedEmployeeDocs] = useState<any[]>([]);
+  const [employeesList, setEmployeesList] = useState<any[]>([]);
+  const [departmentsList, setDepartmentsList] = useState<string[]>([]);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadForm, setUploadForm] = useState<{ employeeId: string; documentType: string; file: File | null }>({ employeeId: '', documentType: 'Aadhaar Card', file: null });
+
+  // map between UI label and API documentType
+  const displayToApiType: Record<string, string> = {
+    'Aadhaar Card': 'AADHAR',
+    'PAN Card': 'PAN',
+    'Educational Certificate': 'EDUCATION',
+    'Offer Letter': 'OFFER',
+    'Relieving Letter': 'RELIEVING',
+    'Bank Passbook': 'BANK',
+    'Resume': 'RESUME'
+  };
+
+  const apiToDisplayType = (api: string) => {
+    const map: Record<string, string> = Object.fromEntries(Object.entries(displayToApiType).map(([k, v]) => [v, k]));
+    return map[api] || api;
+  };
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(emp => {
@@ -104,15 +127,105 @@ const DocumentManagement: React.FC = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && activeUpload) {
-      handleUpdateDocument(activeUpload.empId, activeUpload.type, 'uploaded', file.name);
-      setActiveUpload(null);
-      // Reset input
-      e.target.value = '';
+      // call upload endpoint
+      (async () => {
+        try {
+          const apiType = displayToApiType[activeUpload.type] || activeUpload.type;
+          const resp = await uploadDocument(file, { employeeId: activeUpload.empId, documentType: apiType });
+          notify('Uploaded document successfully','success');
+          // refresh docs for employee
+          if (selectedEmployee && selectedEmployee.employeeId === activeUpload.empId) {
+            const docs = await getDocumentsByEmployee(activeUpload.empId);
+            const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({ ...d, type: apiToDisplayType(d.documentType) }));
+            setSelectedEmployeeDocs(mapped);
+            updateEmployee(selectedEmployee.id, { documents: mapped } as any);
+          }
+        } catch (err: any) {
+          notify(`Upload failed: ${err.message || err}`,'error');
+        } finally {
+          setActiveUpload(null);
+          e.target.value = '';
+        }
+      })();
     }
   };
 
-  const viewDocument = (doc: EmployeeDocument) => {
-    setViewingDoc(doc);
+  // fetch all employees and departments (for upload modal / selection)
+  useEffect(() => {
+    (async () => {
+      try {
+        const [all, depts] = await Promise.all([getAllEmployees(), getDepartments()]);
+        setEmployeesList(Array.isArray(all) ? all : []);
+        setDepartmentsList(Array.isArray(depts) ? depts : []);
+      } catch (err) {
+        // non-blocking
+        console.error('Failed to load employees/departments', err);
+      }
+    })();
+  }, []);
+
+  const openUploadModal = (forEmployeeId?: string) => {
+    setUploadForm({ employeeId: forEmployeeId || '', documentType: 'Aadhaar Card', file: null });
+    setUploadModalOpen(true);
+  };
+
+  const closeUploadModal = () => {
+    setUploadModalOpen(false);
+  };
+
+  const handleUploadFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] || null;
+    setUploadForm(prev => ({ ...prev, file: f }));
+  };
+
+  const handleUploadSubmit = async () => {
+    if (!uploadForm.employeeId || !uploadForm.file) {
+      notify('Please select an employee and a file to upload','warning');
+      return;
+    }
+    try {
+      const apiType = displayToApiType[uploadForm.documentType] || uploadForm.documentType;
+      await uploadDocument(uploadForm.file, { employeeId: uploadForm.employeeId, documentType: apiType });
+      notify('Uploaded document successfully','success');
+      // refresh if viewing same employee
+      if (selectedEmployee && selectedEmployee.employeeId === uploadForm.employeeId) {
+        const docs = await getDocumentsByEmployee(uploadForm.employeeId);
+        const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({ ...d, type: apiToDisplayType(d.documentType) }));
+        setSelectedEmployeeDocs(mapped);
+        updateEmployee(selectedEmployee.id, { documents: mapped } as any);
+      }
+      setUploadModalOpen(false);
+    } catch (err: any) {
+      notify(`Upload failed: ${err.message || err}`,'error');
+    }
+  };
+
+  const viewDocument = (doc: any) => {
+    // if document has id from API, fetch full content
+    (async () => {
+      try {
+        if (doc.id && selectedEmployee) {
+          const full = await getDocument(selectedEmployee.employeeId, doc.id);
+          if (full && full.fileDataBase64) {
+            const byteChars = atob(full.fileDataBase64);
+            const byteNumbers = new Array(byteChars.length).fill(0).map((_, i) => byteChars.charCodeAt(i));
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: full.fileType || 'application/octet-stream' });
+            setViewingDoc({
+              ...doc,
+              fileName: full.fileName,
+              uploadedDate: full.uploadedAt || doc.uploadedAt,
+              fileBlob: blob,
+              fileType: full.fileType
+            } as any);
+            return;
+          }
+        }
+        setViewingDoc(doc);
+      } catch (err: any) {
+        notify(`Failed to load document: ${err.message || err}`,'error');
+      }
+    })();
   };
 
   const toggleSelectAll = () => {
@@ -130,24 +243,55 @@ const DocumentManagement: React.FC = () => {
     setSelectedIds(next);
   };
 
-  const handleDownloadSingle = (doc: EmployeeDocument) => {
-    if (!doc.fileName) return;
-
-    // Simulate downloading a file
-    const mockContent = `This is simulated binary content for document: ${doc.type}\nFile: ${doc.fileName}\nStatus: ${doc.status}`;
-    const blob = new Blob([mockContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = doc.fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    notify(`Downloading ${doc.fileName}...`, 'success');
+  const handleDownloadSingle = async (doc: any) => {
+    try {
+      if (doc.fileBlob) {
+        const url = URL.createObjectURL(doc.fileBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = doc.fileName || 'document.bin';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        notify(`Downloading ${doc.fileName}...`, 'success');
+        return;
+      }
+      if (doc.id && selectedEmployee) {
+        const res = await downloadDocument(selectedEmployee.employeeId, doc.id);
+        const url = URL.createObjectURL(res.blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const filenameMatch = res.disposition?.match(/filename\*=UTF-8''(.+)|filename="?([^";]+)"?/i);
+        const filename = filenameMatch ? decodeURIComponent(filenameMatch[1] || filenameMatch[2]) : (doc.fileName || 'document.bin');
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        notify(`Downloading ${filename}...`, 'success');
+      }
+    } catch (err: any) {
+      notify(`Download failed: ${err.message || err}`,'error');
+    }
   };
+
+  // fetch docs when a selectedEmployee is opened
+  useEffect(() => {
+    if (!selectedEmployee) {
+      setSelectedEmployeeDocs([]);
+      return;
+    }
+    (async () => {
+      try {
+        const docs = await getDocumentsByEmployee(selectedEmployee.employeeId);
+        const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({ ...d, type: apiToDisplayType(d.documentType) }));
+        setSelectedEmployeeDocs(mapped);
+      } catch (err: any) {
+        notify(`Failed to load documents: ${err.message || err}`,'error');
+      }
+    })();
+  }, [selectedEmployee]);
 
   const handleBulkExport = () => {
     const selectedEmployees = employees.filter(e => selectedIds.has(e.id));
@@ -220,6 +364,7 @@ const DocumentManagement: React.FC = () => {
             <Icon name="FileDown" className="w-4 h-4" />
             Bulk Export {selectedIds.size > 0 ? `(${selectedIds.size})` : ''}
           </button>
+          
         </div>
       </div>
 
@@ -319,14 +464,59 @@ const DocumentManagement: React.FC = () => {
                 </tr>
               ))}
               {filteredEmployees.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="py-20 text-center">
-                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Icon name="SearchX" className="w-8 h-8 text-slate-200" />
-                    </div>
-                    <p className="text-slate-400 font-black uppercase text-xs tracking-widest">No matching personal records found</p>
-                  </td>
-                </tr>
+                employeesList.length > 0 ? (
+                  employeesList.map((emp: any) => (
+                    <tr key={emp.employeeId} className={`hover:bg-slate-50/50 transition-colors group`}> 
+                      <td className="py-6 px-8">
+                        <input
+                          aria-label={`Select ${emp.fullName}`}
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                          checked={selectedIds.has(emp.id || emp.employeeId)}
+                          onChange={() => toggleSelect(emp.id || emp.employeeId)}
+                        />
+                      </td>
+                      <td className="py-6 px-2">
+                        <div className="flex items-center gap-4">
+                          <img src={emp.avatar} className="w-10 h-10 rounded-xl border border-slate-100 shadow-sm" alt={`${emp.fullName} avatar`} />
+                          <div>
+                            <p className="font-black text-slate-800 leading-none mb-1 text-sm">{emp.fullName}</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{emp.employeeId} • {emp.department}</p>
+                          </div>
+                        </div>
+                      </td>
+                      {['Aadhaar Card', 'PAN Card', 'Educational Certificate', 'Offer Letter'].map(type => {
+                        const status = getDocStatus(emp, type);
+                        return (
+                          <td key={type} className="py-6 px-4 text-center">
+                            <div className={`p-2 rounded-xl transition-all ${status === 'verified' ? 'bg-emerald-50 text-emerald-500' : status === 'uploaded' ? 'bg-blue-50 text-blue-500' : 'bg-slate-50 text-slate-300'}`}>
+                              <button onClick={() => triggerFileUpload(emp.employeeId, type)} className="p-1">
+                                <Icon name={status === 'verified' ? 'CheckCircle2' : status === 'uploaded' ? 'FileCheck' : 'Upload'} className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </td>
+                        );
+                      })}
+                      <td className="py-6 px-8 text-right">
+                        <button
+                          onClick={() => setSelectedEmployee(emp)}
+                          className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                        >
+                          Manage
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="py-20 text-center">
+                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Icon name="SearchX" className="w-8 h-8 text-slate-200" />
+                      </div>
+                      <p className="text-slate-400 font-black uppercase text-xs tracking-widest">No matching personal records found</p>
+                    </td>
+                  </tr>
+                )
               )}
             </tbody>
           </table>
@@ -379,7 +569,7 @@ const DocumentManagement: React.FC = () => {
                       <div className="flex items-center gap-2">
                         {status === 'pending' ? (
                           <button
-                            onClick={() => triggerFileUpload(selectedEmployee.id, type)}
+                            onClick={() => triggerFileUpload(selectedEmployee.employeeId, type)}
                             className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 flex items-center gap-2"
                           >
                             <Icon name="Upload" className="w-3.5 h-3.5" />
@@ -443,6 +633,38 @@ const DocumentManagement: React.FC = () => {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Upload Modal (select any employee + file) */}
+      <Modal isOpen={uploadModalOpen} onClose={closeUploadModal} title="Upload Document">
+        <div className="space-y-6">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-black">Employee</label>
+            <select value={uploadForm.employeeId} onChange={(e) => setUploadForm(prev => ({ ...prev, employeeId: e.target.value }))} className="w-full p-3 border rounded-xl">
+              <option value="">Select employee</option>
+              {employeesList.map(emp => (
+                <option key={emp.employeeId} value={emp.employeeId}>{emp.fullName} • {emp.employeeId}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-black">Document Type</label>
+            <select value={uploadForm.documentType} onChange={(e) => setUploadForm(prev => ({ ...prev, documentType: e.target.value }))} className="w-full p-3 border rounded-xl">
+              {docTypes.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-black">File</label>
+            <input type="file" onChange={handleUploadFileSelect} />
+          </div>
+
+          <div className="flex gap-2 justify-end">
+            <button onClick={handleUploadSubmit} className="px-4 py-2 bg-indigo-600 text-white rounded-xl">Upload</button>
+            <button onClick={closeUploadModal} className="px-4 py-2 bg-white border rounded-xl">Cancel</button>
+          </div>
+        </div>
       </Modal>
 
       {/* Document Viewer Modal */}
