@@ -1132,7 +1132,10 @@ const Tasks: React.FC = () => {
                       <div className="flex items-center gap-4">
                         <img src={emp.avatar} className="w-10 h-10 rounded-xl shadow-sm border border-slate-100" alt={`${emp.fullName} avatar`} />
                         <div>
-                          <p className="text-sm font-black text-slate-800 leading-tight">{emp.fullName}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-black text-slate-800 leading-tight">{emp.fullName}</p>
+                            <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">{emp.employeeId || emp.id}</span>
+                          </div>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{emp.designation || emp.department}</p>
                         </div>
                       </div>
