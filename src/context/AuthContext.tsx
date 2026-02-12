@@ -62,16 +62,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.email}`,
         };
         setUser(user);
+        localStorage.setItem('user', JSON.stringify(user));
         return user;
       } else {
         setUser(null);
         localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
         return null;
       }
     } catch (error) {
       console.error('Session verification failed:', error);
       setUser(null);
       localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
       return null;
     }
   };
@@ -117,6 +120,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.email}`,
         };
         setUser(parsedUser);
+        localStorage.setItem('user', JSON.stringify(parsedUser));
         return parsedUser;
       }
 
@@ -126,6 +130,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error('Login succeeded but no session information returned');
       }
       
+      if (verified) {
+        localStorage.setItem('user', JSON.stringify(verified));
+      }
       return verified;
       
     } catch (error: any) {
@@ -167,6 +174,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setUser(null);
       localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
     }
   };
 

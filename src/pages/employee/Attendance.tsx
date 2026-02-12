@@ -7,6 +7,7 @@ import {
 import { AttendanceRecord as SharedAttendanceRecord } from '../../types.ts';
 import { GoogleGenAI } from "@google/genai";
 import { getUserSpecificKey } from '../../utils/storage.ts';
+import { useAuth } from '../../context/AuthContext.tsx';
 
 // Add this SYSTEM_HOLIDAYS array to the attendance component
 const SYSTEM_HOLIDAYS = [
@@ -51,6 +52,7 @@ interface AttendanceRecord extends SharedAttendanceRecord {
 }
 
 const Attendance: React.FC = () => {
+  const { user } = useAuth(); // Get current user to detect logout/login
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [isPunchedIn, setIsPunchedIn] = useState<boolean>(false);
   const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null);
@@ -122,7 +124,8 @@ const Attendance: React.FC = () => {
     const oneYearAgo = new Date(today);
     oneYearAgo.setFullYear(today.getFullYear() - 1);
 
-    // Create a set of existing record dates for quick lookup
+    // Create a set of existing record IDs and dates for quick lookup (both for deduplication)
+    const existingIds = new Set(records.map(r => r.id));
     const existingDates = new Set(records.map(r => r.date));
 
     // Calculate the number of days to generate
@@ -133,9 +136,11 @@ const Attendance: React.FC = () => {
       const date = new Date(oneYearAgo);
       date.setDate(oneYearAgo.getDate() + i);
       const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      const absentRecordId = `absent-${dateString}`;
 
-      // Skip if record already exists or if it's a holiday/weekend/working Saturday
-      if (existingDates.has(dateString) || 
+      // Skip if record ID already exists, date exists, or if it's a holiday/weekend/working Saturday
+      if (existingIds.has(absentRecordId) || 
+          existingDates.has(dateString) || 
           isHoliday(dateString) || 
           isWeekend(date) || 
           isWorkingSaturday(date)) {
@@ -144,7 +149,7 @@ const Attendance: React.FC = () => {
 
       // Create absent record with empty strings for timeIn/timeOut
       const absentRecord: AttendanceRecord = {
-        id: `absent-${dateString}`,
+        id: absentRecordId,
         date: dateString,
         status: 'Absent',
         workingHours: 0,
@@ -155,6 +160,7 @@ const Attendance: React.FC = () => {
       };
 
       records.push(absentRecord);
+      existingIds.add(absentRecordId);
     }
 
     return records;
@@ -180,6 +186,19 @@ const Attendance: React.FC = () => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Reset state when user changes (logout/login with different account)
+  useEffect(() => {
+    setIsPunchedIn(false);
+    setTodayRecord(null);
+    setWorkDuration('00:00:00');
+    setAttendanceRecords([]);
+    setLocation(null);
+    setFilterStatus('All');
+    setStartDateFilter('');
+    setEndDateFilter('');
+    setCustomLocationName('');
+  }, [user?.id]); // Reset whenever user ID changes
 
   useEffect(() => {
     const loadData = () => {

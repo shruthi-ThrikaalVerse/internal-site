@@ -151,16 +151,39 @@ const AttendanceMonitor: React.FC = () => {
   const dailyMasterFeed = useMemo(() => {
     const dateStr = formatDateToISO(selectedDate);
 
-    return employees
-      .map((emp: any) => {
-        // ✅ IMPORTANT: string-safe match
-        const record = attendanceData.find(
-          (a) =>
-            String(a.employeeId).trim() === String(emp.employeeId).trim() &&
-            String(a.date).slice(0, 10) === dateStr
-        );
+    // Use attendanceData as the primary source (this has the actual attendance records)
+    const feedFromAttendance = attendanceData
+      .filter((record) => String(record.date).slice(0, 10) === dateStr)
+      .map((record: any) => {
+        let status: AttendanceRow['status'] = record.status;
 
-        // Find if employee is on an approved leave for this date
+        // If checkIn exists, compute late threshold (09:30 AM)
+        if (record.checkIn && record.checkIn !== '--') {
+          const parsed = record.checkIn; // e.g. "10:08 AM"
+          const [time, period] = parsed.split(' ');
+          const [hoursStr, minutesStr] = time.split(':');
+          let hours = Number(hoursStr);
+          const minutes = Number(minutesStr);
+
+          if (period === 'PM' && hours !== 12) hours += 12;
+          if (period === 'AM' && hours === 12) hours = 0;
+
+          const totalMinutes = hours * 60 + minutes;
+          status = totalMinutes > 570 ? 'late' : 'present';
+        }
+
+        return {
+          ...record,
+          status
+        };
+      });
+
+    // Now add employees who are on leave but don't have attendance record
+    const employeesWithAttendance = feedFromAttendance.map((r) => String(r.employeeId).trim());
+    
+    const feedFromLeaves = employees
+      .filter((emp: any) => !employeesWithAttendance.includes(String(emp.employeeId).trim()))
+      .map((emp: any) => {
         const onLeave = leaves.find(
           (l: any) =>
             (l.employeeId === emp.id || l.employeeId === emp.employeeId) &&
@@ -169,38 +192,11 @@ const AttendanceMonitor: React.FC = () => {
             l.endDate >= dateStr
         );
 
-        // Priority 1: Attendance Record (Present/Late)
-        if (record) {
-          let status: AttendanceRow['status'] = record.status;
-
-          // If checkIn exists, compute late threshold (09:30 AM)
-          if (record.checkIn && record.checkIn !== '--') {
-            const parsed = record.checkIn; // e.g. "10:08 AM"
-            const [time, period] = parsed.split(' ');
-            const [hoursStr, minutesStr] = time.split(':');
-            let hours = Number(hoursStr);
-            const minutes = Number(minutesStr);
-
-            if (period === 'PM' && hours !== 12) hours += 12;
-            if (period === 'AM' && hours === 12) hours = 0;
-
-            const totalMinutes = hours * 60 + minutes;
-            status = totalMinutes > 570 ? 'late' : 'present';
-          }
-
-          return {
-            ...record,
-            name: emp.fullName || record.name,
-            status,
-            location: record.location || emp.location
-          };
-        }
-
-        // Priority 2: Leave Record (On Leave)
         if (onLeave) {
           return {
             employeeId: String(emp.employeeId).trim(),
-            name: emp.fullName,
+            name: emp.fullName || emp.username,
+            department: emp.department,
             date: dateStr,
             checkIn: '--',
             checkOut: '--',
@@ -209,29 +205,27 @@ const AttendanceMonitor: React.FC = () => {
             location: emp.location
           };
         }
-
-        // Priority 3: Absent
-        return {
-          employeeId: String(emp.employeeId).trim(),
-          name: emp.fullName,
-          date: dateStr,
-          checkIn: '--',
-          checkOut: '--',
-          totalHours: '00:00',
-          status: 'absent' as const,
-          location: emp.location
-        };
+        return null;
       })
-      .sort((a: any, b: any) => {
-        // Sort priority: Late > Present > On Leave > Absent
-        const order: Record<string, number> = { late: 1, present: 2, 'on-leave': 3, absent: 4 };
-        return (order[a.status] || 5) - (order[b.status] || 5);
-      });
-  }, [employees, attendanceData, leaves, selectedDate]);
+      .filter(Boolean);
+
+    // Combine both feeds
+    const combined = [...feedFromAttendance, ...feedFromLeaves];
+
+    return combined.sort((a: any, b: any) => {
+      // Sort priority: Late > Present > On Leave > Absent
+      const order: Record<string, number> = { late: 1, present: 2, 'on-leave': 3, absent: 4 };
+      return (order[a.status] || 5) - (order[b.status] || 5);
+    });
+  }, [attendanceData, employees, leaves, selectedDate]);
 
   // 2. Filter logic for the UI feed
   const filteredFeed = useMemo(() => {
     if (statusFilter === 'all') return dailyMasterFeed;
+    if (statusFilter === 'present') {
+      // Show both present and late records
+      return dailyMasterFeed.filter((f: any) => f.status === 'present' || f.status === 'late');
+    }
     return dailyMasterFeed.filter((f: any) => f.status === statusFilter);
   }, [dailyMasterFeed, statusFilter]);
 
