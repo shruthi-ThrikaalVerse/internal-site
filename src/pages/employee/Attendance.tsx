@@ -74,7 +74,15 @@ const Attendance: React.FC = () => {
   // Confirmation dialog state
   const [showCheckoutConfirm, setShowCheckoutConfirm] = useState(false);
 
-  // Get today's date in YYYY-MM-DD format
+  // Create user-specific storage key (scoped by user.id)
+  const attendanceStorageKey = useMemo(() => 
+    getUserSpecificKey('attendance_records', user?.id),
+    [user?.id]
+  );
+  const notificationsStorageKey = useMemo(() => 
+    getUserSpecificKey('user_notifications_v1', user?.id),
+    [user?.id]
+  );
   const getTodayDateString = useCallback(() => {
     const today = new Date();
     return today.toISOString().split('T')[0];
@@ -167,7 +175,7 @@ const Attendance: React.FC = () => {
   }, [isHoliday, isWeekend, isWorkingSaturday]);
 
   const triggerNotification = useCallback((title: string, msg: string, icon: string, color: string) => {
-    const saved = JSON.parse(localStorage.getItem(getUserSpecificKey('user_notifications_v1')) || '[]');
+    const saved = JSON.parse(localStorage.getItem(notificationsStorageKey) || '[]');
     const newNotif = {
       id: `notif-${Date.now()}`,
       title,
@@ -178,9 +186,9 @@ const Attendance: React.FC = () => {
       read: false,
       type: 'info'
     };
-    localStorage.setItem(getUserSpecificKey('user_notifications_v1'), JSON.stringify([newNotif, ...saved]));
+    localStorage.setItem(notificationsStorageKey, JSON.stringify([newNotif, ...saved]));
     window.dispatchEvent(new Event('storage'));
-  }, []);
+  }, [notificationsStorageKey]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -202,7 +210,7 @@ const Attendance: React.FC = () => {
 
   useEffect(() => {
     const loadData = () => {
-      const recordsStr = localStorage.getItem(getUserSpecificKey('attendance_records'));
+      const recordsStr = localStorage.getItem(attendanceStorageKey);
       let records: AttendanceRecord[] = recordsStr ? JSON.parse(recordsStr) : [];
 
       // Generate absent records for missing working days (FROM OLD CODE)
@@ -254,7 +262,7 @@ const Attendance: React.FC = () => {
     }
 
     return () => window.removeEventListener('storage', handleStorage);
-  }, [getTodayString, calculateDuration, generateAbsentRecords]);
+  }, [getTodayString, calculateDuration, generateAbsentRecords, attendanceStorageKey]);
 
   // Update work duration in real-time when checked in
   useEffect(() => {
@@ -308,7 +316,7 @@ const Attendance: React.FC = () => {
       return;
     }
 
-    const recordsStr = localStorage.getItem(getUserSpecificKey('attendance_records'));
+    const recordsStr = localStorage.getItem(attendanceStorageKey);
     const updated: AttendanceRecord[] = recordsStr ? JSON.parse(recordsStr) : [];
     const idx = updated.findIndex((r: AttendanceRecord) => r.date === today);
 
@@ -365,7 +373,7 @@ const Attendance: React.FC = () => {
         }
 
         const finalRecords = generateAbsentRecords(updated);
-        localStorage.setItem(getUserSpecificKey('attendance_records'), JSON.stringify(finalRecords));
+        localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
         setAttendanceRecords(finalRecords);
 
         const todayRec = finalRecords.find(r => r.date === today) || null;
@@ -404,7 +412,7 @@ const Attendance: React.FC = () => {
     // Regenerate absent records to ensure they're included (FROM OLD CODE)
     const finalRecords = generateAbsentRecords(updated);
 
-    localStorage.setItem(getUserSpecificKey('attendance_records'), JSON.stringify(finalRecords));
+    localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
     setAttendanceRecords(finalRecords);
 
     const todayRec = finalRecords.find(r => r.date === today) || null;
@@ -430,7 +438,7 @@ const Attendance: React.FC = () => {
     const now = new Date();
     const today = getTodayString();
 
-    const recordsStr = localStorage.getItem(getUserSpecificKey('attendance_records'));
+    const recordsStr = localStorage.getItem(attendanceStorageKey);
     const updated: AttendanceRecord[] = recordsStr ? JSON.parse(recordsStr) : [];
     const idx = updated.findIndex((r: AttendanceRecord) => r.date === today);
 
@@ -456,7 +464,7 @@ const Attendance: React.FC = () => {
           updated[idx] = { ...updated[idx], ...serverRecord } as AttendanceRecord;
 
           const finalRecords = generateAbsentRecords(updated);
-          localStorage.setItem(getUserSpecificKey('attendance_records'), JSON.stringify(finalRecords));
+          localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
           setAttendanceRecords(finalRecords);
 
           const todayRec = finalRecords.find(r => r.date === today) || null;
@@ -497,7 +505,7 @@ const Attendance: React.FC = () => {
 
       const finalRecords = generateAbsentRecords(updated);
 
-      localStorage.setItem(getUserSpecificKey('attendance_records'), JSON.stringify(finalRecords));
+      localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
       setAttendanceRecords(finalRecords);
 
       const todayRec = finalRecords.find(r => r.date === today) || null;
@@ -527,7 +535,7 @@ const Attendance: React.FC = () => {
   const updateLocationName = () => {
     if (!todayRecord) return;
 
-    const recordsStr = localStorage.getItem(getUserSpecificKey('attendance_records'));
+    const recordsStr = localStorage.getItem(attendanceStorageKey);
     const records: AttendanceRecord[] = recordsStr ? JSON.parse(recordsStr) : [];
     const idx = records.findIndex((r: any) => r.id === todayRecord.id);
 
@@ -535,7 +543,7 @@ const Attendance: React.FC = () => {
       records[idx].locationName = customLocationName;
       
       const finalRecords = generateAbsentRecords(records);
-      localStorage.setItem(getUserSpecificKey('attendance_records'), JSON.stringify(finalRecords));
+      localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
       setAttendanceRecords(finalRecords);
       
       setTodayRecord(records[idx]);

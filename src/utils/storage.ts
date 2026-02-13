@@ -2,18 +2,27 @@
 
 /**
  * Get user-specific key for localStorage
+ * @param baseKey The base key name (e.g., 'attendance_records')
+ * @param userId The user's ID. If not provided, falls back to current user in localStorage
+ * @returns Scoped key in format: u_${userId}_${baseKey}
  */
-export const getUserSpecificKey = (baseKey: string): string => {
-    const userJson = localStorage.getItem('user');
-    if (!userJson) return baseKey; // Fallback for when no user is logged in
-
-    try {
-        const user = JSON.parse(userJson);
-        return `${baseKey}_${user.id}`;
-    } catch (e) {
-        console.error('Failed to parse user data for key generation', e);
-        return baseKey;
+export const getUserSpecificKey = (baseKey: string, userId?: string): string => {
+    let id = userId;
+    
+    // Fallback: read from localStorage if userId not provided
+    if (!id) {
+        const userJson = localStorage.getItem('user');
+        if (!userJson) return baseKey;
+        try {
+            const user = JSON.parse(userJson);
+            id = user.id;
+        } catch (e) {
+            console.error('Failed to parse user data for key generation', e);
+            return baseKey;
+        }
     }
+    
+    return id ? `u_${id}_${baseKey}` : baseKey;
 };
 
 export const getUserData = () => {

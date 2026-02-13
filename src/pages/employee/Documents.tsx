@@ -11,6 +11,7 @@ import {
   Mail, Inbox, FileCheck, Receipt, BadgeCheck, Globe, Key, FileCode
 } from 'lucide-react';
 import { getUserSpecificKey } from '../../utils/storage.ts';
+import { useAuth } from '../../context/AuthContext.tsx';
 import { GoogleGenAI, Type } from "@google/genai";
 
 interface DocumentRecord {
@@ -30,6 +31,7 @@ interface DocumentRecord {
 }
 
 const Documents: React.FC = () => {
+  const { user } = useAuth();
   const [activeFolder, setActiveFolder] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'All' | 'Verified' | 'Pending' | 'Flagged' | 'PDF' | 'Image' | 'Contract'>('All');
@@ -41,6 +43,19 @@ const Documents: React.FC = () => {
   // AI States
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
+
+  // Reset state when user changes (logout/login with different account)
+  useEffect(() => {
+    setActiveFolder('All');
+    setSearchQuery('');
+    setActiveFilter('All');
+    setViewMode('grid');
+    setSelectedDoc(null);
+    setShowDocModal(false);
+    setDocuments([]);
+    setIsAnalyzing(false);
+    setIsSummarizing(false);
+  }, [user?.id]);
 
   const librarySchema = [
     { id: 'Personal', name: 'Personal Documents', icon: User, subs: ['Aadhar Card', 'PAN Card', 'Passport', 'Driving License', 'Voter ID'], color: 'from-purple-500 to-purple-700' },

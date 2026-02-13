@@ -161,6 +161,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
+    // Get current user ID before clearing
+    const currentUserId = user?.id;
+    
     try {
       await fetch(`${API_BASE_URL}/api/users/logout`, {
         method: 'POST',
@@ -172,6 +175,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Remove only this user's specific keys using their ID
+      if (currentUserId) {
+        const userSpecificKeys = [
+          `u_${currentUserId}_attendance_records`,
+          `u_${currentUserId}_user_notifications_v1`,
+          `u_${currentUserId}_leave_requests`,
+          `u_${currentUserId}_user_documents_v6`,
+          `u_${currentUserId}_user_documents_v7`,
+          `u_${currentUserId}_user_documents_v8`,
+        ];
+        userSpecificKeys.forEach(key => localStorage.removeItem(key));
+      }
+      
       setUser(null);
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
