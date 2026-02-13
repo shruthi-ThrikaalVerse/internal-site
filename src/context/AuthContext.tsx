@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { clearUserData } from '../utils/storage.ts';
 
 const API_BASE_URL = 'http://localhost:8085';
 
@@ -9,6 +10,20 @@ export interface User {
   role: 'admin' | 'manager' | 'auditor' | 'employee';
   avatar: string;
 }
+
+// Decode JWT token to extract payload
+const decodeJWT = (token: string): Record<string, any> | null => {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = parts[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded;
+  } catch (e) {
+    console.error('Failed to decode JWT:', e);
+    return null;
+  }
+};
 
 // Normalize role strings coming from backend to our union type
 const normalizeRole = (role: any): User['role'] => {
@@ -57,8 +72,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (response.ok) {
         const userData = await response.json().catch(() => ({}));
+        
+        // Extract employeeId from JWT token
+        let userId = userData.id || userData._id || userData.employeeId || '';
+        if (!userId && token) {
+          const decoded = decodeJWT(token);
+          userId = decoded?.employeeId || decoded?.id || decoded?.sub || '';
+        }
+        
         const user: User = {
-          id: userData.id || userData._id || '',
+          id: userId,
           fullName: userData.fullName || userData.name || '',
           email: userData.email || '',
           role: normalizeRole(userData.role),
@@ -113,9 +136,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // If response includes user data, use it immediately
       const userData = responseData.data || responseData.user || responseData;
-      if (userData && (userData.email || userData.id || userData._id)) {
+      if (userData && (userData.email || userData.id || userData._id || userData.employeeId)) {
+        // Extract employeeId from JWT token if not in response
+        let userId = userData.id || userData._id || userData.employeeId || '';
+        if (!userId && token) {
+          const decoded = decodeJWT(token);
+          userId = decoded?.employeeId || decoded?.id || decoded?.sub || '';
+        }
+        
         const parsedUser: User = {
-          id: userData.id || userData._id || '',
+          id: userId,
           fullName: userData.fullName || userData.name || '',
           email: userData.email || '',
           role: normalizeRole(userData.role),
@@ -171,6 +201,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Clear all user-specific localStorage data with current user's ID
+      if (user?.id) {
+        clearUserData(user.id);
+      }
+      
       setUser(null);
       try { localStorage.removeItem('authToken'); } catch { }
       try { localStorage.removeItem('user'); } catch { }

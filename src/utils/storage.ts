@@ -65,14 +65,21 @@ export const removeUserItem = (key: string): void => {
 /**
  * Clear all user-specific data
  */
-export const clearUserData = (): void => {
-    const user = getUserData();
-    if (user?.id) {
-        const prefix = `_${user.id}`;
-        Object.keys(localStorage).forEach(key => {
-            if (key.endsWith(prefix)) {
-                localStorage.removeItem(key);
-            }
+export const clearUserData = (userId?: string): void => {
+    // Use provided userId or try to get from localStorage
+    let userIdToClear = userId;
+    
+    if (!userIdToClear) {
+        const user = getUserData();
+        userIdToClear = user?.id;
+    }
+    
+    if (userIdToClear) {
+        const prefix = `_${userIdToClear}`;
+        // Get all keys before iteration to avoid issues during deletion
+        const keysToClear = Object.keys(localStorage).filter(key => key.endsWith(prefix));
+        keysToClear.forEach(key => {
+            localStorage.removeItem(key);
         });
     }
 };
