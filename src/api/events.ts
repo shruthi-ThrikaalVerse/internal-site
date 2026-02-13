@@ -1,4 +1,5 @@
 export const API_BASE = 'http://localhost:8085/api/events';
+const FETCH_TIMEOUT = 15000; // 15 seconds timeout
 
 const getAuthHeader = () => {
   const token =
@@ -7,6 +8,16 @@ const getAuthHeader = () => {
     localStorage.getItem('authToken') ||
     '';
   return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+// Helper to add timeout to fetch requests
+const fetchWithTimeout = (url: string, options: RequestInit = {}, timeout = FETCH_TIMEOUT) => {
+  return Promise.race([
+    fetch(url, options),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timeout')), timeout)
+    ),
+  ]);
 };
 
 const readBody = async (resp: Response) => {
@@ -28,38 +39,52 @@ const throwIfError = async (resp: Response) => {
 };
 
 export const getEvents = async () => {
-  const resp = await fetch(API_BASE, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      ...getAuthHeader(),
-    },
-    credentials: 'include',
-  });
+  try {
+    const resp = (await fetchWithTimeout(API_BASE, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        ...getAuthHeader(),
+      },
+      credentials: 'include',
+    })) as Response;
 
-  await throwIfError(resp);
-  return readBody(resp);
+    await throwIfError(resp);
+    return readBody(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The events request took too long. The server may be busy. Please try again later.');
+    }
+    throw err;
+  }
 };
 
 export const getEvent = async (id: string | number) => {
-  const resp = await fetch(`${API_BASE}/${id}`, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      ...getAuthHeader(),
-    },
-    credentials: 'include',
-  });
+  try {
+    const resp = (await fetchWithTimeout(`${API_BASE}/${id}`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        ...getAuthHeader(),
+      },
+      credentials: 'include',
+    })) as Response;
 
-  await throwIfError(resp);
-  return readBody(resp);
+    await throwIfError(resp);
+    return readBody(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The event request took too long. Please try again later.');
+    }
+    throw err;
+  }
 };
 
 export const createEvent = async (payload: any) => {
   try {
     console.log('Creating event, payload:', payload);
 
-    const resp = await fetch(API_BASE, {
+    const resp = (await fetchWithTimeout(API_BASE, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -68,7 +93,7 @@ export const createEvent = async (payload: any) => {
       },
       credentials: 'include',
       body: JSON.stringify(payload),
-    });
+    })) as Response;
 
     const body = await resp.text();
     console.log('Create event response status:', resp.status, 'body:', body);
@@ -81,51 +106,69 @@ export const createEvent = async (payload: any) => {
     } catch {
       return body;
     }
-  } catch (err) {
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      console.error('createEvent timeout');
+      throw new Error('The event creation request took too long. Please try again.');
+    }
     console.error('createEvent failed:', err);
     throw err;
   }
 };
 
 export const updateEvent = async (id: string | number, payload: any) => {
-  const resp = await fetch(`${API_BASE}/${id}`, {
-    method: 'PUT',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...getAuthHeader(),
-    },
-    credentials: 'include',
-    body: JSON.stringify(payload),
-  });
+  try {
+    const resp = (await fetchWithTimeout(`${API_BASE}/${id}`, {
+      method: 'PUT',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...getAuthHeader(),
+      },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    })) as Response;
 
-  await throwIfError(resp);
-  return readBody(resp);
+    await throwIfError(resp);
+    return readBody(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The event update request took too long. Please try again.');
+    }
+    throw err;
+  }
 };
 
 export const deleteEvent = async (id: string | number) => {
   const url = `${API_BASE}/${id}`;
   console.log('Deleting event from URL:', url);
 
-  const resp = await fetch(url, {
-    method: 'DELETE',
-    headers: {
-      Accept: 'application/json',
-      ...getAuthHeader(),
-    },
-    credentials: 'include',
-  });
-
-  const body = await resp.text();
-  console.log('Delete response status:', resp.status, 'body:', body);
-
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${body}`);
-
-  // DELETE can return empty string
-  if (!body) return '';
   try {
-    return JSON.parse(body);
-  } catch {
-    return body;
+    const resp = (await fetchWithTimeout(url, {
+      method: 'DELETE',
+      headers: {
+        Accept: 'application/json',
+        ...getAuthHeader(),
+      },
+      credentials: 'include',
+    })) as Response;
+
+    const body = await resp.text();
+    console.log('Delete response status:', resp.status, 'body:', body);
+
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${body}`);
+
+    // DELETE can return empty string
+    if (!body) return '';
+    try {
+      return JSON.parse(body);
+    } catch {
+      return body;
+    }
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The event deletion request took too long. Please try again.');
+    }
+    throw err;
   }
 };

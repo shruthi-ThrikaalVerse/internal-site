@@ -209,6 +209,9 @@ const Profile: React.FC = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [fetchedUserData, setFetchedUserData] = useState<any>(null);
+  const [isLoadingUserData, setIsLoadingUserData] = useState(false);
+  const [userDataError, setUserDataError] = useState<string | null>(null);
 
   // Load profile image from HRMS, localStorage, or Auth user data
   useEffect(() => {
@@ -230,6 +233,53 @@ const Profile: React.FC = () => {
       }
     }
   }, [user, profilePhotos]);
+
+  // Fetch user details from the API endpoint
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      // Use email as the check since id might be empty but email is always present
+      if (!user?.email) {
+        return;
+      }
+      
+      setIsLoadingUserData(true);
+      setUserDataError(null);
+      try {
+        const token = localStorage.getItem('authToken');
+        
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch('http://localhost:8085/api/users/me', {
+          method: 'GET',
+          credentials: 'include',
+          headers,
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch user details: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        // Handle potential nested response structure
+        const userData = data.data || data;
+        setFetchedUserData(userData);
+      } catch (error: any) {
+        setUserDataError(error.message);
+      } finally {
+        setIsLoadingUserData(false);
+      }
+    };
+
+    fetchUserDetails();
+  }, [user?.email]);
 
   // Profile Photo State
   const [isUploading, setIsUploading] = useState(false);
@@ -441,7 +491,7 @@ const Profile: React.FC = () => {
           <div className="relative group">
             <Avatar
               src={profileImage || undefined}
-              name={user?.fullName || 'Admin'}
+              name={(fetchedUserData?.fullName || fetchedUserData?.name || user?.fullName) || 'Admin'}
               size="lg"
               onClick={() => setShowProfileModal(true)}
             />
@@ -464,26 +514,54 @@ const Profile: React.FC = () => {
 
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-black text-slate-900">{user?.fullName}</h1>
+              <h1 className="text-3xl font-black text-slate-900">
+                {isLoadingUserData ? (
+                  <span className="text-slate-400">Loading...</span>
+                ) : fetchedUserData ? (
+                  `${fetchedUserData.firstName || ''} ${fetchedUserData.lastName || ''}`.trim()
+                ) : (
+                  user?.fullName
+                )}
+              </h1>
               <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-black rounded-full uppercase tracking-widest">
                 Verified
               </span>
             </div>
-            <p className="text-sm text-slate-600 mb-3">{user?.email}</p>
+            <p className="text-sm text-slate-600 mb-3">
+              {isLoadingUserData ? (
+                <span className="text-slate-400">Loading...</span>
+              ) : fetchedUserData?.email ? (
+                fetchedUserData.email
+              ) : (
+                user?.email
+              )}
+            </p>
 
             <div className="flex flex-wrap gap-2">
               <div className="flex items-center gap-2 text-xs text-slate-500">
                 <LucideIcons.BadgeCheck className="w-4 h-4 text-indigo-500" />
-                <span className="font-bold">{user?.role} Account</span>
+                <span className="font-bold">
+                  {isLoadingUserData ? (
+                    <span className="text-slate-400">Loading...</span>
+                  ) : fetchedUserData?.role ? (
+                    `${fetchedUserData.role} Account`
+                  ) : (
+                    `${user?.role} Account`
+                  )}
+                </span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <LucideIcons.Globe className="w-4 h-4 text-slate-400" />
-                <span>India (GMT+5:30)</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <LucideIcons.Calendar className="w-4 h-4 text-slate-400" />
-                <span>Member since Jan 2024</span>
-              </div>
+              {!isLoadingUserData && fetchedUserData?.department && (
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <LucideIcons.Briefcase className="w-4 h-4 text-slate-400" />
+                  <span>{fetchedUserData.department}</span>
+                </div>
+              )}
+              {!isLoadingUserData && fetchedUserData?.dateOfJoining && (
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <LucideIcons.Calendar className="w-4 h-4 text-slate-400" />
+                  <span>Member since {new Date(fetchedUserData.dateOfJoining).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -613,26 +691,126 @@ const Profile: React.FC = () => {
         </div>
       </div>
 
-      {/* User Details Section - Fixed: Removed duplicate fields */}
+      {/* User Details Section - Now using actual API fields */}
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Legal Name</label>
-            <p className="text-lg font-black text-slate-800 mt-1">{user?.fullName}</p>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">First Name</label>
+            <p className="text-lg font-black text-slate-800 mt-1">
+              {isLoadingUserData ? (
+                <span className="text-slate-400">Loading...</span>
+              ) : fetchedUserData?.firstName ? (
+                fetchedUserData.firstName
+              ) : (
+                user?.fullName?.split(' ')[0] || 'N/A'
+              )}
+            </p>
+          </div>
+          <div>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Last Name</label>
+            <p className="text-lg font-black text-slate-800 mt-1">
+              {isLoadingUserData ? (
+                <span className="text-slate-400">Loading...</span>
+              ) : fetchedUserData?.lastName ? (
+                fetchedUserData.lastName
+              ) : (
+                user?.fullName?.split(' ').slice(1).join(' ') || 'N/A'
+              )}
+            </p>
           </div>
           <div>
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Work Email</label>
-            <p className="text-lg font-black text-slate-800 mt-1">{user?.email}</p>
+            <p className="text-lg font-black text-slate-800 mt-1">
+              {isLoadingUserData ? (
+                <span className="text-slate-400">Loading...</span>
+              ) : fetchedUserData?.email ? (
+                fetchedUserData.email
+              ) : (
+                user?.email || 'N/A'
+              )}
+            </p>
           </div>
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Unique User ID</label>
-            <p className="text-lg font-black text-indigo-600 mt-1 font-mono">UID-{user?.id?.split('-')[1]?.toUpperCase() || 'ROOT'}</p>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Employee ID</label>
+            <p className="text-lg font-black text-indigo-600 mt-1 font-mono">
+              {isLoadingUserData ? (
+                <span className="text-slate-400">Loading...</span>
+              ) : fetchedUserData?.employeeId ? (
+                fetchedUserData.employeeId
+              ) : (
+                'N/A'
+              )}
+            </p>
           </div>
           <div>
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">System Role</label>
-            <p className="text-lg font-black text-slate-800 mt-1 capitalize">{user?.role} Account</p>
+            <p className="text-lg font-black text-slate-800 mt-1 capitalize">
+              {isLoadingUserData ? (
+                <span className="text-slate-400">Loading...</span>
+              ) : fetchedUserData?.role ? (
+                fetchedUserData.role
+              ) : (
+                user?.role || 'N/A'
+              )}
+            </p>
+          </div>
+          <div>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Department</label>
+            <p className="text-lg font-black text-slate-800 mt-1">
+              {isLoadingUserData ? (
+                <span className="text-slate-400">Loading...</span>
+              ) : fetchedUserData?.department ? (
+                fetchedUserData.department
+              ) : (
+                'N/A'
+              )}
+            </p>
           </div>
         </div>
+
+        {userDataError && (
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl">
+            <p className="text-xs text-rose-600 font-medium">⚠️ {userDataError}</p>
+          </div>
+        )}
+
+        {isLoadingUserData === false && fetchedUserData && (
+          <div className="pt-8 border-t border-slate-50">
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Account Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {fetchedUserData.designation && (
+                <div className="p-4 bg-slate-50 rounded-2xl">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Designation</p>
+                  <p className="text-sm font-bold text-slate-700">{fetchedUserData.designation}</p>
+                </div>
+              )}
+              {fetchedUserData.userType && (
+                <div className="p-4 bg-slate-50 rounded-2xl">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">User Type</p>
+                  <p className="text-sm font-bold text-slate-700">{fetchedUserData.userType}</p>
+                </div>
+              )}
+              {fetchedUserData.dateOfJoining && (
+                <div className="p-4 bg-slate-50 rounded-2xl">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date of Joining</p>
+                  <p className="text-sm font-bold text-slate-700">{new Date(fetchedUserData.dateOfJoining).toLocaleDateString()}</p>
+                </div>
+              )}
+              {fetchedUserData.phoneNumber && (
+                <div className="p-4 bg-slate-50 rounded-2xl">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Phone Number</p>
+                  <p className="text-sm font-bold text-slate-700">{fetchedUserData.phoneNumber}</p>
+                </div>
+              )}
+              {fetchedUserData.address && (
+                <div className="p-4 bg-slate-50 rounded-2xl md:col-span-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Address</p>
+                  <p className="text-sm font-bold text-slate-700">{fetchedUserData.address}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="pt-8 border-t border-slate-50">
           <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Account Metadata</h3>

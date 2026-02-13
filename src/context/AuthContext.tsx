@@ -100,6 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('Session verification failed:', error);
       setUser(null);
       localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
       return null;
     }
   };
@@ -161,7 +162,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!verified) {
         throw new Error('Login succeeded but no session information returned');
       }
-
       return verified;
 
     } catch (error: any) {
