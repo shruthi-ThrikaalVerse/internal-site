@@ -115,8 +115,6 @@ const Payroll: React.FC = () => {
   };
 
   const handleDownload = (slip: Payslip) => {
-    toast.info(`Generating PDF for ${slip.month}...`);
-
     // Simulate File Download
     const content = `PAYSLIP - ${slip.month}\nDate: ${slip.date}\nTotal Net Payable: ${slip.amount}\nStatus: ${slip.status}`;
     const blob = new Blob([content], { type: 'text/plain' });
@@ -127,8 +125,6 @@ const Payroll: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
-    toast.success("Download complete!");
   };
 
   return (

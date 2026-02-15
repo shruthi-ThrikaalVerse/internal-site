@@ -61,7 +61,6 @@ const PayrollProcessing: React.FC = () => {
     setTimeout(() => {
       try {
         runPayroll(runMonth, runYear);
-        notify(`Payroll cycle for ${runMonth} ${runYear} generated.`, 'success');
         addLog('Process', 'Payroll', `Manually executed payroll run for ${runMonth} ${runYear}`);
         setActiveTab('process');
       } catch (err) {
@@ -85,7 +84,6 @@ const PayrollProcessing: React.FC = () => {
   };
 
   const handleViewRun = (run: PayrollRun) => {
-    notify(`Fetching archives for ${run.month} ${run.year}...`, 'info');
     setActiveTab('process');
   };
 
@@ -100,7 +98,7 @@ const PayrollProcessing: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    notify(`Downloading payroll report for ${run.month} ${run.year}`, 'success');
+
   };
 
   const groupedPayroll = useMemo(() => {
@@ -239,8 +237,8 @@ const PayrollProcessing: React.FC = () => {
               <p className="text-xs text-slate-400 font-medium">Breakdown & Individual Disbursal</p>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => notify('Bulk payslips generated.')} className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">Generate Bulk</button>
-              <button onClick={() => notify('All payouts initiated successfully.')} className="px-5 py-2.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100">Disburse All</button>
+              <button onClick={() => {}} className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">Generate Bulk</button>
+              <button onClick={() => {}} className="px-5 py-2.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100">Disburse All</button>
             </div>
           </div>
           <div className="overflow-x-auto">

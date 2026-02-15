@@ -753,7 +753,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
   };
 
   const handleScheduleReview = (employeeName: string) => {
-    notify(`Performance review scheduled for ${employeeName}`, 'success');
   };
 
   // Function to convert data to CSV format
@@ -812,9 +811,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
-      // Show success notification
-      notify(`Performance report downloaded successfully!`, 'success');
 
     } catch (error) {
       console.error('Error downloading report:', error);
@@ -905,7 +901,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
             comment: reviewComment,
             date: new Date().toISOString().split('T')[0]
           });
-          notify('Review submitted successfully', 'success');
           loadPerformanceData();
           closeReviewModal();
         } else {
@@ -921,9 +916,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
   const handleRefreshData = () => {
     loadPerformanceData();
-    notify('Performance data refreshed', 'info');
   };
-
+  
   const handleRefreshTasks = async () => {
     try {
       setApiTasksLoading(true);
@@ -950,7 +944,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
       })) : [];
       
       setApiTasks(normalizedTasks);
-      notify('Tasks refreshed successfully', 'success');
     } catch (error) {
       console.error('Failed to refresh tasks:', error);
       notify('Failed to refresh tasks', 'error');

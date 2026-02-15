@@ -252,13 +252,11 @@ export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
       return [newPhoto, ...filtered];
     });
-    notify('Profile photo updated successfully', 'success');
     addLog('Update', 'Profile', 'Uploaded new profile photo');
   }, [addLog, notify]);
 
   const removeProfilePhoto = useCallback((userId: string) => {
     setProfilePhotos(prev => prev.filter(photo => photo.userId !== userId));
-    notify('Profile photo removed', 'info');
     addLog('Update', 'Profile', 'Removed profile photo');
   }, [addLog, notify]);
 
@@ -314,12 +312,10 @@ export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     setEmployees(prev => [newEmp, ...prev]);
     addLog('Create', 'Employee', `Registered employee ${newEmp.fullName} with ID ${newEmp.employeeId}`);
-    notify(`Employee ${newEmp.fullName} added successfully!`);
   };
 
   const updateEmployee = (id: string, updates: Partial<EmployeeSummary>) => {
     setEmployees(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
-    notify(`Employee record updated.`);
     addLog('Update', 'Employee', `Modified details for record ${id}`);
   };
 
@@ -379,12 +375,10 @@ export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       processedDate: new Date().toISOString().split('T')[0]
     };
     setPayroll(prev => [newRun, ...prev]);
-    notify(`Payroll cycle for ${month} processed successfully!`);
   };
 
   const updateSalaryStructure = (id: string, structure: SalaryStructure) => {
     setEmployees(prev => prev.map(e => e.id === id ? { ...e, salaryStructure: structure } : e));
-    notify(`Salary updated.`);
   };
 
   const addPerformanceCycle = (cycle: Partial<PerformanceCycle>) => {
@@ -424,12 +418,10 @@ export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       ...review
     };
     setTaskReviews(prev => [newReview, ...prev]);
-    notify('Review added.', 'success');
   };
 
   const updateTaskStatus = (id: string, status: Task['status']) => {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, status } : t));
-    notify(`Task status updated.`);
   };
 
   const deleteTask = (id: string) => {
@@ -472,17 +464,14 @@ export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       readBy: []
     };
     setAdminNotifications(prev => [newNotif, ...prev]);
-    notify(`Broadcast posted successfully.`);
   };
 
   const updateAdminNotification = (id: string, updates: Partial<AdminNotification>) => {
     setAdminNotifications(prev => prev.map(n => n.id === id ? { ...n, ...updates } : n));
-    notify(`Broadcast updated.`);
   };
 
   const deleteAdminNotification = (id: string) => {
     setAdminNotifications(prev => prev.filter(n => n.id !== id));
-    notify(`Broadcast removed.`, 'warning');
   };
 
   const markNotificationAsRead = (id: string, userEmail: string) => {
@@ -578,12 +567,10 @@ export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
     setEvents(prev => [newEvent, ...prev]);
     addLog('Create', 'Events', `Scheduled event: ${newEvent.title}`);
-    notify(`Event "${newEvent.title}" scheduled successfully.`);
   };
 
   const updateEvent = (id: string, updates: Partial<AppEvent>) => {
     setEvents(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
-    notify(`Event data updated.`);
   };
 
   const deleteEvent = (id: string) => {

@@ -416,7 +416,7 @@ const DatePicker = ({
 };
 
 const EmployeeHub: React.FC = () => {
-  const { employees, addEmployee, deleteEmployee, updateEmployee, notify, addLog } = useHRMS();
+  const { employees, addEmployee, deleteEmployee, updateEmployee,notify, addLog } = useHRMS();
   const [view, setView] = useState<'table' | 'grid'>('table');
   const [searchTerm, setSearchTerm] = useState('');
   const [deptFilter, setDeptFilter] = useState('All');
@@ -715,7 +715,6 @@ const EmployeeHub: React.FC = () => {
 
       // Re-fetch employees from backend so UI reflects persisted data
       await fetchEmployees();
-      notify('Employee added successfully!', 'success');
       addLog('Create', 'Employee', `Registered employee ${fullName} via API`);
     } catch (err) {
       console.error('Registration error:', err);
@@ -748,7 +747,6 @@ const EmployeeHub: React.FC = () => {
           // Refresh list from backend to ensure UI matches persisted state
           await fetchEmployees();
           setEmployeeToDelete(null);
-          notify('Employee terminated successfully', 'success');
           addLog('Delete', 'Employee', `Terminated employee ${employeeToDelete.fullName}`);
         } else {
           const err = await res.json().catch(() => ({}));
@@ -765,7 +763,6 @@ const EmployeeHub: React.FC = () => {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedField(field);
-      notify(`${field} copied to clipboard`, 'success');
       setTimeout(() => setCopiedField(null), 2000);
     } catch (err) {
       console.error('Failed to copy: ', err);
@@ -817,7 +814,6 @@ const EmployeeHub: React.FC = () => {
       link.click();
       document.body.removeChild(link);
 
-      notify(`Exported ${filteredEmployees.length} employee records.`, 'success');
       addLog('Export', 'Employee', `Exported ${filteredEmployees.length} employee records.`);
     } catch (e) {
       console.error(e);
@@ -1053,15 +1049,18 @@ const EmployeeHub: React.FC = () => {
       {/* Employee Detail Modal */}
       <Modal isOpen={!!selectedEmployee} onClose={() => setSelectedEmployee(null)} title="Personal Profile">
         {selectedEmployee && (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
+            {/* Header Section */}
             <div className="flex flex-col items-center text-center">
-              <img src={selectedEmployee.avatar} className="w-24 h-24 rounded-3xl border-8 border-slate-50 shadow-xl mb-4" alt="" />
-              <h3 className="text-2xl font-black text-slate-900">{selectedEmployee.fullName}</h3>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{selectedEmployee.employeeId} • {selectedEmployee.designation}</p>
-              <div className="mt-4 flex gap-2">
-                <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-100">{selectedEmployee.department}</span>
-                <span className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">{selectedEmployee.status}</span>
-                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${selectedEmployee.employmentType === 'Full-time' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+              <img src={selectedEmployee.avatar} className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl sm:rounded-3xl border-4 sm:border-8 border-slate-50 shadow-lg sm:shadow-xl mb-3 sm:mb-4" alt="" />
+              <h3 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 line-clamp-2">{selectedEmployee.fullName}</h3>
+              <p className="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mt-2 line-clamp-2">{selectedEmployee.employeeId} • {selectedEmployee.designation}</p>
+              
+              {/* Badges - Responsive and Wrappable */}
+              <div className="mt-4 flex flex-wrap gap-2 justify-center">
+                <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-indigo-100 whitespace-nowrap">{selectedEmployee.department}</span>
+                <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-emerald-100 whitespace-nowrap">{selectedEmployee.status}</span>
+                <span className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest border whitespace-nowrap ${selectedEmployee.employmentType === 'Full-time' ? 'bg-blue-50 text-blue-600 border-blue-100' :
                   selectedEmployee.employmentType === 'Part-time' ? 'bg-purple-50 text-purple-600 border-purple-100' :
                     'bg-amber-50 text-amber-600 border-amber-100'
                   }`}>
@@ -1069,36 +1068,36 @@ const EmployeeHub: React.FC = () => {
                 </span>
                 {/* Display role badge if available */}
                 {(selectedEmployee as any).role && (
-                  <span className="px-4 py-1.5 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-600">
+                  <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-indigo-600 text-white rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-indigo-600 whitespace-nowrap">
                     {(selectedEmployee as any).role}
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Work Contact</p>
-                <p className="text-sm font-bold text-slate-700 truncate">{selectedEmployee.email}</p>
-                <p className="text-[10px] font-bold text-slate-400 mt-1">{selectedEmployee.phone || 'No direct line'}</p>
+            {/* Contact Info Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-slate-50 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-100">
+                <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Email</p>
+                <p className="text-xs sm:text-sm font-bold text-slate-700 break-all">{selectedEmployee.email}</p>
               </div>
-              <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Primary Location</p>
-                <p className="text-sm font-bold text-slate-700">{selectedEmployee.location}</p>
-                <p className="text-[10px] font-bold text-slate-400 mt-1">Onboarded: {selectedEmployee.dateOfJoining}</p>
+              <div className="bg-slate-50 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-100">
+                <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Phone</p>
+                <p className="text-xs sm:text-sm font-bold text-slate-700">{selectedEmployee.phone || 'No direct line'}</p>
               </div>
             </div>
 
-            <div className="bg-indigo-600 p-6 rounded-[32px] text-white shadow-xl shadow-indigo-100 relative overflow-hidden group">
+            {/* Credentials Section - Responsive */}
+            <div className="bg-indigo-600 p-4 sm:p-6 rounded-2xl sm:rounded-[32px] text-white shadow-xl shadow-indigo-100 relative overflow-hidden group">
               <div className="absolute right-0 bottom-0 opacity-10 group-hover:scale-110 transition-transform">
-                <Icon name="ShieldCheck" className="w-32 h-32" />
+                <Icon name="ShieldCheck" className="w-20 h-20 sm:w-32 sm:h-32" />
               </div>
-              <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 opacity-70">Employee Access Credentials</h4>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                  <div className="flex-1">
-                    <p className="text-[9px] font-bold uppercase opacity-50">Username / Email</p>
-                    <p className="text-sm font-black tracking-tight truncate">{selectedEmployee.email}</p>
+              <h4 className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-4 opacity-70 pr-8">Employee Access Credentials</h4>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 border-b border-white/10 pb-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[8px] sm:text-[9px] font-bold uppercase opacity-50 mb-1">Username / Email</p>
+                    <p className="text-xs sm:text-sm font-black tracking-tight break-all">{selectedEmployee.email}</p>
                   </div>
                   <button
                     onClick={(e) => {
@@ -1106,7 +1105,7 @@ const EmployeeHub: React.FC = () => {
                       handleCopy(selectedEmployee.email, 'email');
                     }}
                     aria-label="Copy username"
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors relative"
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors relative flex-shrink-0"
                   >
                     <Icon name={copiedField === 'email' ? "Check" : "Copy"} className="w-4 h-4" />
                     {copiedField === 'email' && (
@@ -1116,75 +1115,36 @@ const EmployeeHub: React.FC = () => {
                     )}
                   </button>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-[9px] font-bold uppercase opacity-50">System Password</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-black tracking-widest">
-                        {showPassword ? getEmployeePassword(selectedEmployee) : '••••••••••••'}
-                      </p>
-                      {showPassword && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCopy(getEmployeePassword(selectedEmployee), 'password');
-                          }}
-                          aria-label="Copy password"
-                          className="p-1 hover:bg-white/10 rounded transition-colors relative"
-                        >
-                          <Icon name={copiedField === 'password' ? "Check" : "Copy"} className="w-3 h-3" />
-                          {copiedField === 'password' && (
-                            <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-white text-indigo-600 text-[9px] font-black px-2 py-1 rounded-lg whitespace-nowrap">
-                              Copied!
-                            </span>
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowPassword(!showPassword);
-                    }}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors flex items-center gap-1"
-                  >
-                    <Icon name={showPassword ? "EyeOff" : "Eye"} className="w-4 h-4" />
-                    <span className="text-[9px] font-bold uppercase opacity-70">
-                      {showPassword ? "Hide" : "Show"}
-                    </span>
-                  </button>
-                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Leave Bal</p>
-                <p className="text-2xl font-black text-slate-800">{selectedEmployee.leaveBalance} <span className="text-xs font-bold text-slate-400">days</span></p>
+            {/* Info Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-slate-50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100">
+                <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Leave Balance</p>
+                <p className="text-xl sm:text-2xl font-black text-slate-800">{selectedEmployee.leaveBalance} <span className="text-xs sm:text-xs font-bold text-slate-400">days</span></p>
               </div>
-              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Supervisor</p>
-                <p className="text-sm font-black text-slate-800 truncate">{selectedEmployee.reportingManager}</p>
+              <div className="bg-slate-50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100">
+                <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Onboard Date</p>
+                <p className="text-sm sm:text-base font-bold text-slate-700">{selectedEmployee.dateOfJoining || 'Not available'}</p>
               </div>
             </div>
 
-            <div className="pt-4 flex gap-4">
+            {/* Action Buttons - Stack on mobile */}
+            <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 border-t border-slate-100">
               <button
                 onClick={() => {
                   const nextStatus = selectedEmployee.status === 'active' ? 'inactive' : 'active';
                   updateEmployee(selectedEmployee.id, { status: nextStatus as any });
                   setSelectedEmployee(prev => prev ? { ...prev, status: nextStatus as any } : null);
-                  notify(`Status changed to ${nextStatus}`, 'success');
                 }}
-                className="flex-1 py-4 bg-white border-2 border-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-all"
+                className="py-3 sm:py-4 px-4 bg-white border-2 border-slate-100 text-slate-700 font-black text-[10px] sm:text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-all"
               >
                 Change Status
               </button>
               <button
                 onClick={() => { setEmployeeToDelete(selectedEmployee); setSelectedEmployee(null); }}
-                className="flex-1 py-4 bg-rose-50 text-rose-600 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-rose-100 transition-all"
+                className="py-3 sm:py-4 px-4 bg-rose-50 text-rose-600 font-black text-[10px] sm:text-xs uppercase tracking-widest rounded-2xl hover:bg-rose-100 transition-all"
               >
                 Terminate
               </button>
