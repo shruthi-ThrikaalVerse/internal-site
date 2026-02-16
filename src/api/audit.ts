@@ -32,8 +32,8 @@ export const fetchAuditLogs = async (q: AuditQuery) => {
             if (Array.isArray(parsed)) return { logs: parsed, total: parsed.length };
             // Spring Data Page format: { content: [...], totalElements: N, ... }
             if (parsed.content && Array.isArray(parsed.content)) {
-                return { 
-                    logs: parsed.content || [], 
+                return {
+                    logs: parsed.content || [],
                     total: parsed.totalElements || 0
                 };
             }

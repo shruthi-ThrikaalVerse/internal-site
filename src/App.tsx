@@ -191,7 +191,7 @@ const AppRouter: React.FC = () => {
                 <section id="career" className="py-24 bg-[var(--bg-primary)]">
                   <Career />
                 </section>
-                <section id="contact" className="py-24 bg-gradient-to-t from-[var(--bg-secondary)] to-[var(--bg-primary)]">
+                <section id="contact" className="bg-gradient-to-t from-[var(--bg-secondary)] to-[var(--bg-primary)]">
                   <Contact />
                 </section>
                 <Footer />

@@ -241,16 +241,16 @@ const Profile: React.FC = () => {
       if (!user?.email) {
         return;
       }
-      
+
       setIsLoadingUserData(true);
       setUserDataError(null);
       try {
         const token = localStorage.getItem('authToken');
-        
+
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
         };
-        
+
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
         }
@@ -267,7 +267,7 @@ const Profile: React.FC = () => {
         }
 
         const data = await response.json();
-        
+
         // Handle potential nested response structure
         const userData = data.data || data;
         setFetchedUserData(userData);

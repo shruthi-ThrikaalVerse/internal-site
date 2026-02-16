@@ -628,7 +628,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
       try {
         setApiTasksLoading(true);
         const data = await getTasksFromAPI();
-        
+
         // Normalize task data to match Task interface
         const normalizedTasks = Array.isArray(data) ? data.map((task: any) => ({
           id: task.id || task._id || task.taskId,
@@ -648,7 +648,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
           attachments: task.attachments || [],
           tags: task.tags || [],
         })) : [];
-        
+
         setApiTasks(normalizedTasks);
         console.log('Tasks fetched from API:', normalizedTasks);
       } catch (error) {
@@ -928,7 +928,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
     try {
       setApiTasksLoading(true);
       const data = await getTasksFromAPI();
-      
+
       // Normalize task data to match Task interface
       const normalizedTasks = Array.isArray(data) ? data.map((task: any) => ({
         id: task.id || task._id || task.taskId,
@@ -948,7 +948,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
         attachments: task.attachments || [],
         tags: task.tags || [],
       })) : [];
-      
+
       setApiTasks(normalizedTasks);
       notify('Tasks refreshed successfully', 'success');
     } catch (error) {

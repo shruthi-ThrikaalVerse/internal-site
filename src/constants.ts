@@ -50,36 +50,48 @@ export const NAV_ITEMS = [
 ];
 
 // Backwards-compat aliases used by some components
+// src/constants.js
+
 export const PROJECTS = [
   {
     id: 1,
-    title: "AI-Powered Analytics Platform",
-    category: "Technology",
-    description: "Advanced analytics system leveraging machine learning to provide real-time insights and predictive modeling for enterprise clients.",
-    image: "https://images.unsplash.com/photo-1676582711019-d63e16e39259?w=800&h=600&fit=crop"
+    title: "Givget",
+    category: "Online Marketplace",
+    image:
+      "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=1200&auto=format&fit=crop",
+    description:
+      "An online marketplace platform enabling users to buy, sell, and exchange products seamlessly with secure communication features."
   },
+
   {
     id: 2,
-    title: "Green Energy Grid Integration",
-    category: "Sustainability",
-    description: "Innovative renewable energy distribution network connecting solar and wind farms with smart grid technology.",
-    image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&h=600&fit=crop"
+    title: "Prabhas Cine Universe",
+    category: "Cinema & OTT Ecosystem",
+    image: "/bf038ade-7ce0-46b2-a7a4-517a629e2efb.png",
+
+    description:
+      "A premium cinematic ecosystem offering film education, OTT services, industry union systems, and movie performance analytics."
   },
   {
     id: 3,
-    title: "Cloud Infrastructure Suite",
-    category: "Infrastructure",
-    description: "Comprehensive cloud management platform providing seamless deployment and monitoring across multiple data centers.",
-    image: "https://images.unsplash.com/photo-1667185753392-8f5fbaa243de?w=800&h=600&fit=crop"
+    title: "AI Support Bot",
+    category: "Artificial Intelligence",
+    image:
+      "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=1200&auto=format&fit=crop",
+    description:
+      "An AI-powered chatbot built using Django and modern APIs to automate customer support with intelligent responses."
   },
   {
     id: 4,
-    title: "Blockchain Supply Chain",
-    category: "Enterprise",
-    description: "Decentralized supply chain management system using blockchain technology for complete transparency and traceability.",
-    image: "https://images.unsplash.com/photo-1639762681033-cb37b36a1dd1?w=800&h=600&fit=crop"
+    title: "HRMS Dashboard",
+    category: "Enterprise Software",
+    image:
+      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1200&auto=format&fit=crop",
+    description:
+      "A complete HR management system with employee tracking, payroll management, and attendance monitoring."
   }
 ];
+
 
 export const TEAM = [
   {

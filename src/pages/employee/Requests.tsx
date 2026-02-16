@@ -35,7 +35,7 @@ interface RecordDTO {
   status: string;
   creationDate: string;
   priority: string;
-} 
+}
 
 const FAQ_DATA = [
   {
@@ -456,7 +456,7 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
             // non-json response
             msg = errText || msg;
           }
-        } catch (_) {}
+        } catch (_) { }
 
         if (response.status === 401) toast.error('Authentication failed. Please log in again.');
         else if (response.status === 403) toast.error('Permission denied.');
@@ -550,10 +550,11 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Field 1: Category Dropdown */}
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
+                  <label htmlFor="request-category" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
                     Category *
                   </label>
                   <select
+                    id="request-category"
                     value={selectedCategory}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                       setSelectedCategory(e.target.value);
@@ -561,6 +562,8 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
                     }}
                     required
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700 cursor-pointer"
+                    aria-label="Request category"
+                    title="Request category"
                   >
                     <option value="">Select a category</option>
                     {categories.map(category => (
@@ -573,15 +576,18 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
 
                 {/* Field 2: Type Dropdown */}
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
+                  <label htmlFor="request-type" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
                     Type *
                   </label>
                   <select
+                    id="request-type"
                     value={selectedType}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedType(e.target.value)}
                     required
                     disabled={!selectedCategory}
                     className={`w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700 cursor-pointer ${!selectedCategory ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    aria-label="Request type"
+                    title="Request type"
                   >
                     <option value="">Select a type</option>
                     {getTypesForCategory(selectedCategory).map(type => (
@@ -594,28 +600,34 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
 
                 {/* Field 3: Subject */}
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
+                  <label htmlFor="request-subject" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
                     Subject *
                   </label>
                   <input
+                    id="request-subject"
                     type="text"
                     value={subject}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubject(e.target.value)}
                     required
                     placeholder="Brief summary of your request"
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700"
+                    aria-label="Request subject"
+                    title="Request subject"
                   />
                 </div>
 
                 {/* Field 3.5: Priority */}
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
+                  <label htmlFor="request-priority" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
                     Priority
                   </label>
                   <select
+                    id="request-priority"
                     value={priority}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPriority(e.target.value as 'low' | 'medium' | 'high' | 'urgent')}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700 cursor-pointer"
+                    aria-label="Request priority"
+                    title="Request priority"
                   >
                     <option value="high">High</option>
                     <option value="medium">Medium</option>
@@ -626,33 +638,37 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
 
                 {/* Field 4: Description */}
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
+                  <label htmlFor="request-description" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
                     Description *
                   </label>
                   <textarea
+                    id="request-description"
                     value={description}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
                     required
                     rows={4}
                     placeholder="Detailed description of your issue or request..."
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700 resize-none"
+                    aria-label="Request description"
+                    title="Request description"
                   />
                 </div>
 
                 {/* Field 5: Upload Files */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1 flex items-center gap-1">
+                  <label htmlFor="request-files" className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1 flex items-center gap-1">
                     Attachments
                     {isExpenseClaim && (
                       <span className="text-rose-500">*</span>
                     )}
                     <span className="text-gray-400 font-normal">
-                      {isExpenseClaim 
-                        ? ' (Required for expense claims)' 
+                      {isExpenseClaim
+                        ? ' (Required for expense claims)'
                         : ' (Optional)'}
                     </span>
                   </label>
                   <input
+                    id="request-files"
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileChange}
@@ -660,13 +676,18 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
                     className="hidden"
                   />
                   <div
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
                     onClick={() => fileInputRef.current?.click()}
+                    aria-label="Upload attachments"
+                    title="Upload attachments"
                     className={`border-2 border-dashed rounded-xl p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group ${isExpenseClaim && attachments.length === 0 ? 'border-rose-200 bg-rose-50' : 'border-gray-200'}`}
                   >
                     <FileUp className="w-8 h-8 text-gray-300 mx-auto mb-2 group-hover:text-blue-500 transition-colors" />
                     <span className="text-sm font-medium text-gray-600 block">
-                      {attachments.length === 0 
-                        ? 'Click to upload files (images, documents, etc.)' 
+                      {attachments.length === 0
+                        ? 'Click to upload files (images, documents, etc.)'
                         : `${attachments.length} file(s) selected`}
                     </span>
                     {isExpenseClaim && attachments.length === 0 && (
@@ -675,7 +696,7 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
                       </p>
                     )}
                   </div>
-                  
+
                   {/* Display selected files */}
                   {attachments.length > 0 && (
                     <div className="mt-3 space-y-2">
@@ -691,6 +712,8 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
                             type="button"
                             onClick={() => removeAttachment(idx)}
                             className="p-1 hover:bg-rose-100 text-rose-500 rounded transition-colors"
+                            aria-label={`Remove attachment ${file.name}`}
+                            title={`Remove attachment ${file.name}`}
                           >
                             <X size={14} />
                           </button>
@@ -907,19 +930,25 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
                       <div className="relative group flex-1 min-w-[250px]">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors w-4 h-4" />
                         <input
+                          id="records-search"
                           type="text"
                           placeholder="Search records..."
                           value={searchQuery}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                           className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-sm"
+                          aria-label="Search ticket records"
+                          title="Search ticket records"
                         />
                       </div>
 
                       <div className="flex items-center gap-2">
                         <select
+                          id="filter-status"
                           value={filterStatus}
                           onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterStatus(e.target.value)}
                           className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none flex-1 min-w-[150px]"
+                          aria-label="Filter by status"
+                          title="Filter by status"
                         >
                           <option value="all">All Statuses</option>
                           <option value="open">Pending</option>
@@ -937,7 +966,7 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Fixed Table Header - placed INSIDE the sticky container with column spacing */}
                 <div className="sticky top-[66px] md:top-[82px] z-10 bg-white border-b border-gray-100 min-w-[900px]">
                   <div className="grid grid-cols-12 px-4 sm:px-6 lg:px-8 py-3 bg-white">
@@ -947,27 +976,27 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
                         <span>Help Request</span>
                       </div>
                     </div>
-                    
+
                     {/* Category - 2 columns */}
                     <div className="col-span-2 px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-left">
                       Category
                     </div>
-                    
+
                     {/* Status - 2 columns */}
                     <div className="col-span-2 px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">
                       Status
                     </div>
-                    
+
                     {/* Date Created - 2 columns */}
                     <div className="col-span-2 px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-left">
                       Date Created
                     </div>
-                    
+
                     {/* Priority - 1 column */}
                     <div className="col-span-1 px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">
                       Priority
                     </div>
-                    
+
                     {/* Options - 2 columns */}
                     <div className="col-span-2 px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">
                       Options
@@ -975,7 +1004,7 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
                   </div>
                 </div>
               </div>
-              
+
               {/* Content rows (now using the outer container for scrolling) */}
               <div>
                 {isLoadingRecords ? (
@@ -992,13 +1021,13 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
                             <div className="font-black text-gray-900 text-sm tracking-tight truncate">{r.subject}</div>
                             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1 truncate">ID: {r.ticketId}</div>
                           </div>
-                          
+
                           {/* Category - 2 columns */}
                           <div className="col-span-2 px-3 text-left">
                             <div className="text-[10px] font-black text-gray-800 uppercase tracking-widest truncate">{r.category}</div>
                             <div className="text-[10px] font-bold text-gray-400 uppercase mt-1 truncate">{r.type}</div>
                           </div>
-                          
+
                           {/* Status - 2 columns */}
                           <div className="col-span-2 px-3 text-center">
                             <div className="flex justify-center items-center gap-2">
@@ -1010,7 +1039,7 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
                               </span>
                             </div>
                           </div>
-                          
+
                           {/* Date Created - 2 columns */}
                           <div className="col-span-2 px-3 text-left">
                             <div className="text-[10px] font-black text-gray-800 uppercase tabular-nums">
@@ -1020,14 +1049,14 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
                               {new Date(r.creationDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                             </div>
                           </div>
-                          
+
                           {/* Priority - 1 column */}
                           <div className="col-span-1 px-3 text-center">
-                            <span className={`inline-flex items-center px-3 md:px-4 py-1 md:py-1.5 rounded-lg md:rounded-xl text-[9px] font-black uppercase tracking-widest shadow-sm ${getPriorityColor(((r.priority||'medium') as any))} text-white whitespace-nowrap`}>
+                            <span className={`inline-flex items-center px-3 md:px-4 py-1 md:py-1.5 rounded-lg md:rounded-xl text-[9px] font-black uppercase tracking-widest shadow-sm ${getPriorityColor(((r.priority || 'medium') as any))} text-white whitespace-nowrap`}>
                               {r.priority || 'medium'}
                             </span>
                           </div>
-                          
+
                           {/* Options - 2 columns */}
                           <div className="col-span-2 px-3 text-right">
                             <button
@@ -1222,25 +1251,7 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
         </div>
       )}
 
-      {/* Add CSS for hiding scrollbar */}
-      <style>{`
-        .scrollbar-hidden {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hidden::-webkit-scrollbar {
-          display: none;
-          width: 0;
-          height: 0;
-        }
-        .scrollbar-hidden::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .scrollbar-hidden::-webkit-scrollbar-thumb {
-          background: transparent;
-          border: none;
-        }
-      `}</style>
+      {/* Scrollbar styles moved to global CSS for accessibility */}
     </div>
   );
 };
