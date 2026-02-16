@@ -216,14 +216,12 @@ const Navbar = () => {
         variants={navVariants}
         initial="hidden"
         animate="visible"
-        className={`
-          fixed top-0 left-0 right-0 z-50 
-          transition-all duration-500 px-4 sm:px-6 lg:px-8
-          ${scrolled
-            ? "py-2 sm:py-3 bg-[var(--bg-primary)]/90 backdrop-blur-xl border-b border-[var(--border-color)]"
-            : "py-4 sm:py-6 bg-transparent"
-          }
-        `}
+        className={`fixed top-0 left-0 right-0 z-[9999] transition-all duration-500 px-4 sm:px-6 lg:px-8 ${scrolled ? 'py-2 sm:py-3' : 'py-4 sm:py-6'}`}
+        style={{
+          background: mode === 'dark' ? 'var(--bg-primary)' : 'rgba(255,255,255,0.98)',
+          boxShadow: '0 6px 18px rgba(15,23,42,0.08)',
+          borderBottom: '1px solid var(--border-color)'
+        }}
       >
         <div className="container mx-auto flex items-center justify-between">
           {/* Logo Section */}
