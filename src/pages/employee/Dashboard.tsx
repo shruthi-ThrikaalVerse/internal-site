@@ -508,7 +508,7 @@ const Dashboard: React.FC = () => {
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value as any)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-bold uppercase tracking-widest outline-none"
+              className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-bold uppercase tracking-widest outline-none text-black"
               title="Select month for attendance overview"
             >
               <option value="current">Current Month</option>

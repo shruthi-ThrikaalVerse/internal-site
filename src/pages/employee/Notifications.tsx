@@ -903,7 +903,7 @@ const EmployeeNotifications: React.FC = () => {
                   placeholder="Search employee notifications..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-black"
                 />
               </div>
 
@@ -1201,7 +1201,7 @@ const EmployeeNotifications: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setIsSettingsOpen(false)}
-                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-black"
                   >
                     <X className="w-5 h-5" />
                   </button>
