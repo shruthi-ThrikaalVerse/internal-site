@@ -14,6 +14,8 @@ import {
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { Task } from '../../types.ts';
 import { getTasks as getTasksFromAPI } from '../../api/tasks.ts';
+import { getTeams as getTeamsFromAPI } from '../../api/teams.ts';
+import { getAllEmployees as getEmployeesFromAPI } from '../../api/users.ts';
 interface PerformanceData {
   id: string;
   name: string;
@@ -361,6 +363,10 @@ const EmployeePerformanceDashboard: React.FC = () => {
   const { employees, attendance, notify, tasks, customTeams, taskReviews, addTaskReview } = useHRMS();
   const [apiTasks, setApiTasks] = useState<any[]>([]);
   const [apiTasksLoading, setApiTasksLoading] = useState<boolean>(false);
+  const [apiTeams, setApiTeams] = useState<any[]>([]);
+  const [apiTeamsLoading, setApiTeamsLoading] = useState<boolean>(false);
+  const [apiEmployees, setApiEmployees] = useState<any[]>([]);
+  const [apiEmployeesLoading, setApiEmployeesLoading] = useState<boolean>(false);
   const [performanceDataState, setPerformanceData] = useState<PerformanceData[]>([]);
   const [departmentStats, setDepartmentStats] = useState<DepartmentStats[]>([]);
   const [deptApiData, setDeptApiData] = useState<any[]>([]);
@@ -630,24 +636,29 @@ const EmployeePerformanceDashboard: React.FC = () => {
         const data = await getTasksFromAPI();
 
         // Normalize task data to match Task interface
-        const normalizedTasks = Array.isArray(data) ? data.map((task: any) => ({
-          id: task.id || task._id || task.taskId,
-          title: task.title,
-          description: task.description,
-          status: task.status || 'pending',
-          priority: task.priority || 'p2',
-          assigneeType: task.assigneeType || 'employee', // 'employee' or 'team'
-          assignedTo: task.assignedTo || task.assigneeId,
-          assigneeName: task.assigneeName || task.assigneeName,
-          dueDate: task.dueDate,
-          createdAt: task.createdAt,
-          createdBy: task.createdBy,
-          teamId: task.teamId,
-          teamName: task.teamName,
-          comments: task.comments || [],
-          attachments: task.attachments || [],
-          tags: task.tags || [],
-        })) : [];
+        const normalizedTasks = Array.isArray(data) ? data.map((task: any) => {
+          const assigneeType = (task.assigneeType || 'employee').toLowerCase();
+          const assignedTo = assigneeType === 'team' ? (task.teamId || task.assignedTo) : (task.assignedTo || task.employeeId);
+
+          return {
+            id: task.id || task._id || task.taskId,
+            title: task.title,
+            description: task.description,
+            status: (task.status || 'pending').toLowerCase(),
+            priority: (task.priority || 'p2').toLowerCase(),
+            assigneeType: assigneeType,
+            assignedTo: assignedTo,
+            assigneeName: task.assigneeName || task.assigneeName,
+            dueDate: task.dueDate || task.deadlineAt,
+            createdAt: task.createdAt,
+            createdBy: task.createdBy,
+            teamId: task.teamId,
+            teamName: task.teamName,
+            comments: task.comments || [],
+            attachments: task.attachments || [],
+            tags: task.tags || [],
+          };
+        }) : [];
 
         setApiTasks(normalizedTasks);
         console.log('Tasks fetched from API:', normalizedTasks);
@@ -660,6 +671,73 @@ const EmployeePerformanceDashboard: React.FC = () => {
     };
 
     fetchTasksFromAPI();
+  }, []);
+
+  // Fetch teams from API
+  useEffect(() => {
+    const fetchTeamsFromAPI = async () => {
+      try {
+        setApiTeamsLoading(true);
+        const data = await getTeamsFromAPI();
+
+        // Normalize team data
+        const normalizedTeams = Array.isArray(data) ? data.map((team: any) => {
+          const teamId = team.id || team.teamId;
+          return {
+            id: teamId,
+            teamId: teamId,
+            name: team.name,
+            employeeIds: team.employeeIds || team.memberIds || [],
+            memberIds: team.memberIds || team.employeeIds || []
+          };
+        }) : [];
+
+        setApiTeams(normalizedTeams);
+        console.log('Teams fetched from API:', normalizedTeams);
+      } catch (error) {
+        console.error('Failed to fetch teams from API:', error);
+        setApiTeams([]);
+      } finally {
+        setApiTeamsLoading(false);
+      }
+    };
+
+    fetchTeamsFromAPI();
+  }, []);
+
+  // Fetch employees from API
+  useEffect(() => {
+    const fetchEmployeesFromAPI = async () => {
+      try {
+        setApiEmployeesLoading(true);
+        const data = await getEmployeesFromAPI();
+
+        // Normalize employee data
+        const normalizedEmployees = Array.isArray(data) ? data.map((emp: any) => ({
+          id: emp.id || emp.employeeId,
+          employeeId: emp.employeeId,
+          fullName: emp.fullName,
+          email: emp.email,
+          department: emp.department,
+          designation: emp.designation,
+          avatar: emp.avatar,
+          leaveBalance: emp.leaveBalance,
+          status: emp.status,
+          reportingManager: emp.reportingManager,
+          dateOfJoining: emp.dateOfJoining
+        })) : [];
+
+        setApiEmployees(normalizedEmployees);
+        console.log('Employees fetched from API:', normalizedEmployees);
+      } catch (error) {
+        console.error('Failed to fetch employees from API:', error);
+        setApiEmployees([]);
+      } finally {
+        setApiEmployeesLoading(false);
+      }
+    };
+
+    fetchEmployeesFromAPI();
   }, []);
 
   // Calculate overall stats from real data
@@ -753,7 +831,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
   };
 
   const handleScheduleReview = (employeeName: string) => {
-    notify(`Performance review scheduled for ${employeeName}`, 'success');
   };
 
   // Function to convert data to CSV format
@@ -812,9 +889,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
-      // Show success notification
-      notify(`Performance report downloaded successfully!`, 'success');
 
     } catch (error) {
       console.error('Error downloading report:', error);
@@ -892,7 +966,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
           method: 'POST',
           credentials: 'include',
           headers,
-          body: JSON.stringify({ rating: ratingEnum, reviewComment: reviewComment })
+          body: JSON.stringify({ employeeId: reviewEmployeeId, rating: ratingEnum, comments: reviewComment })
         });
 
         if (res.ok) {
@@ -905,7 +979,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
             comment: reviewComment,
             date: new Date().toISOString().split('T')[0]
           });
-          notify('Review submitted successfully', 'success');
           loadPerformanceData();
           closeReviewModal();
         } else {
@@ -921,7 +994,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
   const handleRefreshData = () => {
     loadPerformanceData();
-    notify('Performance data refreshed', 'info');
   };
 
   const handleRefreshTasks = async () => {
@@ -930,27 +1002,31 @@ const EmployeePerformanceDashboard: React.FC = () => {
       const data = await getTasksFromAPI();
 
       // Normalize task data to match Task interface
-      const normalizedTasks = Array.isArray(data) ? data.map((task: any) => ({
-        id: task.id || task._id || task.taskId,
-        title: task.title,
-        description: task.description,
-        status: task.status || 'pending',
-        priority: task.priority || 'p2',
-        assigneeType: task.assigneeType || 'employee',
-        assignedTo: task.assignedTo || task.assigneeId,
-        assigneeName: task.assigneeName || task.assigneeName,
-        dueDate: task.dueDate,
-        createdAt: task.createdAt,
-        createdBy: task.createdBy,
-        teamId: task.teamId,
-        teamName: task.teamName,
-        comments: task.comments || [],
-        attachments: task.attachments || [],
-        tags: task.tags || [],
-      })) : [];
+      const normalizedTasks = Array.isArray(data) ? data.map((task: any) => {
+        const assigneeType = (task.assigneeType || 'employee').toLowerCase();
+        const assignedTo = assigneeType === 'team' ? (task.teamId || task.assignedTo) : (task.assignedTo || task.employeeId);
+
+        return {
+          id: task.id || task._id || task.taskId,
+          title: task.title,
+          description: task.description,
+          status: (task.status || 'pending').toLowerCase(),
+          priority: (task.priority || 'p2').toLowerCase(),
+          assigneeType: assigneeType,
+          assignedTo: assignedTo,
+          assigneeName: task.assigneeName || task.assigneeName,
+          dueDate: task.dueDate || task.deadlineAt,
+          createdAt: task.createdAt,
+          createdBy: task.createdBy,
+          teamId: task.teamId,
+          teamName: task.teamName,
+          comments: task.comments || [],
+          attachments: task.attachments || [],
+          tags: task.tags || [],
+        };
+      }) : [];
 
       setApiTasks(normalizedTasks);
-      notify('Tasks refreshed successfully', 'success');
     } catch (error) {
       console.error('Failed to refresh tasks:', error);
       notify('Failed to refresh tasks', 'error');
@@ -1759,28 +1835,117 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Review For</label>
-                <select
-                  title="Select employee for review"
-                  value={reviewEmployeeId}
-                  onChange={(e) => setReviewEmployeeId(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
-                >
-                  <option value="">Select employee</option>
-                  {selectedTaskForReview.assigneeType === 'employee' && (
+
+                {selectedTaskForReview.assigneeType === 'employee' && (
+                  <select
+                    title="Select employee for review"
+                    value={reviewEmployeeId}
+                    onChange={(e) => setReviewEmployeeId(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                  >
+                    <option value="">Select employee</option>
                     <option value={selectedTaskForReview.assignedTo}>{selectedTaskForReview.assigneeName}</option>
-                  )}
-                  {selectedTaskForReview.assigneeType === 'team' && (
-                    customTeams.find(t => t.id === selectedTaskForReview.assignedTo)?.memberIds.map(mid => {
-                      const emp = employees.find(e => e.id === mid);
-                      return emp ? <option key={mid} value={emp.id}>{emp.fullName}</option> : null;
-                    })
-                  )}
-                  {selectedTaskForReview.assigneeType === 'department' && (
-                    employees.filter(e => e.department === selectedTaskForReview.assignedTo).map(emp => (
-                      <option key={emp.id} value={emp.id}>{emp.fullName}</option>
-                    ))
-                  )}
-                </select>
+                  </select>
+                )}
+                {selectedTaskForReview.assigneeType === 'team' && (
+                  (() => {
+                    // Get team member IDs from selected task
+                    let memberIds: string[] = [];
+
+                    // Debug info
+                    console.log('=== TEAM TASK DEBUG ===');
+                    console.log('Task:', selectedTaskForReview);
+                    console.log('assignedTo:', selectedTaskForReview.assignedTo);
+                    console.log('API Teams count:', apiTeams.length);
+                    console.log('Custom Teams count:', customTeams.length);
+
+                    if (!selectedTaskForReview.assignedTo) {
+                      console.log('ERROR: assignedTo is null/undefined');
+                      return (
+                        <select
+                          disabled
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm opacity-50"
+                        >
+                          <option>Error: No team ID found</option>
+                        </select>
+                      );
+                    }
+
+                    // Search for team in apiTeams
+                    const apiTeam = apiTeams.find(t => {
+                      const matches = (t.teamId === selectedTaskForReview.assignedTo ||
+                        t.id === selectedTaskForReview.assignedTo);
+                      console.log(`Checking API team - id: "${t.id}", teamId: "${t.teamId}", matches: ${matches}`);
+                      return matches;
+                    });
+
+                    if (apiTeam) {
+                      memberIds = apiTeam.employeeIds || [];
+                      console.log('✓ Found team in API teams:', apiTeam.name, 'Members:', memberIds);
+                    } else {
+                      // Search in custom teams
+                      const customTeam = customTeams.find(t => t.id === selectedTaskForReview.assignedTo);
+                      if (customTeam) {
+                        memberIds = customTeam.memberIds || [];
+                        console.log('✓ Found team in custom teams:', customTeam.name, 'Members:', memberIds);
+                      } else {
+                        console.log('✗ Team NOT found! Looking for ID:', selectedTaskForReview.assignedTo);
+                        console.log('Available API teams:', apiTeams.map(t => ({ id: t.id, teamId: t.teamId, name: t.name })));
+                        console.log('Available custom teams:', customTeams.map(t => ({ id: t.id, name: t.name })));
+                      }
+                    }
+
+                    return (
+                      <select
+                        title="Select employee for review"
+                        value={reviewEmployeeId}
+                        onChange={(e) => setReviewEmployeeId(e.target.value)}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                      >
+                        <option value="">Select employee</option>
+                        {memberIds.length === 0 ? (
+                          <>
+                            <option disabled>Loading team members...</option>
+                            <option disabled>If this persists, there may be an issue loading the team data</option>
+                          </>
+                        ) : (
+                          memberIds.map((memberId: string) => {
+                            // Use API employees first, fallback to context employees
+                            const allEmployees = apiEmployees.length > 0 ? apiEmployees : employees;
+                            const emp = allEmployees.find(e => e.id === memberId || e.employeeId === memberId);
+                            if (emp) {
+                              console.log(`✓ Found employee for ${memberId}:`, emp.fullName);
+                            } else {
+                              console.log(`✗ No employee found for member ID: ${memberId}`);
+                            }
+                            return emp ? (
+                              <option key={memberId} value={emp.id || emp.employeeId}>
+                                {emp.fullName}
+                              </option>
+                            ) : null;
+                          })
+                        )}
+                      </select>
+                    );
+                  })()
+                )}
+                {selectedTaskForReview.assigneeType === 'department' && (
+                  <select
+                    title="Select employee for review"
+                    value={reviewEmployeeId}
+                    onChange={(e) => setReviewEmployeeId(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                  >
+                    <option value="">Select employee</option>
+                    {(apiEmployees.length > 0 ? apiEmployees : employees)
+                      .filter(e => e.department === selectedTaskForReview.assignedTo)
+                      .map(emp => (
+                        <option key={emp.id} value={emp.id}>
+                          {emp.fullName}
+                        </option>
+                      ))}
+                  </select>
+                )}
               </div>
 
               <div>

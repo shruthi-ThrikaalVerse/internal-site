@@ -138,10 +138,8 @@ const NotificationsAdmin: React.FC = () => {
 
       if (editingId) {
         await updateNotification(editingId, payload);
-        notify('Notification updated successfully!', 'success');
       } else {
         await createNotification(payload);
-        notify('Notification created successfully!', 'success');
       }
 
       setIsModalOpen(false);
@@ -182,7 +180,6 @@ const NotificationsAdmin: React.FC = () => {
     if (!window.confirm(`Delete "${n.title}"?`)) return;
     try {
       await deleteNotification(n.id);
-      notify('Notification deleted successfully!', 'success');
       await fetchNotifications();
     } catch (err: any) {
       notify(err?.message || 'Failed to delete notification', 'error');

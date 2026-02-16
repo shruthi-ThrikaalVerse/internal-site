@@ -375,7 +375,6 @@ const Profile: React.FC = () => {
       const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.fullName || 'admin')}`;
       auth.updateAvatar?.(defaultAvatar);
       localStorage.removeItem(`profile_image_${user.id}`);
-      notify('Profile photo removed', 'info');
     }
   };
 
@@ -386,7 +385,6 @@ const Profile: React.FC = () => {
 
   const handlePasswordUpdate = (e: React.FormEvent) => {
     e.preventDefault();
-    notify('Administrative password updated successfully.', 'success');
   };
 
   // Mock implementation for updateProfilePicture
@@ -409,7 +407,6 @@ const Profile: React.FC = () => {
           auth.updateAvatar?.(imageUrl);
         }
 
-        notify('Profile picture updated successfully!', 'success');
         setUploadProgress(0);
       };
       reader.readAsDataURL(file);
@@ -427,7 +424,6 @@ const Profile: React.FC = () => {
       auth.updateAvatar?.(defaultAvatar);
       localStorage.removeItem(`profile_image_${user.id}`);
     }
-    notify('Profile picture removed', 'info');
   };
 
   // Export profile data function
@@ -477,7 +473,6 @@ const Profile: React.FC = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      notify('Profile exported successfully!', 'success');
     } catch (error) {
       console.error('Export failed:', error);
       notify('Failed to export profile data', 'error');
@@ -569,7 +564,7 @@ const Profile: React.FC = () => {
 
       <div className="flex gap-3">
         <button
-          onClick={() => notify('Profile settings saved.', 'success')}
+          onClick={() => {}}
           className="px-6 py-3 bg-white rounded-2xl border border-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2"
           title="Save profile settings"
           aria-label="Save profile settings"
@@ -892,7 +887,6 @@ const Profile: React.FC = () => {
           <button
             onClick={() => {
               setIsMfaEnabled(!isMfaEnabled);
-              notify(`MFA Protocol ${!isMfaEnabled ? 'Enabled' : 'Disabled'}`, !isMfaEnabled ? 'success' : 'warning');
             }}
             className={`w-14 h-8 rounded-full transition-all relative p-1.5 ${isMfaEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`}
             title={`${isMfaEnabled ? 'Disable' : 'Enable'} two-factor authentication`}
@@ -983,7 +977,7 @@ const Profile: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => notify('Profile settings saved.', 'success')} className="px-6 py-3 bg-white rounded-2xl border border-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all" title="Save profile settings" aria-label="Save profile settings">Save</button>
+          <button onClick={() => {}} className="px-6 py-3 bg-white rounded-2xl border border-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all" title="Save profile settings" aria-label="Save profile settings">Save</button>
           <button onClick={handleExportProfile} className="px-6 py-3 bg-indigo-50 text-indigo-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-100 transition-all" title="Export profile data" aria-label="Export profile data">Export</button>
         </div>
       </div>

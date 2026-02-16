@@ -25,12 +25,14 @@ const SYSTEM_HOLIDAYS = [
 ];
 
 const LeaveCenter: React.FC = () => {
-  const { leaves, updateLeaveStatus, updateEmployee, notify, addLog } = useHRMS();
+  const { updateLeaveStatus, updateEmployee, notify, addLog } = useHRMS();
   const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending');
   const [localLeaves, setLocalLeaves] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const pendingLeaves = localLeaves.length > 0 ? localLeaves : leaves.filter(l => l.status === 'pending');
-  const pastLeaves = leaves.filter(l => l.status !== 'pending');
+  const pendingLeaves = localLeaves.filter(l => l.status === 'pending');
+  const pastLeaves = localLeaves.filter(l => l.status !== 'pending');
 
   const displayLeaves = activeTab === 'pending' ? pendingLeaves : pastLeaves;
 
@@ -57,8 +59,11 @@ const LeaveCenter: React.FC = () => {
     }
   }, [updateEmployee]);
 
-  const fetchPendingLeaves = useCallback(async () => {
+  const fetchPendingLeaves = useCallback(async (showLoading = false) => {
     try {
+      if (showLoading) setIsLoading(true);
+      else setIsRefreshing(true);
+      
       const res = await fetch('http://localhost:8085/leave-requests/pending', {
         method: 'GET',
         credentials: 'include',
@@ -85,15 +90,26 @@ const LeaveCenter: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to fetch pending leaves', err);
+      setLocalLeaves([]);
+    } finally {
+      if (showLoading) setIsLoading(false);
+      else setIsRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    // Run fetches once on mount. Using empty deps prevents repeated calls caused
-    // by changing function references (e.g. context functions) that would
-    // otherwise retrigger the effect.
-    fetchPendingLeaves();
+    // Initial load with loading state
+    fetchPendingLeaves(true);
     fetchLeaveBalances();
+
+    // Set up polling to refresh data every 30 seconds
+    const intervalId = setInterval(() => {
+      fetchPendingLeaves(false);
+      fetchLeaveBalances();
+    }, 30000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -109,11 +125,10 @@ const LeaveCenter: React.FC = () => {
         setLocalLeaves(prev => prev.map(l => l.id === id ? { ...l, status } : l).filter(l => status === 'pending' ? true : l.status !== 'pending'));
         // Sync context
         updateLeaveStatus(id, status as any);
-        notify('Leave request status updated successfully!', 'success');
         addLog('Update', 'Leave', `Updated leave ${id} to ${status}`);
         // Refresh balances and pending list
         await fetchLeaveBalances();
-        await fetchPendingLeaves();
+        await fetchPendingLeaves(false);
       } else {
         const err = await res.json().catch(() => ({}));
         notify(err.message || 'Failed to update leave status', 'error');
@@ -134,6 +149,49 @@ const LeaveCenter: React.FC = () => {
       weekday: days[date.getDay()]
     };
   };
+
+  const LeaveCardSkeleton = () => (
+    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6 animate-pulse">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-4 flex-1">
+          <div className="w-12 h-12 bg-gray-200 rounded-2xl" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-gray-200 rounded w-32" />
+            <div className="h-3 bg-gray-100 rounded w-24" />
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <div className="h-5 bg-gray-200 rounded w-16" />
+          <div className="h-3 bg-gray-100 rounded w-20" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-6 bg-gray-50/50 p-5 rounded-2xl">
+        <div className="space-y-2">
+          <div className="h-2 bg-gray-200 rounded w-10" />
+          <div className="h-4 bg-gray-200 rounded w-20" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-2 bg-gray-200 rounded w-10" />
+          <div className="h-4 bg-gray-200 rounded w-20" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-2 bg-gray-200 rounded w-16" />
+          <div className="h-4 bg-gray-200 rounded w-12" />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className="h-2 bg-gray-200 rounded w-24" />
+        <div className="h-4 bg-gray-100 rounded w-full" />
+      </div>
+
+      <div className="flex items-center gap-3 pt-4 border-t border-gray-50">
+        <div className="flex-1 h-10 bg-gray-200 rounded-xl" />
+        <div className="flex-1 h-10 bg-gray-100 rounded-xl" />
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -160,7 +218,14 @@ const LeaveCenter: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
-          {displayLeaves.length > 0 ? displayLeaves.map((req) => (
+          {isLoading ? (
+            // Show skeleton while loading
+            <>
+              <LeaveCardSkeleton />
+              <LeaveCardSkeleton />
+              <LeaveCardSkeleton />
+            </>
+          ) : displayLeaves.length > 0 ? displayLeaves.map((req) => (
             <div key={req.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6 animate-in slide-in-from-bottom-4 duration-300">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
@@ -241,7 +306,8 @@ const LeaveCenter: React.FC = () => {
               <h3 className="text-lg font-bold text-gray-900">No requests found</h3>
               <p className="text-sm text-gray-400 max-w-xs mt-1">There are currently no {activeTab} leave applications to display.</p>
             </div>
-          )}
+          )
+          }
         </div>
 
         <div className="space-y-6">

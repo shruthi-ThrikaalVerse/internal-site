@@ -109,7 +109,6 @@ const DocumentManagement: React.FC = () => {
     }
 
     updateEmployee(empId, { documents: newDocs } as any);
-    notify(`${type} marked as ${status} for ${emp.fullName}`, status === 'verified' ? 'success' : 'info');
     addLog('Update', 'Document', `${status.toUpperCase()} ${type} for ${emp.fullName}`);
 
     if (selectedEmployee && selectedEmployee.id === empId) {
@@ -132,7 +131,6 @@ const DocumentManagement: React.FC = () => {
         try {
           const apiType = displayToApiType[activeUpload.type] || activeUpload.type;
           const resp = await uploadDocument(file, { employeeId: activeUpload.empId, documentType: apiType });
-          notify('Uploaded document successfully','success');
           // refresh docs for employee
           if (selectedEmployee && selectedEmployee.employeeId === activeUpload.empId) {
             const docs = await getDocumentsByEmployee(activeUpload.empId);
@@ -186,7 +184,6 @@ const DocumentManagement: React.FC = () => {
     try {
       const apiType = displayToApiType[uploadForm.documentType] || uploadForm.documentType;
       await uploadDocument(uploadForm.file, { employeeId: uploadForm.employeeId, documentType: apiType });
-      notify('Uploaded document successfully','success');
       // refresh if viewing same employee
       if (selectedEmployee && selectedEmployee.employeeId === uploadForm.employeeId) {
         const docs = await getDocumentsByEmployee(uploadForm.employeeId);
@@ -254,7 +251,6 @@ const DocumentManagement: React.FC = () => {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        notify(`Downloading ${doc.fileName}...`, 'success');
         return;
       }
       if (doc.id && selectedEmployee) {
@@ -269,7 +265,6 @@ const DocumentManagement: React.FC = () => {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        notify(`Downloading ${filename}...`, 'success');
       }
     } catch (err: any) {
       notify(`Download failed: ${err.message || err}`,'error');
@@ -333,7 +328,6 @@ const DocumentManagement: React.FC = () => {
     link.click();
     document.body.removeChild(link);
 
-    notify(`Exported document records for ${selectedEmployees.length} pers.`, 'success');
     addLog('Export', 'Document', `Bulk exported document data for ${selectedEmployees.length} records`);
   };
 

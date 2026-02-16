@@ -317,11 +317,9 @@ const Leave: React.FC = () => {
   const handleDeleteRequest = (id: string) => {
     deleteLeaveRequest(id);
     setActiveActionMenu(null);
-    toast.success("Leave request cancelled successfully");
   };
 
   const handleDownloadSummary = (request: LeaveRequest) => {
-    toast.info(`Preparing summary for ${request.type}...`);
     const content = `LEAVE SUMMARY REPORT\nID: ${request.id}\nType: ${request.type}\nDuration: ${request.days} Days\nPeriod: ${request.startDate} to ${request.endDate}\nStatus: ${request.status}\nReason: ${request.reason}`;
     const blob = new Blob([content], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
@@ -330,7 +328,6 @@ const Leave: React.FC = () => {
     a.download = `Leave_${request.id}_Summary.txt`;
     a.click();
     setActiveActionMenu(null);
-    toast.success("Download initiated");
   };
 
   const handleEditRequest = (request: LeaveRequest) => {
@@ -395,7 +392,6 @@ const Leave: React.FC = () => {
     if (medicalFile) {
       // In a real app, you'd upload the file and use the returned URL
       medicalCertificateUrl = `medical_${Date.now()}_${medicalFile.name}`;
-      toast.info('Medical certificate uploaded successfully');
     }
 
     if (editingRequest) {
@@ -407,7 +403,6 @@ const Leave: React.FC = () => {
         reason: formData.reason,
         medicalCertificate: medicalCertificateUrl || editingRequest.medicalCertificate
       });
-      toast.success("Request updated successfully");
     } else {
       // Call backend API to apply for leave
       try {
@@ -488,9 +483,6 @@ const Leave: React.FC = () => {
 
         const responseData = await response.json();
         console.log('Response received:', responseData);
-        
-        const message = responseData?.message || 'Your Leave Request Sent Successfully';
-        toast.success(message);
       } catch (err: any) {
         console.error('Leave request submission failed', err);
         
@@ -886,7 +878,6 @@ const Leave: React.FC = () => {
                       <p className="text-sm font-medium text-amber-900">Document attached</p>
                       <button 
                         className="text-xs text-amber-600 font-bold hover:text-amber-800"
-                        onClick={() => toast.info('In real app, this would download the medical certificate')}
                       >
                         View
                       </button>
