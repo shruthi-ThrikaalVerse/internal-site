@@ -55,12 +55,12 @@ const Projects = () => {
         }
       `}</style>
 
-      <section className="py-24 projects-section">
+      <section className="projects-section">
         <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
 
           {/* Header */}
           <div className="flex flex-col items-center text-center mb-16 gap-4">
-            <h2 className="text-lg md:text-xl font-bold uppercase tracking-[0.4em] mb-2 portfolio-title">
+            <h2 className="text-lg md:text-xl font-bold uppercase tracking-[0.4em] mb-2 portfolio-title mt-12">
               Portfolio
             </h2>
 
@@ -135,13 +135,6 @@ const Projects = () => {
                 <div className="absolute inset-0 border rounded-3xl transition-all duration-500 border-glow" />
               </motion.div>
             ))}
-          </div>
-
-          {/* Button */}
-          <div className="mt-20 text-center">
-            <button className="px-12 py-4 rounded-full font-bold transition-all duration-300 shadow-lg view-all-btn">
-              View All Projects
-            </button>
           </div>
 
         </div>

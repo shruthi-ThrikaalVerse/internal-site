@@ -6,11 +6,10 @@ const About = () => {
   const founder = {
     name: "VAGYA NAIK BHUKYA",
     role: "Founder & Chairperson",
-    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=800&h=800&auto=format&fit=crop"
-  };
+    image: "/ceo_img.png",};
 
   return (
-    <div className="about-container">
+    <div className="about-container mb-4">
       <div className="about-grid">
         <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="about-image-section">
           <div className="about-image-wrapper">

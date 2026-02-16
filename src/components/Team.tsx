@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React from 'react';
+/*import React from 'react';
 import { motion } from 'framer-motion';
 import { TEAM } from '../constants';
 
@@ -94,4 +94,4 @@ const Team = () => {
   );
 };
 
-export default Team;
+export default Team;*/

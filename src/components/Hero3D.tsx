@@ -19,7 +19,7 @@ const Hero3D = () => {
   return (
     <div className="relative h-screen w-full flex items-center justify-center">
       <div className="absolute inset-0 z-0 flex items-center justify-center">
-        <div className="relative w-full max-w-[1800px] h-[520px] md:h-[790px]">
+        <div className="relative w-full max-w-[1800px] h-[500px] md:h-[650px]">
           <video autoPlay muted loop playsInline preload="auto" className="w-full h-full object-cover mt-6 md:mt-10 opacity-100" aria-hidden="true">
             <source src="/6406122-hd_1920_1080_25fps.mp4" type="video/mp4" />
             {/* Fallback image for browsers that don't support video */}

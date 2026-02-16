@@ -15,7 +15,7 @@ import Navbar from './components/Navbar.tsx';
 import Hero3D from './components/Hero3D.tsx';
 import About from './components/About.tsx';
 import Projects from './components/Projects.tsx';
-import Team from './components/Team.tsx';
+/*import Team from './components/Team.tsx';*/
 import Media from './components/Media.tsx';
 import Contact from './components/Contact.tsx';
 import Career from './components/career.tsx';
@@ -179,16 +179,14 @@ const AppRouter: React.FC = () => {
                 <section id="about" className="py-24 bg-gradient-to-b from-[var(--bg-primary)] to-[var(--bg-secondary)]">
                   <About />
                 </section>
-                <section id="projects" className="py-24 bg-[var(--bg-secondary)]">
+                <section id="projects" className="bg-[var(--bg-secondary)]">
                   <Projects />
                 </section>
-                <section id="team" className="py-24 bg-gradient-to-b from-[var(--bg-secondary)] to-[var(--bg-primary)]">
-                  <Team />
-                </section>
-                <section id="media" className="py-24 bg-[var(--bg-primary)]">
+                
+                <section id="media" className="bg-[var(--bg-primary)]">
                   <Media />
                 </section>
-                <section id="career" className="py-24 bg-[var(--bg-primary)]">
+                <section id="career" className="bg-[var(--bg-primary)]">
                   <Career />
                 </section>
                 <section id="contact" className="bg-gradient-to-t from-[var(--bg-secondary)] to-[var(--bg-primary)]">

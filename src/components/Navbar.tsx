@@ -38,7 +38,6 @@ const Navbar = () => {
       "home",
       "about",
       "projects",
-      "team",
       "media",
       "career",
       "contact",
@@ -116,7 +115,7 @@ const Navbar = () => {
     { label: "Home", id: "home" },
     { label: "About", id: "about" },
     { label: "Projects", id: "projects" },
-    { label: "Team", id: "team" },
+    /*{ label: "Team", id: "team" },*/
     { label: "Media", id: "media" },
     { label: "Career", id: "career" },
     { label: "Contact", id: "contact" },
@@ -221,7 +220,7 @@ const Navbar = () => {
           fixed top-0 left-0 right-0 z-50 
           transition-all duration-500 px-4 sm:px-6 lg:px-8
           ${scrolled
-            ? "py-2 sm:py-3 bg-[var(--bg-primary)]/90 backdrop-blur-xl border-b border-[var(--border-color)] shadow-lg"
+            ? "py-2 sm:py-3 bg-[var(--bg-primary)]/90 backdrop-blur-xl border-b border-[var(--border-color)]"
             : "py-4 sm:py-6 bg-transparent"
           }
         `}
