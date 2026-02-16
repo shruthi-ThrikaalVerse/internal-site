@@ -10,55 +10,404 @@ const About = () => {
   };
 
   return (
-    <div className="container mt-12 px-6">
-      <div className="flex flex-col lg:flex-row items-center gap-16">
-        <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="lg:w-1/2 relative">
-          <div className="relative w-full aspect-square max-w-[500px] mx-auto">
-            <div className="absolute inset-0 border-[1px] border-[var(--border-color)] rounded-full animate-pulse"></div>
-            <div className="absolute inset-[8%] border-[1px] border-[var(--accent-teal)]/30 rounded-full"></div>
-            <div className="absolute inset-[15%] border-[1px] border-[var(--accent-orange)]/30 rounded-full"></div>
-            
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-2/3 h-2/3 bg-gradient-to-br from-[var(--accent-green)] to-[var(--accent-teal)] rounded-full blur-[80px] opacity-10"></div>
-              
-              <div className="relative w-4/5 h-4/5 rounded-full overflow-hidden border-4 border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-[var(--bg-secondary)] group">
-                <img src={founder.image} alt={`${founder.name} - ${founder.role}`} className="w-full h-full object-cover grayscale-0 transition-transform duration-1000 ease-out" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end justify-center pb-12">
-                   <div className="text-center">
-                      <p className="text-white font-black uppercase tracking-[0.2em] text-sm">{founder.name}</p>
-                      <p className="text-orange-500 font-bold text-[10px] tracking-widest uppercase">{founder.role}</p>
-                   </div>
+    <div className="about-container">
+      <div className="about-grid">
+        <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="about-image-section">
+          <div className="about-image-wrapper">
+            <div className="about-border-outer"></div>
+            <div className="about-border-mid"></div>
+            <div className="about-border-inner"></div>
+
+            <div className="about-image-center">
+              <div className="about-glow"></div>
+
+              <div className="about-founder-image">
+                <img
+                  src={founder.image}
+                  alt={`${founder.name} - ${founder.role}`}
+                  className="about-img"
+                  loading="eager"
+                  decoding="auto"
+                />
+                <div className="about-overlay">
+                  <div className="about-overlay-text">
+                    <p className="about-founder-name">{founder.name}</p>
+                    <p className="about-founder-role">{founder.role}</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="absolute inset-0 animate-spin-slow"><div className="absolute top-[5%] left-1/2 -translate-x-1/2 w-5 h-5 rounded-full shadow-[0_0_20px_var(--accent-orange)]" style={{ backgroundColor: 'var(--accent-orange)' }}></div></div>
-            <div className="absolute inset-0 animate-spin-reverse-slow"><div className="absolute bottom-[5%] left-1/2 -translate-x-1/2 w-5 h-5 rounded-full shadow-[0_0_20px_var(--accent-teal)]" style={{ backgroundColor: 'var(--accent-teal)' }}></div></div>
+            <div className="about-rotate-1"><div className="about-dot about-dot-orange"></div></div>
+            <div className="about-rotate-2"><div className="about-dot about-dot-teal"></div></div>
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="lg:w-1/2">
-          <h2 className="text-sm font-bold uppercase tracking-[0.4em] mb-4" style={{ color: 'var(--current-accent)' }}>The Organization</h2>
-          <h3 className="text-4xl md:text-5xl font-black mb-8 text-[var(--text-primary)]">Pioneering Continuity in a <span className="text-[var(--accent-teal)]">Changing World</span></h3>
-          
-          <p className="text-[var(--text-secondary)] text-lg mb-8 leading-relaxed">Founded by {founder.name}, Thrikaal Verse Pvt. Ltd. was built on the principles of sustainability and technological integration. Our name signifies the three phases of time—past, present, and future—representing our commitment to learning from history, excelling in the now, and building for the generations to come.</p>
+        <motion.div initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="about-content-section">
+          <h2 className="about-label">The Organization</h2>
+          <h3 className="about-title">Pioneering Continuity in a <span className="about-title-accent">Changing World</span></h3>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-10">
+          <p className="about-description">Founded by {founder.name}, Thrikaal Verse Pvt. Ltd. was built on the principles of sustainability and technological integration. Our name signifies the three phases of time—past, present, and future—representing our commitment to learning from history, excelling in the now, and building for the generations to come.</p>
+
+          <div className="about-features">
             <div>
-              <h4 className="text-[var(--text-primary)] font-bold mb-2 flex items-center gap-2"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--accent-orange)' }}></span>Global Vision</h4>
-              <p className="text-sm text-[var(--text-secondary)]">Connecting industries across borders with unified digital ecosystems.</p>
+              <h4 className="about-feature-title"><span className="about-feature-dot about-dot-accent"></span>Global Vision</h4>
+              <p className="about-feature-text">Connecting industries across borders with unified digital ecosystems.</p>
             </div>
             <div>
-              <h4 className="text-[var(--text-primary)] font-bold mb-2 flex items-center gap-2"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--accent-teal)' }}></span>Local Impact</h4>
-              <p className="text-sm text-[var(--text-secondary)]">Empowering communities through accessible green technology solutions.</p>
+              <h4 className="about-feature-title"><span className="about-feature-dot about-dot-accent"></span>Local Impact</h4>
+              <p className="about-feature-text">Empowering communities through accessible green technology solutions.</p>
             </div>
           </div>
 
-          <button className="group flex items-center gap-3 text-[var(--text-primary)] font-bold uppercase tracking-widest text-sm">Discover Our Timeline<span className="w-10 h-[1px] transition-all duration-300 group-hover:w-16" style={{ backgroundColor: 'var(--current-accent)' }}></span></button>
+          <button className="about-button">Discover Our Timeline<span className="about-button-line"></span></button>
         </motion.div>
       </div>
 
-      <style jsx>{`@keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes spin-reverse-slow { from { transform: rotate(360deg); } to { transform: rotate(0deg); } } .animate-spin-slow { animation: spin-slow 10s linear infinite; } .animate-spin-reverse-slow { animation: spin-reverse-slow 7s linear infinite; }`}</style>
+      <style jsx>{`
+        .about-container {
+          max-width: 100%;
+          margin-top: 2rem;
+          padding: 0 1rem;
+        }
+
+        @media (min-width: 640px) {
+          .about-container {
+            margin-top: 3rem;
+            padding: 0 1.5rem;
+          }
+        }
+
+        .about-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 2rem;
+          align-items: center;
+        }
+
+        @media (min-width: 640px) {
+          .about-grid {
+            gap: 3rem;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .about-grid {
+            flex-direction: row;
+            gap: 4rem;
+          }
+        }
+
+        .about-image-section {
+          flex: 1;
+          position: relative;
+          width: 100%;
+          min-width: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 1rem 0;
+        }
+
+        @media (min-width: 1024px) {
+          .about-image-section {
+            width: 50%;
+            padding: 0;
+          }
+        }
+
+        .about-image-wrapper {
+          position: relative;
+          width: 90%;
+          max-width: 500px;
+          aspect-ratio: 1;
+          margin: 0 auto;
+          min-height: 280px;
+        }
+
+        @media (min-width: 640px) {
+          .about-image-wrapper {
+            width: 100%;
+            min-height: 350px;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .about-image-wrapper {
+            min-height: 500px;
+          }
+        }
+
+        .about-border-outer {
+          position: absolute;
+          inset: 0;
+          border: 1px solid;
+          border-color: var(--border-color);
+          border-radius: 50%;
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .about-border-mid {
+          position: absolute;
+          inset: 8%;
+          border: 1px solid;
+          border-color: var(--accent-teal);
+          border-radius: 50%;
+          opacity: 0.3;
+        }
+
+        .about-border-inner {
+          position: absolute;
+          inset: 15%;
+          border: 1px solid;
+          border-color: var(--accent-orange);
+          border-radius: 50%;
+          opacity: 0.3;
+        }
+
+        .about-image-center {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .about-glow {
+          width: 66.666%;
+          height: 66.666%;
+          background: linear-gradient(to bottom right, var(--accent-green), var(--accent-teal));
+          border-radius: 50%;
+          filter: blur(80px);
+          opacity: 0.1;
+        }
+
+        .about-founder-image {
+          position: relative;
+          width: 80%;
+          height: 80%;
+          border-radius: 50%;
+          overflow: hidden;
+          border: 4px solid;
+          border-color: rgba(255, 255, 255, 0.1);
+          box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+          background-color: var(--bg-secondary);
+          group: group;
+        }
+
+        .about-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 1000ms ease-out;
+        }
+
+        .about-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+          opacity: 0;
+          transition: opacity 500ms;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          padding-bottom: 3rem;
+        }
+
+        .about-founder-image:hover .about-overlay {
+          opacity: 1;
+        }
+
+        .about-overlay-text {
+          text-align: center;
+        }
+
+        .about-founder-name {
+          color: white;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          font-size: 0.875rem;
+        }
+
+        .about-founder-role {
+          color: var(--current-accent);
+          font-weight: 700;
+          font-size: 10px;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+        }
+
+        .about-rotate-1 {
+          position: absolute;
+          inset: 0;
+          animation: spin-slow 10s linear infinite;
+        }
+
+        .about-rotate-2 {
+          position: absolute;
+          inset: 0;
+          animation: spin-reverse-slow 7s linear infinite;
+        }
+
+        .about-dot {
+          position: absolute;
+          width: 1.25rem;
+          height: 1.25rem;
+          border-radius: 50%;
+        }
+
+        .about-dot-orange {
+          top: 5%;
+          left: 50%;
+          transform: translateX(-50%);
+          background-color: var(--accent-orange);
+          box-shadow: 0 0 20px var(--accent-orange);
+        }
+
+        .about-dot-teal {
+          bottom: 5%;
+          left: 50%;
+          transform: translateX(-50%);
+          background-color: var(--accent-teal);
+          box-shadow: 0 0 20px var(--accent-teal);
+        }
+
+        .about-content-section {
+          flex: 1;
+        }
+
+        @media (min-width: 1024px) {
+          .about-content-section {
+            width: 50%;
+          }
+        }
+
+        .about-label {
+          font-size: 0.875rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          margin-bottom: 1rem;
+          color: var(--current-accent);
+        }
+
+        .about-title {
+          font-size: 2.25rem;
+          line-height: 2.5rem;
+          font-weight: 900;
+          margin-bottom: 2rem;
+          color: var(--text-primary);
+        }
+
+        @media (min-width: 768px) {
+          .about-title {
+            font-size: 3rem;
+            line-height: 3.5rem;
+          }
+        }
+
+        .about-title-accent {
+          color: var(--current-accent);
+        }
+
+        .about-description {
+          font-size: 1.125rem;
+          margin-bottom: 2rem;
+          line-height: 1.75;
+          color: var(--text-secondary);
+        }
+
+        .about-features {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 2rem;
+          margin-bottom: 2.5rem;
+        }
+
+        @media (min-width: 640px) {
+          .about-features {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        .about-feature-title {
+          font-weight: 700;
+          margin-bottom: 0.5rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: var(--text-primary);
+        }
+
+        .about-feature-dot {
+          width: 0.5rem;
+          height: 0.5rem;
+          border-radius: 50%;
+        }
+
+        .about-dot-accent {
+          background-color: var(--current-accent);
+        }
+
+        .about-feature-text {
+          font-size: 0.875rem;
+          color: var(--text-secondary);
+        }
+
+        .about-button {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          font-size: 0.875rem;
+          color: var(--text-primary);
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+        }
+
+        .about-button-line {
+          width: 2.5rem;
+          height: 1px;
+          transition: width 300ms;
+          background-color: var(--current-accent);
+        }
+
+        .about-button:hover .about-button-line {
+          width: 4rem;
+        }
+
+        @keyframes spin-slow { 
+          from { transform: rotate(0deg); } 
+          to { transform: rotate(360deg); } 
+        } 
+
+        @keyframes spin-reverse-slow { 
+          from { transform: rotate(360deg); } 
+          to { transform: rotate(0deg); } 
+        } 
+
+        .animate-spin-slow { 
+          animation: spin-slow 10s linear infinite; 
+        } 
+
+        .animate-spin-reverse-slow { 
+          animation: spin-reverse-slow 7s linear infinite; 
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.5;
+          }
+        }
+      `}</style>
     </div>
   );
 };

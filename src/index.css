@@ -9,6 +9,9 @@
   --text-secondary: #9aa8bd;
   --border-color: #1f2937;
   --current-accent: #06b6d4;
+  --button-start: #06b6d4;
+  --button-end: #f37321;
+  --nav-offset: 80px;
 }
 
 html,
@@ -24,6 +27,16 @@ body {
   color: var(--text-primary);
 }
 
+/* Enable smooth scrolling for in-page anchors */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Ensure sections are scrolled into view below the fixed navbar */
+section {
+  scroll-margin-top: var(--nav-offset);
+}
+
 /* Invisible scrollbar - allows scrolling but hides scrollbar */
 .invisible-scrollbar {
   -ms-overflow-style: none;
@@ -32,4 +45,82 @@ body {
 
 .invisible-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* Navbar helper classes moved from inline styles for accessibility and reuse */
+.logo-transform {
+  transform: scale(1.14) translateX(-1.6px) translateY(-0.7px);
+}
+
+.accent-text {
+  color: var(--current-accent);
+}
+
+.nav-underline {
+  background-color: var(--current-accent);
+}
+
+.bg-accent-orange {
+  background-color: var(--accent-orange);
+}
+
+.bg-accent-teal {
+  background-color: var(--accent-teal);
+}
+
+.bg-accent-green {
+  background-color: var(--accent-green);
+}
+
+.accent-bg {
+  background-color: var(--current-accent);
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin-reverse-slow {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 10s linear infinite;
+}
+
+.animate-spin-reverse-slow {
+  animation: spin-reverse-slow 7s linear infinite;
+}
+
+/* Scrollbar helper (used by Requests.tsx) */
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.scrollbar-hidden::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-hidden::-webkit-scrollbar-thumb {
+  background: transparent;
+  border: none;
 }

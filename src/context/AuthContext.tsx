@@ -72,14 +72,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (response.ok) {
         const userData = await response.json().catch(() => ({}));
-        
+
         // Extract employeeId from JWT token
         let userId = userData.id || userData._id || userData.employeeId || '';
         if (!userId && token) {
           const decoded = decodeJWT(token);
           userId = decoded?.employeeId || decoded?.id || decoded?.sub || '';
         }
-        
+
         const user: User = {
           id: userId,
           fullName: userData.fullName || userData.name || '',
@@ -144,7 +144,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const decoded = decodeJWT(token);
           userId = decoded?.employeeId || decoded?.id || decoded?.sub || '';
         }
-        
+
         const parsedUser: User = {
           id: userId,
           fullName: userData.fullName || userData.name || '',
@@ -205,7 +205,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (user?.id) {
         clearUserData(user.id);
       }
-      
+
       setUser(null);
       try { localStorage.removeItem('authToken'); } catch { }
       try { localStorage.removeItem('user'); } catch { }
