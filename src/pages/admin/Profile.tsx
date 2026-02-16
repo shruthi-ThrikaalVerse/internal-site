@@ -323,18 +323,16 @@ const Profile: React.FC = () => {
     return `Today, ${day}${suffix} ${now.toLocaleDateString('en-US', { month: 'short' })}, ${getCurrentTime()}`;
   };
 
-  // Handle profile photo upload
-  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle profile photo upload (calls backend endpoint)
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
-    // Check file type
     if (!file.type.startsWith('image/')) {
       notify('Please upload an image file', 'error');
       return;
     }
 
-    // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       notify('Image size should be less than 5MB', 'error');
       return;
@@ -342,40 +340,75 @@ const Profile: React.FC = () => {
 
     setIsUploading(true);
 
-    // Create a FileReader to read the file
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        const imageUrl = e.target.result as string;
-        // Store the photo URL in HRMS context and update Auth avatar so header updates
+    try {
+      const form = new FormData();
+      form.append('image', file);
+
+      const token = localStorage.getItem('authToken');
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const resp = await fetch('http://localhost:8085/api/users/admin/profile-image', {
+        method: 'PUT',
+        credentials: 'include',
+        headers,
+        body: form,
+      });
+
+      if (!resp.ok) {
+        const txt = await resp.text().catch(() => '');
+        throw new Error(txt || `Upload failed (${resp.status})`);
+      }
+
+      const data = await resp.json().catch(() => null);
+      // Try to pick image URL from response
+      const imageUrl = data?.avatar || data?.data?.avatar || URL.createObjectURL(file);
+
+      if (user?.id) {
         updateProfilePhoto(user.id, imageUrl);
         auth.updateAvatar?.(imageUrl);
-        setProfileImage(imageUrl);
         localStorage.setItem(`profile_image_${user.id}`, imageUrl);
-        setIsUploading(false);
-
-        // Reset file input
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
       }
-    };
-    reader.onerror = () => {
+
+      setProfileImage(imageUrl);
+      notify('Profile picture updated successfully!', 'success');
+    } catch (err: any) {
+      console.error('Upload failed:', err);
+      notify(err.message || 'Failed to upload image', 'error');
+    } finally {
       setIsUploading(false);
-      notify('Failed to upload image', 'error');
-    };
-    reader.readAsDataURL(file);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
-  // Remove profile photo
-  const handleRemovePhoto = () => {
-    if (user) {
+  // Remove profile photo (calls backend endpoint)
+  const handleRemovePhoto = async () => {
+    if (!user?.id) return;
+    try {
+      const token = localStorage.getItem('authToken');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const resp = await fetch('http://localhost:8085/api/users/admin/profile-image', {
+        method: 'DELETE',
+        credentials: 'include',
+        headers,
+      });
+
+      if (!resp.ok) {
+        const txt = await resp.text().catch(() => '');
+        throw new Error(txt || `Remove failed (${resp.status})`);
+      }
+
       removeProfilePhoto(user.id);
       setProfileImage(null);
       const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.fullName || 'admin')}`;
       auth.updateAvatar?.(defaultAvatar);
       localStorage.removeItem(`profile_image_${user.id}`);
       notify('Profile photo removed', 'info');
+    } catch (err: any) {
+      console.error('Remove failed:', err);
+      notify(err.message || 'Failed to remove profile photo', 'error');
     }
   };
 
@@ -384,50 +417,114 @@ const Profile: React.FC = () => {
     fileInputRef.current?.click();
   };
 
-  const handlePasswordUpdate = (e: React.FormEvent) => {
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    notify('Administrative password updated successfully.', 'success');
+
+    const currentInput = document.getElementById('current-password') as HTMLInputElement | null;
+    const newInput = document.getElementById('new-password') as HTMLInputElement | null;
+    const oldPassword = currentInput?.value || '';
+    const newPassword = newInput?.value || '';
+
+    if (!oldPassword || !newPassword) {
+      notify('Please provide both current and new passwords', 'error');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const resp = await fetch('http://localhost:8085/api/users/change-password', {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({ oldPassword, newPassword }),
+      });
+
+      if (!resp.ok) {
+        const txt = await resp.text().catch(() => '');
+        throw new Error(txt || `Password change failed (${resp.status})`);
+      }
+
+      notify('Administrative password updated successfully.', 'success');
+      if (currentInput) currentInput.value = '';
+      if (newInput) newInput.value = '';
+    } catch (err: any) {
+      console.error('Password change failed:', err);
+      notify(err.message || 'Failed to update password', 'error');
+    }
   };
 
   // Mock implementation for updateProfilePicture
   const handleProfilePictureUpload = async (file: File) => {
+    if (!file || !user?.id) return;
     try {
-      // Simulate upload progress
-      for (let i = 0; i <= 100; i += 20) {
-        setTimeout(() => setUploadProgress(i), i * 10);
+      setUploadProgress(10);
+      const form = new FormData();
+      form.append('image', file);
+
+      const token = localStorage.getItem('authToken');
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const resp = await fetch('http://localhost:8085/api/users/admin/profile-image', {
+        method: 'PUT',
+        credentials: 'include',
+        headers,
+        body: form,
+      });
+
+      if (!resp.ok) {
+        const txt = await resp.text().catch(() => '');
+        throw new Error(txt || `Upload failed (${resp.status})`);
       }
 
-      // Create a preview URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const imageUrl = reader.result as string;
-        setProfileImage(imageUrl);
+      const data = await resp.json().catch(() => null);
+      const imageUrl = data?.avatar || data?.data?.avatar || URL.createObjectURL(file);
 
-        if (user?.id) {
-          localStorage.setItem(`profile_image_${user.id}`, imageUrl);
-          updateProfilePhoto(user.id, imageUrl);
-          auth.updateAvatar?.(imageUrl);
-        }
-
-        notify('Profile picture updated successfully!', 'success');
-        setUploadProgress(0);
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      notify('Failed to upload profile picture', 'error');
+      setProfileImage(imageUrl);
+      updateProfilePhoto(user.id, imageUrl);
+      auth.updateAvatar?.(imageUrl);
+      localStorage.setItem(`profile_image_${user.id}`, imageUrl);
+      setUploadProgress(100);
+      notify('Profile picture updated successfully!', 'success');
+      setUploadProgress(0);
+    } catch (err: any) {
+      console.error('Upload failed:', err);
+      notify(err.message || 'Failed to upload profile picture', 'error');
       setUploadProgress(0);
     }
   };
 
-  const handleRemoveProfilePicture = () => {
-    setProfileImage(null);
-    if (user?.id) {
+  const handleRemoveProfilePicture = async () => {
+    if (!user?.id) return;
+    try {
+      const token = localStorage.getItem('authToken');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const resp = await fetch('http://localhost:8085/api/users/admin/profile-image', {
+        method: 'DELETE',
+        credentials: 'include',
+        headers,
+      });
+
+      if (!resp.ok) {
+        const txt = await resp.text().catch(() => '');
+        throw new Error(txt || `Remove failed (${resp.status})`);
+      }
+
+      setProfileImage(null);
       removeProfilePhoto(user.id);
       const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.fullName || 'admin')}`;
       auth.updateAvatar?.(defaultAvatar);
       localStorage.removeItem(`profile_image_${user.id}`);
+      notify('Profile picture removed', 'info');
+    } catch (err: any) {
+      console.error('Remove failed:', err);
+      notify(err.message || 'Failed to remove profile picture', 'error');
     }
-    notify('Profile picture removed', 'info');
   };
 
   // Export profile data function

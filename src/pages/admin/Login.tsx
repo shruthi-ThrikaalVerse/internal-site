@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogIn, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
+import { LogIn, Mail, Lock, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.tsx';
 
 const Login: React.FC = () => {
-  const { login, user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { login, user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // On mount, clear any existing token/user so arriving at login (e.g. via back) forces re-authentication
+  useEffect(() => {
+    try { localStorage.removeItem('authToken'); } catch { }
+    try { localStorage.removeItem('user'); } catch { }
+    if (logout) {
+      logout().catch(() => { });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Watch for authentication state changes and redirect accordingly
   useEffect(() => {
@@ -75,10 +85,10 @@ const Login: React.FC = () => {
       <div className="hidden lg:flex lg:w-1/2 bg-indigo-600 relative overflow-hidden flex-col justify-between p-16">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/50 rounded-full -ml-48 -mb-48 blur-3xl"></div>
-        
+
         <div className="relative z-10">
           <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-indigo-600 font-black text-2xl shadow-xl mb-8">H</div>
-          <h1 className="text-5xl font-black text-white leading-tight">Empowering your <br/><span className="text-indigo-200">Workforce Dynamics.</span></h1>
+          <h1 className="text-5xl font-black text-white leading-tight">Empowering your <br /><span className="text-indigo-200">Workforce Dynamics.</span></h1>
           <p className="text-indigo-100 mt-6 text-lg max-w-md font-medium">The most comprehensive HRMS solution for modern enterprises. Streamline payroll, attendance, and performance in one secure portal.</p>
         </div>
 
@@ -100,6 +110,14 @@ const Login: React.FC = () => {
       {/* Right Login Panel */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#f8fafc]">
         <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+          <button
+            onClick={() => navigate('/login-selection')}
+            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors mb-4"
+          >
+            <ArrowLeft size={18} />
+            Back to User Login
+          </button>
+
           <div className="text-center lg:text-left">
             <h2 className="text-3xl font-black text-slate-900 tracking-tight">Welcome Back</h2>
             <p className="text-slate-500 mt-2 font-medium">Please enter your credentials to access the portal.</p>
@@ -117,9 +135,10 @@ const Login: React.FC = () => {
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   required
+                  autoComplete="off"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-12 pr-6 py-4 bg-white border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-slate-700 shadow-sm"
@@ -135,9 +154,10 @@ const Login: React.FC = () => {
               </div>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   required
+                  autoComplete="off"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-12 pr-6 py-4 bg-white border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-slate-700 shadow-sm"
@@ -151,8 +171,8 @@ const Login: React.FC = () => {
               <label htmlFor="remember" className="text-xs text-slate-500 font-medium cursor-pointer">Remember this device for 30 days</label>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isSubmitting || authLoading}
               className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
             >
@@ -173,3 +193,8 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+
+// Clear token on mount when this login page is shown (ensures back-button clears session)
+// Note: this is intentionally executed on mount to force re-authentication when hitting login via history.
+/* eslint-disable react-hooks/rules-of-hooks */
+// Place a small effect by exporting a helper that callers can optionally invoke; keep file-level effect simple.

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { clearUserData } from '../utils/storage.ts';
 
 const API_BASE_URL = 'http://localhost:8085';
 
@@ -6,15 +7,32 @@ export interface User {
   id: string;
   fullName: string;
   email: string;
-  role: 'admin' | 'manager' | 'auditor';
+  role: 'admin' | 'manager' | 'auditor' | 'employee';
   avatar: string;
 }
+
+// Decode JWT token to extract payload
+const decodeJWT = (token: string): Record<string, any> | null => {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = parts[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded;
+  } catch (e) {
+    console.error('Failed to decode JWT:', e);
+    return null;
+  }
+};
 
 // Normalize role strings coming from backend to our union type
 const normalizeRole = (role: any): User['role'] => {
   const r = String(role || 'auditor').toLowerCase();
   if (r.includes('admin')) return 'admin';
   if (r.includes('manager')) return 'manager';
+  if (r.includes('employee')) return 'employee';
+  if (r.includes('auditor')) return 'auditor';
+  // fallback: treat unknown roles as 'auditor' to avoid granting admin/manager access
   return 'auditor';
 };
 
@@ -40,7 +58,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      
+
       // Add token to Authorization header if available
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -54,15 +72,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (response.ok) {
         const userData = await response.json().catch(() => ({}));
+        
+        // Extract employeeId from JWT token
+        let userId = userData.id || userData._id || userData.employeeId || '';
+        if (!userId && token) {
+          const decoded = decodeJWT(token);
+          userId = decoded?.employeeId || decoded?.id || decoded?.sub || '';
+        }
+        
         const user: User = {
-          id: userData.id || userData._id || '',
+          id: userId,
           fullName: userData.fullName || userData.name || '',
           email: userData.email || '',
           role: normalizeRole(userData.role),
           avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.email}`,
         };
         setUser(user);
-        localStorage.setItem('user', JSON.stringify(user));
+        try { localStorage.setItem('user', JSON.stringify(user)); } catch { }
         return user;
       } else {
         setUser(null);
@@ -111,16 +137,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // If response includes user data, use it immediately
       const userData = responseData.data || responseData.user || responseData;
-      if (userData && (userData.email || userData.id || userData._id)) {
+      if (userData && (userData.email || userData.id || userData._id || userData.employeeId)) {
+        // Extract employeeId from JWT token if not in response
+        let userId = userData.id || userData._id || userData.employeeId || '';
+        if (!userId && token) {
+          const decoded = decodeJWT(token);
+          userId = decoded?.employeeId || decoded?.id || decoded?.sub || '';
+        }
+        
         const parsedUser: User = {
-          id: userData.id || userData._id || '',
+          id: userId,
           fullName: userData.fullName || userData.name || '',
           email: userData.email || '',
           role: normalizeRole(userData.role),
           avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.email}`,
         };
         setUser(parsedUser);
-        localStorage.setItem('user', JSON.stringify(parsedUser));
+        try { localStorage.setItem('user', JSON.stringify(parsedUser)); } catch { }
         return parsedUser;
       }
 
@@ -129,12 +162,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!verified) {
         throw new Error('Login succeeded but no session information returned');
       }
-      
-      if (verified) {
-        localStorage.setItem('user', JSON.stringify(verified));
-      }
       return verified;
-      
+
     } catch (error: any) {
       throw error;
     }
@@ -175,22 +204,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Remove only this user's specific keys using their ID
-      if (currentUserId) {
-        const userSpecificKeys = [
-          `u_${currentUserId}_attendance_records`,
-          `u_${currentUserId}_user_notifications_v1`,
-          `u_${currentUserId}_leave_requests`,
-          `u_${currentUserId}_user_documents_v6`,
-          `u_${currentUserId}_user_documents_v7`,
-          `u_${currentUserId}_user_documents_v8`,
-        ];
-        userSpecificKeys.forEach(key => localStorage.removeItem(key));
+      // Clear all user-specific localStorage data with current user's ID
+      if (user?.id) {
+        clearUserData(user.id);
       }
       
       setUser(null);
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
+      try { localStorage.removeItem('authToken'); } catch { }
+      try { localStorage.removeItem('user'); } catch { }
     }
   };
 
@@ -216,14 +237,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated: !!user, 
-      isLoading, 
-      login, 
-      register, 
-      logout, 
-      updateAvatar 
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated: !!user,
+      isLoading,
+      login,
+      register,
+      logout,
+      updateAvatar
     }}>
       {children}
     </AuthContext.Provider>

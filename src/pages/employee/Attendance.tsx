@@ -52,7 +52,7 @@ interface AttendanceRecord extends SharedAttendanceRecord {
 }
 
 const Attendance: React.FC = () => {
-  const { user } = useAuth(); // Get current user to detect logout/login
+  const auth = useAuth();
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [isPunchedIn, setIsPunchedIn] = useState<boolean>(false);
   const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null);
@@ -76,12 +76,12 @@ const Attendance: React.FC = () => {
 
   // Create user-specific storage key (scoped by user.id)
   const attendanceStorageKey = useMemo(() => 
-    getUserSpecificKey('attendance_records', user?.id),
-    [user?.id]
+    getUserSpecificKey('attendance_records', auth?.user?.id),
+    [auth?.user?.id]
   );
   const notificationsStorageKey = useMemo(() => 
-    getUserSpecificKey('user_notifications_v1', user?.id),
-    [user?.id]
+    getUserSpecificKey('user_notifications_v1', auth?.user?.id),
+    [auth?.user?.id]
   );
   const getTodayDateString = useCallback(() => {
     const today = new Date();
@@ -206,12 +206,59 @@ const Attendance: React.FC = () => {
     setStartDateFilter('');
     setEndDateFilter('');
     setCustomLocationName('');
-  }, [user?.id]); // Reset whenever user ID changes
+  }, [auth?.user?.id]); // Reset whenever user ID changes
 
   useEffect(() => {
-    const loadData = () => {
-      const recordsStr = localStorage.getItem(attendanceStorageKey);
+    const loadData = async () => {
+      const today = getTodayString();
+
+      // Load local records first
+      const recordsStr = localStorage.getItem(getUserSpecificKey('attendance_records'));
       let records: AttendanceRecord[] = recordsStr ? JSON.parse(recordsStr) : [];
+
+      // Attempt to sync today's record from the backend when user is authenticated
+      if (auth?.isAuthenticated) {
+        try {
+          // Try likely endpoints - backend may expose one of these
+          const endpoints = [
+            `/api/employee_attend/attendance?date=${encodeURIComponent(today)}`,
+            `/api/employee_attend/today`,
+            `/api/employee_attend/get-today`,
+            `/api/employee_attend/record?date=${encodeURIComponent(today)}`
+          ];
+
+          for (const ep of endpoints) {
+            try {
+              const resp = await fetch(`http://localhost:8085${ep}`, { credentials: 'include' });
+              if (!resp.ok) continue;
+              const data = await resp.json().catch(() => null);
+              if (!data) continue;
+
+              // Normalize server response into a record object
+              let serverRecord: any = null;
+              if (Array.isArray(data) && data.length > 0) serverRecord = data[0];
+              else if (data.record) serverRecord = data.record;
+              else if (data.date || data.timeIn || data.id) serverRecord = data;
+
+              if (serverRecord && serverRecord.date === today) {
+                const idx = records.findIndex(r => r.date === today);
+                if (idx > -1) {
+                  records[idx] = { ...records[idx], ...serverRecord } as AttendanceRecord;
+                } else {
+                  records.push(serverRecord as AttendanceRecord);
+                }
+
+                // we merged today's server record; no need to try other endpoints
+                break;
+              }
+            } catch (err) {
+              // ignore and try next endpoint
+            }
+          }
+        } catch (err) {
+          console.warn('Failed to sync attendance from server:', err);
+        }
+      }
 
       // Generate absent records for missing working days (FROM OLD CODE)
       records = generateAbsentRecords(records);
@@ -219,9 +266,10 @@ const Attendance: React.FC = () => {
       // Sort by date (newest first)
       records.sort((a, b) => b.date.localeCompare(a.date));
 
+      // Persist merged records and update state
+      localStorage.setItem(getUserSpecificKey('attendance_records'), JSON.stringify(records));
       setAttendanceRecords(records);
 
-      const today = getTodayString();
       const rec = records.find((r: AttendanceRecord) => r.date === today);
 
       if (rec) {
@@ -248,9 +296,10 @@ const Attendance: React.FC = () => {
       }
     };
 
+    // run loader
     loadData();
 
-    const handleStorage = () => loadData();
+    const handleStorage = () => { void loadData(); };
     window.addEventListener('storage', handleStorage);
 
     if (navigator.geolocation) {
@@ -262,7 +311,7 @@ const Attendance: React.FC = () => {
     }
 
     return () => window.removeEventListener('storage', handleStorage);
-  }, [getTodayString, calculateDuration, generateAbsentRecords, attendanceStorageKey]);
+  }, [getTodayString, calculateDuration, generateAbsentRecords, auth?.user?.id, auth?.isAuthenticated]);
 
   // Update work duration in real-time when checked in
   useEffect(() => {

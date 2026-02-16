@@ -1,8 +1,7 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router';
-import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { initializeUserData } from '../../utils/storage.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
@@ -17,7 +16,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const auth = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,10 +24,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
     try {
       // Use AuthContext login method which handles both token persistence and session verification
-      await login(email, password);
+      await auth?.login(email, password);
 
       // Initialize per-user storage buckets
-      try { 
+      try {
         const currentUser = localStorage.getItem('user');
         if (currentUser) {
           const user = JSON.parse(currentUser);
@@ -44,6 +43,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       // notify App that user has logged in so routes update
       onLogin?.();
 
+      // Wait briefly for AuthContext / localStorage to be populated so route guards allow navigation
+      const waitForAuth = async () => {
+        for (let i = 0; i < 20; i++) {
+          if (auth?.isAuthenticated || localStorage.getItem('user')) return;
+          // wait 100ms
+          // eslint-disable-next-line no-await-in-loop
+          await new Promise((r) => setTimeout(r, 100));
+        }
+      };
+      await waitForAuth();
+
       navigate('/employee/dashboard');
     } catch (err: any) {
       toast.error(err?.message || 'Login failed. Please check your credentials and try again.', {
@@ -55,10 +65,30 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }
   };
 
+  // Clear any existing token/user when showing the login page
+  useEffect(() => {
+    try { localStorage.removeItem('authToken'); } catch { }
+    try { localStorage.removeItem('user'); } catch { }
+    // ensure auth state is cleared
+    if (auth?.logout) {
+      // call logout to clear context state without relying on server
+      auth.logout().catch(() => { });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-inter">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8 sm:p-10">
+          <button
+            onClick={() => navigate('/login-selection')}
+            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors mb-6"
+          >
+            <ArrowLeft size={18} />
+            Back
+          </button>
+
           <div className="text-center mb-10">
             <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-200">
               <span className="text-white text-2xl font-bold">HR</span>
@@ -78,6 +108,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   id="email"
                   type="email"
                   required
+                  autoComplete="off"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all sm:text-sm"
@@ -99,6 +130,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   required
+                  autoComplete="off"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-11 pr-11 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all sm:text-sm"

@@ -187,7 +187,7 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Distribution by Department</h2>
-                <p className="text-xs text-slate-400 font-medium">Staffing density across key modules.</p>
+                <p className="text-xs text-slate-400 font-medium mb-4">Staffing density across key modules.</p>
               </div>
             </div>
             <div className="h-72 w-full">
@@ -214,7 +214,7 @@ const Dashboard: React.FC = () => {
             <div className="p-8 border-b flex items-center justify-between relative">
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Live Activity Feed</h2>
-                <p className="text-xs text-slate-400 font-medium">Real-time sync from across the organization.</p>
+                <p className="text-xs text-slate-400 font-medium mb-4">Real-time sync from across the organization.</p>
               </div>
 
               <div className="relative">

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
@@ -38,6 +39,7 @@ import ProfileAdmin from './pages/admin/Profile.tsx';
 import AuditLogsPage from './pages/admin/AuditLogs.tsx';
 import LoginPageAdmin from './pages/admin/Login.tsx';
 import RegisterPageAdmin from './pages/admin/Register.tsx';
+import AdminRequests from './pages/admin/Requests.tsx';
 
 // Admin Components
 import LayoutWrapper from './components/admin/LayoutWrapper.tsx';
@@ -100,6 +102,39 @@ const AppRouter: React.FC = () => {
   const auth = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  if (auth?.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+        <div className="w-full max-w-5xl px-6">
+          <div className="animate-pulse">
+            <div className="h-6 bg-slate-200 rounded mb-6" />
+
+            <div className="flex gap-6">
+              <div className="w-64 space-y-4">
+                <div className="h-4 bg-slate-200 rounded" />
+                <div className="h-4 bg-slate-200 rounded w-5/6" />
+                <div className="h-48 bg-slate-200 rounded mt-4" />
+              </div>
+
+              <div className="flex-1 space-y-4">
+                <div className="h-6 bg-slate-200 rounded w-3/4" />
+                <div className="h-4 bg-slate-200 rounded" />
+                <div className="h-4 bg-slate-200 rounded" />
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  <div className="h-24 bg-slate-200 rounded" />
+                  <div className="h-24 bg-slate-200 rounded" />
+                  <div className="h-24 bg-slate-200 rounded" />
+                </div>
+                <div className="h-4 bg-slate-200 rounded mt-6" />
+                <div className="h-4 bg-slate-200 rounded w-2/3" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     try {
@@ -188,6 +223,7 @@ const AppRouter: React.FC = () => {
                   <Route path="tasks" element={<TasksAdmin />} />
                   <Route path="events" element={<EventsAdmin />} />
                   <Route path="notifications" element={<NotificationsAdmin />} />
+                  <Route path="requests" element={<AdminRequests />} />
                   <Route path="payroll" element={<PayrollProcessing />} />
                   <Route path="payslips" element={<PayslipsAdmin />} />
                   <Route path="performance" element={<PerformanceManagement />} />

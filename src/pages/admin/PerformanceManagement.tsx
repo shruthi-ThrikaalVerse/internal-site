@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { Task } from '../../types.ts';
+import { getTasks as getTasksFromAPI } from '../../api/tasks.ts';
 interface PerformanceData {
   id: string;
   name: string;
@@ -358,6 +359,8 @@ const EmployeePerformanceModal: React.FC<{
 
 const EmployeePerformanceDashboard: React.FC = () => {
   const { employees, attendance, notify, tasks, customTeams, taskReviews, addTaskReview } = useHRMS();
+  const [apiTasks, setApiTasks] = useState<any[]>([]);
+  const [apiTasksLoading, setApiTasksLoading] = useState<boolean>(false);
   const [performanceDataState, setPerformanceData] = useState<PerformanceData[]>([]);
   const [departmentStats, setDepartmentStats] = useState<DepartmentStats[]>([]);
   const [deptApiData, setDeptApiData] = useState<any[]>([]);
@@ -617,6 +620,46 @@ const EmployeePerformanceDashboard: React.FC = () => {
     fetchEmployeesPerf();
     fetchTop();
     fetchLow();
+  }, []);
+
+  // Fetch tasks from API
+  useEffect(() => {
+    const fetchTasksFromAPI = async () => {
+      try {
+        setApiTasksLoading(true);
+        const data = await getTasksFromAPI();
+        
+        // Normalize task data to match Task interface
+        const normalizedTasks = Array.isArray(data) ? data.map((task: any) => ({
+          id: task.id || task._id || task.taskId,
+          title: task.title,
+          description: task.description,
+          status: task.status || 'pending',
+          priority: task.priority || 'p2',
+          assigneeType: task.assigneeType || 'employee', // 'employee' or 'team'
+          assignedTo: task.assignedTo || task.assigneeId,
+          assigneeName: task.assigneeName || task.assigneeName,
+          dueDate: task.dueDate,
+          createdAt: task.createdAt,
+          createdBy: task.createdBy,
+          teamId: task.teamId,
+          teamName: task.teamName,
+          comments: task.comments || [],
+          attachments: task.attachments || [],
+          tags: task.tags || [],
+        })) : [];
+        
+        setApiTasks(normalizedTasks);
+        console.log('Tasks fetched from API:', normalizedTasks);
+      } catch (error) {
+        console.error('Failed to fetch tasks from API:', error);
+        setApiTasks([]);
+      } finally {
+        setApiTasksLoading(false);
+      }
+    };
+
+    fetchTasksFromAPI();
   }, []);
 
   // Calculate overall stats from real data
@@ -881,9 +924,49 @@ const EmployeePerformanceDashboard: React.FC = () => {
     notify('Performance data refreshed', 'info');
   };
 
-  // Task filter helpers
+  const handleRefreshTasks = async () => {
+    try {
+      setApiTasksLoading(true);
+      const data = await getTasksFromAPI();
+      
+      // Normalize task data to match Task interface
+      const normalizedTasks = Array.isArray(data) ? data.map((task: any) => ({
+        id: task.id || task._id || task.taskId,
+        title: task.title,
+        description: task.description,
+        status: task.status || 'pending',
+        priority: task.priority || 'p2',
+        assigneeType: task.assigneeType || 'employee',
+        assignedTo: task.assignedTo || task.assigneeId,
+        assigneeName: task.assigneeName || task.assigneeName,
+        dueDate: task.dueDate,
+        createdAt: task.createdAt,
+        createdBy: task.createdBy,
+        teamId: task.teamId,
+        teamName: task.teamName,
+        comments: task.comments || [],
+        attachments: task.attachments || [],
+        tags: task.tags || [],
+      })) : [];
+      
+      setApiTasks(normalizedTasks);
+      notify('Tasks refreshed successfully', 'success');
+    } catch (error) {
+      console.error('Failed to refresh tasks:', error);
+      notify('Failed to refresh tasks', 'error');
+    } finally {
+      setApiTasksLoading(false);
+    }
+  };
+
+  // Task filter helpers - use API tasks as primary source, fallback to context tasks
+  const allTasks = useMemo(() => {
+    const tasksList = apiTasks.length > 0 ? apiTasks : (tasks || []);
+    return tasksList;
+  }, [apiTasks, tasks]);
+
   const visibleTasks = useMemo(() => {
-    return (tasks || []).filter(t => {
+    return (allTasks || []).filter(t => {
       // tab filter
       if (taskTab === 'team' && t.assigneeType !== 'team') return false;
       if (taskTab === 'individual' && t.assigneeType !== 'employee') return false;
@@ -905,14 +988,14 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
       return true;
     });
-  }, [tasks, taskTab, taskFilters]);
+  }, [allTasks, taskTab, taskFilters]);
 
   // Task summaries for Performance view
-  const teamTasks = useMemo(() => (tasks || []).filter(t => (t.assigneeType || '').toLowerCase() === 'team'), [tasks]);
-  const individualTasks = useMemo(() => (tasks || []).filter(t => (t.assigneeType || '').toLowerCase() === 'employee'), [tasks]);
+  const teamTasks = useMemo(() => (allTasks || []).filter(t => (t.assigneeType || '').toLowerCase() === 'team'), [allTasks]);
+  const individualTasks = useMemo(() => (allTasks || []).filter(t => (t.assigneeType || '').toLowerCase() === 'employee'), [allTasks]);
   const teamTasksCount = teamTasks.length;
   const individualTasksCount = individualTasks.length;
-  const totalTasksCount = (tasks || []).length;
+  const totalTasksCount = (allTasks || []).length;
 
   return (
     <div className="w-full bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6 font-sans">
@@ -1008,10 +1091,12 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   ))}
                 </div>
                 <button
-                  onClick={handleRefreshData}
-                  className="px-5 py-3 bg-white text-blue-700 border-none rounded-xl text-xs font-black hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl uppercase tracking-widest"
+                  onClick={handleRefreshTasks}
+                  disabled={apiTasksLoading}
+                  className="px-5 py-3 bg-white text-blue-700 border-none rounded-xl text-xs font-black hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={apiTasksLoading ? 'Loading tasks...' : 'Refresh tasks'}
                 >
-                  🔄 Refresh
+                  {apiTasksLoading ? '⏳ Loading...' : '🔄 Refresh Tasks'}
                 </button>
               </div>
             </div>
@@ -1031,7 +1116,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-xs text-blue-600 font-black uppercase tracking-widest">All Tasks</p>
-                    <p className="text-3xl font-black text-blue-900">{(tasks || []).length}</p>
+                    <p className="text-3xl font-black text-blue-900">{totalTasksCount}</p>
                   </div>
                 </div>
               </div>
@@ -1047,7 +1132,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-xs text-emerald-600 font-black uppercase tracking-widest">Team Tasks</p>
-                    <p className="text-3xl font-black text-emerald-900">{(tasks || []).filter(t => t.assigneeType === 'team').length}</p>
+                    <p className="text-3xl font-black text-emerald-900">{teamTasksCount}</p>
                   </div>
                 </div>
               </div>
@@ -1063,7 +1148,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-xs text-amber-600 font-black uppercase tracking-widest">Individual Tasks</p>
-                    <p className="text-3xl font-black text-amber-900">{(tasks || []).filter(t => t.assigneeType === 'employee').length}</p>
+                    <p className="text-3xl font-black text-amber-900">{individualTasksCount}</p>
                   </div>
                 </div>
               </div>
@@ -1173,51 +1258,72 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
           {/* Task list (filtered by selected tab) */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {visibleTasks.map(task => (
-              <div key={task.id} className="group p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all duration-200 bg-white">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700">
-                        {task.assigneeType}
-                      </span>
-                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getTaskPriorityColor(task.priority)}`}>
-                        {task.priority} Priority
-                      </span>
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1">{task.title}</h3>
-                    <p className="text-xs text-gray-600 mb-3 line-clamp-2">{task.description}</p>
+            {apiTasksLoading ? (
+              <div className="col-span-full flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4 animate-pulse">
+                    <CheckSquare className="w-8 h-8 text-blue-600" />
                   </div>
-                </div>
-
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                      <User className="w-3 h-3 text-blue-600" />
-                    </div>
-                    <span className="text-xs font-medium text-gray-700">{task.assigneeName}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs text-gray-500">Due Date</div>
-                    <div className="text-sm font-medium text-gray-900">{task.dueDate}</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full border ${getTaskStatusColor(task.status)}`}>
-                      {task.status}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => openReviewModal(task)}
-                    className="px-3 py-1.5 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 text-xs font-medium rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all duration-200 shadow-sm"
-                  >
-                    Add Review
-                  </button>
+                  <p className="text-gray-600 font-semibold">Loading tasks from API...</p>
                 </div>
               </div>
-            ))}
+            ) : visibleTasks.length > 0 ? (
+              visibleTasks.map(task => (
+                <div key={task.id} className="group p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all duration-200 bg-white">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                          {task.assigneeType}
+                        </span>
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getTaskPriorityColor(task.priority)}`}>
+                          {task.priority} Priority
+                        </span>
+                      </div>
+                      <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1">{task.title}</h3>
+                      <p className="text-xs text-gray-600 mb-3 line-clamp-2">{task.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                        <User className="w-3 h-3 text-blue-600" />
+                      </div>
+                      <span className="text-xs font-medium text-gray-700">{task.assigneeName}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500">Due Date</div>
+                      <div className="text-sm font-medium text-gray-900">{task.dueDate}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full border ${getTaskStatusColor(task.status)}`}>
+                        {task.status}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => openReviewModal(task)}
+                      className="px-3 py-1.5 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 text-xs font-medium rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all duration-200 shadow-sm"
+                    >
+                      Add Review
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 mb-4">
+                    <CheckSquare className="w-8 h-8 text-amber-600" />
+                  </div>
+                  <p className="text-gray-600 font-semibold">No tasks found</p>
+                  <p className="text-gray-500 text-sm mt-1">Try adjusting your filters</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1631,22 +1737,24 @@ const EmployeePerformanceDashboard: React.FC = () => {
       {/* Review Modal */}
       {isReviewModalOpen && selectedTaskForReview && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl w-full max-w-lg overflow-hidden shadow-2xl">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
+          <div className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
               <h3 className="text-xl font-bold text-gray-900">Add Review for Task</h3>
               <button
                 onClick={closeReviewModal}
                 title="Close review modal"
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            <div className="p-6 space-y-6">
+
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                <p className="text-sm font-semibold text-blue-900 mb-1">Task Details</p>
-                <p className="font-bold text-gray-900">{selectedTaskForReview.title}</p>
-                <p className="text-sm text-gray-600 mt-1">{selectedTaskForReview.description}</p>
+                <p className="text-sm font-semibold text-blue-900 mb-2">Task Details</p>
+                <p className="font-bold text-gray-900 text-sm md:text-base">{selectedTaskForReview.title}</p>
+                <p className="text-sm text-gray-600 mt-2 line-clamp-2">{selectedTaskForReview.description}</p>
               </div>
 
               <div>
@@ -1655,7 +1763,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   title="Select employee for review"
                   value={reviewEmployeeId}
                   onChange={(e) => setReviewEmployeeId(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
                 >
                   <option value="">Select employee</option>
                   {selectedTaskForReview.assigneeType === 'employee' && (
@@ -1681,7 +1789,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   title="Select review rating"
                   value={reviewRating}
                   onChange={e => setReviewRating(Number(e.target.value))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
                 >
                   {[5, 4, 3, 2, 1].map(n => (
                     <option key={n} value={n}>
@@ -1696,26 +1804,27 @@ const EmployeePerformanceDashboard: React.FC = () => {
                 <textarea
                   value={reviewComment}
                   onChange={e => setReviewComment(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm resize-none"
                   placeholder="Provide constructive feedback about task execution, quality, and areas for improvement..."
-                  rows={3}
+                  rows={4}
                 />
               </div>
+            </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <button
-                  onClick={closeReviewModal}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={submitReview}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm hover:shadow"
-                >
-                  Submit Review
-                </button>
-              </div>
+            {/* Fixed Footer */}
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+              <button
+                onClick={closeReviewModal}
+                className="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitReview}
+                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm hover:shadow text-sm"
+              >
+                Submit Review
+              </button>
             </div>
           </div>
         </div>

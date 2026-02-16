@@ -38,6 +38,7 @@ export const NAV_ITEMS = [
   { id: 'admin/documents', label: 'Documents', icon: 'FileText' },
   { id: 'admin/attendance', label: 'Attendance', icon: 'CalendarCheck' },
   { id: 'admin/leave', label: 'Leave Requests', icon: 'ClipboardList' },
+  { id: 'admin/requests', label: 'Support', icon: 'MessageCircle' },
   { id: 'admin/tasks', label: 'Task Assignment', icon: 'CheckSquare' },
   { id: 'admin/events', label: 'Events Hub', icon: 'CalendarDays' },
   { id: 'admin/notifications', label: 'Notifications', icon: 'Bell' },
