@@ -113,13 +113,13 @@ const Navbar = () => {
   };
 
   const navItems = [
-    { label: "Home", id: "home", icon: "🏠" },
-    { label: "About", id: "about", icon: "📖" },
-    { label: "Projects", id: "projects", icon: "🚀" },
-    { label: "Team", id: "team", icon: "👥" },
-    { label: "Media", id: "media", icon: "🎥" },
-    { label: "Career", id: "career", icon: "💼" },
-    { label: "Contact", id: "contact", icon: "📞" },
+    { label: "Home", id: "home" },
+    { label: "About", id: "about" },
+    { label: "Projects", id: "projects" },
+    { label: "Team", id: "team" },
+    { label: "Media", id: "media" },
+    { label: "Career", id: "career" },
+    { label: "Contact", id: "contact" },
   ];
 
   const accentColors = {

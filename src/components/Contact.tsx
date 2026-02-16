@@ -8,9 +8,15 @@ const Contact = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
 
-  const EMAILJS_PUBLIC_KEY = 'KjtzE6cyGpsiSE6Qf';
-  const EMAILJS_SERVICE_ID = 'service_7i0x5ti';
-  const EMAILJS_TEMPLATE_ID = 'template_8pjc5ua';
+  const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+  const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+  const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+
+  if (!EMAILJS_PUBLIC_KEY || !EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID) {
+    // Helpful dev-time warning when env vars are missing
+    // (keep @ts-nocheck at top to avoid TS errors in this file)
+    console.warn('EmailJS env vars are missing. Ensure .env.local or deployment secrets are set.');
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +27,7 @@ const Contact = () => {
         from_name: formData.name,
         from_email: formData.email,
         message: formData.message,
-        to_email: 'nandhigamashruthi@gmail.com',
+        to_email: 'thrikaalverse@gmail.com',
         reply_to: formData.email,
         subject: `New Contact Form Submission from ${formData.name}`
       }, EMAILJS_PUBLIC_KEY);
