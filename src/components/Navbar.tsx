@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "./ThemeContext.tsx";
+import thrikaalLogo from '../../public/thrikaal_logo.png';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -249,7 +250,7 @@ const Navbar = () => {
                 style={{ borderColor: currentAccent.light }}
               >
                 <img
-                  src="/thrikaal_logo.png"
+                  src={thrikaalLogo}
                   alt="Thrikaal Verse"
                   className="w-full h-full object-cover"
                 />
@@ -694,7 +695,7 @@ const Navbar = () => {
                       <div className="relative w-12 h-12 rounded-full overflow-hidden border-2"
                         style={{ borderColor: currentAccent.light }}
                       >
-                        <img src="/thrikaal_logo.png" alt="Logo" className="w-full h-full object-cover" />
+                        <img src={thrikaalLogo} alt="Logo" className="w-full h-full object-cover" />
                       </div>
                     </div>
                     <div>

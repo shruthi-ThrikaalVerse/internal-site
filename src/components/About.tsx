@@ -1,12 +1,14 @@
 // @ts-nocheck
 import React from 'react';
 import { motion } from 'framer-motion';
+import ceoImg from '../../public/ceo_img.png';
 
 const About = () => {
   const founder = {
     name: "VAGYA NAIK BHUKYA",
     role: "Founder & Chairperson",
-    image: "/ceo_img.png",};
+    image: ceoImg
+  };
 
   return (
     <div className="about-container mb-4">
@@ -27,6 +29,9 @@ const About = () => {
                   className="about-img"
                   loading="eager"
                   decoding="auto"
+                  crossOrigin="anonymous"
+                  onError={(e) => console.error('Image failed to load:', founder.image, e)}
+                  onLoad={() => console.log('Image loaded successfully:', founder.image)}
                 />
                 <div className="about-overlay">
                   <div className="about-overlay-text">
@@ -192,6 +197,7 @@ const About = () => {
           box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
           background-color: var(--bg-secondary);
           group: group;
+          background: linear-gradient(135deg, #333, #555);
         }
 
         .about-img {
