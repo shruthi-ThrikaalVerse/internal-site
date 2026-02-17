@@ -172,6 +172,25 @@ export const deleteEvent = async (id: string | number) => {
   }
 };
 
+// GET all events created by admin
+export const getAllEvents = async () => {
+  try {
+    const resp = (await fetchWithTimeout(`${API_BASE}/getAllEvents`, {
+      method: 'GET',
+      headers: { Accept: 'application/json', ...getAuthHeader() },
+      credentials: 'include',
+    })) as Response;
+
+    await throwIfError(resp);
+    return readBody(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The all-events request took too long. Please try again later.');
+    }
+    throw err;
+  }
+};
+
 // GET events created by currently authenticated user
 export const getMyEvents = async () => {
   try {
