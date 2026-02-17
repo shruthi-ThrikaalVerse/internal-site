@@ -921,7 +921,7 @@ const Profile: React.FC = () => {
             <div className="bg-slate-50/50 p-6 rounded-[32px] border border-slate-100 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all group-hover:-translate-y-1">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{log.module} Audit</span>
-                <span className="text-[10px] font-bold text-slate-400">{log.timestamp}</span>
+                <span className="text-[10px] font-bold text-slate-400 text-black">{log.timestamp}</span>
               </div>
               <p className="text-sm font-black text-slate-800">{log.action}</p>
               <div className="text-xs text-slate-500 font-medium mt-1 leading-relaxed whitespace-pre-wrap">
@@ -972,7 +972,7 @@ const Profile: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl font-black text-slate-900">{user?.fullName}</h1>
-              <p className="text-xs text-slate-400 font-medium mt-1">{user?.email}</p>
+              <p className="text-xs text-slate-400 font-medium mt-1 text-black">{user?.email}</p>
             </div>
           </div>
         </div>

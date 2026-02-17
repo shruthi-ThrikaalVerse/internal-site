@@ -229,7 +229,7 @@ const AuditLogsPage: React.FC = () => {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-900">Total Logs</p>
-                                    <p className="text-2xl font-bold mt-1">{total.toLocaleString()}</p>
+                                    <p className="text-2xl font-bold mt-1 text-black">{total.toLocaleString()}</p>
                                 </div>
                                 <div className="p-3 bg-blue-50 rounded-lg">
                                     <LucideIcons.Database size={24} className="text-blue-600" />
@@ -298,7 +298,7 @@ const AuditLogsPage: React.FC = () => {
                                             title="Log level"
                                             value={level}
                                             onChange={(e) => setLevel(e.target.value)}
-                                            className="w-full px-4 py-3 border-2 border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white font-semibold text-gray-800 hover:border-indigo-400 transition-colors"
+                                            className="w-full px-4 py-3 border-2 border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white font-semibold text-gray-800 hover:border-indigo-400 transition-colors text-black"
                                         >
                                             {LEVELS.map(l => (
                                                 <option key={l} value={l}>{l}</option>
@@ -315,7 +315,7 @@ const AuditLogsPage: React.FC = () => {
                                                 value={search}
                                                 onChange={(e) => setSearch(e.target.value)}
                                                 placeholder="User, message, IP..."
-                                                className="w-full pl-11 pr-4 py-3 border-2 border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white font-medium hover:border-indigo-400 transition-colors"
+                                                className="w-full pl-11 pr-4 py-3 border-2 border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white font-medium hover:border-indigo-400 transition-colors text-black"
                                             />
                                             <LucideIcons.Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-600 font-bold" />
                                         </div>
@@ -329,7 +329,7 @@ const AuditLogsPage: React.FC = () => {
                                                 title="From date"
                                                 value={startDate ? startDate.split('T')[0] : ''}
                                                 onChange={e => setStartDate(e.target.value ? `${e.target.value}T00:00:00Z` : undefined)}
-                                                className="w-full px-4 py-3 border-2 border-indigo-300 rounded-xl text-sm bg-white font-semibold hover:border-indigo-400 transition-colors"
+                                                className="w-full px-4 py-3 border-2 border-indigo-300 rounded-xl text-sm bg-white font-semibold hover:border-indigo-400 transition-colors text-black"
                                             />
                                         </div>
                                         <div>
@@ -339,7 +339,7 @@ const AuditLogsPage: React.FC = () => {
                                                 title="To date"
                                                 value={endDate ? endDate.split('T')[0] : ''}
                                                 onChange={e => setEndDate(e.target.value ? `${e.target.value}T23:59:59Z` : undefined)}
-                                                className="w-full px-4 py-3 border-2 border-indigo-300 rounded-xl text-sm bg-white font-semibold hover:border-indigo-400 transition-colors"
+                                                className="w-full px-4 py-3 border-2 border-indigo-300 rounded-xl text-sm bg-white font-semibold hover:border-indigo-400 transition-colors text-black"
                                             />
                                         </div>
                                     </div>
@@ -454,15 +454,15 @@ const AuditLogsPage: React.FC = () => {
                                     <button
                                         onClick={() => setPage(p => Math.max(1, p - 1))}
                                         disabled={page <= 1 || isLoading}
-                                        className="px-4 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                        className="px-4 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition-colors text-black"
                                     >
                                         Previous
                                     </button>
-                                    <span className="px-4 py-2 font-medium">{page}</span>
+                                    <span className="px-4 py-2 font-medium text-black">{page}</span>
                                     <button
                                         onClick={() => setPage(p => p + 1)}
                                         disabled={page * limit >= total || isLoading}
-                                        className="px-4 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                        className="px-4 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition-colors text-black"
                                     >
                                         Next
                                     </button>

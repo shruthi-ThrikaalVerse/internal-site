@@ -1098,7 +1098,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                 placeholder="Search employees..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 pr-5 py-3 border-2 border-indigo-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm w-full md:w-72 shadow-lg font-semibold hover:border-indigo-400 transition-colors"
+                className="pl-12 pr-5 py-3 border-2 border-indigo-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm w-full md:w-72 shadow-lg font-semibold hover:border-indigo-400 transition-colors text-black"
               />
             </div>
 

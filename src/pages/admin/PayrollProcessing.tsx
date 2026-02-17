@@ -180,7 +180,7 @@ const PayrollProcessing: React.FC = () => {
           <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
             <div className="p-8 border-b flex items-center justify-between">
               <h2 className="text-xl font-black text-slate-900">Payroll Run History</h2>
-              <button aria-label="Filter runs" className="p-3 hover:bg-slate-50 rounded-2xl transition-colors text-slate-400"><Icon name="Filter" className="w-5 h-5" /></button>
+              <button aria-label="Filter runs" className="p-3 hover:bg-slate-50 rounded-2xl transition-colors text-slate-400 text-black"><Icon name="Filter" className="w-5 h-5" /></button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -209,8 +209,8 @@ const PayrollProcessing: React.FC = () => {
                           </td>
                           <td className="px-8 py-6 text-right">
                             <div className="flex justify-end gap-2">
-                              <button aria-label={`Download report for ${run.month} ${run.year}`} onClick={() => handleDownloadRun(run)} className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-xl shadow-sm border border-transparent transition-all"><Icon name="Download" className="w-4 h-4" /></button>
-                              <button aria-label={`View details for ${run.month} ${run.year}`} onClick={() => handleViewRun(run)} className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-xl shadow-sm border border-transparent transition-all"><Icon name="Eye" className="w-4 h-4" /></button>
+                              <button aria-label={`Download report for ${run.month} ${run.year}`} onClick={() => handleDownloadRun(run)} className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-xl shadow-sm border border-transparent transition-all text-black"><Icon name="Download" className="w-4 h-4" /></button>
+                              <button aria-label={`View details for ${run.month} ${run.year}`} onClick={() => handleViewRun(run)} className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-xl shadow-sm border border-transparent transition-all text-black"><Icon name="Eye" className="w-4 h-4" /></button>
                             </div>
                           </td>
                         </tr>
