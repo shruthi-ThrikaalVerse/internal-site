@@ -24,7 +24,7 @@ type AttendanceRow = {
 };
 
 const AttendanceMonitor: React.FC = () => {
-  const { employees, leaves, notify } = useHRMS();
+  const { employees, leaves } = useHRMS();
   const [attendanceData, setAttendanceData] = useState<AttendanceRow[]>([]);
 
   // State for date and status filtering
@@ -90,7 +90,7 @@ const AttendanceMonitor: React.FC = () => {
 
         if (!res.ok) {
           const err = await res.text().catch(() => 'Failed');
-          notify(`Failed to fetch attendance: ${err}`, 'error');
+         
           setAttendanceData([]);
           return;
         }
@@ -136,16 +136,15 @@ const AttendanceMonitor: React.FC = () => {
         });
 
         setAttendanceData(flattened);
-        notify('Attendance synchronized', 'success');
+        
       } catch (err) {
         console.error('Attendance fetch error', err);
-        notify('Network error while fetching attendance', 'error');
         setAttendanceData([]);
       }
     };
 
     fetchAttendance();
-  }, [selectedDate, statusFilter, lastRefresh, notify]);
+  }, [selectedDate, statusFilter, lastRefresh]);
 
   // 1. Data Normalization & Feed Derivation
   const dailyMasterFeed = useMemo(() => {
@@ -268,7 +267,6 @@ const AttendanceMonitor: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    notify(`Report generated for ${filteredFeed.length} persons.`, 'success');
   };
 
   return (
@@ -501,7 +499,6 @@ const AttendanceMonitor: React.FC = () => {
               aria-label="Refresh now"
               onClick={() => {
                 setLastRefresh(new Date());
-                notify('Attendance synchronized', 'success');
               }}
               className="px-5 py-2.5 bg-white border border-gray-200 text-gray-500 hover:text-indigo-600 hover:border-indigo-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
             >

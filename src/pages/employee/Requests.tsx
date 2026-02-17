@@ -376,13 +376,11 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
     link.click();
     document.body.removeChild(link);
     setActiveActionMenu(null);
-    toast.success(`Downloading PDF for ${latest.id}`);
   };
 
   const handlePurgeRequest = (id: string) => {
     setRequests((prev: SupportRequest[]) => prev.filter((r: SupportRequest) => r.id !== id));
     setActiveActionMenu(null);
-    toast.info("Request deleted from your list.");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -472,8 +470,6 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
       // Refresh tickets from server to reflect authoritative state
       await fetchTickets();
       setShowNewRequestModal(false);
-
-      toast.success('Help request submitted successfully! (server data refreshed)');
 
       // Reset form
       setSelectedCategory('');
@@ -1064,7 +1060,6 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
                                 try {
                                   const fresh = await fetchTicketById(String(r.ticketId));
                                   if (fresh) setDetailRequest(fresh);
-                                  else toast.info('Ticket details not found');
                                 } catch (e) {
                                   console.warn('Failed to fetch ticket for details', e);
                                   toast.error('Unable to load ticket details');

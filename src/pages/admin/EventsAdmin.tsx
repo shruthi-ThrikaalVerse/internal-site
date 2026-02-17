@@ -600,7 +600,6 @@ const EventsAdmin: React.FC = () => {
     setIsDeleting(true);
     try {
       await apiDeleteEvent(eventToDelete); // ✅ DELETE /api/events/{eventId}
-      notify('Event deleted successfully!', 'success');
       setDeleteConfirmOpen(false);
       setEventToDelete(null);
       await fetchEvents(); // ✅ refresh immediately
@@ -727,10 +726,8 @@ const EventsAdmin: React.FC = () => {
 
         if (editingId) {
           await apiUpdateEvent(editingId, payload);
-          notify('Event updated successfully!', 'success');
         } else {
           await apiCreateEvent(payload);
-          notify('Event created & notifications sent', 'success');
         }
 
         // ✅ close overlay + refresh events hub

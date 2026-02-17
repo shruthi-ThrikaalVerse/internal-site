@@ -92,7 +92,6 @@ const Dashboard: React.FC = () => {
   }, [activities, activityFilter]);
 
   const handleTraceActivity = (type: string, name: string) => {
-    notify(`Tracing ${type} record for ${name}...`, 'info');
 
     switch (type) {
       case 'checkin':
@@ -119,10 +118,13 @@ const Dashboard: React.FC = () => {
   };
 
   const handleDownloadPayslip = (p: PayslipData) => {
-    notify(`Preparing payslip for ${p.month} ${p.year}...`, 'info');
-    setTimeout(() => {
-      notify(`Payslip for ${p.month} ${p.year} downloaded!`, 'success');
-    }, 1000);
+    const content = `PAYSLIP - ${p.month} ${p.year}\nBasic: ${p.basic}\nGross: ${p.grossSalary}\nNet: ${p.netPay}`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Payslip_${p.month}_${p.year}.txt`;
+    a.click();
   };
 
   const clearActivityFilter = () => {

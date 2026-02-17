@@ -8,9 +8,9 @@ const Contact = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
 
-  const EMAILJS_PUBLIC_KEY = 'KjtzE6cyGpsiSE6Qf';
-  const EMAILJS_SERVICE_ID = 'service_7i0x5ti';
-  const EMAILJS_TEMPLATE_ID = 'template_8pjc5ua';
+  const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+  const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+  const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +21,7 @@ const Contact = () => {
         from_name: formData.name,
         from_email: formData.email,
         message: formData.message,
-        to_email: 'nandhigamashruthi@gmail.com',
+        to_email: 'thrikaalverse@gmail.com',
         reply_to: formData.email,
         subject: `New Contact Form Submission from ${formData.name}`
       }, EMAILJS_PUBLIC_KEY);

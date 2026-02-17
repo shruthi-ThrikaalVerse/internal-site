@@ -91,7 +91,6 @@ const PayslipsAdmin: React.FC = () => {
           });
         }
       });
-      notify(`Payslips processed for ${formData.targetEmployeeIds.length} employees.`, 'success');
     }
 
     setIsModalOpen(false);

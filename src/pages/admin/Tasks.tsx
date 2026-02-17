@@ -606,11 +606,9 @@ const Tasks: React.FC = () => {
       try {
         if (editingTaskId) {
           await apiUpdateTask(editingTaskId, payload);
-          notify('Task updated successfully!', 'success');
           setEditingTaskId(null);
         } else {
           await apiCreateTask(payload);
-          notify('Task created successfully!', 'success');
         }
 
         // Refresh tasks list
@@ -652,13 +650,11 @@ const Tasks: React.FC = () => {
             name: newTeam.name,
             employeeIds: newTeam.memberIds
           });
-          notify('Team updated successfully!', 'success');
         } else {
           await apiCreateTeam({
             name: newTeam.name,
             employeeIds: newTeam.memberIds
           });
-          notify('Team created successfully!', 'success');
         }
 
         // Refresh teams list
@@ -697,7 +693,6 @@ const Tasks: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this task?')) return;
     try {
       await apiDeleteTask(taskId);
-      notify('Task deleted successfully!', 'success');
       const refreshed = await apiGetTasks();
       setApiTasks(Array.isArray(refreshed) ? refreshed : []);
     } catch (err: any) {
@@ -709,7 +704,6 @@ const Tasks: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this team?')) return;
     try {
       await apiDeleteTeam(teamId);
-      notify('Team deleted successfully!', 'success');
       const refreshed = await apiGetTeams();
       setApiTeams(Array.isArray(refreshed) ? refreshed : []);
     } catch (err: any) {
@@ -1182,12 +1176,10 @@ const Tasks: React.FC = () => {
               try {
                 if (kindToDelete === 'task') {
                   await apiDeleteTask(idToDelete);
-                  notify('Task deleted successfully!', 'success');
                   const refreshed = await apiGetTasks();
                   setApiTasks(Array.isArray(refreshed) ? refreshed : []);
                 } else {
                   await apiDeleteTeam(idToDelete);
-                  notify('Team deleted successfully!', 'success');
                   const refreshed = await apiGetTeams();
                   setApiTeams(Array.isArray(refreshed) ? refreshed : []);
                 }

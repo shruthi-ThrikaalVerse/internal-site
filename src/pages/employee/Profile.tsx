@@ -120,7 +120,6 @@ const Profile: React.FC = () => {
         newPassword: newPassword
       }, { withCredentials: true });
 
-      toast.success(res.data?.message || 'Password updated successfully');
       setShowChangePasswordModal(false);
       setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
     } catch (err: any) {
