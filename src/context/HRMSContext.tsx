@@ -219,9 +219,9 @@ export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Derive a sensible log level from the action when possible, otherwise default to INFO
     const derivedLevel = /delete|remove|terminate/i.test(action) ? 'WARN'
       : /error|fail/i.test(action) ? 'ERROR'
-      : /create|add|register/i.test(action) ? 'INFO'
-      : /update|modify/i.test(action) ? 'INFO'
-      : 'INFO';
+        : /create|add|register/i.test(action) ? 'INFO'
+          : /update|modify/i.test(action) ? 'INFO'
+            : 'INFO';
 
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
@@ -266,6 +266,13 @@ export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [profilePhotos]);
 
   const addEmployee = (emp: Partial<EmployeeSummary>) => {
+    // Check if employee already exists by ID
+    if (emp.id && employees.some(e => e.id === emp.id)) {
+      // Employee already exists, update instead
+      updateEmployee(emp.id, emp);
+      return;
+    }
+
     const maxIdNum = employees.reduce((max, e) => {
       const parts = e.employeeId.split('-');
       if (parts.length === 2) {
@@ -279,20 +286,20 @@ export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const formattedId = `EMP-${nextIdNum.toString().padStart(3, '0')}`;
 
     const newEmp: EmployeeSummary = {
-      id: `emp-${Date.now()}`,
-      employeeId: formattedId,
+      id: emp.id || `emp-${Date.now()}`,
+      employeeId: emp.employeeId || formattedId,
       fullName: emp.fullName || 'New Employee',
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=emp-${Date.now()}`,
+      avatar: emp.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=emp-${Date.now()}`,
       designation: emp.designation || 'Software Engineer',
       department: emp.department || 'Engineering',
       email: emp.email || 'new@company.com',
-      status: 'active',
-      dateOfJoining: new Date().toISOString().split('T')[0],
-      reportingManager: 'Rajesh Kumar',
+      status: emp.status || 'active',
+      dateOfJoining: emp.dateOfJoining || new Date().toISOString().split('T')[0],
+      reportingManager: emp.reportingManager || 'Rajesh Kumar',
       location: emp.location || 'Bangalore',
-      tags: [],
-      leaveBalance: 15,
-      salaryStructure: {
+      tags: emp.tags || [],
+      leaveBalance: emp.leaveBalance !== undefined ? emp.leaveBalance : 15,
+      salaryStructure: emp.salaryStructure || {
         basic: 40000,
         hra: 16000,
         da: 4000,
@@ -302,7 +309,7 @@ export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         professionalTax: 200,
         tds: 0
       },
-      bankDetails: {
+      bankDetails: emp.bankDetails || {
         bankName: 'HDFC Bank',
         accountNumber: '50100' + Math.floor(10000000 + Math.random() * 90000000),
         ifsc: 'HDFC0001234'
@@ -326,6 +333,11 @@ export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       addLog('Delete', 'Employee', `Terminated record for ${emp.fullName}`);
       notify(`Employee ${emp.fullName} removed.`, 'warning');
     }
+  };
+
+  const syncEmployees = (employeeList: EmployeeSummary[]) => {
+    setEmployees(employeeList);
+    addLog('Sync', 'Employee', `Synced ${employeeList.length} employees from backend`);
   };
 
   const updateLeaveStatus = (id: string, status: LeaveStatus) => {
@@ -624,6 +636,7 @@ export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       addEmployee,
       updateEmployee,
       deleteEmployee,
+      syncEmployees,
       updateLeaveStatus,
       runPayroll,
       updateSalaryStructure,
