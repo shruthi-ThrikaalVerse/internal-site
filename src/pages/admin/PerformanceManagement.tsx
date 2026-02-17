@@ -16,7 +16,6 @@ import { Task } from '../../types.ts';
 import { getTasks as getTasksFromAPI } from '../../api/tasks.ts';
 import { getTeams as getTeamsFromAPI } from '../../api/teams.ts';
 import { getAllEmployees as getEmployeesFromAPI } from '../../api/users.ts';
-
 interface PerformanceData {
   id: string;
   name: string;
@@ -640,7 +639,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
         const normalizedTasks = Array.isArray(data) ? data.map((task: any) => {
           const assigneeType = (task.assigneeType || 'employee').toLowerCase();
           const assignedTo = assigneeType === 'team' ? (task.teamId || task.assignedTo) : (task.assignedTo || task.employeeId);
-
           return {
             id: task.id || task._id || task.taskId,
             title: task.title,
@@ -660,7 +658,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
             tags: task.tags || [],
           };
         }) : [];
-
         setApiTasks(normalizedTasks);
         console.log('Tasks fetched from API:', normalizedTasks);
       } catch (error) {
@@ -680,7 +677,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
       try {
         setApiTeamsLoading(true);
         const data = await getTeamsFromAPI();
-
         // Normalize team data
         const normalizedTeams = Array.isArray(data) ? data.map((team: any) => {
           const teamId = team.id || team.teamId;
@@ -692,7 +688,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
             memberIds: team.memberIds || team.employeeIds || []
           };
         }) : [];
-
         setApiTeams(normalizedTeams);
         console.log('Teams fetched from API:', normalizedTeams);
       } catch (error) {
@@ -712,7 +707,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
       try {
         setApiEmployeesLoading(true);
         const data = await getEmployeesFromAPI();
-
         // Normalize employee data
         const normalizedEmployees = Array.isArray(data) ? data.map((emp: any) => ({
           id: emp.id || emp.employeeId,
@@ -727,7 +721,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
           reportingManager: emp.reportingManager,
           dateOfJoining: emp.dateOfJoining
         })) : [];
-
         setApiEmployees(normalizedEmployees);
         console.log('Employees fetched from API:', normalizedEmployees);
       } catch (error) {
@@ -996,7 +989,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
   const handleRefreshData = () => {
     loadPerformanceData();
   };
-
+  
   const handleRefreshTasks = async () => {
     try {
       setApiTasksLoading(true);
@@ -1006,7 +999,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
       const normalizedTasks = Array.isArray(data) ? data.map((task: any) => {
         const assigneeType = (task.assigneeType || 'employee').toLowerCase();
         const assignedTo = assigneeType === 'team' ? (task.teamId || task.assignedTo) : (task.assignedTo || task.employeeId);
-
         return {
           id: task.id || task._id || task.taskId,
           title: task.title,
@@ -1026,7 +1018,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
           tags: task.tags || [],
         };
       }) : [];
-
       setApiTasks(normalizedTasks);
     } catch (error) {
       console.error('Failed to refresh tasks:', error);
@@ -1819,14 +1810,12 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   (() => {
                     // Get team member IDs from selected task
                     let memberIds: string[] = [];
-
                     // Debug info
                     console.log('=== TEAM TASK DEBUG ===');
                     console.log('Task:', selectedTaskForReview);
                     console.log('assignedTo:', selectedTaskForReview.assignedTo);
                     console.log('API Teams count:', apiTeams.length);
                     console.log('Custom Teams count:', customTeams.length);
-
                     if (!selectedTaskForReview.assignedTo) {
                       console.log('ERROR: assignedTo is null/undefined');
                       return (
@@ -1862,7 +1851,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
                         console.log('Available custom teams:', customTeams.map(t => ({ id: t.id, name: t.name })));
                       }
                     }
-
                     return (
                       <select
                         title="Select employee for review"

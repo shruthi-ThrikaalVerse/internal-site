@@ -63,7 +63,6 @@ const LeaveCenter: React.FC = () => {
     try {
       if (showLoading) setIsLoading(true);
       else setIsRefreshing(true);
-
       const res = await fetch('http://localhost:8085/leave-requests/pending', {
         method: 'GET',
         credentials: 'include',
@@ -230,10 +229,10 @@ const LeaveCenter: React.FC = () => {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-bold shadow-sm border border-blue-100">
-                    {req.employeeName.split(' ').map(n => n[0]).join('')}
+                    {(req.employeeName || '?').split(' ').map(n => n[0]).join('')}
                   </div>
                   <div>
-                    <h3 className="font-bold text-black text-lg">{req.employeeName}</h3>
+                    <h3 className="font-bold text-black text-lg">{req.employeeName || 'Unknown Employee'}</h3>
                     <p className="text-xs text-black font-medium">Applied on {req.appliedDate}</p>
                   </div>
                 </div>

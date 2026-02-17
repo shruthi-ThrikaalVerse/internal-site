@@ -29,7 +29,7 @@ const fetchWithTimeout = (url: string, options: RequestInit = {}, timeout = FETC
 
 export const createTask = async (payload: any) => {
   try {
-    const resp = (await fetchWithTimeout(API_BASE, {
+    const resp = (await fetchWithTimeout(`${API_BASE}/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...getAuthHeader() },
       credentials: 'include',
@@ -45,9 +45,27 @@ export const createTask = async (payload: any) => {
   }
 };
 
+export const createSelfTask = async (payload: any) => {
+  try {
+    const resp = (await fetchWithTimeout(`${API_BASE}/self`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...getAuthHeader() },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    })) as Response;
+    await throwIfError(resp);
+    return parseText(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The self-task creation request took too long. Please try again.');
+    }
+    throw err;
+  }
+};
+
 export const getTasks = async () => {
   try {
-    const resp = (await fetchWithTimeout(API_BASE, {
+    const resp = (await fetchWithTimeout(`${API_BASE}/getAll`, {
       headers: { Accept: 'application/json', ...getAuthHeader() },
       credentials: 'include',
     })) as Response;
@@ -63,7 +81,7 @@ export const getTasks = async () => {
 
 export const getTask = async (taskId: string) => {
   try {
-    const resp = (await fetchWithTimeout(`${API_BASE}/${taskId}`, {
+    const resp = (await fetchWithTimeout(`${API_BASE}/get/${taskId}`, {
       headers: { Accept: 'application/json', ...getAuthHeader() },
       credentials: 'include',
     })) as Response;
@@ -79,7 +97,7 @@ export const getTask = async (taskId: string) => {
 
 export const updateTask = async (taskId: string, payload: any) => {
   try {
-    const resp = (await fetchWithTimeout(`${API_BASE}/${taskId}`, {
+    const resp = (await fetchWithTimeout(`${API_BASE}/update/${taskId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...getAuthHeader() },
       credentials: 'include',
@@ -97,7 +115,7 @@ export const updateTask = async (taskId: string, payload: any) => {
 
 export const deleteTask = async (taskId: string) => {
   try {
-    const resp = (await fetchWithTimeout(`${API_BASE}/${taskId}`, {
+    const resp = (await fetchWithTimeout(`${API_BASE}/delete/${taskId}`, {
       method: 'DELETE',
       headers: { Accept: 'application/json', ...getAuthHeader() },
       credentials: 'include',
@@ -107,6 +125,110 @@ export const deleteTask = async (taskId: string) => {
   } catch (err: any) {
     if (err.message === 'Request timeout') {
       throw new Error('The task deletion request took too long. Please try again.');
+    }
+    throw err;
+  }
+};
+
+// Get tasks by employee ID
+export const getTasksByEmployeeId = async (employeeId: string) => {
+  try {
+    const resp = (await fetchWithTimeout(`${API_BASE}/task/${employeeId}`, {
+      headers: { Accept: 'application/json', ...getAuthHeader() },
+      credentials: 'include',
+    })) as Response;
+    await throwIfError(resp);
+    return parseText(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The employee tasks request took too long. Please try again.');
+    }
+    throw err;
+  }
+};
+
+// Get my tasks (logged-in user)
+export const getMyTasks = async () => {
+  try {
+    const resp = (await fetchWithTimeout(`${API_BASE}/mytasks`, {
+      headers: { Accept: 'application/json', ...getAuthHeader() },
+      credentials: 'include',
+    })) as Response;
+    await throwIfError(resp);
+    return parseText(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The my-tasks request took too long. Please try again.');
+    }
+    throw err;
+  }
+};
+
+// Get all self-assigned tasks
+export const getSelfTasks = async () => {
+  try {
+    const resp = (await fetchWithTimeout(`${API_BASE}/selftasks`, {
+      headers: { Accept: 'application/json', ...getAuthHeader() },
+      credentials: 'include',
+    })) as Response;
+    await throwIfError(resp);
+    return parseText(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The self-tasks request took too long. Please try again.');
+    }
+    throw err;
+  }
+};
+
+// Add / Update review for task
+export const addTaskReview = async (taskId: string, payload: any) => {
+  try {
+    const resp = (await fetchWithTimeout(`${API_BASE}/review/${taskId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...getAuthHeader() },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    })) as Response;
+    await throwIfError(resp);
+    return parseText(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The task review request took too long. Please try again.');
+    }
+    throw err;
+  }
+};
+
+// Get my reviews (logged-in user)
+export const getMyReviews = async () => {
+  try {
+    const resp = (await fetchWithTimeout(`${API_BASE}/reviews`, {
+      headers: { Accept: 'application/json', ...getAuthHeader() },
+      credentials: 'include',
+    })) as Response;
+    await throwIfError(resp);
+    return parseText(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The my-reviews request took too long. Please try again.');
+    }
+    throw err;
+  }
+};
+
+// Get all reviews (admin)
+export const getAllReviews = async () => {
+  try {
+    const resp = (await fetchWithTimeout(`${API_BASE}/allReviews`, {
+      headers: { Accept: 'application/json', ...getAuthHeader() },
+      credentials: 'include',
+    })) as Response;
+    await throwIfError(resp);
+    return parseText(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The all-reviews request took too long. Please try again.');
     }
     throw err;
   }

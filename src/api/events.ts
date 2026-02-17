@@ -40,7 +40,7 @@ const throwIfError = async (resp: Response) => {
 
 export const getEvents = async () => {
   try {
-    const resp = (await fetchWithTimeout(API_BASE, {
+    const resp = (await fetchWithTimeout(`${API_BASE}/getAll`, {
       method: 'GET',
       headers: {
         Accept: 'application/json',
@@ -61,7 +61,7 @@ export const getEvents = async () => {
 
 export const getEvent = async (id: string | number) => {
   try {
-    const resp = (await fetchWithTimeout(`${API_BASE}/${id}`, {
+    const resp = (await fetchWithTimeout(`${API_BASE}/getEvent/${id}`, {
       method: 'GET',
       headers: {
         Accept: 'application/json',
@@ -83,8 +83,7 @@ export const getEvent = async (id: string | number) => {
 export const createEvent = async (payload: any) => {
   try {
     console.log('Creating event, payload:', payload);
-
-    const resp = (await fetchWithTimeout(API_BASE, {
+    const resp = (await fetchWithTimeout(`${API_BASE}/create`, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -118,7 +117,7 @@ export const createEvent = async (payload: any) => {
 
 export const updateEvent = async (id: string | number, payload: any) => {
   try {
-    const resp = (await fetchWithTimeout(`${API_BASE}/${id}`, {
+    const resp = (await fetchWithTimeout(`${API_BASE}/update/${id}`, {
       method: 'PUT',
       headers: {
         Accept: 'application/json',
@@ -140,7 +139,7 @@ export const updateEvent = async (id: string | number, payload: any) => {
 };
 
 export const deleteEvent = async (id: string | number) => {
-  const url = `${API_BASE}/${id}`;
+  const url = `${API_BASE}/deleteEvent/${id}`;
   console.log('Deleting event from URL:', url);
 
   try {
@@ -168,6 +167,25 @@ export const deleteEvent = async (id: string | number) => {
   } catch (err: any) {
     if (err.message === 'Request timeout') {
       throw new Error('The event deletion request took too long. Please try again.');
+    }
+    throw err;
+  }
+};
+
+// GET events created by currently authenticated user
+export const getMyEvents = async () => {
+  try {
+    const resp = (await fetchWithTimeout(`${API_BASE}/getAllEvents`, {
+      method: 'GET',
+      headers: { Accept: 'application/json', ...getAuthHeader() },
+      credentials: 'include',
+    })) as Response;
+
+    await throwIfError(resp);
+    return readBody(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The my-events request took too long. Please try again later.');
     }
     throw err;
   }

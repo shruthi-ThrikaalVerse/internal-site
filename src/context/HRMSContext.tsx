@@ -59,6 +59,7 @@ interface HRMSContextType {
   globalSearchTerm: string;
   setGlobalSearchTerm: (val: string) => void;
   addEmployee: (emp: Partial<EmployeeSummary>) => void;
+  syncEmployees: (employeeList: EmployeeSummary[]) => void;
   updateEmployee: (id: string, updates: Partial<EmployeeSummary>) => void;
   deleteEmployee: (id: string) => void;
   updateLeaveStatus: (id: string, status: 'approved' | 'rejected' | 'pending') => void;

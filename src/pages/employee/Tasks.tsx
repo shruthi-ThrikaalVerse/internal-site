@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getTasks as apiGetTasks, getMyTasks as apiGetMyTasks, getSelfTasks as apiGetSelfTasks, createSelfTask } from '../../api/tasks.ts';
 import {
   CheckCircle, Clock, MoreVertical, Plus, Filter, Grid, List,
   X, Trash2, Loader2, AlertCircle, User, Tag,
@@ -39,10 +40,20 @@ interface Task {
   comments: TaskComment[];
   attachments: string[];
   logs: TimeLog[];
+  taskType?: 'team' | 'individual' | 'work' | 'self';
 }
 
 const Tasks: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [allTasks, setAllTasks] = useState<{ [key: string]: Task[] }>({
+    my: [],
+    team: [],
+    individual: [],
+    self: [],
+  });
+  const [selectedCategory, setSelectedCategory] = useState<'my' | 'team' | 'individual' | 'self'>('my');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedPriority, setSelectedPriority] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -130,8 +141,84 @@ const Tasks: React.FC = () => {
     loadTasks();
   }, []);
 
+  const mapTaskData = (item: any): Task => {
+    const priorityMap: { [key: string]: Task['priority'] } = {
+      'P1': 'urgent',
+      'P2': 'high',
+      'P3': 'medium',
+      'P4': 'low',
+      'URGENT': 'urgent',
+      'HIGH': 'high',
+      'MEDIUM': 'medium',
+      'LOW': 'low',
+    };
+    
+    const statusMap: { [key: string]: Task['status'] } = {
+      'PENDING': 'todo',
+      'TODO': 'todo',
+      'IN_PROGRESS': 'in_progress',
+      'REVIEW': 'review',
+      'COMPLETED': 'completed',
+      'DONE': 'completed',
+    };
+    
+    return {
+      id: item.taskId || String(Math.random()),
+      title: item.title || 'Task',
+      project: item.department || item.project || 'General',
+      status: statusMap[(item.status || 'PENDING').toUpperCase()] || 'todo',
+      priority: priorityMap[(item.priority || 'P3').toUpperCase()] || 'medium',
+      dueDate: item.deadlineAt ? new Date(item.deadlineAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      estimatedHours: item.estimatedHours || 0,
+      timeLogged: item.timeLogged || 0,
+      description: item.description || '',
+      tags: Array.isArray(item.tags) ? item.tags : [],
+      assignee: item.assigneeName || `EMP: ${item.employeeId}`,
+      assignedBy: item.assignedBy || '',
+      createdAt: item.createdAt || new Date().toISOString(),
+      comments: Array.isArray(item.comments) ? item.comments : [],
+      attachments: Array.isArray(item.attachments) ? item.attachments : [],
+      logs: Array.isArray(item.logs) ? item.logs : [],
+      taskType: item.taskType || 'work',
+    };
+  };
+
   const loadTasks = () => {
-    const mockTasks: Task[] = [
+    (async () => {
+      try {
+        // Fetch tasks from multiple categories
+        const [myTasksData, selfTasksData] = await Promise.all([
+          apiGetMyTasks().catch(() => []),
+          apiGetSelfTasks().catch(() => []),
+        ]);
+
+        const myTasks = (Array.isArray(myTasksData) && myTasksData.length > 0) 
+          ? myTasksData.map(mapTaskData) 
+          : [];
+        
+        const selfTasks = (Array.isArray(selfTasksData) && selfTasksData.length > 0) 
+          ? selfTasksData.map(mapTaskData) 
+          : [];
+
+        // For team and individual tasks, filter from myTasks based on type
+        const teamTasks = myTasks.filter((t) => t.taskType === 'team' || t.assignee?.includes('Team'));
+        const individualTasks = myTasks.filter((t) => t.taskType === 'individual' || !t.assignee?.includes('Team'));
+
+        setAllTasks({
+          my: myTasks,
+          self: selfTasks,
+          team: teamTasks,
+          individual: individualTasks,
+        });
+
+        // Set displayed tasks based on selected category
+        setTasks(myTasks);
+        return;
+      } catch (err) {
+        console.warn('Failed to load tasks from API, falling back to mock tasks.', err);
+      }
+
+      const mockTasks: Task[] = [
       {
         id: '1',
         title: 'Update Design System Components',
@@ -279,8 +366,39 @@ const Tasks: React.FC = () => {
         logs: []
       }
     ];
-    setTasks(mockTasks);
+      
+      const teamTasks = mockTasks.filter((t) => t.taskType === 'team' || t.assignee?.includes('Team'));
+      const selfTasks = mockTasks.filter((t) => t.id.startsWith('self-'));
+      const individualTasks = mockTasks.filter((t) => !t.assignee?.includes('Team'));
+
+      setAllTasks({
+        my: mockTasks,
+        self: selfTasks,
+        team: teamTasks,
+        individual: individualTasks,
+      });
+      
+      setTasks(mockTasks);
+    })();
   };
+
+  // Handle category and filter changes
+  useEffect(() => {
+    const categoryTasks = allTasks[selectedCategory] || [];
+    
+    // Apply status and priority filters
+    let filteredTasks = categoryTasks;
+    
+    if (selectedStatus !== 'all') {
+      filteredTasks = filteredTasks.filter((t) => t.status === selectedStatus);
+    }
+    
+    if (selectedPriority !== 'all') {
+      filteredTasks = filteredTasks.filter((t) => t.priority === selectedPriority);
+    }
+    
+    setTasks(filteredTasks);
+  }, [selectedCategory, selectedStatus, selectedPriority, allTasks]);
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -288,33 +406,51 @@ const Tasks: React.FC = () => {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
 
-    const estimatedInput = parseFloat(formData.get('estimated') as string) || 0;
-    const estimatedHours = Math.max(0, estimatedInput);
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
 
-    const newTask: Task = {
-      id: Date.now().toString(),
-      title: formData.get('title') as string,
-      project: formData.get('project') as string,
-      status: 'todo',
-      priority: formData.get('priority') as Task['priority'],
-      dueDate: formData.get('dueDate') as string,
-      estimatedHours: estimatedHours,
-      timeLogged: 0,
-      description: formData.get('description') as string,
-      tags: (formData.get('tags') as string).split(',').map(tag => tag.trim()).filter(Boolean),
-      assignee: formData.get('assignee') as string || undefined,
-      assignedBy: formData.get('assignedBy') as string || undefined,
-      createdAt: new Date().toISOString().split('T')[0],
-      comments: [],
-      attachments: [],
-      logs: []
-    };
+    // Call API to create self-task
+    (async () => {
+      try {
+        const payload = { title, description };
+        const response = await createSelfTask(payload);
+        console.log('Self-task created:', response);
 
-    setTimeout(() => {
-      setTasks(prev => [newTask, ...prev]);
-      setIsSubmitting(false);
-      setShowAddModal(false);
-    }, 500);
+        // Create local task object for UI
+        const newTask: Task = {
+          id: response?.id || Date.now().toString(),
+          title: title,
+          project: 'Self-Assigned',
+          status: 'todo',
+          priority: 'medium',
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          estimatedHours: 0,
+          timeLogged: 0,
+          description: description,
+          tags: [],
+          assignee: 'You',
+          assignedBy: undefined,
+          createdAt: new Date().toISOString(),
+          comments: [],
+          attachments: [],
+          logs: [],
+          taskType: 'self',
+        };
+
+        // Add to self-tasks category
+        setAllTasks(prev => ({
+          ...prev,
+          self: [newTask, ...prev.self],
+        }));
+
+        setShowAddModal(false);
+      } catch (err) {
+        console.error('Error creating self-task:', err);
+        alert('Failed to create self-task. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
+    })();
   };
 
   const updateTaskStatus = (taskId: string, newStatus: Task['status']) => {
@@ -722,7 +858,111 @@ const Tasks: React.FC = () => {
           </div>
         </div>
 
-        {/* Summary Cards */}
+        {/* Task Category Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 md:mb-8">
+          {[
+            { id: 'my' as const, label: 'My Tasks', icon: CheckCircle, color: 'blue' },
+            { id: 'team' as const, label: 'Team Tasks', icon: FileText, color: 'purple' },
+            { id: 'individual' as const, label: 'Individual Tasks', icon: User, color: 'green' },
+            { id: 'self' as const, label: 'Self-Assign Tasks', icon: Zap, color: 'orange' },
+          ].map((category) => {
+            const Icon = category.icon;
+            const categoryCount = allTasks[category.id]?.length || 0;
+            const isSelected = selectedCategory === category.id;
+            const colorClasses = {
+              blue: isSelected ? 'bg-blue-50 border-blue-300' : 'bg-white hover:bg-blue-50',
+              purple: isSelected ? 'bg-purple-50 border-purple-300' : 'bg-white hover:bg-purple-50',
+              green: isSelected ? 'bg-green-50 border-green-300' : 'bg-white hover:bg-green-50',
+              orange: isSelected ? 'bg-orange-50 border-orange-300' : 'bg-white hover:bg-orange-50',
+            };
+
+            return (
+              <button
+                key={category.id}
+                onClick={() => {
+                  setSelectedCategory(category.id);
+                  setSelectedStatus('all');
+                  setSelectedPriority('all');
+                }}
+                className={`p-4 rounded-lg border border-gray-200 transition-all cursor-pointer ${colorClasses[category.color]}`}
+              >
+                <Icon size={24} className="mb-2" />
+                <h3 className="font-semibold text-gray-900 text-sm">{category.label}</h3>
+                <p className="text-lg font-bold text-gray-900 mt-1">{categoryCount}</p>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Status Filter Bar */}
+        <div className="mb-4 pb-4 border-b border-gray-200">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Filter by Status</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedStatus('all')}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                selectedStatus === 'all'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              All
+            </button>
+            {[
+              { id: 'todo', label: 'In Progress' },
+              { id: 'in_progress', label: 'In Progress' },
+              { id: 'review', label: 'On Review' },
+              { id: 'completed', label: 'Completed' },
+            ].map((status) => (
+              <button
+                key={status.id}
+                onClick={() => setSelectedStatus(status.id)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  selectedStatus === status.id
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {status.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Priority Filter Bar */}
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Filter by Priority</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedPriority('all')}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                selectedPriority === 'all'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              All
+            </button>
+            {[
+              { id: 'urgent', label: 'P1-Urgent' },
+              { id: 'high', label: 'P2-High' },
+              { id: 'medium', label: 'P3-Medium' },
+              { id: 'low', label: 'P4-Low' },
+            ].map((priority) => (
+              <button
+                key={priority.id}
+                onClick={() => setSelectedPriority(priority.id)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  selectedPriority === priority.id
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {priority.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 md:mb-6 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {/* Total Tasks */}
           <div
@@ -1317,7 +1557,7 @@ const Tasks: React.FC = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Task Title
+                      Task Title <span className="text-red-500">*</span>
                     </label>
                     <input
                       name="title"
@@ -1328,111 +1568,14 @@ const Tasks: React.FC = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Project
-                      </label>
-                      <input
-                        name="project"
-                        type="text"
-                        required
-                        placeholder="Project name"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-2">
-                        Due Date
-                      </label>
-                      <input
-                        id="dueDate"
-                        name="dueDate"
-                        type="date"
-                        required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Priority (SLA)
-                      </label>
-                      <select
-                        name="priority"
-                        aria-label="Task priority"
-                        required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-                      >
-                        {priorities.map(priority => (
-                          <option key={priority.id} value={priority.id}>
-                            {priority.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Estimated Hours
-                      </label>
-                      <input
-                        name="estimated"
-                        type="number"
-                        step="0.5"
-                        min="0"
-                        required
-                        placeholder="8.0"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Assignee
-                      </label>
-                      <input
-                        name="assignee"
-                        type="text"
-                        placeholder="Team member name"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Assigned By
-                      </label>
-                      <input
-                        name="assignedBy"
-                        type="text"
-                        placeholder="Who is assigning?"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-                      />
-                    </div>
-                  </div>
-
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tags (comma separated)
-                    </label>
-                    <input
-                      name="tags"
-                      type="text"
-                      placeholder="design, development, bug"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description
+                      Description <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       name="description"
                       rows={4}
+                      required
                       placeholder="Describe the task..."
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm md:text-base"
                     />

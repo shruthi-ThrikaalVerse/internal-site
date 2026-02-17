@@ -90,7 +90,6 @@ const AttendanceMonitor: React.FC = () => {
 
         if (!res.ok) {
           const err = await res.text().catch(() => 'Failed');
-
           setAttendanceData([]);
           return;
         }
@@ -136,7 +135,6 @@ const AttendanceMonitor: React.FC = () => {
         });
 
         setAttendanceData(flattened);
-
       } catch (err) {
         console.error('Attendance fetch error', err);
         setAttendanceData([]);
