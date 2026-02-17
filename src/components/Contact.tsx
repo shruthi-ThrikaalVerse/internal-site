@@ -12,6 +12,12 @@ const Contact = () => {
   const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
   const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
 
+  if (!EMAILJS_PUBLIC_KEY || !EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID) {
+    // Helpful dev-time warning when env vars are missing
+    // (keep @ts-nocheck at top to avoid TS errors in this file)
+    console.warn('EmailJS env vars are missing. Ensure .env.local or deployment secrets are set.');
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);

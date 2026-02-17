@@ -1,8 +1,8 @@
-import { 
-  EmployeeSummary, 
-  DashboardStats, 
-  RecentActivity, 
-  PendingApproval, 
+import {
+  EmployeeSummary,
+  DashboardStats,
+  RecentActivity,
+  PendingApproval,
   DepartmentHeadcount,
   AttendanceRecord,
   LeaveRequest,
@@ -58,7 +58,7 @@ export const mockEmployees: EmployeeSummary[] = INDIAN_NAMES.map((name, index) =
   const departments = ['Engineering', 'Finance', 'Sales', 'Marketing', 'Human Resources'];
   const locations = ['Bangalore', 'Mumbai', 'Hyderabad', 'Pune'];
   const designations = ['Software Engineer', 'Senior Manager', 'Sales Representative', 'HR Specialist', 'Financial Analyst'];
-  
+
   const documents: EmployeeDocument[] = [
     { type: 'Aadhaar Card', status: index % 2 === 0 ? 'verified' : 'uploaded', fileName: `aadhaar_${index + 1}.pdf`, uploadedDate: '2024-01-10' },
     { type: 'PAN Card', status: index % 3 === 0 ? 'verified' : 'uploaded', fileName: `pan_card_${index + 1}.pdf`, uploadedDate: '2024-01-12' },
@@ -67,7 +67,7 @@ export const mockEmployees: EmployeeSummary[] = INDIAN_NAMES.map((name, index) =
   if (index % 4 === 0) {
     documents.push({ type: 'Educational Certificate', status: 'verified', fileName: 'degree_certificate.pdf', uploadedDate: '2024-01-15' });
   }
-  
+
   if (index % 5 === 0) {
     documents.push({ type: 'Offer Letter', status: 'verified', fileName: 'offer_letter_signed.pdf', uploadedDate: '2024-01-05' });
   }
@@ -158,21 +158,21 @@ export const mockLeaveRequests: LeaveRequest[] = [
 ];
 
 export const mockPerformanceCycles: PerformanceCycle[] = [
-  { 
-    id: 'pc-1', 
-    name: 'Annual Review 2024', 
-    period: 'Jan - Dec 2024', 
-    status: 'active', 
-    participants: 20, 
-    completed: 12 
+  {
+    id: 'pc-1',
+    name: 'Annual Review 2024',
+    period: 'Jan - Dec 2024',
+    status: 'active',
+    participants: 20,
+    completed: 12
   },
-  { 
-    id: 'pc-2', 
-    name: 'Mid-Year Sync 2023', 
-    period: 'Jan - Jun 2023', 
-    status: 'completed', 
-    participants: 18, 
-    completed: 18 
+  {
+    id: 'pc-2',
+    name: 'Mid-Year Sync 2023',
+    period: 'Jan - Jun 2023',
+    status: 'completed',
+    participants: 18,
+    completed: 18
   }
 ];
 

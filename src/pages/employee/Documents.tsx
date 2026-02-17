@@ -11,6 +11,7 @@ import {
   Mail, Inbox, FileCheck, Receipt, BadgeCheck, Globe, Key, FileCode
 } from 'lucide-react';
 import { getUserSpecificKey } from '../../utils/storage.ts';
+import { getMyDocuments } from '../../api/documents.js';
 import { useAuth } from '../../context/AuthContext.tsx';
 import { GoogleGenAI, Type } from "@google/genai";
 
@@ -67,224 +68,44 @@ const Documents: React.FC = () => {
   ];
 
   useEffect(() => {
-    const loadData = () => {
-      const saved = JSON.parse(localStorage.getItem(getUserSpecificKey('user_documents_v8')) || '[]');
-      if (saved.length === 0) {
-        const initial: DocumentRecord[] = [
-          // Personal Documents (Aadhar, PAN, etc.)
-          {
-            id: 'doc-1',
-            name: 'Aadhar_Card_Sarah_Kumar.pdf',
-            category: 'Personal',
-            subCategory: 'Aadhar Card',
-            type: 'PDF',
-            size: '1.5 MB',
-            uploaded: '2024-01-15',
-            status: 'Verified',
-            access: 'Private',
-            notes: 'Government issued identity proof with photo and biometric details.',
-            color: 'bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/20'
-          },
-          {
-            id: 'doc-2',
-            name: 'PAN_Card_Sarah_Kumar.jpg',
-            category: 'Personal',
-            subCategory: 'PAN Card',
-            type: 'JPG',
-            size: '980 KB',
-            uploaded: '2024-01-15',
-            status: 'Verified',
-            access: 'Private',
-            notes: 'Permanent Account Number card for tax purposes.',
-            color: 'bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/20',
-            isLocked: true
-          },
-          {
-            id: 'doc-3',
-            name: 'Passport_Sarah_Kumar.pdf',
-            category: 'Personal',
-            subCategory: 'Passport',
-            type: 'PDF',
-            size: '2.8 MB',
-            uploaded: '2024-02-10',
-            status: 'Verified',
-            access: 'Private',
-            color: 'bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/20'
-          },
-          {
-            id: 'doc-4',
-            name: 'Driving_License_Sarah_Kumar.pdf',
-            category: 'Personal',
-            subCategory: 'Driving License',
-            type: 'PDF',
-            size: '1.2 MB',
-            uploaded: '2024-02-15',
-            status: 'Pending',
-            access: 'Private',
-            notes: 'Awaiting verification by HR department.',
-            color: 'bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/20'
-          },
-          
-          // Employment Letters
-          {
-            id: 'doc-5',
-            name: 'Offer_Letter_Sarah_March_2024.pdf',
-            category: 'Employment',
-            subCategory: 'Offer Letters',
-            type: 'PDF',
-            size: '1.8 MB',
-            uploaded: '2024-03-15',
-            status: 'Verified',
-            access: 'Private',
-            notes: 'Signed offer letter with position details and compensation.',
-            color: 'bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/20'
-          },
-          {
-            id: 'doc-6',
-            name: 'Promotion_Letter_Dec_2023.pdf',
-            category: 'Employment',
-            subCategory: 'Promotion Letters',
-            type: 'PDF',
-            size: '1.2 MB',
-            uploaded: '2023-12-10',
-            status: 'Verified',
-            access: 'Private',
-            color: 'bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/20'
-          },
-          {
-            id: 'doc-7',
-            name: 'Experience_Certificate_2022-2024.pdf',
-            category: 'Employment',
-            subCategory: 'Experience Letters',
-            type: 'PDF',
-            size: '2.1 MB',
-            uploaded: '2024-03-28',
-            status: 'Verified',
-            access: 'HR',
-            notes: 'Detailed experience certificate for previous employment period.',
-            color: 'bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/20'
-          },
-          
-          // Financial Documents
-          {
-            id: 'doc-8',
-            name: 'Salary_Certificate_March_2024.pdf',
-            category: 'Financial',
-            subCategory: 'Salary Certificates',
-            type: 'PDF',
-            size: '850 KB',
-            uploaded: '2024-03-31',
-            status: 'Pending',
-            access: 'Private',
-            notes: 'Awaiting HR approval. Expected clearance: 48 hours.',
-            color: 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/20'
-          },
-          {
-            id: 'doc-9',
-            name: 'Form_16_2023_2024.pdf',
-            category: 'Financial',
-            subCategory: 'Form 16',
-            type: 'PDF',
-            size: '1.5 MB',
-            uploaded: '2024-04-01',
-            status: 'Verified',
-            access: 'Private',
-            notes: 'Tax deduction certificate for financial year 2023-24.',
-            color: 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/20'
-          },
-          
-          // Legal Documents
-          {
-            id: 'doc-10',
-            name: 'NDA_Agreement_Signed.pdf',
-            category: 'Legal',
-            subCategory: 'NDA Agreements',
-            type: 'PDF',
-            size: '3.2 MB',
-            uploaded: '2024-03-25',
-            status: 'Flagged',
-            access: 'HR',
-            notes: 'Requires re-signature. Expiry date approaching.',
-            color: 'bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/20'
-          },
-          
-          // IT & Access
-          {
-            id: 'doc-11',
-            name: 'VPN_Access_Approval.pdf',
-            category: 'IT',
-            subCategory: 'VPN Letters',
-            type: 'PDF',
-            size: '1.1 MB',
-            uploaded: '2024-03-20',
-            status: 'Verified',
-            access: 'Manager',
-            color: 'bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 border border-indigo-500/20'
-          },
-          
-          // Company Policy
-          {
-            id: 'doc-12',
-            name: 'Employee_Handbook_2024.pdf',
-            category: 'Company',
-            subCategory: 'Employee Handbook',
-            type: 'PDF',
-            size: '8.7 MB',
-            uploaded: '2024-01-05',
-            status: 'Verified',
-            access: 'Public',
-            notes: 'Updated company policies and procedures.',
-            color: 'bg-gradient-to-br from-red-500/20 to-red-600/10 border border-red-500/20'
-          },
-          
-          // More Personal Documents
-          {
-            id: 'doc-13',
-            name: 'Voter_ID_Sarah_Kumar.jpg',
-            category: 'Personal',
-            subCategory: 'Voter ID',
-            type: 'JPG',
-            size: '1.1 MB',
-            uploaded: '2024-02-20',
-            status: 'Verified',
-            access: 'Private',
-            color: 'bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/20'
-          },
-          
-          // Additional Financial Documents
-          {
-            id: 'doc-14',
-            name: 'Investment_Proof_2023_24.pdf',
-            category: 'Financial',
-            subCategory: 'Investment Proofs',
-            type: 'PDF',
-            size: '2.3 MB',
-            uploaded: '2024-03-15',
-            status: 'Verified',
-            access: 'Private',
-            color: 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/20'
-          },
-          
-          // More Employment Documents
-          {
-            id: 'doc-15',
-            name: 'Appointment_Letter_Project_Lead.pdf',
-            category: 'Employment',
-            subCategory: 'Appointment Letters',
-            type: 'PDF',
-            size: '1.9 MB',
-            uploaded: '2024-03-10',
-            status: 'Verified',
-            access: 'Private',
-            notes: 'Appointment as Project Lead for Q2 initiatives.',
-            color: 'bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/20'
-          },
-        ];
-        setDocuments(initial);
-        localStorage.setItem(getUserSpecificKey('user_documents_v8'), JSON.stringify(initial));
-      } else {
-        setDocuments(saved);
+    const loadData = async () => {
+      try {
+        const apiDocs: any = await getMyDocuments();
+        if (Array.isArray(apiDocs) && apiDocs.length > 0) {
+          const mapped: DocumentRecord[] = apiDocs.map((d: any) => {
+            const fileType = (d.fileType || '').toLowerCase();
+            const extType = fileType.includes('pdf') ? 'PDF' : fileType.includes('image') ? 'JPG' : 'FILE';
+            const mapDocType: Record<string, string> = {
+              'AADHAAR': 'Aadhar Card',
+              'PAN': 'PAN Card',
+              'CERTIFICATES': 'Certificates',
+              'OFFER_LETTER': 'Offer Letters'
+            };
+            return {
+              id: String(d.id),
+              name: d.fileName || `document_${d.id}`,
+              category: 'Personal',
+              subCategory: mapDocType[d.documentType] || d.documentType || 'General',
+              type: extType,
+              size: d.fileSize ? `${Math.round(d.fileSize/1024)} KB` : 'N/A',
+              uploaded: d.uploadedAt ? d.uploadedAt.split('T')[0] : '',
+              status: d.uploadedAt ? 'Verified' : 'Pending',
+              access: 'Private',
+              notes: '',
+              color: 'bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/20'
+            } as DocumentRecord;
+          });
+          setDocuments(mapped);
+          localStorage.setItem(getUserSpecificKey('user_documents_v8'), JSON.stringify(mapped));
+          return;
+        }
+      } catch (err) {
+        console.warn('Failed to load documents from API, falling back to local data', err);
       }
+
+      // Fallback to existing local mock if API returns nothing or fails
+      const saved = JSON.parse(localStorage.getItem(getUserSpecificKey('user_documents_v8')) || '[]');
+      if (saved.length) setDocuments(saved);
     };
 
     loadData();
