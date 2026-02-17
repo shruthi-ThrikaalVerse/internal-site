@@ -18,9 +18,9 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-2xl" }: any
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose}></div>
       <div className={`bg-white rounded-[32px] w-full ${maxWidth} relative shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden`}>
         <div className="p-8 border-b flex items-center justify-between bg-white sticky top-0">
-          <h2 className="text-2xl font-black text-slate-900">{title}</h2>
+          <h2 className="text-2xl font-black text-black">{title}</h2>
           <button aria-label="Close dialog" onClick={onClose} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors">
-            <Icon name="X" className="w-6 h-6" />
+            <Icon name="X" className="w-6 h-6 text-black" />
           </button>
         </div>
         <div className="p-8 max-h-[80vh] overflow-y-auto custom-scrollbar">{children}</div>
@@ -139,7 +139,7 @@ const DocumentManagement: React.FC = () => {
             updateEmployee(selectedEmployee.id, { documents: mapped } as any);
           }
         } catch (err: any) {
-          notify(`Upload failed: ${err.message || err}`,'error');
+          notify(`Upload failed: ${err.message || err}`, 'error');
         } finally {
           setActiveUpload(null);
           e.target.value = '';
@@ -178,7 +178,7 @@ const DocumentManagement: React.FC = () => {
 
   const handleUploadSubmit = async () => {
     if (!uploadForm.employeeId || !uploadForm.file) {
-      notify('Please select an employee and a file to upload','warning');
+      notify('Please select an employee and a file to upload', 'warning');
       return;
     }
     try {
@@ -193,7 +193,7 @@ const DocumentManagement: React.FC = () => {
       }
       setUploadModalOpen(false);
     } catch (err: any) {
-      notify(`Upload failed: ${err.message || err}`,'error');
+      notify(`Upload failed: ${err.message || err}`, 'error');
     }
   };
 
@@ -220,7 +220,7 @@ const DocumentManagement: React.FC = () => {
         }
         setViewingDoc(doc);
       } catch (err: any) {
-        notify(`Failed to load document: ${err.message || err}`,'error');
+        notify(`Failed to load document: ${err.message || err}`, 'error');
       }
     })();
   };
@@ -267,7 +267,7 @@ const DocumentManagement: React.FC = () => {
         URL.revokeObjectURL(url);
       }
     } catch (err: any) {
-      notify(`Download failed: ${err.message || err}`,'error');
+      notify(`Download failed: ${err.message || err}`, 'error');
     }
   };
 
@@ -283,7 +283,7 @@ const DocumentManagement: React.FC = () => {
         const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({ ...d, type: apiToDisplayType(d.documentType) }));
         setSelectedEmployeeDocs(mapped);
       } catch (err: any) {
-        notify(`Failed to load documents: ${err.message || err}`,'error');
+        notify(`Failed to load documents: ${err.message || err}`, 'error');
       }
     })();
   }, [selectedEmployee]);
@@ -344,21 +344,21 @@ const DocumentManagement: React.FC = () => {
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Compliance & Documents</h1>
-          <p className="text-slate-500 text-sm font-medium">Verify and manage statutory documentation for {employees.length} Personnel.</p>
+          <h1 className="text-3xl font-black text-black tracking-tight">Compliance & Documents</h1>
+          <p className="text-slate-600 text-sm font-medium">Verify and manage statutory documentation for {employees.length} Personnel.</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={handleBulkExport}
             className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-sm transition-all ${selectedIds.size > 0
               ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-100'
-              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+              : 'bg-white border border-slate-200 text-black hover:bg-slate-50'
               }`}
           >
-            <Icon name="FileDown" className="w-4 h-4" />
+            <Icon name="FileDown" className="w-4 h-4 text-black" />
             Bulk Export {selectedIds.size > 0 ? `(${selectedIds.size})` : ''}
           </button>
-          
+
         </div>
       </div>
 
@@ -366,24 +366,24 @@ const DocumentManagement: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
           <div className="flex flex-1 items-center gap-4 w-full">
             <div className="relative flex-1 group">
-              <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
+              <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black group-focus-within:text-indigo-500 transition-colors" />
               <input
                 aria-label="Search by Employee ID or Name"
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by Employee ID or Name..."
-                className="w-full pl-12 pr-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium text-slate-600 shadow-inner"
+                className="w-full pl-12 pr-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium text-black placeholder:text-slate-400 shadow-inner"
               />
             </div>
             <select
               aria-label="Filter by department"
               value={deptFilter}
               onChange={(e) => setDeptFilter(e.target.value)}
-              className="px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-black text-xs uppercase tracking-widest text-slate-500 shadow-inner"
+              className="px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-black text-xs uppercase tracking-widest text-black shadow-inner"
             >
-              <option value="All">All Departments</option>
-              {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+              <option value="All" className="text-black">All Departments</option>
+              {DEPARTMENTS.map(d => <option key={d} value={d} className="text-black">{d}</option>)}
             </select>
           </div>
         </div>
@@ -401,12 +401,12 @@ const DocumentManagement: React.FC = () => {
                     onChange={toggleSelectAll}
                   />
                 </th>
-                <th className="text-left py-6 px-2 text-[11px] font-black text-slate-400 uppercase tracking-widest">Employee</th>
-                <th className="text-center py-6 px-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Aadhaar</th>
-                <th className="text-center py-6 px-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">PAN</th>
-                <th className="text-center py-6 px-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Certificates</th>
-                <th className="text-center py-6 px-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Offer</th>
-                <th className="text-right py-6 px-8 text-[11px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                <th className="text-left py-6 px-2 text-[11px] font-black text-black uppercase tracking-widest">Employee</th>
+                <th className="text-center py-6 px-4 text-[11px] font-black text-black uppercase tracking-widest">Aadhaar</th>
+                <th className="text-center py-6 px-4 text-[11px] font-black text-black uppercase tracking-widest">PAN</th>
+                <th className="text-center py-6 px-4 text-[11px] font-black text-black uppercase tracking-widest">Certificates</th>
+                <th className="text-center py-6 px-4 text-[11px] font-black text-black uppercase tracking-widest">Offer</th>
+                <th className="text-right py-6 px-8 text-[11px] font-black text-black uppercase tracking-widest">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -425,8 +425,8 @@ const DocumentManagement: React.FC = () => {
                     <div className="flex items-center gap-4">
                       <img src={emp.avatar} className="w-10 h-10 rounded-xl border border-slate-100 shadow-sm" alt={`${emp.fullName} avatar`} />
                       <div>
-                        <p className="font-black text-slate-800 leading-none mb-1 text-sm">{emp.fullName}</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{emp.employeeId} • {emp.department}</p>
+                        <p className="font-black text-black leading-none mb-1 text-sm">{emp.fullName}</p>
+                        <p className="text-[10px] font-bold text-black uppercase tracking-widest">{emp.employeeId} • {emp.department}</p>
                       </div>
                     </div>
                   </td>
@@ -439,7 +439,7 @@ const DocumentManagement: React.FC = () => {
                           onClick={() => setSelectedEmployee(emp)}
                           className={`p-2 rounded-xl transition-all ${status === 'verified' ? 'bg-emerald-50 text-emerald-500' :
                             status === 'uploaded' ? 'bg-blue-50 text-blue-500' :
-                              'bg-slate-50 text-slate-300'
+                              'bg-slate-50 text-black'
                             }`}
                         >
                           <Icon name={status === 'verified' ? 'CheckCircle2' : status === 'uploaded' ? 'FileCheck' : 'FileWarning'} className="w-5 h-5" />
@@ -460,7 +460,7 @@ const DocumentManagement: React.FC = () => {
               {filteredEmployees.length === 0 && (
                 employeesList.length > 0 ? (
                   employeesList.map((emp: any) => (
-                    <tr key={emp.employeeId} className={`hover:bg-slate-50/50 transition-colors group`}> 
+                    <tr key={emp.employeeId} className={`hover:bg-slate-50/50 transition-colors group`}>
                       <td className="py-6 px-8">
                         <input
                           aria-label={`Select ${emp.fullName}`}
@@ -474,8 +474,8 @@ const DocumentManagement: React.FC = () => {
                         <div className="flex items-center gap-4">
                           <img src={emp.avatar} className="w-10 h-10 rounded-xl border border-slate-100 shadow-sm" alt={`${emp.fullName} avatar`} />
                           <div>
-                            <p className="font-black text-slate-800 leading-none mb-1 text-sm">{emp.fullName}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{emp.employeeId} • {emp.department}</p>
+                            <p className="font-black text-black leading-none mb-1 text-sm">{emp.fullName}</p>
+                            <p className="text-[10px] font-bold text-black uppercase tracking-widest">{emp.employeeId} • {emp.department}</p>
                           </div>
                         </div>
                       </td>
@@ -483,7 +483,7 @@ const DocumentManagement: React.FC = () => {
                         const status = getDocStatus(emp, type);
                         return (
                           <td key={type} className="py-6 px-4 text-center">
-                            <div className={`p-2 rounded-xl transition-all ${status === 'verified' ? 'bg-emerald-50 text-emerald-500' : status === 'uploaded' ? 'bg-blue-50 text-blue-500' : 'bg-slate-50 text-slate-300'}`}>
+                            <div className={`p-2 rounded-xl transition-all ${status === 'verified' ? 'bg-emerald-50 text-emerald-500' : status === 'uploaded' ? 'bg-blue-50 text-blue-500' : 'bg-slate-50 text-black'}`}>
                               <button onClick={() => triggerFileUpload(emp.employeeId, type)} className="p-1">
                                 <Icon name={status === 'verified' ? 'CheckCircle2' : status === 'uploaded' ? 'FileCheck' : 'Upload'} className="w-5 h-5" />
                               </button>
@@ -505,9 +505,9 @@ const DocumentManagement: React.FC = () => {
                   <tr>
                     <td colSpan={7} className="py-20 text-center">
                       <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Icon name="SearchX" className="w-8 h-8 text-slate-200" />
+                        <Icon name="SearchX" className="w-8 h-8 text-black" />
                       </div>
-                      <p className="text-slate-400 font-black uppercase text-xs tracking-widest">No matching personal records found</p>
+                      <p className="text-black font-black uppercase text-xs tracking-widest">No matching personal records found</p>
                     </td>
                   </tr>
                 )
@@ -528,13 +528,13 @@ const DocumentManagement: React.FC = () => {
             <div className="flex items-center gap-6 p-6 bg-slate-50 rounded-[32px] border border-slate-100">
               <img src={selectedEmployee.avatar} className="w-16 h-16 rounded-2xl border-4 border-white shadow-md" alt={`${selectedEmployee.fullName} avatar`} />
               <div>
-                <h3 className="text-xl font-black text-slate-900">{selectedEmployee.fullName}</h3>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{selectedEmployee.employeeId} • {selectedEmployee.designation}</p>
+                <h3 className="text-xl font-black text-black">{selectedEmployee.fullName}</h3>
+                <p className="text-xs font-bold text-black uppercase tracking-widest mt-1">{selectedEmployee.employeeId} • {selectedEmployee.designation}</p>
               </div>
             </div>
 
             <div className="space-y-4">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Statutory & Educational Records</h4>
+              <h4 className="text-[10px] font-black text-black uppercase tracking-[0.2em] ml-2">Statutory & Educational Records</h4>
               <div className="grid grid-cols-1 gap-4">
                 {docTypes.map(type => {
                   const doc = getDocData(selectedEmployee, type);
@@ -543,17 +543,17 @@ const DocumentManagement: React.FC = () => {
                     <div key={type} className="bg-white border border-slate-100 p-5 rounded-3xl flex items-center justify-between group hover:shadow-lg hover:shadow-indigo-500/5 transition-all">
                       <div className="flex items-center gap-4">
                         <div className={`p-3 rounded-2xl transition-colors ${status === 'verified' ? 'bg-emerald-50 text-emerald-600' :
-                          status === 'uploaded' ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-400'
+                          status === 'uploaded' ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-black'
                           }`}>
                           <Icon name={type === 'Educational Certificate' ? 'GraduationCap' : 'FileText'} className="w-6 h-6" />
                         </div>
                         <div>
-                          <p className="text-sm font-black text-slate-800">{type}</p>
+                          <p className="text-sm font-black text-black">{type}</p>
                           {doc?.fileName ? (
-                            <p className="text-[9px] font-bold text-indigo-500 truncate max-w-[150px]">{doc.fileName}</p>
+                            <p className="text-[9px] font-bold text-indigo-600 truncate max-w-[150px]">{doc.fileName}</p>
                           ) : (
-                            <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${status === 'verified' ? 'text-emerald-500' :
-                              status === 'uploaded' ? 'text-blue-500' : 'text-slate-400'
+                            <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${status === 'verified' ? 'text-emerald-600' :
+                              status === 'uploaded' ? 'text-blue-600' : 'text-black'
                               }`}>
                               {status.toUpperCase()}
                             </p>
@@ -566,7 +566,7 @@ const DocumentManagement: React.FC = () => {
                             onClick={() => triggerFileUpload(selectedEmployee.employeeId, type)}
                             className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 flex items-center gap-2"
                           >
-                            <Icon name="Upload" className="w-3.5 h-3.5" />
+                            <Icon name="Upload" className="w-3.5 h-3.5 text-white" />
                             Upload
                           </button>
                         ) : (
@@ -583,7 +583,7 @@ const DocumentManagement: React.FC = () => {
                             {status === 'uploaded' && (
                               <button
                                 onClick={() => handleUpdateDocument(selectedEmployee.id, type, 'verified')}
-                                className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors border border-emerald-100"
+                                className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-emerald-100"
                                 title="Mark as Verified"
                               >
                                 <Icon name="Check" className="w-5 h-5" />
@@ -592,7 +592,7 @@ const DocumentManagement: React.FC = () => {
 
                             <button
                               onClick={() => handleUpdateDocument(selectedEmployee.id, type, 'pending')}
-                              className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-rose-100"
+                              className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-rose-100"
                               title="Delete/Reject"
                             >
                               <Icon name="Trash2" className="w-5 h-5" />
@@ -616,11 +616,11 @@ const DocumentManagement: React.FC = () => {
                 }}
                 className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-2"
               >
-                <Icon name="Download" className="w-4 h-4" /> Download Archive
+                <Icon name="Download" className="w-4 h-4 text-white" /> Download Archive
               </button>
               <button
                 onClick={() => setSelectedEmployee(null)}
-                className="flex-1 py-4 bg-white border border-slate-200 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all"
+                className="flex-1 py-4 bg-white border border-slate-200 text-black rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all"
               >
                 Close Vault
               </button>
@@ -633,30 +633,30 @@ const DocumentManagement: React.FC = () => {
       <Modal isOpen={uploadModalOpen} onClose={closeUploadModal} title="Upload Document">
         <div className="space-y-6">
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-black">Employee</label>
-            <select value={uploadForm.employeeId} onChange={(e) => setUploadForm(prev => ({ ...prev, employeeId: e.target.value }))} className="w-full p-3 border rounded-xl">
-              <option value="">Select employee</option>
+            <label className="text-sm font-black text-black">Employee</label>
+            <select value={uploadForm.employeeId} onChange={(e) => setUploadForm(prev => ({ ...prev, employeeId: e.target.value }))} className="w-full p-3 border rounded-xl text-black">
+              <option value="" className="text-black">Select employee</option>
               {employeesList.map(emp => (
-                <option key={emp.employeeId} value={emp.employeeId}>{emp.fullName} • {emp.employeeId}</option>
+                <option key={emp.employeeId} value={emp.employeeId} className="text-black">{emp.fullName} • {emp.employeeId}</option>
               ))}
             </select>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-black">Document Type</label>
-            <select value={uploadForm.documentType} onChange={(e) => setUploadForm(prev => ({ ...prev, documentType: e.target.value }))} className="w-full p-3 border rounded-xl">
-              {docTypes.map(t => <option key={t} value={t}>{t}</option>)}
+            <label className="text-sm font-black text-black">Document Type</label>
+            <select value={uploadForm.documentType} onChange={(e) => setUploadForm(prev => ({ ...prev, documentType: e.target.value }))} className="w-full p-3 border rounded-xl text-black">
+              {docTypes.map(t => <option key={t} value={t} className="text-black">{t}</option>)}
             </select>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-black">File</label>
-            <input type="file" onChange={handleUploadFileSelect} />
+            <label className="text-sm font-black text-black">File</label>
+            <input type="file" onChange={handleUploadFileSelect} className="text-black" />
           </div>
 
           <div className="flex gap-2 justify-end">
             <button onClick={handleUploadSubmit} className="px-4 py-2 bg-indigo-600 text-white rounded-xl">Upload</button>
-            <button onClick={closeUploadModal} className="px-4 py-2 bg-white border rounded-xl">Cancel</button>
+            <button onClick={closeUploadModal} className="px-4 py-2 bg-white border rounded-xl text-black">Cancel</button>
           </div>
         </div>
       </Modal>
@@ -675,23 +675,23 @@ const DocumentManagement: React.FC = () => {
                 <Icon name="FileText" className="w-5 h-5 text-indigo-600" />
                 <span className="text-sm font-black text-indigo-900">{viewingDoc.fileName || 'document.pdf'}</span>
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500">Uploaded on {viewingDoc.uploadedDate}</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Uploaded on {viewingDoc.uploadedDate}</span>
             </div>
 
             <div className="aspect-[3/4] bg-white rounded-[32px] border-4 border-slate-100 flex flex-col items-center justify-center p-12 text-center relative overflow-hidden shadow-inner">
               {/* Mock document content visualization */}
-              <div className="absolute inset-0 opacity-[0.05] pointer-events-none select-none overflow-hidden text-[10px] leading-relaxed font-serif p-10 text-left">
+              <div className="absolute inset-0 opacity-[0.05] pointer-events-none select-none overflow-hidden text-[10px] leading-relaxed font-serif p-10 text-left text-black">
                 {Array.from({ length: 120 }).map((_, i) => (
-                  <p key={i} className="mb-2">OFFICIAL RECORD: {viewingDoc.type} (Verified ID: {Math.random().toString(36).substring(7).toUpperCase()}) - This document contains sensitive personal information protected under the Organizational Data Privacy Act. System integrity hash: {Date.now()}. Access timestamp: {new Date().toISOString()}. Authorization level: TIER-1 ADMIN.</p>
+                  <p key={i} className="mb-2 text-black">OFFICIAL RECORD: {viewingDoc.type} (Verified ID: {Math.random().toString(36).substring(7).toUpperCase()}) - This document contains sensitive personal information protected under the Organizational Data Privacy Act. System integrity hash: {Date.now()}. Access timestamp: {new Date().toISOString()}. Authorization level: TIER-1 ADMIN.</p>
                 ))}
               </div>
 
               <div className="relative z-10 flex flex-col items-center">
                 <div className="w-24 h-24 bg-slate-50 rounded-3xl flex items-center justify-center mb-6 shadow-sm border border-slate-100">
-                  <Icon name={viewingDoc.status === 'verified' ? 'ShieldCheck' : 'FileSearch'} className={`w-12 h-12 ${viewingDoc.status === 'verified' ? 'text-emerald-500' : 'text-indigo-500'}`} />
+                  <Icon name={viewingDoc.status === 'verified' ? 'ShieldCheck' : 'FileSearch'} className={`w-12 h-12 ${viewingDoc.status === 'verified' ? 'text-emerald-600' : 'text-indigo-600'}`} />
                 </div>
-                <h3 className="text-2xl font-black text-slate-800 mb-2">{viewingDoc.type}</h3>
-                <p className="text-slate-500 text-sm max-w-sm font-medium leading-relaxed mb-8">
+                <h3 className="text-2xl font-black text-black mb-2">{viewingDoc.type}</h3>
+                <p className="text-black text-sm max-w-sm font-medium leading-relaxed mb-8">
                   Secure preview of <span className="text-indigo-600 font-bold">{viewingDoc.fileName}</span>.
                   The document is verified as {viewingDoc.status === 'verified' ? 'compliant' : 'authentic'}.
                 </p>
@@ -715,7 +715,7 @@ const DocumentManagement: React.FC = () => {
                     <Icon name={viewingDoc.status === 'verified' ? 'CheckCircle2' : 'FileCheck'} className="w-6 h-6" />
                   </div>
                   <div className="text-left">
-                    <p className="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">Audit Status</p>
+                    <p className="text-[10px] font-black text-black uppercase leading-none mb-1">Audit Status</p>
                     <p className={`text-sm font-black uppercase tracking-widest ${viewingDoc.status === 'verified' ? 'text-emerald-600' : 'text-blue-600'}`}>{viewingDoc.status}</p>
                   </div>
                 </div>
@@ -727,11 +727,11 @@ const DocumentManagement: React.FC = () => {
                 onClick={() => handleDownloadSingle(viewingDoc)}
                 className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 active:scale-95"
               >
-                <Icon name="Download" className="w-4 h-4" /> Download Original File
+                <Icon name="Download" className="w-4 h-4 text-white" /> Download Original File
               </button>
               <button
                 onClick={() => setViewingDoc(null)}
-                className="px-8 py-4 bg-white border border-slate-200 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all"
+                className="px-8 py-4 bg-white border border-slate-200 text-black rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all"
               >
                 Dismiss
               </button>
@@ -744,4 +744,3 @@ const DocumentManagement: React.FC = () => {
 };
 
 export default DocumentManagement;
-

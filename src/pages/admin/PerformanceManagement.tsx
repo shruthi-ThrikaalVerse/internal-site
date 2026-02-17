@@ -16,6 +16,7 @@ import { Task } from '../../types.ts';
 import { getTasks as getTasksFromAPI } from '../../api/tasks.ts';
 import { getTeams as getTeamsFromAPI } from '../../api/teams.ts';
 import { getAllEmployees as getEmployeesFromAPI } from '../../api/users.ts';
+
 interface PerformanceData {
   id: string;
   name: string;
@@ -1178,7 +1179,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Summary Cards */}
+          {/* Summary Cards - Moved inside Tasks Overview section */}
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
               {/* All Tasks Card */}
@@ -1333,7 +1334,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
           </div>
 
           {/* Task list (filtered by selected tab) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6 pt-0">
             {apiTasksLoading ? (
               <div className="col-span-full flex items-center justify-center py-12">
                 <div className="text-center">
@@ -1777,40 +1778,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Tasks Summary Cards (Team / Individual) */}
-      <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs text-gray-500 uppercase font-black tracking-widest">Total Tasks</p>
-            <p className="text-2xl font-extrabold text-gray-900">{totalTasksCount}</p>
-          </div>
-          <div className="text-gray-400">
-            <FileText className="w-8 h-8" />
-          </div>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs text-gray-500 uppercase font-black tracking-widest">Team Tasks</p>
-            <p className="text-2xl font-extrabold text-gray-900">{teamTasksCount}</p>
-          </div>
-          <div className="text-gray-400">
-            <UsersIcon className="w-8 h-8" />
-          </div>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs text-gray-500 uppercase font-black tracking-widest">Individual Tasks</p>
-            <p className="text-2xl font-extrabold text-gray-900">{individualTasksCount}</p>
-          </div>
-          <div className="text-gray-400">
-            <User className="w-8 h-8" />
-          </div>
-        </div>
-      </div>
-
-      {/* Review Modal */}
+      {/* Review Modal - Fixed with black text */}
       {isReviewModalOpen && selectedTaskForReview && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
@@ -1825,26 +1793,26 @@ const EmployeePerformanceDashboard: React.FC = () => {
               </button>
             </div>
 
-            {/* Scrollable Content Area */}
+            {/* Scrollable Content Area - All text is now black */}
             <div className="flex-1 overflow-y-auto p-6 space-y-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
                 <p className="text-sm font-semibold text-blue-900 mb-2">Task Details</p>
                 <p className="font-bold text-gray-900 text-sm md:text-base">{selectedTaskForReview.title}</p>
-                <p className="text-sm text-gray-600 mt-2 line-clamp-2">{selectedTaskForReview.description}</p>
+                <p className="text-sm text-gray-900 mt-2 line-clamp-2">{selectedTaskForReview.description}</p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Review For</label>
+                <label className="text-sm font-medium text-gray-900 mb-2 block">Review For</label>
 
                 {selectedTaskForReview.assigneeType === 'employee' && (
                   <select
                     title="Select employee for review"
                     value={reviewEmployeeId}
                     onChange={(e) => setReviewEmployeeId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
                   >
-                    <option value="">Select employee</option>
-                    <option value={selectedTaskForReview.assignedTo}>{selectedTaskForReview.assigneeName}</option>
+                    <option value="" className="text-black">Select employee</option>
+                    <option value={selectedTaskForReview.assignedTo} className="text-gray-900">{selectedTaskForReview.assigneeName}</option>
                   </select>
                 )}
                 {selectedTaskForReview.assigneeType === 'team' && (
@@ -1864,9 +1832,9 @@ const EmployeePerformanceDashboard: React.FC = () => {
                       return (
                         <select
                           disabled
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm opacity-50"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900 opacity-50"
                         >
-                          <option>Error: No team ID found</option>
+                          <option className="text-gray-900">Error: No team ID found</option>
                         </select>
                       );
                     }
@@ -1900,13 +1868,13 @@ const EmployeePerformanceDashboard: React.FC = () => {
                         title="Select employee for review"
                         value={reviewEmployeeId}
                         onChange={(e) => setReviewEmployeeId(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
                       >
-                        <option value="">Select employee</option>
+                        <option value="" className="text-gray-900">Select employee</option>
                         {memberIds.length === 0 ? (
                           <>
-                            <option disabled>Loading team members...</option>
-                            <option disabled>If this persists, there may be an issue loading the team data</option>
+                            <option disabled className="text-gray-900">Loading team members...</option>
+                            <option disabled className="text-gray-900">If this persists, there may be an issue loading the team data</option>
                           </>
                         ) : (
                           memberIds.map((memberId: string) => {
@@ -1914,13 +1882,15 @@ const EmployeePerformanceDashboard: React.FC = () => {
                             const allEmployees = apiEmployees.length > 0 ? apiEmployees : employees;
                             const emp = allEmployees.find(e => e.id === memberId || e.employeeId === memberId);
                             if (emp) {
-                              console.log(`✓ Found employee for ${memberId}:`, emp.fullName);
+                              console.log(`✓ Found employee for ${memberId}:`, emp);
+                              const empName = emp.fullName || emp.name || Object.values(emp).find(v => typeof v === 'string' && v.length > 2) || 'Unknown';
+                              console.log(`  Name resolved to: ${empName}`);
                             } else {
                               console.log(`✗ No employee found for member ID: ${memberId}`);
                             }
                             return emp ? (
-                              <option key={memberId} value={emp.id || emp.employeeId}>
-                                {emp.fullName}
+                              <option key={memberId} value={emp.id || emp.employeeId} className="text-gray-900">
+                                {emp.fullName || emp.name || emp['firstName'] || emp['lastName'] || 'Unknown'}
                               </option>
                             ) : null;
                           })
@@ -1934,14 +1904,14 @@ const EmployeePerformanceDashboard: React.FC = () => {
                     title="Select employee for review"
                     value={reviewEmployeeId}
                     onChange={(e) => setReviewEmployeeId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
                   >
-                    <option value="">Select employee</option>
+                    <option value="" className="text-gray-900">Select employee</option>
                     {(apiEmployees.length > 0 ? apiEmployees : employees)
                       .filter(e => e.department === selectedTaskForReview.assignedTo)
                       .map(emp => (
-                        <option key={emp.id} value={emp.id}>
-                          {emp.fullName}
+                        <option key={emp.id} value={emp.id || emp.employeeId} className="text-gray-900">
+                          {emp.fullName || emp.name || 'Unknown'}
                         </option>
                       ))}
                   </select>
@@ -1949,15 +1919,15 @@ const EmployeePerformanceDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Rating</label>
+                <label className="text-sm font-medium text-gray-900 mb-2 block">Rating</label>
                 <select
                   title="Select review rating"
                   value={reviewRating}
                   onChange={e => setReviewRating(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
                 >
                   {[5, 4, 3, 2, 1].map(n => (
-                    <option key={n} value={n}>
+                    <option key={n} value={n} className="text-gray-900">
                       {n} {n === 1 ? 'Star' : 'Stars'} - {n >= 4 ? 'Excellent' : n >= 3 ? 'Good' : n >= 2 ? 'Fair' : 'Poor'}
                     </option>
                   ))}
@@ -1965,11 +1935,11 @@ const EmployeePerformanceDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Comments</label>
+                <label className="text-sm font-medium text-gray-900 mb-2 block">Comments</label>
                 <textarea
                   value={reviewComment}
                   onChange={e => setReviewComment(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm resize-none"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900 resize-none"
                   placeholder="Provide constructive feedback about task execution, quality, and areas for improvement..."
                   rows={4}
                 />
