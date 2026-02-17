@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { getMyNotifications } from '../../api/notifications.ts';
 import { 
   Bell, Check, Clock, User, Shield, Info, CheckCircle2, AlertCircle, 
   Inbox, X, Search, Filter, Archive, Volume2, VolumeX,
@@ -740,6 +741,38 @@ const EmployeeNotifications: React.FC = () => {
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
+
+  // Fetch notifications from API (try /my first, fallback to existing mock)
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getMyNotifications();
+        if (Array.isArray(data) && data.length > 0) {
+          // Map API response to Notification interface
+          const mapped: Notification[] = data.map((item: any) => ({
+            id: item.id || item.notificationId || String(Math.random()),
+            title: item.title || item.subject || 'Notification',
+            msg: item.message || item.content || item.description || '',
+            time: item.createdAt || item.timestamp || item.time || new Date().toISOString(),
+            icon: item.icon || 'Bell',
+            color: item.color || 'text-blue-600 bg-blue-50',
+            read: item.read || item.isRead || false,
+            type: item.type || 'info',
+            priority: item.priority || 'medium',
+            category: item.category || item.type || 'system_updates',
+            department: item.department,
+            employeeId: item.employeeId,
+            action: item.action,
+            archived: item.archived || false,
+            metadata: item.metadata,
+          }));
+          setNotifications(mapped);
+        }
+      } catch (err: any) {
+        console.warn('getMyNotifications failed, keeping local mock notifications.', err);
+      }
+    })();
+  }, []);
 
   const selectAllOnPage = () => {
     const pageIds = getFilteredNotifications().map(n => n.id);

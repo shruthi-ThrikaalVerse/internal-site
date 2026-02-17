@@ -416,7 +416,7 @@ const DatePicker = ({
 };
 
 const EmployeeHub: React.FC = () => {
-  const { employees, addEmployee, deleteEmployee, updateEmployee,notify, addLog } = useHRMS();
+  const { employees, addEmployee, deleteEmployee, updateEmployee, syncEmployees, notify, addLog } = useHRMS();
   const [view, setView] = useState<'table' | 'grid'>('table');
   const [searchTerm, setSearchTerm] = useState('');
   const [deptFilter, setDeptFilter] = useState('All');
@@ -465,9 +465,6 @@ const EmployeeHub: React.FC = () => {
   // Fetch employees from backend API (idempotent). Reusable for mount/refresh.
   const fetchEmployees = async () => {
     try {
-      // Clear all initial/mock employees first
-      employees.forEach(emp => deleteEmployee(emp.id));
-
       const res = await fetch('http://localhost:8085/api/admin-hub/employees', {
         method: 'GET',
         credentials: 'include',
@@ -478,9 +475,22 @@ const EmployeeHub: React.FC = () => {
         const data = await res.json().catch(() => []);
         const empList = Array.isArray(data) ? data : data.data || [];
 
-        // Map backend response to EmployeeSummary format and populate only with API data
-        if (empList.length > 0) {
-          empList.forEach((emp: any) => {
+        // Deduplicate the fetched list by ID to prevent duplicates from backend
+        const seenIds = new Set<string>();
+        const uniqueEmpList = empList.filter((emp: any) => {
+          const empId = emp.id || emp._id || emp.employeeId || emp.email;
+          if (seenIds.has(empId)) {
+            console.warn(`Duplicate employee ID detected: ${empId}, skipping...`);
+            return false;
+          }
+          seenIds.add(empId);
+          return true;
+        });
+
+        // Map backend response to EmployeeSummary format
+        const backendEmployees: EmployeeSummary[] = [];
+        if (uniqueEmpList.length > 0) {
+          uniqueEmpList.forEach((emp: any) => {
             // Determine status based on active field or terminatedAt
             let status: 'active' | 'inactive' | 'probation' | 'resigned' = 'active';
             if (emp.terminatedAt || !emp.active) {
@@ -489,7 +499,7 @@ const EmployeeHub: React.FC = () => {
               status = 'inactive';
             }
 
-            addEmployee({
+            backendEmployees.push({
               id: emp.id || emp._id || emp.employeeId || emp.email,
               employeeId: emp.employeeId || emp.id || emp._id || emp.email,
               fullName: emp.fullName || emp.name || `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username || '',
@@ -521,6 +531,16 @@ const EmployeeHub: React.FC = () => {
             });
           });
         }
+
+        // Get existing local employees that don't conflict with backend data
+        const backendIds = new Set(backendEmployees.map(emp => emp.id));
+        const localOnlyEmployees = employees.filter(emp => !backendIds.has(emp.id));
+
+        // Merge: backend data takes precedence, but keep local-only employees
+        const mergedEmployees = [...backendEmployees, ...localOnlyEmployees];
+
+        // Update state by replacing all employees at once
+        syncEmployees(mergedEmployees);
       }
     } catch (err) {
       console.error('Failed to fetch employees:', err);
@@ -661,7 +681,7 @@ const EmployeeHub: React.FC = () => {
       employmentType: newEmp.employmentType,
       phoneNumber: newEmp.phone,
       address: newEmp.address || '',
-      username: newEmp.email,
+      username: `${newEmp.firstName.toLowerCase()}.${newEmp.lastName.toLowerCase()}`,
       avatar: avatarUrl
     };
 
@@ -708,7 +728,8 @@ const EmployeeHub: React.FC = () => {
         dateOfBirth: newEmp.dateOfBirth,
         active: true,
         terminationReason: null,
-        terminatedAt: null
+        terminatedAt: null,
+        username: `${newEmp.firstName.toLowerCase()}.${newEmp.lastName.toLowerCase()}`
       };
 
       // Add the employee to the local state immediately
@@ -739,9 +760,12 @@ const EmployeeHub: React.FC = () => {
       notify(`Employee ${fullName} added successfully!`, 'success');
       addLog('Create', 'Employee', `Registered employee ${fullName}`);
 
-      // Optionally refetch from backend in the background to ensure consistency
-      // but don't await it - let it happen in the background
-      fetchEmployees().catch(err => console.error('Background refetch failed:', err));
+      // Refresh from backend to ensure consistency and get the updated data with generated IDs
+      try {
+        await fetchEmployees();
+      } catch (err) {
+        console.error('Background refetch failed:', err);
+      }
 
     } catch (err) {
       console.error('Registration error:', err);
@@ -965,8 +989,8 @@ const EmployeeHub: React.FC = () => {
             <div className="overflow-x-auto invisible-scrollbar invisible-scrollbar">
               <table className="w-full">
                 <tbody className="divide-y divide-slate-50">
-                  {filteredEmployees.map((emp, idx) => (
-                    <tr key={`${emp.employeeId}-${emp.id || emp.email || idx}`} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => { setSelectedEmployee(emp); setShowPassword(false); }}>
+                  {filteredEmployees.map((emp) => (
+                    <tr key={emp.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => { setSelectedEmployee(emp); setShowPassword(false); }}>
                       <td className="py-6 px-8">
                         <div className="flex items-center gap-4">
                           <img src={emp.avatar} className="w-12 h-12 rounded-2xl border-4 border-white shadow-sm transition-transform group-hover:scale-110" alt="" />
@@ -1019,7 +1043,7 @@ const EmployeeHub: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
               {filteredEmployees.map((emp, idx) => (
                 <div
-                  key={`${emp.employeeId}-${emp.id || emp.email || idx}`}
+                  key={emp.id}
                   onClick={() => { setSelectedEmployee(emp); setShowPassword(false); }}
                   className="bg-white border border-slate-100 rounded-[32px] p-6 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all group relative cursor-pointer flex flex-col h-full"
                 >

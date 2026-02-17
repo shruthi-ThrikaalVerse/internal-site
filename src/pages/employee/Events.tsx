@@ -9,6 +9,7 @@ import {
     CheckCircle, XCircle, AlertCircle, Plus, X
 } from 'lucide-react';
 import { Event, EventType } from '../../types.ts';
+import { getEvents } from '../../api/events.ts';
 
 // Sample events data
 const SAMPLE_EVENTS: Event[] = [
@@ -195,13 +196,25 @@ const Events: React.FC = () => {
         if (savedCalendarEvents) {
             try {
                 const parsedEvents = JSON.parse(savedCalendarEvents);
-                // Ensure we have an array
                 setCalendarEvents(Array.isArray(parsedEvents) ? parsedEvents : []);
             } catch (error) {
                 console.error('Error loading calendar events:', error);
                 setCalendarEvents([]);
             }
         }
+
+        // Fetch events from API and fallback to SAMPLE_EVENTS
+        (async () => {
+            try {
+                const data = await getEvents();
+                if (Array.isArray(data) && data.length > 0) {
+                    setEvents(data as Event[]);
+                    setFilteredEvents(data as Event[]);
+                }
+            } catch (err) {
+                console.warn('Failed to load events from API, using sample events.', err);
+            }
+        })();
     }, []);
 
     // Listen for calendar events updates from other components
