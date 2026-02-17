@@ -50,10 +50,11 @@ const DocumentManagement: React.FC = () => {
 
   // map between UI label and API documentType
   const displayToApiType: Record<string, string> = {
-    'Aadhaar Card': 'AADHAR',
+    // Align these with backend enum values: AADHAAR, PAN, CERTIFICATES, OFFER_LETTER
+    'Aadhaar Card': 'AADHAAR',
     'PAN Card': 'PAN',
-    'Educational Certificate': 'EDUCATION',
-    'Offer Letter': 'OFFER',
+    'Educational Certificate': 'CERTIFICATES',
+    'Offer Letter': 'OFFER_LETTER',
     'Relieving Letter': 'RELIEVING',
     'Bank Passbook': 'BANK',
     'Resume': 'RESUME'
@@ -134,10 +135,18 @@ const DocumentManagement: React.FC = () => {
           // refresh docs for employee
           if (selectedEmployee && selectedEmployee.employeeId === activeUpload.empId) {
             const docs = await getDocumentsByEmployee(activeUpload.empId);
-            const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({ ...d, type: apiToDisplayType(d.documentType) }));
+            const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({
+              ...d,
+              type: apiToDisplayType(d.documentType),
+              status: d.status || 'uploaded',
+              uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0]
+            }));
             setSelectedEmployeeDocs(mapped);
+            const updatedEmployee = { ...selectedEmployee, documents: mapped };
             updateEmployee(selectedEmployee.id, { documents: mapped } as any);
+            setSelectedEmployee(updatedEmployee as any);
           }
+          notify('Document uploaded successfully', 'success');
         } catch (err: any) {
           notify(`Upload failed: ${err.message || err}`, 'error');
         } finally {
@@ -187,11 +196,20 @@ const DocumentManagement: React.FC = () => {
       // refresh if viewing same employee
       if (selectedEmployee && selectedEmployee.employeeId === uploadForm.employeeId) {
         const docs = await getDocumentsByEmployee(uploadForm.employeeId);
-        const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({ ...d, type: apiToDisplayType(d.documentType) }));
+        const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({
+          ...d,
+          type: apiToDisplayType(d.documentType),
+          status: d.status || 'uploaded',
+          uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0]
+        }));
         setSelectedEmployeeDocs(mapped);
+        const updatedEmployee = { ...selectedEmployee, documents: mapped };
         updateEmployee(selectedEmployee.id, { documents: mapped } as any);
+        setSelectedEmployee(updatedEmployee as any);
       }
+      notify('Document uploaded successfully', 'success');
       setUploadModalOpen(false);
+      setUploadForm({ employeeId: '', documentType: 'Aadhaar Card', file: null });
     } catch (err: any) {
       notify(`Upload failed: ${err.message || err}`, 'error');
     }
@@ -225,6 +243,38 @@ const DocumentManagement: React.FC = () => {
     })();
   };
 
+  const handleDeleteDocument = async (type: string) => {
+    if (!selectedEmployee) return;
+
+    const confirmDelete = window.confirm(`Are you sure you want to delete the ${type} document? This action cannot be undone.`);
+    if (!confirmDelete) return;
+
+    try {
+      const doc = getDocData(selectedEmployee, type) as any;
+      if (doc?.id) {
+        await deleteDocument(selectedEmployee.employeeId, doc.id as number);
+      }
+
+      // Refresh documents after deletion
+      const docs = await getDocumentsByEmployee(selectedEmployee.employeeId);
+      const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({
+        ...d,
+        type: apiToDisplayType(d.documentType),
+        status: d.status || 'uploaded',
+        uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0]
+      }));
+      setSelectedEmployeeDocs(mapped);
+      const updatedEmployee = { ...selectedEmployee, documents: mapped };
+      updateEmployee(selectedEmployee.id, { documents: mapped } as any);
+      setSelectedEmployee(updatedEmployee as any);
+
+      notify(`${type} document deleted successfully`, 'success');
+      addLog('Delete', 'Document', `Deleted ${type} for ${selectedEmployee.fullName}`);
+    } catch (err: any) {
+      notify(`Failed to delete document: ${err.message || err}`, 'error');
+    }
+  };
+
   const toggleSelectAll = () => {
     if (selectedIds.size === filteredEmployees.length && filteredEmployees.length > 0) {
       setSelectedIds(new Set());
@@ -254,7 +304,7 @@ const DocumentManagement: React.FC = () => {
         return;
       }
       if (doc.id && selectedEmployee) {
-        const res = await downloadDocument(selectedEmployee.employeeId, doc.id);
+        const res = await downloadDocument(doc.id as number);
         const url = URL.createObjectURL(res.blob);
         const link = document.createElement('a');
         link.href = url;
@@ -280,8 +330,14 @@ const DocumentManagement: React.FC = () => {
     (async () => {
       try {
         const docs = await getDocumentsByEmployee(selectedEmployee.employeeId);
-        const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({ ...d, type: apiToDisplayType(d.documentType) }));
+        const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({
+          ...d,
+          type: apiToDisplayType(d.documentType),
+          status: d.status || 'uploaded',
+          uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0]
+        }));
         setSelectedEmployeeDocs(mapped);
+        updateEmployee(selectedEmployee.id, { documents: mapped } as any);
       } catch (err: any) {
         notify(`Failed to load documents: ${err.message || err}`, 'error');
       }
@@ -574,16 +630,17 @@ const DocumentManagement: React.FC = () => {
                             <button
                               aria-label="View document"
                               onClick={() => viewDocument(doc!)}
-                              className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-indigo-100"
+                              className="px-3 py-2 text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors border-none flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-md shadow-indigo-100"
                               title="View Document"
                             >
                               <Icon name="Eye" className="w-4 h-4" />
+                              View
                             </button>
 
                             {status === 'uploaded' && (
                               <button
                                 onClick={() => handleUpdateDocument(selectedEmployee.id, type, 'verified')}
-                                className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-emerald-100"
+                                className="p-2 text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors border-none"
                                 title="Mark as Verified"
                               >
                                 <Icon name="Check" className="w-5 h-5" />
@@ -591,11 +648,12 @@ const DocumentManagement: React.FC = () => {
                             )}
 
                             <button
-                              onClick={() => handleUpdateDocument(selectedEmployee.id, type, 'pending')}
-                              className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-rose-100"
-                              title="Delete/Reject"
+                              onClick={() => handleDeleteDocument(type)}
+                              className="px-3 py-2 text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors border-none flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-md shadow-rose-100"
+                              title="Delete Document"
                             >
-                              <Icon name="Trash2" className="w-5 h-5" />
+                              <Icon name="Trash2" className="w-4 h-4" />
+                              Delete
                             </button>
                           </div>
                         )}

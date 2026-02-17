@@ -20,7 +20,10 @@ const throwIfError = async (resp: Response) => {
 export const uploadDocument = async (file: File, data: { employeeId: string; documentType: string }) => {
   const form = new FormData();
   form.append('file', file);
-  form.append('data', JSON.stringify(data));
+  form.append(
+    "data",
+    new Blob([JSON.stringify(data)], { type: "application/json" })
+  );
 
   const resp = await fetch(`${API_BASE}/upload`, {
     method: 'POST',
@@ -34,7 +37,8 @@ export const uploadDocument = async (file: File, data: { employeeId: string; doc
 };
 
 export const getDocumentsByEmployee = async (employeeId: string) => {
-  const resp = await fetch(`${API_BASE}/${encodeURIComponent(employeeId)}`, {
+  // API: GET /getAll/{employeeId}
+  const resp = await fetch(`${API_BASE}/getAll/${encodeURIComponent(employeeId)}`, {
     headers: { Accept: 'application/json', ...getAuthHeader() },
     credentials: 'include',
   });
@@ -43,7 +47,8 @@ export const getDocumentsByEmployee = async (employeeId: string) => {
 };
 
 export const getDocument = async (employeeId: string, documentId: number) => {
-  const resp = await fetch(`${API_BASE}/${encodeURIComponent(employeeId)}/${documentId}`, {
+  // API: GET /get/{employeeId}/{documentId} (returns base64 file data)
+  const resp = await fetch(`${API_BASE}/get/${encodeURIComponent(employeeId)}/${documentId}`, {
     headers: { Accept: 'application/json', ...getAuthHeader() },
     credentials: 'include',
   });
@@ -51,8 +56,9 @@ export const getDocument = async (employeeId: string, documentId: number) => {
   return parseText(resp);
 };
 
-export const downloadDocument = async (employeeId: string, documentId: number) => {
-  const resp = await fetch(`${API_BASE}/download/${encodeURIComponent(employeeId)}/${documentId}`, {
+export const downloadDocument = async (documentId: number) => {
+  // API: GET /download/{documentId} -> binary with Content-Disposition
+  const resp = await fetch(`${API_BASE}/download/${documentId}`, {
     headers: { ...getAuthHeader() },
     credentials: 'include',
   });
@@ -70,6 +76,7 @@ export const updateDocument = async (employeeId: string, documentId: number, dat
   form.append('data', JSON.stringify(data));
   if (file) form.append('file', file);
 
+  // Note: server may support PUT /{employeeId}/{documentId} or a different contract — keep existing path
   const resp = await fetch(`${API_BASE}/${encodeURIComponent(employeeId)}/${documentId}`, {
     method: 'PUT',
     body: form,
@@ -81,7 +88,8 @@ export const updateDocument = async (employeeId: string, documentId: number, dat
 };
 
 export const deleteDocument = async (employeeId: string, documentId: number) => {
-  const resp = await fetch(`${API_BASE}/${encodeURIComponent(employeeId)}/${documentId}`, {
+  // API: DELETE /delete/{employeeId}/{documentId}
+  const resp = await fetch(`${API_BASE}/delete/${encodeURIComponent(employeeId)}/${documentId}`, {
     method: 'DELETE',
     headers: { ...getAuthHeader() },
     credentials: 'include',
@@ -102,6 +110,16 @@ export const getStatusForEmployee = async (employeeId: string) => {
 
 export const getStatusAll = async () => {
   const resp = await fetch(`${API_BASE}/status`, {
+    headers: { Accept: 'application/json', ...getAuthHeader() },
+    credentials: 'include',
+  });
+  await throwIfError(resp);
+  return parseText(resp);
+};
+
+// Helper for logged-in user: GET /my
+export const getMyDocuments = async () => {
+  const resp = await fetch(`${API_BASE}/my`, {
     headers: { Accept: 'application/json', ...getAuthHeader() },
     credentials: 'include',
   });
