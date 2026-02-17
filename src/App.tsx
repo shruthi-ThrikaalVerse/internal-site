@@ -171,15 +171,15 @@ const AppRouter: React.FC = () => {
         <Route
           path="/"
           element={
-            <div className="relative min-h-screen transition-colors duration-500 bg-[var(--bg-primary)] text-[var(--text-primary)]">
+            <div className="public-layout relative min-h-screen transition-colors duration-500 bg-[var(--bg-primary)] text-[var(--text-primary)]">
               <main>
                 <section id="home">
                   <Hero3D />
                 </section>
-                <section id="about" className="py-24 bg-gradient-to-b from-[var(--bg-primary)] to-[var(--bg-secondary)]">
+                <section id="about" className="py-2 sm:py-24 pb-20 bg-gradient-to-b from-[var(--bg-primary)] to-[var(--bg-secondary)]">
                   <About />
                 </section>
-                <section id="projects" className="bg-[var(--bg-secondary)]">
+                <section id="projects" className="bg-[var(--bg-secondary)] -mt-10">
                   <Projects />
                 </section>
                 
