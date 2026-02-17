@@ -591,7 +591,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                                         aria-label="Select time range"
                                         value={selectedTimeRange}
                                         onChange={(e) => setSelectedTimeRange(e.target.value)}
-                                        className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm bg-white appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm bg-white appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black"
                                     >
                                         <option value="current">
                                             Current {selectedPeriod === 'monthly' ? 'Month' : selectedPeriod === 'quarterly' ? 'Quarter' : 'Year'}
@@ -602,8 +602,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
                                             </option>
                                         ))}
                                     </select>
-                                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                                        <Calendar size={16} className="text-gray-400" />
+                                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 ">
+                                        <Calendar size={16} className="text-black mb-2" />
                                     </div>
                                 </div>
                             </div>

@@ -849,7 +849,7 @@ const Tasks: React.FC = () => {
                         aria-label="Filter by status"
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-auto"
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-auto text-black"
                       >
                         <option value="all">All Status</option>
                         {statuses.map(status => (
@@ -864,7 +864,7 @@ const Tasks: React.FC = () => {
                         aria-label="Filter by priority"
                         value={filterPriority}
                         onChange={(e) => setFilterPriority(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-auto"
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-auto text-black"
                       >
                         <option value="all">All Priority</option>
                         {priorities.map(priority => (
@@ -879,7 +879,7 @@ const Tasks: React.FC = () => {
                         aria-label="Filter by project"
                         value={filterProject}
                         onChange={(e) => setFilterProject(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-auto"
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-auto text-black"
                       >
                         <option value="all">All Projects</option>
                         {getProjects().map(project => (
@@ -895,7 +895,7 @@ const Tasks: React.FC = () => {
                         placeholder="Search tasks..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full text-black"
                       />
                     </div>
 

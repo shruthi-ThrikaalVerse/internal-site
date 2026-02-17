@@ -145,7 +145,7 @@ const Contact = () => {
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         className="contact-input"
-                        placeholder="John Doe"
+                        placeholder="Your Full Name"
                         disabled={isLoading}
                       />
                     </div>
@@ -160,7 +160,7 @@ const Contact = () => {
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="contact-input"
-                        placeholder="john@example.com"
+                        placeholder="Your Email Address"
                         disabled={isLoading}
                       />
                     </div>

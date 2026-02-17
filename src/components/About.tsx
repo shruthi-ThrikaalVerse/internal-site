@@ -1,16 +1,17 @@
 // @ts-nocheck
 import React from 'react';
 import { motion } from 'framer-motion';
+import ceoImg from '../../public/ceo_img.png';
 
 const About = () => {
   const founder = {
     name: "VAGYA NAIK BHUKYA",
     role: "Founder & Chairperson",
-    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=800&h=800&auto=format&fit=crop"
+    image: ceoImg
   };
 
   return (
-    <div className="about-container">
+    <div className="about-container mb-4">
       <div className="about-grid">
         <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="about-image-section">
           <div className="about-image-wrapper">
@@ -28,6 +29,9 @@ const About = () => {
                   className="about-img"
                   loading="eager"
                   decoding="auto"
+                  crossOrigin="anonymous"
+                  onError={(e) => console.error('Image failed to load:', founder.image, e)}
+                  onLoad={() => console.log('Image loaded successfully:', founder.image)}
                 />
                 <div className="about-overlay">
                   <div className="about-overlay-text">
@@ -193,6 +197,7 @@ const About = () => {
           box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
           background-color: var(--bg-secondary);
           group: group;
+          background: linear-gradient(135deg, #333, #555);
         }
 
         .about-img {

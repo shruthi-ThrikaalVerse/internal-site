@@ -192,6 +192,6 @@ export const mockGoals: GoalTracking[] = mockEmployees.slice(0, 5).map(emp => ({
 }));
 
 export const mockAuditLogs: AuditLog[] = [
-  { id: 'log1', timestamp: '2024-05-15 10:30:00', user: 'Admin User', action: 'Update', module: 'Employee', details: 'Updated salary for EMP-001', ipAddress: '192.168.1.1' },
-  { id: 'log2', timestamp: '2024-05-15 11:15:00', user: 'Admin User', action: 'Create', module: 'Payroll', details: 'Started May 2024 payroll run', ipAddress: '192.168.1.1' },
+  { id: 'log1', timestamp: '2024-05-15 10:30:00', level: 'INFO', user: 'Admin User', action: 'Update', message: 'Updated employee salary', module: 'Employee', entity: 'Employee', details: 'Updated salary for EMP-001', ipAddress: '192.168.1.1' },
+  { id: 'log2', timestamp: '2024-05-15 11:15:00', level: 'INFO', user: 'Admin User', action: 'Create', message: 'Created payroll run', module: 'Payroll', entity: 'Payroll', details: 'Started May 2024 payroll run', ipAddress: '192.168.1.1' },
 ];

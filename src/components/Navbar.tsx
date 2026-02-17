@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "./ThemeContext.tsx";
+import thrikaalLogo from '../../public/thrikaal_logo.png';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -38,7 +39,6 @@ const Navbar = () => {
       "home",
       "about",
       "projects",
-      "team",
       "media",
       "career",
       "contact",
@@ -116,7 +116,7 @@ const Navbar = () => {
     { label: "Home", id: "home" },
     { label: "About", id: "about" },
     { label: "Projects", id: "projects" },
-    { label: "Team", id: "team" },
+    /*{ label: "Team", id: "team" },*/
     { label: "Media", id: "media" },
     { label: "Career", id: "career" },
     { label: "Contact", id: "contact" },
@@ -217,14 +217,12 @@ const Navbar = () => {
         variants={navVariants}
         initial="hidden"
         animate="visible"
-        className={`
-          fixed top-0 left-0 right-0 z-50 
-          transition-all duration-500 px-4 sm:px-6 lg:px-8
-          ${scrolled
-            ? "py-2 sm:py-3 bg-[var(--bg-primary)]/90 backdrop-blur-xl border-b border-[var(--border-color)] shadow-lg"
-            : "py-4 sm:py-6 bg-transparent"
-          }
-        `}
+        className={`fixed top-0 left-0 right-0 z-[9999] transition-all duration-500 px-4 sm:px-6 lg:px-8 ${scrolled ? 'py-2 sm:py-3' : 'py-4 sm:py-6'}`}
+        style={{
+          background: mode === 'dark' ? 'var(--bg-primary)' : 'rgba(255,255,255,0.98)',
+          boxShadow: '0 6px 18px rgba(15,23,42,0.08)',
+          borderBottom: '1px solid var(--border-color)'
+        }}
       >
         <div className="container mx-auto flex items-center justify-between">
           {/* Logo Section */}
@@ -252,7 +250,7 @@ const Navbar = () => {
                 style={{ borderColor: currentAccent.light }}
               >
                 <img
-                  src="/thrikaal_logo.png"
+                  src={thrikaalLogo}
                   alt="Thrikaal Verse"
                   className="w-full h-full object-cover"
                 />
@@ -697,7 +695,7 @@ const Navbar = () => {
                       <div className="relative w-12 h-12 rounded-full overflow-hidden border-2"
                         style={{ borderColor: currentAccent.light }}
                       >
-                        <img src="/thrikaal_logo.png" alt="Logo" className="w-full h-full object-cover" />
+                        <img src={thrikaalLogo} alt="Logo" className="w-full h-full object-cover" />
                       </div>
                     </div>
                     <div>

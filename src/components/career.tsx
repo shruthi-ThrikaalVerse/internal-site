@@ -38,7 +38,6 @@ const Career = () => {
           </motion.div>
         ))}
       </div>
-      <div className="pt-3 text-center"><button className="px-10 py-4 rounded-full transition-all font-bold" style={{ color: 'var(--text-primary)', borderColor: 'var(--current-accent)', backgroundColor: 'transparent', border: '2px solid var(--current-accent)' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--current-accent)'; e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.opacity = '1'; }}>View All Jobs</button></div>
     </div>
   );
 };
