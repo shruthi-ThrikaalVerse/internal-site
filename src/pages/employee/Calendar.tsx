@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { CalendarAttendanceRecord } from '../../types.ts';
 import { getUserItem } from '../../utils/storage.ts';
+import { useAuth } from '../../context/AuthContext.tsx';
 
 const SYSTEM_HOLIDAYS = [
   { date: '2026-01-15', name: 'Makara Sankranti/ Pongal' },
@@ -54,6 +55,7 @@ interface CalendarEvent {
 }
 
 const Calendar: React.FC = () => {
+  const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [attendanceRecords, setAttendanceRecords] = useState<CalendarAttendanceRecord[]>([]);
   const [selectedRecord, setSelectedRecord] = useState<CalendarAttendanceRecord | null>(null);
@@ -69,6 +71,24 @@ const Calendar: React.FC = () => {
     eventDays: 0
   });
   const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+
+  // Reset state when user changes (logout/login with different account)
+  useEffect(() => {
+    setCurrentMonth(new Date());
+    setAttendanceRecords([]);
+    setSelectedRecord(null);
+    setSelectedEvents([]);
+    setIsModalOpen(false);
+    setIsTodayPresent(false);
+    setMonthlyStats({
+      totalHours: 0,
+      workDays: 0,
+      leaves: 0,
+      holidays: 0,
+      workingSaturdays: 0,
+      eventDays: 0
+    });
+  }, [user?.id]);
 
   // Detect screen size
   useEffect(() => {

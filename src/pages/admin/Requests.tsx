@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getEmployeeTickets, updateTicketStatus as apiUpdateTicketStatus } from '../../api/tickets.ts';
 
 
 type RequestItem = {
@@ -39,9 +40,45 @@ const initialData: RequestItem[] = [
 
 const AdminRequestsPage: React.FC = () => {
   const [requests, setRequests] = useState<RequestItem[]>(initialData);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const setStatus = (id: string, status: RequestItem['status']) => {
+  // Fetch tickets from API on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        setIsLoading(true);
+        const data = await getEmployeeTickets();
+        if (Array.isArray(data) && data.length > 0) {
+          // Map ticket response to RequestItem format
+          const mapped = data.map((ticket: any) => ({
+            id: ticket.ticketId,
+            employeeName: ticket.category || `EMP: ${ticket.employeeId}`,
+            subject: ticket.subject,
+            message: ticket.issueDetails,
+            createdAt: new Date().toLocaleString(), // Placeholder since API doesn't return this
+            status: 'inprogress' as const, // Default status until backend specifies
+          }));
+          setRequests(mapped);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch tickets from API, using local data.', err);
+        // Keep initialData as fallback
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
+
+  const setStatus = async (id: string, status: RequestItem['status']) => {
+    // Update local state
     setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    
+    // Call API to update ticket status
+    try {
+      await apiUpdateTicketStatus(id, status);
+    } catch (err: any) {
+      console.error('Failed to update ticket status:', err);
+    }
   };
 
   const statusBadge = (status: RequestItem['status']) => {

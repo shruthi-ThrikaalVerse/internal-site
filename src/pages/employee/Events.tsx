@@ -9,6 +9,7 @@ import {
     CheckCircle, XCircle, AlertCircle, Plus, X
 } from 'lucide-react';
 import { Event, EventType } from '../../types.ts';
+import { getAllEvents } from '../../api/events.ts';
 
 // Sample events data
 const SAMPLE_EVENTS: Event[] = [
@@ -195,13 +196,46 @@ const Events: React.FC = () => {
         if (savedCalendarEvents) {
             try {
                 const parsedEvents = JSON.parse(savedCalendarEvents);
-                // Ensure we have an array
                 setCalendarEvents(Array.isArray(parsedEvents) ? parsedEvents : []);
             } catch (error) {
                 console.error('Error loading calendar events:', error);
                 setCalendarEvents([]);
             }
         }
+
+        // Fetch all events created by admin from API and fallback to SAMPLE_EVENTS
+        (async () => {
+            try {
+                const data = await getAllEvents();
+                if (Array.isArray(data) && data.length > 0) {
+                    // Map API response to Event interface, providing defaults for missing fields
+                    const mappedEvents = data.map((event: any) => ({
+                        ...event,
+                        id: event.id || event.eventId || String(Math.random()),
+                        title: event.title || event.name || 'Untitled Event',
+                        description: event.description || event.details || '',
+                        type: event.type || event.eventType || 'meeting',
+                        date: event.date || event.startDate || new Date().toISOString().split('T')[0],
+                        startTime: event.startTime || '09:00',
+                        endTime: event.endTime || '17:00',
+                        location: event.location || event.venue || 'TBD',
+                        status: event.status || 'upcoming',
+                        organizer: event.organizer || event.createdBy || 'Admin',
+                        participants: event.participants || event.targetEmployees || ['All Employees'],
+                        isMandatory: event.isMandatory ?? false,
+                    })) as Event[];
+                    setEvents(mappedEvents);
+                    setFilteredEvents(mappedEvents);
+                    return;
+                }
+            } catch (err) {
+                console.warn('Failed to load events from API, using sample events.', err);
+            }
+            
+            // Fallback to sample events if API fails
+            setEvents(SAMPLE_EVENTS);
+            setFilteredEvents(SAMPLE_EVENTS);
+        })();
     }, []);
 
     // Listen for calendar events updates from other components
@@ -690,8 +724,8 @@ const Events: React.FC = () => {
 
                                                 {/* Event Header */}
                                                 <div className="flex justify-between items-start mb-4 pr-12">
-                                                    <div className={`p-2 rounded-lg text-black ${getEventTypeColor(event.type).split(' ')[0]}`}>
-                                                        {getEventTypeIcon(event.type)}
+                                                    <div className={`p-2 rounded-lg text-black ${getEventTypeColor(event.type || 'meeting').split(' ')[0]}`}>
+                                                        {getEventTypeIcon(event.type || 'meeting')}
                                                     </div>
                                                     <div className="flex flex-col items-end gap-1">
                                                         <div className="flex gap-1 flex-wrap justify-end">
@@ -742,8 +776,8 @@ const Events: React.FC = () => {
                                                 </div>
 
                                                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getEventTypeColor(event.type)} whitespace-nowrap`}>
-                                                        {event.type.replace('_', ' ')}
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getEventTypeColor(event.type || 'meeting')} whitespace-nowrap`}>
+                                                        {(event.type || 'meeting').replace('_', ' ')}
                                                     </span>
                                                     <span className="text-xs text-gray-500 truncate max-w-[120px]">
                                                         For: {event.participants?.join(', ').length > 20
@@ -783,8 +817,8 @@ const Events: React.FC = () => {
                                                 </button>
 
                                                 <div className="flex items-start gap-4 pr-12">
-                                                    <div className={`p-3 rounded-lg ${getEventTypeColor(event.type).split(' ')[0]}`}>
-                                                        {getEventTypeIcon(event.type)}
+                                                    <div className={`p-3 rounded-lg ${getEventTypeColor(event.type || 'meeting').split(' ')[0]}`}>
+                                                        {getEventTypeIcon(event.type || 'meeting')}
                                                     </div>
 
                                                     <div className="flex-1">

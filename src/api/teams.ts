@@ -18,7 +18,7 @@ const throwIfError = async (resp: Response) => {
 };
 
 export const createTeam = async (payload: any) => {
-  const resp = await fetch(API_BASE, {
+  const resp = await fetch(`${API_BASE}/create`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...getAuthHeader() },
     credentials: 'include',
@@ -29,7 +29,7 @@ export const createTeam = async (payload: any) => {
 };
 
 export const getTeams = async () => {
-  const resp = await fetch(API_BASE, {
+  const resp = await fetch(`${API_BASE}/getTeams`, {
     headers: { Accept: 'application/json', ...getAuthHeader() },
     credentials: 'include',
   });
@@ -38,7 +38,7 @@ export const getTeams = async () => {
 };
 
 export const getTeam = async (teamId: string) => {
-  const resp = await fetch(`${API_BASE}/${teamId}`, {
+  const resp = await fetch(`${API_BASE}/get/${teamId}`, {
     headers: { Accept: 'application/json', ...getAuthHeader() },
     credentials: 'include',
   });
@@ -47,7 +47,7 @@ export const getTeam = async (teamId: string) => {
 };
 
 export const updateTeam = async (teamId: string, payload: any) => {
-  const resp = await fetch(`${API_BASE}/${teamId}`, {
+  const resp = await fetch(`${API_BASE}/update/${teamId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...getAuthHeader() },
     credentials: 'include',
@@ -58,8 +58,18 @@ export const updateTeam = async (teamId: string, payload: any) => {
 };
 
 export const deleteTeam = async (teamId: string) => {
-  const resp = await fetch(`${API_BASE}/${teamId}`, {
+  const resp = await fetch(`${API_BASE}/delete/${teamId}`, {
     method: 'DELETE',
+    headers: { Accept: 'application/json', ...getAuthHeader() },
+    credentials: 'include',
+  });
+  await throwIfError(resp);
+  return parseText(resp);
+};
+
+// Get teams for logged-in user (teams they belong to)
+export const getMyTeams = async () => {
+  const resp = await fetch(`${API_BASE}/myteams`, {
     headers: { Accept: 'application/json', ...getAuthHeader() },
     credentials: 'include',
   });

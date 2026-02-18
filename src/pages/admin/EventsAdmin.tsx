@@ -26,7 +26,7 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
       >
         <div className="p-8 border-b flex items-center justify-between bg-white sticky top-0 z-10">
           <h2 className="text-2xl font-black text-slate-900">{title}</h2>
-          <button aria-label="Close dialog" onClick={onClose} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors">
+          <button aria-label="Close dialog" onClick={onClose} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors text-black">
             <Icon name="X" className="w-6 h-6" />
           </button>
         </div>
@@ -610,10 +610,10 @@ const EventsAdmin: React.FC = () => {
     }
   };
 
-  const toggleEmployeeSelection = (id: string) => {
+  const toggleEmployeeSelection = (employeeId: string) => {
     setFormData((prev) => {
       const current = (prev.targetEmployeeIds as any[]) || [];
-      const next = current.includes(id) ? current.filter((cid) => cid !== id) : [...current, id];
+      const next = current.includes(employeeId) ? current.filter((cid) => cid !== employeeId) : [...current, employeeId];
       return { ...prev, targetEmployeeIds: next };
     });
   };
@@ -663,12 +663,8 @@ const EventsAdmin: React.FC = () => {
       meetingType: isVirtual ? 'VIRTUAL' : 'PHYSICAL',
     };
 
-    // ✅ map selected employee UI ids → employeeId
+    // ✅ targetEmployeeIds already contains employeeIds, no mapping needed
     const selectedIds = ((formData.targetEmployeeIds as any[]) || [])
-      .map((id) => {
-        const emp = employees.find((e: any) => e.id === id);
-        return emp ? emp.employeeId : id;
-      })
       .filter(Boolean);
 
     if (selectedIds.length > 0) payload.employeeIds = selectedIds;
@@ -1100,7 +1096,7 @@ const EventsAdmin: React.FC = () => {
                   <input
                     type="text"
                     placeholder="🔍 Filter employees..."
-                    className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-bold outline-none shadow-inner"
+                    className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-bold outline-none shadow-inner text-black"
                     value={empSearch}
                     onChange={(e) => setEmpSearch(e.target.value)}
                   />
@@ -1109,8 +1105,8 @@ const EventsAdmin: React.FC = () => {
                 <div className="max-h-[150px] overflow-y-auto custom-scrollbar divide-y divide-slate-50 bg-slate-50 rounded-xl border border-slate-100 shadow-inner">
                   {filteredEmployees.map((emp: any) => (
                     <div
-                      key={emp.id}
-                      onClick={() => toggleEmployeeSelection(emp.id)}
+                      key={emp.employeeId}
+                      onClick={() => toggleEmployeeSelection(emp.employeeId)}
                       className="p-2.5 flex items-center justify-between cursor-pointer hover:bg-white transition-colors group"
                     >
                       <span className="text-[10px] font-bold text-slate-700">
@@ -1118,7 +1114,7 @@ const EventsAdmin: React.FC = () => {
                       </span>
                       <div
                         className={`w-4 h-4 rounded-md border-2 transition-all flex items-center justify-center shadow-sm ${
-                          (formData.targetEmployeeIds as any[])?.includes(emp.id)
+                          (formData.targetEmployeeIds as any[])?.includes(emp.employeeId)
                             ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-transparent text-white'
                             : 'bg-white border-slate-200 text-transparent group-hover:border-indigo-200'
                         }`}

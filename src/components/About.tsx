@@ -73,12 +73,20 @@ const About = () => {
           max-width: 100%;
           margin-top: 2rem;
           padding: 0 1rem;
+          padding-bottom: 0.5rem;
         }
 
         @media (min-width: 640px) {
           .about-container {
-            margin-top: 3rem;
+            margin-top: 1rem;
             padding: 0 1.5rem;
+            padding-bottom: 3rem;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .about-container {
+            padding-bottom: 4rem;
           }
         }
 
