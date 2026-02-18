@@ -70,7 +70,7 @@ const AdminRequestsPage: React.FC = () => {
   const setStatus = async (id: string, status: RequestItem['status']) => {
     // Update local state
     setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
-    
+
     // Call API to update ticket status
     try {
       await apiUpdateTicketStatus(id, status);
@@ -86,9 +86,9 @@ const AdminRequestsPage: React.FC = () => {
         req.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
         req.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         req.id.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesStatus = statusFilter === 'all' || req.status === statusFilter;
-      
+
       return matchesSearch && matchesStatus;
     });
   }, [requests, searchTerm, statusFilter]);
@@ -125,7 +125,7 @@ const AdminRequestsPage: React.FC = () => {
       {/* Empty State */}
       {!isLoading && requests.length === 0 && (
         <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-16 flex flex-col items-center justify-center text-center">
-          
+
           <h3 className="text-xl font-black text-black mb-2">No Requests Yet</h3>
           <p className="text-slate-500 font-medium max-w-sm">
             When employees submit requests or tickets, they will appear here. Everything is quiet for now.
@@ -170,11 +170,10 @@ const AdminRequestsPage: React.FC = () => {
                     <button
                       key={status}
                       onClick={() => setStatusFilter(status)}
-                      className={`px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                        statusFilter === status
+                      className={`px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${statusFilter === status
                           ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
                           : 'bg-slate-50 text-black border border-slate-200 hover:bg-slate-100'
-                      }`}
+                        }`}
                     >
                       {status === 'all' && 'All'}
                       {status === 'inprogress' && 'In Progress'}
@@ -212,26 +211,24 @@ const AdminRequestsPage: React.FC = () => {
                   <div className="flex items-start justify-between gap-3 mb-4">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <div
-                        className={`w-3 h-3 rounded-full flex-shrink-0 ring-2 ${
-                          req.status === 'approved'
+                        className={`w-3 h-3 rounded-full flex-shrink-0 ring-2 ${req.status === 'approved'
                             ? 'bg-emerald-500 ring-emerald-200'
                             : req.status === 'rejected'
-                            ? 'bg-rose-500 ring-rose-200'
-                            : 'bg-amber-500 ring-amber-200'
-                        }`}
+                              ? 'bg-rose-500 ring-rose-200'
+                              : 'bg-amber-500 ring-amber-200'
+                          }`}
                       />
                       <span className="text-xs font-black text-slate-500 uppercase tracking-widest truncate">
                         {req.id}
                       </span>
                     </div>
                     <div
-                      className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest whitespace-nowrap flex-shrink-0 ${
-                        req.status === 'approved'
+                      className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest whitespace-nowrap flex-shrink-0 ${req.status === 'approved'
                           ? 'bg-emerald-50 text-emerald-600'
                           : req.status === 'rejected'
-                          ? 'bg-rose-50 text-rose-600'
-                          : 'bg-amber-50 text-amber-600'
-                      }`}
+                            ? 'bg-rose-50 text-rose-600'
+                            : 'bg-amber-50 text-amber-600'
+                        }`}
                     >
                       {req.status === 'inprogress' ? 'Pending' : req.status.toUpperCase()}
                     </div>
@@ -241,7 +238,7 @@ const AdminRequestsPage: React.FC = () => {
                   <div className="flex-1 mb-4">
                     <div className="text-sm font-black text-black mb-2 line-clamp-2">{req.subject}</div>
                     <div className="text-xs text-slate-600 line-clamp-3 mb-4">{req.message}</div>
-                    
+
                     {/* Category and Timestamp */}
                     <div className="text-xs text-slate-500 space-y-1">
                       <div>
