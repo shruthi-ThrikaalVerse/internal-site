@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getTasks as apiGetTasks, getMyTasks as apiGetMyTasks, getSelfTasks as apiGetSelfTasks, createSelfTask } from '../../api/tasks.ts';
+import { getTasks as apiGetTasks, getMyTasks as apiGetMyTasks, getSelfTasks as apiGetSelfTasks, createSelfTask, deleteSelfTask } from '../../api/tasks.ts';
 import {
   CheckCircle, Clock, MoreVertical, Plus, Filter, Grid, List,
   X, Trash2, Loader2, AlertCircle, User, Tag,
   Circle, TrendingUp, FileText, Calendar,
   Download, Zap, AlertTriangle, Search, AlertOctagon, AlertCircle as AlertCircleIcon,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, Building2, Users
 } from 'lucide-react';
 
 interface TaskComment {
@@ -40,7 +40,9 @@ interface Task {
   comments: TaskComment[];
   attachments: string[];
   logs: TimeLog[];
-  taskType?: 'team' | 'individual' | 'work' | 'self';
+  taskType?: 'team' | 'individual' | 'work' | 'self' | 'department';
+  memberCount?: number;
+  teamMembers?: Array<{ employeeId: string; name: string; email: string }>;
 }
 
 const Tasks: React.FC = () => {
@@ -50,8 +52,9 @@ const Tasks: React.FC = () => {
     team: [],
     individual: [],
     self: [],
+    department: [],
   });
-  const [selectedCategory, setSelectedCategory] = useState<'my' | 'team' | 'individual' | 'self'>('my');
+  const [selectedCategory, setSelectedCategory] = useState<'my' | 'team' | 'individual' | 'self' | 'department'>('my');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedPriority, setSelectedPriority] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
@@ -124,7 +127,7 @@ const Tasks: React.FC = () => {
 
 
   const statuses = [
-    { id: 'todo', label: 'Self-assign', color: 'bg-gray-100 text-gray-800', icon: Circle },
+    { id: 'todo', label: 'To Do', color: 'bg-gray-100 text-gray-800', icon: Circle },
     { id: 'in_progress', label: 'In Progress', color: 'bg-blue-100 text-blue-800', icon: Clock },
     { id: 'review', label: 'On Review', color: 'bg-yellow-100 text-yellow-800', icon: AlertCircle },
     { id: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800', icon: CheckCircle }
@@ -161,6 +164,18 @@ const Tasks: React.FC = () => {
       'COMPLETED': 'completed',
       'DONE': 'completed',
     };
+
+    // Determine taskType based on assigneeType from backend
+    let taskType: Task['taskType'] = 'work';
+    if (item.assigneeType === 'TEAM') {
+      taskType = 'team';
+    } else if (item.assigneeType === 'EMPLOYEE') {
+      taskType = 'individual';
+    } else if (item.assigneeType === 'DEPARTMENT') {
+      taskType = 'department';
+    } else if (item.taskType) {
+      taskType = item.taskType;
+    }
     
     return {
       id: item.taskId || String(Math.random()),
@@ -179,7 +194,9 @@ const Tasks: React.FC = () => {
       comments: Array.isArray(item.comments) ? item.comments : [],
       attachments: Array.isArray(item.attachments) ? item.attachments : [],
       logs: Array.isArray(item.logs) ? item.logs : [],
-      taskType: item.taskType || 'work',
+      taskType: taskType,
+      memberCount: item.totalTasksCreated || 0,
+      teamMembers: Array.isArray(item.teamMembers) ? item.teamMembers : [],
     };
   };
 
@@ -197,18 +214,24 @@ const Tasks: React.FC = () => {
           : [];
         
         const selfTasks = (Array.isArray(selfTasksData) && selfTasksData.length > 0) 
-          ? selfTasksData.map(mapTaskData) 
+          ? selfTasksData.map(mapTaskData).map(t => ({ ...t, taskType: 'self' as Task['taskType'] })) 
           : [];
 
-        // For team and individual tasks, filter from myTasks based on type
-        const teamTasks = myTasks.filter((t) => t.taskType === 'team' || t.assignee?.includes('Team'));
-        const individualTasks = myTasks.filter((t) => t.taskType === 'individual' || !t.assignee?.includes('Team'));
+        // Categorize tasks by assigneeType (now captured in mapTaskData)
+        // Team tasks: assigneeType === 'TEAM' (mapped to taskType 'team')
+        // Individual tasks: assigneeType === 'EMPLOYEE' (mapped to taskType 'individual')
+        // Department tasks: assigneeType === 'DEPARTMENT' (mapped to taskType 'department')
+        // Exclude self-tasks to avoid duplicates
+        const teamTasks = myTasks.filter((t) => t.taskType === 'team' && !selfTasks.some(st => st.id === t.id));
+        const individualTasks = myTasks.filter((t) => t.taskType === 'individual' && !selfTasks.some(st => st.id === t.id));
+        const departmentTasks = myTasks.filter((t) => t.taskType === 'department' && !selfTasks.some(st => st.id === t.id));
 
         setAllTasks({
           my: myTasks,
           self: selfTasks,
           team: teamTasks,
           individual: individualTasks,
+          department: departmentTasks,
         });
 
         // Set displayed tasks based on selected category
@@ -416,9 +439,9 @@ const Tasks: React.FC = () => {
         const response = await createSelfTask(payload);
         console.log('Self-task created:', response);
 
-        // Create local task object for UI
+        // Create local task object for UI - use taskId from response (matches mapTaskData)
         const newTask: Task = {
-          id: response?.id || Date.now().toString(),
+          id: response?.taskId || response?.id || String(Math.random()),
           title: title,
           project: 'Self-Assigned',
           status: 'todo',
@@ -617,8 +640,20 @@ const Tasks: React.FC = () => {
               <status.icon size={20} />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">{status.label}</h3>
-              <p className="text-sm text-gray-600">{tasks.length} tasks</p>
+              {(() => {
+                let displayLabel = status.label;
+                if (status.id === 'todo') {
+                  if (selectedCategory === 'individual') displayLabel = 'Individual Tasks';
+                  else if (selectedCategory === 'self') displayLabel = 'Self Assign Tasks';
+                  else displayLabel = 'To Do';
+                }
+                return (
+                  <>
+                    <h3 className="font-semibold text-gray-900">{displayLabel}</h3>
+                    <p className="text-sm text-gray-600">{tasks.length} tasks</p>
+                  </>
+                );
+              })()}
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -688,12 +723,20 @@ const Tasks: React.FC = () => {
 
         <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
           <span className="font-medium text-gray-700">{task.project}</span>
-          {task.assignee && (
-            <div className="flex items-center gap-1">
-              <User size={12} />
-              <span>{task.assignee.split(' ')[0]}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {task.memberCount && task.memberCount > 0 && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded">
+                <Users size={12} />
+                <span className="font-medium">{task.memberCount}</span>
+              </div>
+            )}
+            {task.assignee && (
+              <div className="flex items-center gap-1">
+                <User size={12} />
+                <span>{task.assignee.split(' ')[0]}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {task.assignedBy && (
@@ -773,6 +816,15 @@ const Tasks: React.FC = () => {
                           <User size={12} />
                           {task.assignee || 'Unassigned'}
                         </span>
+                        {task.memberCount && task.memberCount > 0 && (
+                          <>
+                            <span>•</span>
+                            <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">
+                              <Users size={12} />
+                              {task.memberCount} members
+                            </span>
+                          </>
+                        )}
                         <span>•</span>
                         <span>By: {task.assignedBy || '-'}</span>
                         {isBreached && (
@@ -859,12 +911,13 @@ const Tasks: React.FC = () => {
         </div>
 
         {/* Task Category Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 md:mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6 md:mb-8">
           {[
             { id: 'my' as const, label: 'My Tasks', icon: CheckCircle, color: 'blue' },
-            { id: 'team' as const, label: 'Team Tasks', icon: FileText, color: 'purple' },
+            { id: 'team' as const, label: 'Team Tasks', icon: Users, color: 'purple' },
             { id: 'individual' as const, label: 'Individual Tasks', icon: User, color: 'green' },
-            { id: 'self' as const, label: 'Self-Assign Tasks', icon: Zap, color: 'orange' },
+            { id: 'department' as const, label: 'Dept Tasks', icon: Building2, color: 'red' },
+            { id: 'self' as const, label: 'Self Assign Tasks', icon: Zap, color: 'orange' },
           ].map((category) => {
             const Icon = category.icon;
             const categoryCount = allTasks[category.id]?.length || 0;
@@ -873,6 +926,7 @@ const Tasks: React.FC = () => {
               blue: isSelected ? 'bg-blue-50 border-blue-300' : 'bg-white hover:bg-blue-50',
               purple: isSelected ? 'bg-purple-50 border-purple-300' : 'bg-white hover:bg-purple-50',
               green: isSelected ? 'bg-green-50 border-green-300' : 'bg-white hover:bg-green-50',
+              red: isSelected ? 'bg-red-50 border-red-300' : 'bg-white hover:bg-red-50',
               orange: isSelected ? 'bg-orange-50 border-orange-300' : 'bg-white hover:bg-orange-50',
             };
 
@@ -909,7 +963,7 @@ const Tasks: React.FC = () => {
               All
             </button>
             {[
-              { id: 'todo', label: 'In Progress' },
+              { id: 'todo', label: 'To Do' },
               { id: 'in_progress', label: 'In Progress' },
               { id: 'review', label: 'On Review' },
               { id: 'completed', label: 'Completed' },
@@ -981,7 +1035,7 @@ const Tasks: React.FC = () => {
             <div className="text-lg md:text-2xl font-bold text-gray-600">
               {tasks.filter(t => t.status === 'todo').length}
             </div>
-            <div className="text-xs md:text-sm text-gray-600">Self-assign</div>
+            <div className="text-xs md:text-sm text-gray-600">To Do</div>
           </div>
 
           {/* In Progress */}
@@ -1244,9 +1298,17 @@ const Tasks: React.FC = () => {
                                 <h4 className="font-medium text-gray-900 text-sm mb-2 line-clamp-2">{task.title}</h4>
                                 <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
                                   <span className="font-medium text-gray-700">{task.project}</span>
-                                  <div className="flex items-center gap-1">
-                                    <User size={12} />
-                                    <span>{task.assignee?.split(' ')[0] || 'Unassigned'}</span>
+                                  <div className="flex items-center gap-2">
+                                    {task.memberCount && task.memberCount > 0 && (
+                                      <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded">
+                                        <Users size={12} />
+                                        <span className="font-medium">{task.memberCount}</span>
+                                      </div>
+                                    )}
+                                    <div className="flex items-center gap-1">
+                                      <User size={12} />
+                                      <span>{task.assignee?.split(' ')[0] || 'Unassigned'}</span>
+                                    </div>
                                   </div>
                                 </div>
                                 <div className="flex items-center justify-between text-xs text-red-600 font-medium">
@@ -1369,7 +1431,7 @@ const Tasks: React.FC = () => {
                           <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
                             <div className="text-sm text-gray-600">Status</div>
                             <div className="font-medium text-gray-900 mt-1 text-sm md:text-base capitalize">
-                              {selectedTask.status === 'todo' ? 'Self-assign' : selectedTask.status.replace('_', ' ')}
+                              {selectedTask.status === 'todo' ? 'To Do' : selectedTask.status.replace('_', ' ')}
                             </div>
                           </div>
                           <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
@@ -1448,7 +1510,7 @@ const Tasks: React.FC = () => {
 
                 <div className="w-full md:w-80 border-t md:border-l md:border-t-0 border-gray-200 p-4 md:p-8">
                   <div className="space-y-4 md:space-y-6">
-                    {selectedTask.status === 'todo' && (
+                    {(selectedTask.taskType === 'self' || allTasks.self.some(t => t.id === selectedTask.id)) && (
                       <div>
                         <h3 className="font-semibold text-gray-900 mb-3 md:mb-4">Quick Actions</h3>
                         <div className="space-y-2 md:space-y-3">
@@ -1465,14 +1527,54 @@ const Tasks: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => {
-                              setTasks(prev => prev.filter(t => t.id !== selectedTask.id));
-                              setSelectedTask(null);
+                              if (!window.confirm('Delete this self-assigned task? This action cannot be undone.')) return;
+                              (async () => {
+                                try {
+                                  console.log('Deleting task - selectedTask:', selectedTask);
+                                  console.log('Task ID being sent:', selectedTask.id, 'Type:', typeof selectedTask.id);
+                                  await deleteSelfTask(selectedTask.id);
+                                  console.log('Delete successful');
+
+                                  // Remove task from displayed lists
+                                  setTasks(prev => prev.filter(t => t.id !== selectedTask.id));
+                                  setAllTasks(prev => ({
+                                    my: prev.my.filter(t => t.id !== selectedTask.id),
+                                    self: prev.self.filter(t => t.id !== selectedTask.id),
+                                    team: prev.team.filter(t => t.id !== selectedTask.id),
+                                    individual: prev.individual.filter(t => t.id !== selectedTask.id),
+                                    department: prev.department.filter(t => t.id !== selectedTask.id),
+                                  }));
+                                  setSelectedTask(null);
+                                } catch (err: any) {
+                                  console.error('Failed to delete self-task', err);
+                                  alert('Failed to delete task. Please try again.');
+                                }
+                              })();
                             }}
                             className="w-full flex items-center gap-3 px-3 md:px-4 py-2 md:py-3 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors text-sm"
                           >
                             <Trash2 size={16} />
                             <span>Delete Task</span>
                           </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedTask.teamMembers && selectedTask.teamMembers.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-gray-900 mb-3 md:mb-4">Team Members</h3>
+                        <div className="space-y-2">
+                          {selectedTask.teamMembers.map((member, idx) => (
+                            <div key={idx} className="bg-gray-50 p-3 rounded-lg">
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <div className="font-medium text-sm text-gray-900">{member.name}</div>
+                                  <div className="text-xs text-gray-600 mt-1">{member.employeeId}</div>
+                                  <div className="text-xs text-gray-600">{member.email}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}

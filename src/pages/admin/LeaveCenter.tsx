@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import * as LucideIcons from 'lucide-react';
 import { useHRMS } from '../../context/HRMSContext.tsx';
+import { getPendingLeaveRequests, getNonPendingLeaveRequests, deleteLeaveRequest, updateLeaveStatus, getLeaveBalances } from '../../api/leave.ts';
 
 const Icon = ({ name, className }: { name: string; className?: string }) => {
   const LucideIcon = (LucideIcons as any)[name];
@@ -25,71 +26,76 @@ const SYSTEM_HOLIDAYS = [
 ];
 
 const LeaveCenter: React.FC = () => {
-  const { updateLeaveStatus, updateEmployee, notify, addLog } = useHRMS();
+  const { updateLeaveStatus: updateLeaveStatusContext, updateEmployee, notify, addLog } = useHRMS();
   const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending');
-  const [localLeaves, setLocalLeaves] = useState<any[]>([]);
+  const [pendingLeaves, setPendingLeaves] = useState<any[]>([]);
+  const [historyLeaves, setHistoryLeaves] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const pendingLeaves = localLeaves.filter(l => l.status === 'pending');
-  const pastLeaves = localLeaves.filter(l => l.status !== 'pending');
-
-  const displayLeaves = activeTab === 'pending' ? pendingLeaves : pastLeaves;
+  const displayLeaves = activeTab === 'pending' ? pendingLeaves : historyLeaves;
 
   const fetchLeaveBalances = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:8085/leave-requests/leave-balance', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      if (res.ok) {
-        const data = await res.json().catch(() => []);
-        if (Array.isArray(data)) {
-          data.forEach((b: any) => {
-            if (b.employeeId) {
-              // update employee leave balance in context
-              updateEmployee(b.employeeId, { totalLeaveBalance: b.totalLeaveBalance, leaveBalance: b.totalLeaveBalance });
-            }
-          });
-        }
+      const data = await getLeaveBalances();
+      if (Array.isArray(data)) {
+        data.forEach((b: any) => {
+          if (b.employeeId) {
+            updateEmployee(b.employeeId, { totalLeaveBalance: b.totalLeaveBalance, leaveBalance: b.totalLeaveBalance });
+          }
+        });
       }
     } catch (err) {
       console.error('Failed to fetch leave balances', err);
     }
   }, [updateEmployee]);
 
+  const mapLeaveData = (data: any) => ({
+    id: String(data.leaveId),
+    leaveId: data.leaveId,
+    employeeId: data.employeeId,
+    employeeName: (data.firstName || data.lastName) ? `${data.firstName || ''} ${data.lastName || ''}`.trim() : data.employeeId,
+    profileImage: data.profileImage || null,
+    leaveType: data.category || data.type || 'Leave',
+    startDate: data.startDate,
+    endDate: data.endDate,
+    days: parseInt((data.duration || '0').toString(), 10) || 0,
+    reason: data.reason || '',
+    status: (data.status || 'pending').toString().toLowerCase(),
+    appliedDate: data.appliedDate || '',
+    department: data.department || ''
+  });
+
   const fetchPendingLeaves = useCallback(async (showLoading = false) => {
     try {
       if (showLoading) setIsLoading(true);
       else setIsRefreshing(true);
-      const res = await fetch('http://localhost:8085/leave-requests/pending', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      if (res.ok) {
-        const data = await res.json().catch(() => []);
-        if (Array.isArray(data)) {
-          const mapped = data.map((r: any) => ({
-            id: String(r.leaveId),
-            employeeId: r.employeeId,
-            employeeName: (r.firstName || r.lastName) ? `${r.firstName || ''} ${r.lastName || ''}`.trim() : r.employeeId,
-            profileImage: r.profileImage || null,
-            leaveType: r.category || r.type || 'Leave',
-            startDate: r.startDate,
-            endDate: r.endDate,
-            days: parseInt((r.duration || '0').toString(), 10) || 0,
-            reason: r.reason || '',
-            status: (r.status || 'pending').toString().toLowerCase(),
-            appliedDate: r.appliedDate || ''
-          }));
-          setLocalLeaves(mapped);
-        }
+      const data = await getPendingLeaveRequests();
+      if (Array.isArray(data)) {
+        const mapped = data.map(mapLeaveData);
+        setPendingLeaves(mapped);
       }
     } catch (err) {
       console.error('Failed to fetch pending leaves', err);
-      setLocalLeaves([]);
+      setPendingLeaves([]);
+    } finally {
+      if (showLoading) setIsLoading(false);
+      else setIsRefreshing(false);
+    }
+  }, []);
+
+  const fetchNonPendingLeaves = useCallback(async (showLoading = false) => {
+    try {
+      if (showLoading) setIsLoading(true);
+      else setIsRefreshing(true);
+      const data = await getNonPendingLeaveRequests();
+      if (Array.isArray(data)) {
+        const mapped = data.map(mapLeaveData);
+        setHistoryLeaves(mapped);
+      }
+    } catch (err) {
+      console.error('Failed to fetch non-pending leaves', err);
+      setHistoryLeaves([]);
     } finally {
       if (showLoading) setIsLoading(false);
       else setIsRefreshing(false);
@@ -98,12 +104,20 @@ const LeaveCenter: React.FC = () => {
 
   useEffect(() => {
     // Initial load with loading state
-    fetchPendingLeaves(true);
-    fetchLeaveBalances();
+    (async () => {
+      setIsLoading(true);
+      await Promise.all([
+        fetchPendingLeaves(false),
+        fetchNonPendingLeaves(false)
+      ]);
+      await fetchLeaveBalances();
+      setIsLoading(false);
+    })();
 
     // Set up polling to refresh data every 30 seconds
     const intervalId = setInterval(() => {
       fetchPendingLeaves(false);
+      fetchNonPendingLeaves(false);
       fetchLeaveBalances();
     }, 30000);
 
@@ -112,29 +126,48 @@ const LeaveCenter: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleUpdateStatus = async (id: string, status: 'approved' | 'rejected' | 'pending') => {
+  const handleUpdateStatus = async (id: string, leaveId: number, status: 'approved' | 'rejected' | 'pending') => {
     try {
-      const res = await fetch(`http://localhost:8085/leave-requests/update-status/${encodeURIComponent(id)}?status=${encodeURIComponent(status)}`, {
-        method: 'PUT',
-        credentials: 'include'
+      await updateLeaveStatus(leaveId, status);
+
+      // Update local UI
+      setPendingLeaves(prev => prev.filter(l => l.id !== id));
+      setHistoryLeaves(prev => {
+        const updated = prev.map(l => l.id === id ? { ...l, status } : l);
+        return status !== 'pending' ? updated : updated.filter(l => l.id !== id);
       });
 
-      if (res.ok) {
-        // Update local UI
-        setLocalLeaves(prev => prev.map(l => l.id === id ? { ...l, status } : l).filter(l => status === 'pending' ? true : l.status !== 'pending'));
-        // Sync context
-        updateLeaveStatus(id, status as any);
-        addLog('Update', 'Leave', `Updated leave ${id} to ${status}`);
-        // Refresh balances and pending list
-        await fetchLeaveBalances();
-        await fetchPendingLeaves(false);
-      } else {
-        const err = await res.json().catch(() => ({}));
-        notify(err.message || 'Failed to update leave status', 'error');
-      }
-    } catch (err) {
+      // Sync context
+      updateLeaveStatusContext(id, status as any);
+      addLog('Update', 'Leave', `Updated leave ${id} to ${status}`);
+      
+      // Refresh data
+      await fetchLeaveBalances();
+      await Promise.all([fetchPendingLeaves(false), fetchNonPendingLeaves(false)]);
+      notify(`Leave ${status} successfully`, 'success');
+    } catch (err: any) {
       console.error('Failed to update leave status', err);
-      notify('Network error while updating leave status', 'error');
+      notify(err.message || 'Failed to update leave status', 'error');
+    }
+  };
+
+  const handleDeleteLeave = async (id: string, leaveId: number, name: string) => {
+    if (!window.confirm(`Delete leave request from ${name}? This action cannot be undone.`)) return;
+    try {
+      await deleteLeaveRequest(leaveId);
+      
+      // Update local UI
+      setPendingLeaves(prev => prev.filter(l => l.id !== id));
+      setHistoryLeaves(prev => prev.filter(l => l.id !== id));
+      
+      addLog('Delete', 'Leave', `Deleted leave request ${id}`);
+      notify('Leave request deleted successfully', 'success');
+      
+      // Refresh data
+      await Promise.all([fetchPendingLeaves(false), fetchNonPendingLeaves(false)]);
+    } catch (err: any) {
+      console.error('Failed to delete leave request', err);
+      notify(err.message || 'Failed to delete leave request', 'error');
     }
   };
 
@@ -274,26 +307,35 @@ const LeaveCenter: React.FC = () => {
                 {req.status === 'pending' ? (
                   <>
                     <button
-                      onClick={() => handleUpdateStatus(req.id, 'approved')}
+                      onClick={() => handleUpdateStatus(req.id, req.leaveId, 'approved')}
                       className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all uppercase text-xs"
                     >
                       Approve Leave
                     </button>
                     <button
-                      onClick={() => handleUpdateStatus(req.id, 'rejected')}
+                      onClick={() => handleUpdateStatus(req.id, req.leaveId, 'rejected')}
                       className="flex-1 py-3 bg-white border border-gray-200 text-black font-bold rounded-xl hover:bg-gray-50 transition-all uppercase text-xs"
                     >
                       Reject Request
                     </button>
                   </>
                 ) : (
-                  <button
-                    onClick={() => handleUpdateStatus(req.id, 'pending')}
-                    className="flex-1 py-3 bg-white border border-gray-200 text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition-all uppercase text-xs flex items-center justify-center gap-2"
-                  >
-                    <Icon name="Edit3" className="w-4 h-4" />
-                    Revert to Pending
-                  </button>
+                  <>
+                    <button
+                      onClick={() => handleUpdateStatus(req.id, req.leaveId, 'pending')}
+                      className="flex-1 py-3 bg-white border border-gray-200 text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition-all uppercase text-xs flex items-center justify-center gap-2"
+                    >
+                      <Icon name="Edit3" className="w-4 h-4" />
+                      Revert to Pending
+                    </button>
+                    <button
+                      onClick={() => handleDeleteLeave(req.id, req.leaveId, req.employeeName)}
+                      className="flex-1 py-3 bg-red-50 border border-red-200 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-all uppercase text-xs flex items-center justify-center gap-2"
+                    >
+                      <Icon name="Trash2" className="w-4 h-4" />
+                      Delete
+                    </button>
+                  </>
                 )}
               </div>
             </div>

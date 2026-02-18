@@ -130,6 +130,27 @@ export const deleteTask = async (taskId: string) => {
   }
 };
 
+// Delete a self-assigned task
+export const deleteSelfTask = async (taskId: string) => {
+  try {
+    // Try DELETE /self/{taskId} (alternative pattern if /self/delete/{taskId} fails on backend)
+    const url = `${API_BASE}/self/delete/${taskId}`;
+    console.log('Deleting self-task:', { taskId, url });
+    const resp = (await fetchWithTimeout(url, {
+      method: 'DELETE',
+      headers: { Accept: 'application/json', ...getAuthHeader() },
+      credentials: 'include',
+    })) as Response;
+    await throwIfError(resp);
+    return parseText(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The self-task deletion request took too long. Please try again.');
+    }
+    throw err;
+  }
+};
+
 // Get tasks by employee ID
 export const getTasksByEmployeeId = async (employeeId: string) => {
   try {
