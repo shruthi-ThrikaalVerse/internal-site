@@ -324,6 +324,15 @@ const Profile: React.FC = () => {
   };
 
   // Handle profile photo upload (calls backend endpoint)
+  const fileToDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = (e) => reject(e);
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
@@ -361,8 +370,11 @@ const Profile: React.FC = () => {
       }
 
       const data = await resp.json().catch(() => null);
-      // Try to pick image URL from response
-      const imageUrl = data?.avatar || data?.data?.avatar || URL.createObjectURL(file);
+      // Prefer server-provided URL. If backend doesn't return one, fall back to a data URL (persistent string),
+      // instead of a temporary blob URL which disappears after reload.
+      const serverUrl = data?.avatar || data?.data?.avatar;
+      const fallbackDataUrl = await fileToDataUrl(file);
+      const imageUrl = serverUrl || fallbackDataUrl;
 
       if (user?.id) {
         updateProfilePhoto(user.id, imageUrl);
@@ -430,21 +442,43 @@ const Profile: React.FC = () => {
       return;
     }
 
+    if (newPassword.length < 8) {
+      notify('New password must be at least 8 characters long', 'error');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('authToken');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
+      const payload = {
+        oldPassword,
+        newPassword,
+        currentPassword: oldPassword // Some APIs use different field names
+      };
+
+      console.log('Attempting password change with payload:', { ...payload, oldPassword: '***', newPassword: '***' });
+
       const resp = await fetch('http://localhost:8085/api/users/change-password', {
         method: 'POST',
         credentials: 'include',
         headers,
-        body: JSON.stringify({ oldPassword, newPassword }),
+        body: JSON.stringify(payload),
       });
 
+      const responseText = await resp.text();
+      console.log('Password change response status:', resp.status, 'body:', responseText);
+
       if (!resp.ok) {
-        const txt = await resp.text().catch(() => '');
-        throw new Error(txt || `Password change failed (${resp.status})`);
+        let errorMessage = `Error ${resp.status}: `;
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage += errorData.message || errorData.error || responseText;
+        } catch {
+          errorMessage += responseText || 'Unknown error occurred';
+        }
+        throw new Error(errorMessage);
       }
 
       notify('Administrative password updated successfully.', 'success');
@@ -481,7 +515,9 @@ const Profile: React.FC = () => {
       }
 
       const data = await resp.json().catch(() => null);
-      const imageUrl = data?.avatar || data?.data?.avatar || URL.createObjectURL(file);
+      const serverUrl = data?.avatar || data?.data?.avatar;
+      const fallbackDataUrl = await fileToDataUrl(file);
+      const imageUrl = serverUrl || fallbackDataUrl;
 
       setProfileImage(imageUrl);
       updateProfilePhoto(user.id, imageUrl);
@@ -665,7 +701,7 @@ const Profile: React.FC = () => {
 
       <div className="flex gap-3">
         <button
-          onClick={() => {}}
+          onClick={() => { }}
           className="px-6 py-3 bg-white rounded-2xl border border-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2"
           title="Save profile settings"
           aria-label="Save profile settings"
@@ -827,8 +863,20 @@ const Profile: React.FC = () => {
             </p>
           </div>
           <div>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username</label>
+            <p className="text-lg font-black text-black mt-1 font-mono">
+              {isLoadingUserData ? (
+                <span className="text-slate-400">Loading...</span>
+              ) : fetchedUserData?.username ? (
+                fetchedUserData.username
+              ) : (
+                user?.username || 'N/A'
+              )}
+            </p>
+          </div>
+          <div>
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Employee ID</label>
-            <p className="text-lg font-black text-indigo-600 mt-1 font-mono">
+            <p className="text-lg font-black text-black mt-1 font-mono">
               {isLoadingUserData ? (
                 <span className="text-slate-400">Loading...</span>
               ) : fetchedUserData?.employeeId ? (
@@ -910,18 +958,10 @@ const Profile: React.FC = () => {
 
         <div className="pt-8 border-t border-slate-50">
           <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Account Metadata</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="p-4 bg-slate-50 rounded-2xl text-center">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Joined Date</p>
-              <p className="text-xs font-black text-slate-700">{getCurrentDate()}</p>
-            </div>
+          <div className="grid grid-cols-1 gap-4">
             <div className="p-4 bg-slate-50 rounded-2xl text-center">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Last Sync</p>
               <p className="text-xs font-black text-slate-700">{getLastSync()}</p>
-            </div>
-            <div className="p-4 bg-slate-50 rounded-2xl text-center">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Auth Type</p>
-              <p className="text-xs font-black text-slate-700">{isMfaEnabled ? 'MFA Enforced' : 'Password Only'}</p>
             </div>
           </div>
         </div>
@@ -1053,35 +1093,6 @@ const Profile: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      <div className="flex items-center justify-between gap-6">
-        <div className="flex-1">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              {userProfilePhoto ? (
-                <img
-                  src={userProfilePhoto}
-                  alt="Profile"
-                  className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-md"
-                />
-              ) : (
-                <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-md">
-                  <span className="text-xl font-black text-white">
-                    {user?.fullName?.charAt(0) || 'A'}
-                  </span>
-                </div>
-              )}
-            </div>
-            <div>
-              <h1 className="text-2xl font-black text-slate-900">{user?.fullName}</h1>
-              <p className="text-xs text-slate-400 font-medium mt-1 text-black">{user?.email}</p>
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-3">
-          <button onClick={() => {}} className="px-6 py-3 bg-white rounded-2xl border border-slate-100 text-slate-700 font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all" title="Save profile settings" aria-label="Save profile settings">Save</button>
-          <button onClick={handleExportProfile} className="px-6 py-3 bg-indigo-50 text-indigo-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-100 transition-all" title="Export profile data" aria-label="Export profile data">Export</button>
-        </div>
-      </div>
 
       <div>
         <div className="mb-6">
