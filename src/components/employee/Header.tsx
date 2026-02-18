@@ -96,7 +96,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <header className="h-16 md:h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 lg:px-10 z-40 sticky top-0">
+    <header className="h-16 md:h-20 bg-transparent border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 lg:px-10 z-40 sticky top-0">
       {/* Left Section: Menu Toggle & Search */}
       <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0">
         <button

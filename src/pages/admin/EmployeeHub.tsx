@@ -487,60 +487,51 @@ const EmployeeHub: React.FC = () => {
           return true;
         });
 
-        // Map backend response to EmployeeSummary format
-        const backendEmployees: EmployeeSummary[] = [];
-        if (uniqueEmpList.length > 0) {
-          uniqueEmpList.forEach((emp: any) => {
-            // Determine status based on active field or terminatedAt
-            let status: 'active' | 'inactive' | 'probation' | 'resigned' = 'active';
-            if (emp.terminatedAt || !emp.active) {
-              status = 'resigned';
-            } else if (!emp.active) {
-              status = 'inactive';
-            }
+        // Map backend response to EmployeeSummary format (runs even for empty arrays)
+        const backendEmployees: EmployeeSummary[] = uniqueEmpList.map((emp: any) => {
+          // Determine status based on active field or terminatedAt
+          let status: 'active' | 'inactive' | 'probation' | 'resigned' = 'active';
+          if (emp.terminatedAt || emp.active === false) {
+            status = 'resigned';
+          } else if (emp.active === false) {
+            status = 'inactive';
+          }
 
-            backendEmployees.push({
-              id: emp.id || emp._id || emp.employeeId || emp.email,
-              employeeId: emp.employeeId || emp.id || emp._id || emp.email,
-              fullName: emp.fullName || emp.name || `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username || '',
-              email: emp.email || '',
-              designation: emp.designation || '',
-              department: emp.department || '',
-              avatar: emp.profileImage || emp.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.fullName || emp.name || emp.username || emp.email || 'User')}`,
-              status,
-              dateOfJoining: emp.dateOfJoining || '',
-              location: emp.locationName || emp.location || '',
-              reportingManager: emp.reportingManager || emp.createdByName || 'Unassigned',
-              phone: emp.phone || emp.phoneNumber || '',
-              leaveBalance: emp.totalLeaveBalance || emp.leaveBalance || 20,
-              tags: [],
-              password: emp.password,
-              employmentType: emp.userType || emp.employmentType || '',
-              role: emp.role || emp.createdByRole || undefined,
-              dateOfBirth: emp.dateOfBirth || '',
-              username: emp.username || undefined,
-              profileImage: emp.profileImage || null,
-              locationName: emp.locationName || undefined,
-              createdByRole: emp.createdByRole || undefined,
-              createdByName: emp.createdByName || undefined,
-              totalLeaveBalance: emp.totalLeaveBalance || undefined,
-              userType: emp.userType || undefined,
-              active: emp.active !== undefined ? emp.active : true,
-              terminationReason: emp.terminationReason || null,
-              terminatedAt: emp.terminatedAt || null
-            });
-          });
-        }
+          return {
+            id: emp.id || emp._id || emp.employeeId || emp.email,
+            employeeId: emp.employeeId || emp.id || emp._id || emp.email,
+            fullName: emp.fullName || emp.name || `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username || '',
+            email: emp.email || '',
+            designation: emp.designation || '',
+            department: emp.department || '',
+            avatar: emp.profileImage || emp.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.fullName || emp.name || emp.username || emp.email || 'User')}`,
+            status,
+            dateOfJoining: emp.dateOfJoining || '',
+            location: emp.locationName || emp.location || '',
+            reportingManager: emp.reportingManager || emp.createdByName || 'Unassigned',
+            phone: emp.phone || emp.phoneNumber || '',
+            leaveBalance: emp.totalLeaveBalance || emp.leaveBalance || 20,
+            tags: [],
+            password: emp.password,
+            employmentType: emp.userType || emp.employmentType || '',
+            role: emp.role || emp.createdByRole || undefined,
+            dateOfBirth: emp.dateOfBirth || '',
+            username: emp.username || undefined,
+            profileImage: emp.profileImage || null,
+            locationName: emp.locationName || undefined,
+            createdByRole: emp.createdByRole || undefined,
+            createdByName: emp.createdByName || undefined,
+            totalLeaveBalance: emp.totalLeaveBalance || undefined,
+            userType: emp.userType || undefined,
+            active: emp.active !== undefined ? emp.active : true,
+            terminationReason: emp.terminationReason || null,
+            terminatedAt: emp.terminatedAt || null
+          } as EmployeeSummary;
+        });
 
-        // Get existing local employees that don't conflict with backend data
-        const backendIds = new Set(backendEmployees.map(emp => emp.id));
-        const localOnlyEmployees = employees.filter(emp => !backendIds.has(emp.id));
-
-        // Merge: backend data takes precedence, but keep local-only employees
-        const mergedEmployees = [...backendEmployees, ...localOnlyEmployees];
-
-        // Update state by replacing all employees at once
-        syncEmployees(mergedEmployees);
+        // Direct replacement: overwrite local state with backend data only.
+        // Also filter to include only active employees for display.
+        syncEmployees(backendEmployees.filter(e => e.active));
       }
     } catch (err) {
       console.error('Failed to fetch employees:', err);

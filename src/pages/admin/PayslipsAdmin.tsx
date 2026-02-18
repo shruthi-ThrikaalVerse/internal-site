@@ -16,7 +16,7 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
       <div className={`bg-white rounded-[32px] w-full max-w-2xl relative shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]`}>
         <div className="p-8 border-b flex items-center justify-between bg-white sticky top-0 z-10">
           <h2 className="text-2xl font-black text-slate-900">{title}</h2>
-          <button aria-label="Close dialog" onClick={onClose} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors">
+          <button aria-label="Close dialog" onClick={onClose} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors text-black">
             <Icon name="X" className="w-6 h-6" />
           </button>
         </div>
@@ -207,8 +207,8 @@ const PayslipsAdmin: React.FC = () => {
                   </td>
                   <td className="px-8 py-6 text-right">
                     <div className="flex justify-end gap-2">
-                      <button aria-label={`Edit payslip for ${ps.name}`} onClick={() => handleEdit(ps)} className="p-2 text-slate-300 hover:text-indigo-600 transition-colors"><Icon name="Edit3" className="w-4 h-4" /></button>
-                      <button aria-label={`Delete payslip for ${ps.name}`} onClick={() => deletePayslip(ps.id)} className="p-2 text-slate-300 hover:text-rose-500 transition-colors"><Icon name="Trash2" className="w-4 h-4" /></button>
+                      <button aria-label={`Edit payslip for ${ps.name}`} onClick={() => handleEdit(ps)} className="p-2 text-slate-300 hover:text-indigo-600 transition-colors text-black"><Icon name="Edit3" className="w-4 h-4" /></button>
+                      <button aria-label={`Delete payslip for ${ps.name}`} onClick={() => deletePayslip(ps.id)} className="p-2 text-slate-300 hover:text-rose-500 transition-colors text-black"><Icon name="Trash2" className="w-4 h-4" /></button>
                     </div>
                   </td>
                 </tr>
@@ -238,7 +238,7 @@ const PayslipsAdmin: React.FC = () => {
                 <input
                   type="text"
                   placeholder="Search personal..."
-                  className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none text-black"
                   value={empSearch}
                   onChange={(e) => setEmpSearch(e.target.value)}
                 />

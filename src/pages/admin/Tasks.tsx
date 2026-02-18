@@ -20,7 +20,7 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
       <div className={`bg-white rounded-[32px] w-full max-w-xl relative shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]`}>
         <div className="p-8 border-b flex items-center justify-between bg-white sticky top-0 z-10">
           <h2 className="text-2xl font-black text-slate-900">{title}</h2>
-          <button aria-label="Close dialog" onClick={onClose} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors">
+          <button aria-label="Close dialog" onClick={onClose} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors text-black">
             <Icon name="X" className="w-6 h-6" />
           </button>
         </div>
@@ -438,13 +438,13 @@ const TEAM_GRADIENTS = [
 
 const Tasks: React.FC = () => {
   const { tasks, addTask, updateTaskStatus, deleteTask, customTeams, addCustomTeam, updateCustomTeam, deleteCustomTeam, employees, notify } = useHRMS();
-  
+
   // API State
   const [apiTasks, setApiTasks] = useState<any[]>([]);
   const [apiTeams, setApiTeams] = useState<any[]>([]);
   const [apiEmployees, setApiEmployees] = useState<any[]>([]);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-  
+
   const [activeTab, setActiveTab] = useState<'tasks' | 'teams'>('tasks');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
@@ -911,7 +911,7 @@ const Tasks: React.FC = () => {
                     <div className={`w-16 h-16 ${avatarGradient} text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg border border-white/30`}>
                       {team.name.charAt(0)}
                     </div>
-                      <div className="flex gap-1">
+                    <div className="flex gap-1">
                       <button aria-label={`Edit team ${team.name}`} onClick={() => handleEditTeam(team)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white/50 transition-all rounded-xl">
                         <Icon name="Edit3" className="w-5 h-5" />
                       </button>
@@ -1080,7 +1080,7 @@ const Tasks: React.FC = () => {
           </div>
 
           <div className="pt-6 border-t border-slate-100 flex gap-4">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all">Discard</button>
+            <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all text-black">Discard</button>
             <button type="submit" className="flex-1 py-4 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-purple-100 hover:opacity-90 transition-all active:scale-95">🎯 Confirm Assignment</button>
           </div>
         </form>
@@ -1144,7 +1144,7 @@ const Tasks: React.FC = () => {
           </div>
 
           <div className="pt-6 border-t border-slate-100 flex gap-4">
-            <button type="button" onClick={() => { setIsTeamModalOpen(false); setEditingTeamId(null); }} className="flex-1 py-4 text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all">Abort</button>
+            <button type="button" onClick={() => { setIsTeamModalOpen(false); setEditingTeamId(null); }} className="flex-1 py-4 text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all text-black">Abort</button>
             <button type="submit" className="flex-1 py-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-teal-100 hover:opacity-90 transition-all active:scale-95">
               {editingTeamId ? "Update Team" : "🚀 Commit Prepared Team"}
             </button>
@@ -1192,7 +1192,7 @@ const Tasks: React.FC = () => {
           </div>
         </div>
       </Modal>
-    </div>
+    </div >
   );
 };
 
