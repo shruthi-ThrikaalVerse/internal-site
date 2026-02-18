@@ -226,9 +226,9 @@ const NotificationsAdmin: React.FC = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto rounded-[24px] border border-slate-50">
+        <div className="overflow-hidden rounded-[24px] border border-slate-50">
           <table className="w-full text-left">
-            <thead className="bg-slate-50/50">
+            <thead className="bg-slate-50/50 sticky top-0 z-10">
               <tr className="border-b border-slate-100">
                 <th className="px-8 py-5 text-[10px] font-black text-black uppercase tracking-[0.2em]">Context</th>
                 <th className="px-8 py-5 text-[10px] font-black text-black uppercase tracking-[0.2em]">Deployment</th>
@@ -237,57 +237,61 @@ const NotificationsAdmin: React.FC = () => {
                 <th className="px-8 py-5 text-[10px] font-black text-black uppercase tracking-[0.2em] text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
-              {filteredNotifications.length > 0 ? filteredNotifications.map(n => (
-                <tr key={n.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-8 py-6">
-                    <div className="max-w-xs">
-                      <p className="text-sm font-black text-black truncate">{n.title}</p>
-                      <p className="text-xs text-black line-clamp-1 mt-1">{n.message}</p>
-                      <p className="text-[9px] font-bold text-black uppercase mt-1.5">{n.createdAt}</p>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${n.targetSelection === 'GLOBAL' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-blue-50 text-blue-600 border-blue-100'
-                        }`}>
-                        {n.targetSelection === 'GLOBAL' ? 'Global' : 'Selected'}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 text-center">
-                    <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${n.priority === 'URGENT' ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                      n.priority === 'HIGH' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                        'bg-slate-50 text-black border-slate-100'
-                      }`}>
-                      {n.priority}
-                    </span>
-                  </td>
-                  <td className="px-8 py-6 text-center">
-                    <div className="flex flex-col items-center">
-                      <span className="text-xs font-black text-black">{n.targetSelection === 'GLOBAL' ? 'All Staff' : `${n.employeeCount} Targeted`}</span>
-                      <span className="text-[9px] font-bold text-black uppercase tracking-tighter">{n.active ? 'Active' : 'Inactive'}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button aria-label={`Edit notification ${n.title}`} onClick={() => handleEdit(n)} className="p-2 text-black hover:text-indigo-600 hover:bg-white rounded-xl shadow-sm border border-transparent transition-all"><Icon name="Edit3" className="w-4 h-4" /></button>
-                      <button aria-label={`Delete notification ${n.title}`} onClick={() => handleDelete(n)} className="p-2 text-black hover:text-rose-500 hover:bg-white rounded-xl shadow-sm border border-transparent transition-all"><Icon name="Trash2" className="w-4 h-4" /></button>
-                    </div>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan={5} className="py-24 text-center">
-                    <div className="w-20 h-20 bg-slate-50 rounded-[28px] flex items-center justify-center mx-auto mb-6">
-                      <Icon name="BellOff" className="w-10 h-10 text-black" />
-                    </div>
-                    <p className="text-black font-black uppercase text-xs tracking-widest">Zero historical broadcasts found.</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
           </table>
+          <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+            <table className="w-full text-left">
+              <tbody className="divide-y divide-slate-50">
+                {filteredNotifications.length > 0 ? filteredNotifications.map(n => (
+                  <tr key={n.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <td className="px-8 py-6">
+                      <div className="max-w-xs">
+                        <p className="text-sm font-black text-black truncate">{n.title}</p>
+                        <p className="text-xs text-black line-clamp-1 mt-1">{n.message}</p>
+                        <p className="text-[9px] font-bold text-black uppercase mt-1.5">{n.createdAt}</p>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${n.targetSelection === 'GLOBAL' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                          }`}>
+                          {n.targetSelection === 'GLOBAL' ? 'Global' : 'Selected'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6 text-center">
+                      <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${n.priority === 'URGENT' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                        n.priority === 'HIGH' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                          'bg-slate-50 text-black border-slate-100'
+                        }`}>
+                        {n.priority}
+                      </span>
+                    </td>
+                    <td className="px-8 py-6 text-center">
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs font-black text-black">{n.targetSelection === 'GLOBAL' ? 'All Staff' : `${n.employeeCount} Targeted`}</span>
+                        <span className="text-[9px] font-bold text-black uppercase tracking-tighter">{n.active ? 'Active' : 'Inactive'}</span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button aria-label={`Edit notification ${n.title}`} onClick={() => handleEdit(n)} className="p-2 text-black hover:text-indigo-600 hover:bg-white rounded-xl shadow-sm border border-transparent transition-all"><Icon name="Edit3" className="w-4 h-4" /></button>
+                        <button aria-label={`Delete notification ${n.title}`} onClick={() => handleDelete(n)} className="p-2 text-black hover:text-rose-500 hover:bg-white rounded-xl shadow-sm border border-transparent transition-all"><Icon name="Trash2" className="w-4 h-4" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={5} className="py-24 text-center">
+                      <div className="w-20 h-20 bg-slate-50 rounded-[28px] flex items-center justify-center mx-auto mb-6">
+                        <Icon name="BellOff" className="w-10 h-10 text-black" />
+                      </div>
+                      <p className="text-black font-black uppercase text-xs tracking-widest">Zero historical broadcasts found.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

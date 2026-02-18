@@ -48,6 +48,7 @@ const AuditLogsPage: React.FC = () => {
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [usingMock, setUsingMock] = useState(false);
     const tailRef = useRef<number | null>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     const presets = {
         today: () => {
@@ -213,7 +214,7 @@ const AuditLogsPage: React.FC = () => {
                             {/* Mobile filter toggle */}
                             <button
                                 onClick={() => setShowMobileFilters(!showMobileFilters)}
-                                className="md:hidden px-3 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                                className="md:hidden px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
                             >
                                 {showMobileFilters ? 'Hide Filters' : 'Show Filters'}
                             </button>
@@ -266,39 +267,54 @@ const AuditLogsPage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Filters Panel - Enhanced Visibility */}
+                    {/* Filters Panel - Enhanced Design */}
                     <div className={`mb-6 ${showMobileFilters ? 'block' : 'hidden md:block'}`}>
-                        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl border-2 border-indigo-200 shadow-lg overflow-hidden">
-                            <div className="p-5 md:p-6 bg-gradient-to-r from-indigo-600 to-blue-600 border-b-2 border-indigo-700">
-                                <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">🔍 Filters & Quick Presets</h2>
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            {/* Header */}
+                            <div className="px-5 py-4 bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200">
+                                <div className="flex items-center gap-2">
+                                    <LucideIcons.Filter className="w-5 h-5 text-gray-600" />
+                                    <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Filters</h2>
+                                </div>
                             </div>
 
-                            <div className="p-5 md:p-7 space-y-6">
-                                {/* Quick Presets */}
-                                <div>
-                                    <h3 className="inline-block text-sm font-black text-white bg-gradient-to-r from-indigo-600 to-blue-600 px-3 py-1 rounded-lg uppercase tracking-widest mb-3">Quick Presets</h3>
-                                    <div className="flex flex-wrap gap-3">
-                                        <button onClick={presets.today} className="px-5 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95">
-                                            📅 Today
-                                        </button>
-                                        <button onClick={presets.last24h} className="px-5 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95">
-                                            ⏱️ Last 24h
-                                        </button>
-                                        <button onClick={presets.last7d} className="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95">
-                                            📊 Last 7 Days
-                                        </button>
-                                    </div>
+                            {/* Quick Presets - Compact */}
+                            <div className="px-5 pt-4">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-xs font-medium text-gray-500 mr-1">Quick:</span>
+                                    <button
+                                        onClick={presets.today}
+                                        className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-medium transition-colors"
+                                    >
+                                        Today
+                                    </button>
+                                    <button
+                                        onClick={presets.last24h}
+                                        className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-medium transition-colors"
+                                    >
+                                        Last 24h
+                                    </button>
+                                    <button
+                                        onClick={presets.last7d}
+                                        className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium transition-colors"
+                                    >
+                                        7 Days
+                                    </button>
                                 </div>
+                            </div>
 
-                                {/* Main Filters */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            {/* Filter Grid */}
+                            <div className="p-5 space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {/* Level Select */}
                                     <div>
-                                        <label className="inline-block text-sm font-black text-white bg-gradient-to-r from-indigo-600 to-blue-600 px-3 py-1 rounded-lg mb-2 uppercase tracking-widest">Log Level</label>
+                                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1.5">
+                                            Log Level
+                                        </label>
                                         <select
-                                            title="Log level"
                                             value={level}
                                             onChange={(e) => setLevel(e.target.value)}
-                                            className="w-full px-4 py-3 border-2 border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white font-semibold text-gray-800 hover:border-indigo-400 transition-colors text-black"
+                                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                                         >
                                             {LEVELS.map(l => (
                                                 <option key={l} value={l}>{l}</option>
@@ -306,53 +322,55 @@ const AuditLogsPage: React.FC = () => {
                                         </select>
                                     </div>
 
+                                    {/* Search */}
                                     <div className="md:col-span-2 lg:col-span-1">
-                                        <label className="inline-block text-sm font-black text-white bg-gradient-to-r from-indigo-600 to-blue-600 px-3 py-1 rounded-lg mb-2 uppercase tracking-widest">Search</label>
+                                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1.5">
+                                            Search
+                                        </label>
                                         <div className="relative">
+                                            <LucideIcons.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                             <input
                                                 type="text"
-                                                title="Search logs"
                                                 value={search}
                                                 onChange={(e) => setSearch(e.target.value)}
                                                 placeholder="User, message, IP..."
-                                                className="w-full pl-11 pr-4 py-3 border-2 border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white font-medium hover:border-indigo-400 transition-colors text-black"
+                                                className="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 text-gray-900"
                                             />
-                                            <LucideIcons.Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-600 font-bold" />
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3 md:col-span-2 lg:col-span-1">
-                                        <div>
-                                            <label className="inline-block text-sm font-black text-white bg-gradient-to-r from-indigo-600 to-blue-600 px-3 py-1 rounded-lg mb-2 uppercase tracking-widest">From</label>
-                                            <input
-                                                type="date"
-                                                title="From date"
-                                                value={startDate ? startDate.split('T')[0] : ''}
-                                                onChange={e => setStartDate(e.target.value ? `${e.target.value}T00:00:00Z` : undefined)}
-                                                className="w-full px-4 py-3 border-2 border-indigo-300 rounded-xl text-sm bg-white font-semibold hover:border-indigo-400 transition-colors text-black"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="inline-block text-sm font-black text-white bg-gradient-to-r from-indigo-600 to-blue-600 px-3 py-1 rounded-lg mb-2 uppercase tracking-widest">To</label>
-                                            <input
-                                                type="date"
-                                                title="To date"
-                                                value={endDate ? endDate.split('T')[0] : ''}
-                                                onChange={e => setEndDate(e.target.value ? `${e.target.value}T23:59:59Z` : undefined)}
-                                                className="w-full px-4 py-3 border-2 border-indigo-300 rounded-xl text-sm bg-white font-semibold hover:border-indigo-400 transition-colors text-black"
-                                            />
+                                    {/* Date Range */}
+                                    <div className="md:col-span-2 lg:col-span-2">
+                                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1.5">
+                                            Date Range
+                                        </label>
+                                        <div className="grid grid-cols-2 gap-4 w-full">
+                                            <div className="relative">
+                                                <LucideIcons.Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                <input
+                                                    type="date"
+                                                    value={startDate ? startDate.split('T')[0] : ''}
+                                                    onChange={e => setStartDate(e.target.value ? `${e.target.value}T00:00:00Z` : undefined)}
+                                                    className="w-full pl-10 pr-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                                                    placeholder="From"
+                                                />
+                                            </div>
+                                            <div className="relative">
+                                                <LucideIcons.Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                <input
+                                                    type="date"
+                                                    value={endDate ? endDate.split('T')[0] : ''}
+                                                    onChange={e => setEndDate(e.target.value ? `${e.target.value}T23:59:59Z` : undefined)}
+                                                    className="w-full pl-10 pr-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                                                    placeholder="To"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Action buttons */}
-                                <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t-2 border-indigo-200">
-                                    <button
-                                        onClick={() => { setPage(1); load(); }}
-                                        className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl active:scale-95"
-                                    >
-                                        🔎 Apply Filters
-                                    </button>
+                                {/* Action Buttons */}
+                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
                                     <button
                                         onClick={() => {
                                             setSearch('');
@@ -361,9 +379,16 @@ const AuditLogsPage: React.FC = () => {
                                             setEndDate(undefined);
                                             setPage(1);
                                         }}
-                                        className="px-6 py-3 bg-gradient-to-r from-slate-600 to-gray-600 text-white rounded-xl font-bold hover:from-slate-700 hover:to-gray-700 transition-all shadow-md hover:shadow-lg active:scale-95"
+                                        className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
                                     >
-                                        🔄 Reset Filters
+                                        Reset
+                                    </button>
+                                    <button
+                                        onClick={() => { setPage(1); load(); }}
+                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm flex items-center gap-2"
+                                    >
+                                        <LucideIcons.Filter className="w-4 h-4" />
+                                        Apply Filters
                                     </button>
                                 </div>
                             </div>
@@ -381,57 +406,70 @@ const AuditLogsPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Desktop Table - Fixed table layout */}
-                            <div className="hidden md:block overflow-x-auto" style={{
-                                scrollbarWidth: 'none',
-                                msOverflowStyle: 'none'
-                            }}>
+                            {/* Desktop Table - Fixed header with scrollable body and invisible scrollbar */}
+                            <div className="hidden md:block">
                                 <style>{`
-                                  .audit-table-scroll::-webkit-scrollbar {
-                                    display: none;
-                                  }
+                                    .hide-scrollbar {
+                                        scrollbar-width: none;
+                                        -ms-overflow-style: none;
+                                    }
+                                    .hide-scrollbar::-webkit-scrollbar {
+                                        display: none;
+                                    }
+                                    .table-fixed-header {
+                                        position: sticky;
+                                        top: 0;
+                                        background-color: #f9fafb;
+                                        z-index: 10;
+                                    }
                                 `}</style>
-                                <table className="min-w-full divide-y divide-gray-200 audit-table-scroll">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 min-w-[150px]" onClick={() => sortToggle('timestamp')}>
-                                                Time {sort === 'timestamp' && (order === 'asc' ? '↑' : '↓')}
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 min-w-[80px]" onClick={() => sortToggle('level')}>
-                                                Level {sort === 'level' && (order === 'asc' ? '↑' : '↓')}
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 min-w-[100px]" onClick={() => sortToggle('user')}>
-                                                User {sort === 'user' && (order === 'asc' ? '↑' : '↓')}
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[80px]">Role</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[120px]">Action</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[100px]">Module</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[100px]">Entity</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[80px]">Entity ID</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[180px]">Message</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[120px]">Service</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[100px]">IP Address</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[200px]">Details</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200 bg-white">
-                                        {isLoading ? (
+                                <div
+                                    ref={scrollContainerRef}
+                                    className="overflow-x-auto overflow-y-auto max-h-[600px] hide-scrollbar"
+                                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                                >
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50 table-fixed-header">
                                             <tr>
-                                                <td colSpan={11} className="px-6 py-16 text-center text-gray-500">
-                                                    Loading audit logs...
-                                                </td>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 min-w-[150px]" onClick={() => sortToggle('timestamp')}>
+                                                    Time {sort === 'timestamp' && (order === 'asc' ? '↑' : '↓')}
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 min-w-[80px]" onClick={() => sortToggle('level')}>
+                                                    Level {sort === 'level' && (order === 'asc' ? '↑' : '↓')}
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 min-w-[100px]" onClick={() => sortToggle('user')}>
+                                                    User {sort === 'user' && (order === 'asc' ? '↑' : '↓')}
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[80px]">Role</th>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[120px]">Action</th>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[100px]">Module</th>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[100px]">Entity</th>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[80px]">Entity ID</th>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[180px]">Message</th>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[120px]">Service</th>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[100px]">IP Address</th>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[200px]">Details</th>
                                             </tr>
-                                        ) : logs.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={11} className="px-6 py-16 text-center text-gray-500">
-                                                    No matching audit logs found
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            logs.map(log => <DesktopRow key={log.id} log={log} />)
-                                        )}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-200 bg-white">
+                                            {isLoading ? (
+                                                <tr>
+                                                    <td colSpan={12} className="px-6 py-16 text-center text-gray-500">
+                                                        Loading audit logs...
+                                                    </td>
+                                                </tr>
+                                            ) : logs.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={12} className="px-6 py-16 text-center text-gray-500">
+                                                        No matching audit logs found
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                logs.map(log => <DesktopRow key={log.id} log={log} />)
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
 
                             {/* Mobile Cards */}
@@ -515,7 +553,15 @@ const DetailPreview: React.FC<{ details?: any }> = ({ details }) => {
     const truncated = formatted.length > 300 ? `${formatted.slice(0, 300)}…` : formatted;
 
     return (
-        <div className="text-sm text-gray-700 max-h-52 overflow-auto bg-gray-50 p-3 rounded border border-gray-200 font-sans">
+        <div className="text-sm text-gray-700 max-h-52 overflow-auto bg-gray-50 p-3 rounded border border-gray-200 font-sans hide-scrollbar" style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
+        }}>
+            <style>{`
+                .hide-scrollbar::-webkit-scrollbar {
+                    display: none;
+                }
+            `}</style>
             {truncated.split('\n').map((line, i) => (
                 <div key={i} className="whitespace-pre-wrap break-words text-xs leading-relaxed">
                     {line}
