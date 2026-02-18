@@ -42,6 +42,7 @@ interface Task {
   logs: TimeLog[];
   taskType?: 'team' | 'individual' | 'work' | 'self' | 'department';
   memberCount?: number;
+  teamMembers?: Array<{ employeeId: string; name: string; email: string }>;
 }
 
 const Tasks: React.FC = () => {
@@ -195,6 +196,7 @@ const Tasks: React.FC = () => {
       logs: Array.isArray(item.logs) ? item.logs : [],
       taskType: taskType,
       memberCount: item.totalTasksCreated || 0,
+      teamMembers: Array.isArray(item.teamMembers) ? item.teamMembers : [],
     };
   };
 
@@ -722,7 +724,7 @@ const Tasks: React.FC = () => {
         <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
           <span className="font-medium text-gray-700">{task.project}</span>
           <div className="flex items-center gap-2">
-            {task.memberCount && task.memberCount > 0 && (task.taskType === 'team' || task.taskType === 'department' || task.taskType === 'individual') && (
+            {task.memberCount && task.memberCount > 0 && (
               <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded">
                 <Users size={12} />
                 <span className="font-medium">{task.memberCount}</span>
@@ -814,7 +816,7 @@ const Tasks: React.FC = () => {
                           <User size={12} />
                           {task.assignee || 'Unassigned'}
                         </span>
-                        {task.memberCount && task.memberCount > 0 && (task.taskType === 'team' || task.taskType === 'department' || task.taskType === 'individual') && (
+                        {task.memberCount && task.memberCount > 0 && (
                           <>
                             <span>•</span>
                             <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">
@@ -1297,7 +1299,7 @@ const Tasks: React.FC = () => {
                                 <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
                                   <span className="font-medium text-gray-700">{task.project}</span>
                                   <div className="flex items-center gap-2">
-                                    {task.memberCount && task.memberCount > 0 && (task.taskType === 'team' || task.taskType === 'department' || task.taskType === 'individual') && (
+                                    {task.memberCount && task.memberCount > 0 && (
                                       <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded">
                                         <Users size={12} />
                                         <span className="font-medium">{task.memberCount}</span>
@@ -1540,6 +1542,7 @@ const Tasks: React.FC = () => {
                                     self: prev.self.filter(t => t.id !== selectedTask.id),
                                     team: prev.team.filter(t => t.id !== selectedTask.id),
                                     individual: prev.individual.filter(t => t.id !== selectedTask.id),
+                                    department: prev.department.filter(t => t.id !== selectedTask.id),
                                   }));
                                   setSelectedTask(null);
                                 } catch (err: any) {
@@ -1553,6 +1556,25 @@ const Tasks: React.FC = () => {
                             <Trash2 size={16} />
                             <span>Delete Task</span>
                           </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedTask.teamMembers && selectedTask.teamMembers.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-gray-900 mb-3 md:mb-4">Team Members</h3>
+                        <div className="space-y-2">
+                          {selectedTask.teamMembers.map((member, idx) => (
+                            <div key={idx} className="bg-gray-50 p-3 rounded-lg">
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <div className="font-medium text-sm text-gray-900">{member.name}</div>
+                                  <div className="text-xs text-gray-600 mt-1">{member.employeeId}</div>
+                                  <div className="text-xs text-gray-600">{member.email}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
