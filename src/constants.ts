@@ -67,7 +67,7 @@ export const PROJECTS = [
     id: 2,
     title: "Prabhas Cine Universe",
     category: "Cinema & OTT Ecosystem",
-    image: "/bf038ade-7ce0-46b2-a7a4-517a629e2efb.png",
+    image: "https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?q=80&w=1200&auto=format&fit=crop",
 
     description:
       "A premium cinematic ecosystem offering film education, OTT services, industry union systems, and movie performance analytics."

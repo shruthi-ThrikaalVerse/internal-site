@@ -340,9 +340,8 @@ const Navbar = () => {
 
                   {/* More dropdown for remaining items */}
                   <div className="relative group">
-                    <motion.button
-                      className="relative px-3 py-2 text-sm font-medium tracking-wide rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all duration-300 flex items-center gap-1"
-                      whileHover={{ scale: 1.05 }}
+                    <div
+                      className="relative px-3 py-2 text-sm font-medium tracking-wide rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all duration-300 flex items-center gap-1 cursor-pointer"
                     >
                       <span>More</span>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -362,7 +361,7 @@ const Navbar = () => {
                           </button>
                         ))}
                       </div>
-                    </motion.button>
+                    </div>
                   </div>
                 </div>
 
