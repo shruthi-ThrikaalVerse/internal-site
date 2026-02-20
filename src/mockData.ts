@@ -40,12 +40,6 @@ export const mockActivities: RecentActivity[] = [
   { id: '5', type: 'checkout', employeeName: 'Vikram Singh', time: '05:30 PM', details: 'Checked out from Office' },
 ];
 
-export const mockPendingApprovals: PendingApproval[] = [
-  { id: 'ap1', type: 'leave', employeeName: 'Ananya Iyer', details: 'Casual Leave (2 days)', date: '2024-05-15', status: 'pending' },
-  { id: 'ap2', type: 'expense', employeeName: 'Siddharth Verma', details: 'Client Dinner Reimbursment (₹2,500)', date: '2024-05-14', status: 'pending' },
-  { id: 'ap3', type: 'overtime', employeeName: 'Kavita Nair', details: 'Night Shift Bonus (4 hrs)', date: '2024-05-13', status: 'pending' },
-];
-
 export const mockDepartmentHeadcount: DepartmentHeadcount[] = [
   { department: 'Engineering', count: 120, color: '#3b82f6' },
   { department: 'Sales', count: 85, color: '#22c55e' },
@@ -117,45 +111,6 @@ export const mockAttendanceRecords: AttendanceRecord[] = mockEmployees.slice(0, 
   status: idx % 3 === 0 ? 'late' : 'present',
   location: emp.location
 }));
-
-export const mockLeaveRequests: LeaveRequest[] = [
-  {
-    id: 'lr1',
-    employeeId: 'emp-6',
-    employeeName: 'Ananya Iyer',
-    leaveType: 'casual',
-    startDate: '2024-05-15',
-    endDate: '2024-05-16',
-    days: 2,
-    reason: 'Family function in hometown',
-    status: 'approved',
-    appliedDate: '2024-05-15'
-  },
-  {
-    id: 'lr2',
-    employeeId: 'emp-8',
-    employeeName: 'Kavita Nair',
-    leaveType: 'sick',
-    startDate: '2024-05-14',
-    endDate: '2024-05-15',
-    days: 1,
-    reason: 'Viral fever',
-    status: 'approved',
-    appliedDate: '2024-05-13'
-  },
-  {
-    id: 'lr3',
-    employeeId: 'emp-10',
-    employeeName: 'Rohan Joshi',
-    leaveType: 'annual',
-    startDate: '2024-06-01',
-    endDate: '2024-06-10',
-    days: 10,
-    reason: 'Summer vacation with family',
-    status: 'pending',
-    appliedDate: '2024-05-12'
-  }
-];
 
 export const mockPerformanceCycles: PerformanceCycle[] = [
   {

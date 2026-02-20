@@ -21,7 +21,6 @@ import {
 } from '../types.ts';
 import {
   mockEmployees as initialEmployees,
-  mockLeaveRequests as initialLeaves,
   mockActivities as initialActivities,
   mockDashboardStats as initialStats,
   mockPayrollRuns as initialPayroll,
@@ -100,7 +99,7 @@ export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const loadData = () => {
     const defaults = {
       employees: initialEmployees || [],
-      leaves: initialLeaves || [],
+      leaves: [],
       activities: initialActivities || [],
       attendance: initialAttendance || [],
       stats: initialStats,
