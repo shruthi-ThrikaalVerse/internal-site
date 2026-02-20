@@ -1800,7 +1800,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                     title="Select employee for review"
                     value={reviewEmployeeId}
                     onChange={(e) => setReviewEmployeeId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
+                    className="text-black w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
                   >
                     <option value="" className="text-black">Select employee</option>
                     <option value={selectedTaskForReview.assignedTo} className="text-gray-900">{selectedTaskForReview.assigneeName}</option>
@@ -1821,7 +1821,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                       return (
                         <select
                           disabled
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900 opacity-50"
+                          className="text-blackw-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900 opacity-50"
                         >
                           <option className="text-gray-900">Error: No team ID found</option>
                         </select>
@@ -1856,7 +1856,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                         title="Select employee for review"
                         value={reviewEmployeeId}
                         onChange={(e) => setReviewEmployeeId(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
+                        className="text-black w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
                       >
                         <option value="" className="text-gray-900">Select employee</option>
                         {memberIds.length === 0 ? (

@@ -844,7 +844,7 @@ const Leave: React.FC = () => {
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">Leave Details</h2>
                 <button
                   onClick={() => setViewingRequest(null)}
-                  className="p-1.5 sm:p-2 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-lg transition-all"
+                  className="text-black p-1.5 sm:p-2 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-lg transition-all"
                   title="Close details"
                   aria-label="Close leave request details"
                 >
@@ -922,7 +922,7 @@ const Leave: React.FC = () => {
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">{editingRequest ? 'Modify Leave Request' : 'Request Time Off'}</h2>
                 <button
                   onClick={() => { setShowApplyModal(false); setEditingRequest(null); setDateError(''); }}
-                  className="p-1.5 sm:p-2 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-lg transition-all"
+                  className="text-black p-1.5 sm:p-2 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-lg transition-all"
                   title="Close form"
                   aria-label="Close leave request form"
                 >
@@ -936,7 +936,7 @@ const Leave: React.FC = () => {
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 sm:mb-3">
                     Leave Category
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <div className="text-black grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                     {leaveTypes.map(type => (
                       <button
                         key={type.id}
