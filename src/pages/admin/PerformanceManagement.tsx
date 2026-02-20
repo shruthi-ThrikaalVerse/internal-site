@@ -989,7 +989,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
   const handleRefreshData = () => {
     loadPerformanceData();
   };
-  
+
   const handleRefreshTasks = async () => {
     try {
       setApiTasksLoading(true);
@@ -1450,16 +1450,16 @@ const EmployeePerformanceDashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Department Performance */}
           <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-lg p-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-blue-600" />
                 <h2 className="text-lg font-semibold text-gray-900">Department-wise Performance</h2>
               </div>
-              <div className="relative">
+              <div className="relative w-full sm:w-56">
                 <select
                   value={selectedDepartment}
                   onChange={(e) => setSelectedDepartment(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm appearance-none shadow-sm text-black"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm appearance-none shadow-sm text-black"
                   title="Select department"
                 >
                   <option value="All">All Departments</option>
@@ -1467,7 +1467,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                     <option key={dept.name} value={dept.name}>{dept.name}</option>
                   ))}
                 </select>
-                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
             </div>
 
@@ -1800,7 +1800,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                     title="Select employee for review"
                     value={reviewEmployeeId}
                     onChange={(e) => setReviewEmployeeId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
+                    className="text-black w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
                   >
                     <option value="" className="text-black">Select employee</option>
                     <option value={selectedTaskForReview.assignedTo} className="text-gray-900">{selectedTaskForReview.assigneeName}</option>
@@ -1821,7 +1821,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                       return (
                         <select
                           disabled
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900 opacity-50"
+                          className="text-blackw-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900 opacity-50"
                         >
                           <option className="text-gray-900">Error: No team ID found</option>
                         </select>
@@ -1856,7 +1856,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                         title="Select employee for review"
                         value={reviewEmployeeId}
                         onChange={(e) => setReviewEmployeeId(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
+                        className="text-black w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
                       >
                         <option value="" className="text-gray-900">Select employee</option>
                         {memberIds.length === 0 ? (
