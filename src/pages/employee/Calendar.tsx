@@ -592,7 +592,7 @@ const Calendar: React.FC = () => {
             <button 
               title="Previous month" 
               onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))} 
-              className="p-1.5 sm:p-2 bg-white rounded-lg sm:rounded-xl hover:bg-slate-50 text-slate-600 transition-all"
+              className="text-black p-1.5 sm:p-2 bg-white rounded-lg sm:rounded-xl hover:bg-slate-50 text-slate-600 transition-all"
             >
               <ChevronLeft size={16} className="sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
             </button>
@@ -602,7 +602,7 @@ const Calendar: React.FC = () => {
                 title="Select month" 
                 value={currentMonth.getMonth()} 
                 onChange={(e) => handleMonthChange(parseInt(e.target.value))} 
-                className="bg-white border-none text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 sm:px-2 py-1 rounded-lg outline-none cursor-pointer flex-1 sm:flex-none"
+                className="text-black bg-white border-none text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 sm:px-2 py-1 rounded-lg outline-none cursor-pointer flex-1 sm:flex-none"
               >
                 {monthNames.map((m, i) => <option key={i} value={i}>{screenSize === 'mobile' ? m.substring(0, 3) : m}</option>)}
               </select>
@@ -610,7 +610,7 @@ const Calendar: React.FC = () => {
                 title="Select year" 
                 value={currentMonth.getFullYear()} 
                 onChange={(e) => handleYearChange(parseInt(e.target.value))} 
-                className="bg-white border-none text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 sm:px-2 py-1 rounded-lg outline-none cursor-pointer flex-1 sm:flex-none"
+                className="text-black bg-white border-none text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 sm:px-2 py-1 rounded-lg outline-none cursor-pointer flex-1 sm:flex-none"
               >
                 {years.map(y => <option key={y} value={y}>{y}</option>)}
               </select>

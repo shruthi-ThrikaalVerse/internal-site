@@ -663,7 +663,7 @@ const Tasks: React.FC = () => {
             <button
               type="button"
               onClick={() => toggleStatusSection(status.id as keyof typeof showStatusSections)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="text-black p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               {showStatusSections[status.id as keyof typeof showStatusSections] ? (
                 <X size={20} />
@@ -1393,7 +1393,7 @@ const Tasks: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setSelectedTask(null)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="text-black p-2 hover:bg-gray-100 rounded-lg transition-colors"
                       title="Close task details"
                       aria-label="Close task details"
                     >
@@ -1648,7 +1648,7 @@ const Tasks: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="text-black p-2 hover:bg-gray-100 rounded-lg transition-colors"
                   title="Close modal"
                   aria-label="Close create task modal"
                 >
@@ -1666,7 +1666,7 @@ const Tasks: React.FC = () => {
                       type="text"
                       required
                       placeholder="Enter task title"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
+                      className="text-black w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
                     />
                   </div>
 
@@ -1679,7 +1679,7 @@ const Tasks: React.FC = () => {
                       rows={4}
                       required
                       placeholder="Describe the task..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm md:text-base"
+                      className="text-black w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm md:text-base"
                     />
                   </div>
                 </div>

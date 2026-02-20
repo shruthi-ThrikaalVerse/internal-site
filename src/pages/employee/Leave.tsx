@@ -9,14 +9,14 @@ import { useLeave } from '../../context/LeaveContext.tsx';
 import { LeaveRequest } from '../../types.ts';
 
 const Leave: React.FC = () => {
-  const { 
-    leaveBalance, 
-    leaveRequests, 
-    setLeaveBalance, 
+  const {
+    leaveBalance,
+    leaveRequests,
+    setLeaveBalance,
     setLeaveRequests,
-    addLeaveRequest, 
-    updateLeaveRequest, 
-    deleteLeaveRequest 
+    addLeaveRequest,
+    updateLeaveRequest,
+    deleteLeaveRequest
   } = useLeave();
 
   const [showApplyModal, setShowApplyModal] = useState(false);
@@ -25,7 +25,7 @@ const Leave: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [dateError, setDateError] = useState('');
   const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
-  const [menuPosition, setMenuPosition] = useState<{top: number, right: number}>({top: 0, right: 0});
+  const [menuPosition, setMenuPosition] = useState<{ top: number, right: number }>({ top: 0, right: 0 });
   const actionMenuRef = useRef<HTMLDivElement>(null);
   const [viewingRequest, setViewingRequest] = useState<LeaveRequest | null>(null);
   const [editingRequest, setEditingRequest] = useState<LeaveRequest | null>(null);
@@ -64,26 +64,26 @@ const Leave: React.FC = () => {
 
   // Stats in the requested order
   const topRowStats = [
-    { 
-      label: 'Total Leaves', 
+    {
+      label: 'Total Leaves',
       value: leaveStats.totalLeaves,
       color: 'bg-blue-100 text-blue-600',
       icon: <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
     },
-    { 
-      label: 'Leaves Available', 
+    {
+      label: 'Leaves Available',
       value: leaveStats.leavesAvailable,
       color: 'bg-green-100 text-green-600',
       icon: <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
     },
-    { 
-      label: 'Leaves Used', 
+    {
+      label: 'Leaves Used',
       value: leaveStats.leavesUsed,
       color: 'bg-indigo-100 text-indigo-600',
       icon: <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
     },
-    { 
-      label: 'Carry Forwarded Leaves', 
+    {
+      label: 'Carry Forwarded Leaves',
       value: leaveStats.carryForwardedLeaves,
       color: 'bg-purple-100 text-purple-600',
       icon: <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -91,26 +91,26 @@ const Leave: React.FC = () => {
   ];
 
   const bottomRowStats = [
-    { 
-      label: 'Total Sick Leaves', 
+    {
+      label: 'Total Sick Leaves',
       value: leaveStats.totalSickLeaves,
       color: 'bg-amber-100 text-amber-600',
       icon: <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
     },
-    { 
-      label: 'Sick Leaves Available', 
+    {
+      label: 'Sick Leaves Available',
       value: leaveStats.sickLeavesAvailable,
       color: 'bg-cyan-100 text-cyan-600',
       icon: <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
     },
-    { 
-      label: 'Sick Leaves Used', 
+    {
+      label: 'Sick Leaves Used',
       value: leaveStats.sickLeavesUsed,
       color: 'bg-orange-100 text-orange-600',
       icon: <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
     },
-    { 
-      label: 'Loss of Pay', 
+    {
+      label: 'Loss of Pay',
       value: leaveStats.lossOfPay,
       color: 'bg-red-100 text-red-600',
       icon: <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -130,14 +130,14 @@ const Leave: React.FC = () => {
   const getMinDate = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     // For sick leave, allow dates up to 60 days in the past
     if (formData.type === 'Sick Leave') {
       const pastDate = new Date();
       pastDate.setDate(today.getDate() - 60);
       return pastDate.toISOString().split('T')[0];
     }
-    
+
     // For other leaves, only allow today or future dates (or editing mode)
     return editingRequest ? undefined : today.toISOString().split('T')[0];
   };
@@ -145,7 +145,7 @@ const Leave: React.FC = () => {
   // Validate dates with different rules for sick leave
   const validateDates = (start: string, end: string): boolean => {
     if (!start || !end) return true;
-    
+
     const startDate = new Date(start);
     const endDate = new Date(end);
     const today = new Date();
@@ -156,16 +156,16 @@ const Leave: React.FC = () => {
       // Allow past dates for sick leave, but not too far in the future
       const maxFutureDate = new Date(today);
       maxFutureDate.setDate(today.getDate() + 30);
-      
+
       if (startDate > maxFutureDate) {
         setDateError('Sick leave cannot be scheduled more than 30 days in advance');
         return false;
       }
-      
+
       // Maximum 60 days in the past for sick leave
       const minPastDate = new Date(today);
       minPastDate.setDate(today.getDate() - 60);
-      
+
       if (startDate < minPastDate) {
         setDateError('Sick leave can only be applied for dates within the last 60 days');
         return false;
@@ -198,7 +198,7 @@ const Leave: React.FC = () => {
   const handleDateChange = (field: 'startDate' | 'endDate', value: string) => {
     const newFormData = { ...formData, [field]: value };
     setFormData(newFormData);
-    
+
     if (newFormData.startDate && newFormData.endDate) {
       validateDates(newFormData.startDate, newFormData.endDate);
     } else {
@@ -207,8 +207,8 @@ const Leave: React.FC = () => {
   };
 
   const handleLeaveTypeChange = (type: string) => {
-    setFormData(prev => ({ 
-      ...prev, 
+    setFormData(prev => ({
+      ...prev,
       type,
       startDate: '', // Reset dates when changing type
       endDate: ''
@@ -227,13 +227,13 @@ const Leave: React.FC = () => {
         toast.error('Please upload PDF, JPEG, or PNG files only');
         return;
       }
-      
+
       // Check file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
         toast.error('File size should be less than 5MB');
         return;
       }
-      
+
       setMedicalFile(file);
       setMedicalFileName(file.name);
     }
@@ -241,66 +241,66 @@ const Leave: React.FC = () => {
 
   // Fetch user's leave requests from backend and map to local LeaveRequest shape
   const fetchMyLeaves = async (statusParam?: string) => {
-  setIsLoadingRequests(true);
-  try {
-    const params: any = {};
+    setIsLoadingRequests(true);
+    try {
+      const params: any = {};
 
-    // ✅ send uppercase to backend (safer)
-    if (statusParam && statusParam !== 'all') {
-      params.status = statusParam.toUpperCase(); // PENDING / APPROVED / REJECTED
+      // ✅ send uppercase to backend (safer)
+      if (statusParam && statusParam !== 'all') {
+        params.status = statusParam.toUpperCase(); // PENDING / APPROVED / REJECTED
+      }
+
+      // ✅ call the real backend URL (same style as apply API)
+      const response = await axios.get('http://localhost:8085/leave-requests/my-leaves', {
+        params,
+        withCredentials: true,
+      });
+
+      console.log("my-leaves response:", response.status, response.data);
+
+      const data = response.data;
+      if (Array.isArray(data)) {
+        const toStatus = (s: any): LeaveRequest['status'] => {
+          const v = String(s || 'pending').toLowerCase();
+          if (v === 'approved') return 'approved';
+          if (v === 'rejected') return 'rejected';
+          return 'pending';
+        };
+
+        const mapped: LeaveRequest[] = data.map((item: any, idx: number) => ({
+          id: item.id || `${Date.now()}-${idx}`,
+          type: item.category || item.type || 'Leave',
+          startDate: item.startDate,
+          endDate: item.endDate,
+          days: calculateDays(item.startDate, item.endDate),
+          status: toStatus(item.status),
+          reason: item.reason || '',
+          appliedDate: item.appliedDate
+            ? String(item.appliedDate).split('T')[0]
+            : new Date().toISOString().split('T')[0],
+          applicant: item.applicant || 'You',
+          medicalCertificate: item.attachment || item.medicalCertificate || undefined,
+        }));
+        setLeaveRequests(mapped);
+      } else {
+        console.error("Unexpected response shape:", data);
+        toast.error('Unexpected response from server');
+      }
+    } catch (err: any) {
+      console.error('Failed fetching leave requests', err);
+
+      // ✅ show backend message if present
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        'Failed to fetch leave requests';
+
+      toast.error(msg);
+    } finally {
+      setIsLoadingRequests(false);
     }
-
-    // ✅ call the real backend URL (same style as apply API)
-    const response = await axios.get('http://localhost:8085/leave-requests/my-leaves', {
-      params,
-      withCredentials: true,
-    });
-
-    console.log("my-leaves response:", response.status, response.data);
-
-    const data = response.data;
-    if (Array.isArray(data)) {
-      const toStatus = (s: any): LeaveRequest['status'] => {
-        const v = String(s || 'pending').toLowerCase();
-        if (v === 'approved') return 'approved';
-        if (v === 'rejected') return 'rejected';
-        return 'pending';
-      };
-
-      const mapped: LeaveRequest[] = data.map((item: any, idx: number) => ({
-        id: item.id || `${Date.now()}-${idx}`,
-        type: item.category || item.type || 'Leave',
-        startDate: item.startDate,
-        endDate: item.endDate,
-        days: calculateDays(item.startDate, item.endDate),
-        status: toStatus(item.status),
-        reason: item.reason || '',
-        appliedDate: item.appliedDate
-          ? String(item.appliedDate).split('T')[0]
-          : new Date().toISOString().split('T')[0],
-        applicant: item.applicant || 'You',
-        medicalCertificate: item.attachment || item.medicalCertificate || undefined,
-      }));
-      setLeaveRequests(mapped);
-    } else {
-      console.error("Unexpected response shape:", data);
-      toast.error('Unexpected response from server');
-    }
-  } catch (err: any) {
-    console.error('Failed fetching leave requests', err);
-
-    // ✅ show backend message if present
-    const msg =
-      err?.response?.data?.message ||
-      err?.response?.data?.error ||
-      err?.message ||
-      'Failed to fetch leave requests';
-
-    toast.error(msg);
-  } finally {
-    setIsLoadingRequests(false);
-  }
-};
+  };
 
 
   // Fetch on mount and whenever filter changes (pass status param when not 'all')
@@ -370,14 +370,14 @@ const Leave: React.FC = () => {
       const endDate = new Date(formData.endDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       // For sick leave extending into the future
       if (endDate > today && !medicalFile) {
         setDateError('Medical certificate is required for ongoing or future sick leave');
         setIsSubmitting(false);
         return;
       }
-      
+
       // For sick leave > 3 days in the past
       const daysDifference = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       if (days > 3 && daysDifference > 0 && !medicalFile) {
@@ -421,10 +421,10 @@ const Leave: React.FC = () => {
 
         // Attach LeaveRequestDTO JSON as a string (not as Blob)
         // Attach LeaveRequestDTO as JSON Blob (Spring Boot compatible)
-          formDataObj.append(
-            "leaveRequestDTO",
-            new Blob([JSON.stringify(payload)], { type: "application/json" })
-          );
+        formDataObj.append(
+          "leaveRequestDTO",
+          new Blob([JSON.stringify(payload)], { type: "application/json" })
+        );
 
 
         // Attach medical file if exists
@@ -457,7 +457,7 @@ const Leave: React.FC = () => {
 
         if (!response.ok) {
           let errorMessage = 'Failed to submit leave request';
-          
+
           try {
             const errorData = await response.json();
             console.error('Error response data:', errorData);
@@ -465,7 +465,7 @@ const Leave: React.FC = () => {
           } catch (parseError) {
             console.error('Failed to parse error response:', parseError);
           }
-          
+
           if (response.status === 401) {
             toast.error('Authentication failed. Please log in again.');
           } else if (response.status === 403) {
@@ -477,7 +477,7 @@ const Leave: React.FC = () => {
           } else {
             toast.error(`${errorMessage} (Status: ${response.status})`);
           }
-          
+
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
@@ -485,13 +485,13 @@ const Leave: React.FC = () => {
         console.log('Response received:', responseData);
       } catch (err: any) {
         console.error('Leave request submission failed', err);
-        
+
         if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
           toast.error('Network error. Please check your connection or try again.');
         } else if (err.message && !err.message.includes('HTTP error')) {
           toast.error(`Failed to submit leave request: ${err.message}`);
         }
-        
+
         setIsSubmitting(false);
         return;
       }
@@ -679,12 +679,12 @@ const Leave: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Scrollable Table Data */}
         <div className="overflow-y-auto max-h-[500px] scrollbar-hide">
           {filteredRequests.map(request => (
-            <div 
-              key={request.id} 
+            <div
+              key={request.id}
               className="grid grid-cols-12 px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50/50 transition-colors border-b border-gray-100 last:border-b-0"
             >
               {/* Type & Reason */}
@@ -704,14 +704,14 @@ const Leave: React.FC = () => {
                   </div>
                 )}
               </div>
-              
+
               {/* Duration */}
               <div className="col-span-2 flex items-center justify-center">
                 <div className="text-xs sm:text-sm font-bold text-gray-900">
                   {request.days} <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase">Days</span>
                 </div>
               </div>
-              
+
               {/* Date Window */}
               <div className="col-span-3">
                 <div className="text-[10px] sm:text-xs font-medium text-gray-700">
@@ -726,7 +726,7 @@ const Leave: React.FC = () => {
                   </div>
                 )}
               </div>
-              
+
               {/* Status */}
               <div className="col-span-1 flex items-center">
                 <div className={`inline-flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${getStatusColor(request.status)}`}>
@@ -736,7 +736,7 @@ const Leave: React.FC = () => {
                   </span>
                 </div>
               </div>
-              
+
               {/* Actions */}
               <div className="col-span-1 flex items-center justify-end">
                 <div className="flex items-center gap-0.5 sm:gap-1">
@@ -760,7 +760,7 @@ const Leave: React.FC = () => {
               </div>
             </div>
           ))}
-          
+
           {/* Empty State */}
           {filteredRequests.length === 0 && (
             <div className="py-16 sm:py-20 text-center text-gray-400 px-4 sm:px-6">
@@ -775,11 +775,11 @@ const Leave: React.FC = () => {
       {activeActionMenu && (
         <>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-40" 
+          <div
+            className="fixed inset-0 z-40"
             onClick={() => setActiveActionMenu(null)}
           />
-          
+
           {/* Dropdown Menu */}
           <div
             ref={actionMenuRef}
@@ -792,7 +792,7 @@ const Leave: React.FC = () => {
             {(() => {
               const request = leaveRequests.find(r => r.id === activeActionMenu);
               if (!request) return null;
-              
+
               return (
                 <>
                   <button
@@ -876,7 +876,7 @@ const Leave: React.FC = () => {
                     <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">Medical Certificate</p>
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-amber-900">Document attached</p>
-                      <button 
+                      <button
                         className="text-xs text-amber-600 font-bold hover:text-amber-800"
                       >
                         View
@@ -942,8 +942,8 @@ const Leave: React.FC = () => {
                         key={type.id}
                         type="button"
                         onClick={() => handleLeaveTypeChange(type.label)}
-                        className={`px-3 py-2 sm:px-4 sm:py-3 border rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${formData.type === type.label
-                          ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm'
+                        className={`text-black px-3 py-2 sm:px-4 sm:py-3 border rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${formData.type === type.label
+                          ? 'text-black border-blue-500 bg-blue-50 text-blue-700 shadow-sm'
                           : 'border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300'
                           }`}
                       >
@@ -1007,7 +1007,7 @@ const Leave: React.FC = () => {
                       value={formData.startDate}
                       onChange={e => handleDateChange('startDate', e.target.value)}
                       min={getMinDate()}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-sm"
+                      className="text-black w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-sm"
                       required
                     />
                     {formData.type === 'Sick Leave' && (
@@ -1024,7 +1024,7 @@ const Leave: React.FC = () => {
                       value={formData.endDate}
                       onChange={e => handleDateChange('endDate', e.target.value)}
                       min={formData.startDate}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-sm"
+                      className="text-black w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-sm"
                       required
                     />
                   </div>
@@ -1079,7 +1079,7 @@ const Leave: React.FC = () => {
                     value={formData.reason}
                     onChange={e => setFormData(prev => ({ ...prev, reason: e.target.value }))}
                     rows={3}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-sm resize-none"
+                    className="text-black w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-sm resize-none"
                     placeholder="Provide details for your manager..."
                     required
                   />
@@ -1173,7 +1173,7 @@ const Leave: React.FC = () => {
           )}
         </div>
       </div>
-      
+
       {/* Add CSS for hiding scrollbar */}
       <style>{`
         .scrollbar-hide {
