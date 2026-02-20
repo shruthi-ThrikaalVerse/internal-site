@@ -419,7 +419,6 @@ const Leave: React.FC = () => {
 
         const formDataObj = new FormData();
 
-        // Attach LeaveRequestDTO JSON as a string (not as Blob)
         // Attach LeaveRequestDTO as JSON Blob (Spring Boot compatible)
         formDataObj.append(
           "leaveRequestDTO",
@@ -568,8 +567,8 @@ const Leave: React.FC = () => {
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Leave Management</h1>
-            <p className="text-gray-600 text-sm mt-1">Request and track your administrative time-off</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-black tracking-tight">Leave Management</h1>
+            <p className="text-black text-sm mt-1">Request and track your administrative time-off</p>
           </div>
           <button
             onClick={() => {
@@ -586,7 +585,7 @@ const Leave: React.FC = () => {
 
         {/* Top Row Stats - The requested 4 sections */}
         <div className="mb-4">
-          <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em] mb-4 ml-1">Leave Overview</h3>
+          <h3 className="text-xs font-black text-black uppercase tracking-[0.3em] mb-4 ml-1">Leave Overview</h3>
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             {topRowStats.map((stat, index) => (
               <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -597,8 +596,8 @@ const Leave: React.FC = () => {
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider truncate">{stat.label}</div>
-                    <div className="text-xl sm:text-2xl font-bold text-gray-900">{stat.value}</div>
+                    <div className="text-[10px] sm:text-xs font-bold text-black uppercase tracking-wider truncate">{stat.label}</div>
+                    <div className="text-xl sm:text-2xl font-bold text-black">{stat.value}</div>
                   </div>
                 </div>
               </div>
@@ -608,7 +607,7 @@ const Leave: React.FC = () => {
 
         {/* Bottom Row Stats - Additional 4 sections */}
         <div className="mb-6 sm:mb-8">
-          <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em] mb-4 ml-1">Sick Leave Details</h3>
+          <h3 className="text-xs font-black text-black uppercase tracking-[0.3em] mb-4 ml-1">Sick Leave Details</h3>
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {bottomRowStats.map((stat, index) => (
               <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -619,8 +618,8 @@ const Leave: React.FC = () => {
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider truncate">{stat.label}</div>
-                    <div className="text-xl sm:text-2xl font-bold text-gray-900">{stat.value}</div>
+                    <div className="text-[10px] sm:text-xs font-bold text-black uppercase tracking-wider truncate">{stat.label}</div>
+                    <div className="text-xl sm:text-2xl font-bold text-black">{stat.value}</div>
                   </div>
                 </div>
               </div>
@@ -633,7 +632,7 @@ const Leave: React.FC = () => {
       <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 mb-4 sm:mb-6 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-            <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
+            <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-black flex-shrink-0" />
             <div className="flex flex-wrap gap-1 sm:gap-2 flex-1">
               {(['all', 'pending', 'approved', 'rejected'] as const).map(status => (
                 <button
@@ -641,7 +640,7 @@ const Leave: React.FC = () => {
                   onClick={() => setFilter(status)}
                   className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${filter === status
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-100'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    : 'bg-gray-100 text-black hover:bg-gray-200'
                     }`}
                 >
                   {status === 'all' ? 'All' : status}
@@ -650,7 +649,7 @@ const Leave: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-end">
-            <button className="p-2 sm:p-2.5 bg-gray-50 text-gray-500 hover:text-blue-600 rounded-lg border border-gray-200 transition-colors" title="Export data" aria-label="Export leave data">
+            <button className="p-2 sm:p-2.5 bg-gray-50 text-black hover:text-blue-600 rounded-lg border border-gray-200 transition-colors" title="Export data" aria-label="Export leave data">
               <Download className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
@@ -663,19 +662,19 @@ const Leave: React.FC = () => {
         <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
           <div className="grid grid-cols-12 bg-gray-50/50 px-4 sm:px-6 py-3 sm:py-4">
             <div className="col-span-5">
-              <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Type & Reason</div>
+              <div className="text-[9px] sm:text-[10px] font-black text-black uppercase tracking-widest">Type & Reason</div>
             </div>
             <div className="col-span-2 text-center">
-              <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Duration</div>
+              <div className="text-[9px] sm:text-[10px] font-black text-black uppercase tracking-widest">Duration</div>
             </div>
             <div className="col-span-3">
-              <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Date Window</div>
+              <div className="text-[9px] sm:text-[10px] font-black text-black uppercase tracking-widest">Date Window</div>
             </div>
             <div className="col-span-1">
-              <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</div>
+              <div className="text-[9px] sm:text-[10px] font-black text-black uppercase tracking-widest">Status</div>
             </div>
             <div className="col-span-1 text-right">
-              <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</div>
+              <div className="text-[9px] sm:text-[10px] font-black text-black uppercase tracking-widest">Actions</div>
             </div>
           </div>
         </div>
@@ -689,12 +688,12 @@ const Leave: React.FC = () => {
             >
               {/* Type & Reason */}
               <div className="col-span-5">
-                <div className="font-bold text-gray-900 text-xs sm:text-sm">{request.type}</div>
-                <div className="text-[10px] sm:text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                  <User className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                <div className="font-bold text-black text-xs sm:text-sm">{request.type}</div>
+                <div className="text-[10px] sm:text-xs text-black mt-0.5 flex items-center gap-1">
+                  <User className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-black" />
                   {request.applicant}
                 </div>
-                <div className="text-[10px] sm:text-xs text-gray-600 mt-1 sm:mt-2 bg-gray-100 px-2 py-1 rounded inline-block truncate max-w-full">
+                <div className="text-[10px] sm:text-xs text-black bg-gray-100 px-2 py-1 rounded inline-block truncate max-w-full">
                   "{request.reason}"
                 </div>
                 {request.type === 'Sick Leave' && request.medicalCertificate && (
@@ -707,17 +706,17 @@ const Leave: React.FC = () => {
 
               {/* Duration */}
               <div className="col-span-2 flex items-center justify-center">
-                <div className="text-xs sm:text-sm font-bold text-gray-900">
-                  {request.days} <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase">Days</span>
+                <div className="text-xs sm:text-sm font-bold text-black">
+                  {request.days} <span className="text-[9px] sm:text-[10px] text-black uppercase">Days</span>
                 </div>
               </div>
 
               {/* Date Window */}
               <div className="col-span-3">
-                <div className="text-[10px] sm:text-xs font-medium text-gray-700">
+                <div className="text-[10px] sm:text-xs font-medium text-black">
                   {formatDate(request.startDate)} - {formatDate(request.endDate)}
                 </div>
-                <div className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
+                <div className="text-[8px] sm:text-[9px] font-black text-black uppercase tracking-widest mt-0.5">
                   Applied: {formatDate(request.appliedDate)}
                 </div>
                 {request.type === 'Sick Leave' && new Date(request.startDate) < new Date() && (
@@ -750,7 +749,7 @@ const Leave: React.FC = () => {
                       });
                       setActiveActionMenu(activeActionMenu === request.id ? null : request.id);
                     }}
-                    className={`p-1.5 sm:p-2 rounded-lg transition-all ${activeActionMenu === request.id ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-500'}`}
+                    className={`p-1.5 sm:p-2 rounded-lg transition-all ${activeActionMenu === request.id ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-black'}`}
                     title="More actions"
                     aria-label="More actions for this leave request"
                   >
@@ -763,9 +762,9 @@ const Leave: React.FC = () => {
 
           {/* Empty State */}
           {filteredRequests.length === 0 && (
-            <div className="py-16 sm:py-20 text-center text-gray-400 px-4 sm:px-6">
-              <FileText size={32} className="mx-auto opacity-10 mb-3 sm:mb-4" />
-              <p className="text-xs font-black uppercase tracking-widest">No matching leave records found</p>
+            <div className="py-16 sm:py-20 text-center text-black px-4 sm:px-6">
+              <FileText size={32} className="mx-auto opacity-10 mb-3 sm:mb-4 text-black" />
+              <p className="text-xs font-black uppercase tracking-widest text-black">No matching leave records found</p>
             </div>
           )}
         </div>
@@ -797,13 +796,13 @@ const Leave: React.FC = () => {
                 <>
                   <button
                     onClick={() => handleViewDetails(request)}
-                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-black hover:bg-gray-100 flex items-center gap-2"
                   >
                     <Eye size={14} /> View Details
                   </button>
                   <button
                     onClick={() => handleDownloadSummary(request)}
-                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-black hover:bg-gray-100 flex items-center gap-2"
                   >
                     <Download size={14} /> Download
                   </button>
@@ -841,10 +840,10 @@ const Leave: React.FC = () => {
               onClick={e => e.stopPropagation()}
             >
               <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">Leave Details</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-black tracking-tight">Leave Details</h2>
                 <button
                   onClick={() => setViewingRequest(null)}
-                  className="p-1.5 sm:p-2 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-lg transition-all"
+                  className="p-1.5 sm:p-2 hover:bg-rose-50 text-black hover:text-rose-500 rounded-lg transition-all"
                   title="Close details"
                   aria-label="Close leave request details"
                 >
@@ -854,8 +853,8 @@ const Leave: React.FC = () => {
               <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-xl sm:rounded-2xl border border-slate-100">
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Request ID</p>
-                    <p className="text-sm font-bold text-slate-900">REQ-00{viewingRequest.id}</p>
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest">Request ID</p>
+                    <p className="text-sm font-bold text-black">REQ-00{viewingRequest.id}</p>
                   </div>
                   <div className={`px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusColor(viewingRequest.status)}`}>
                     {viewingRequest.status}
@@ -863,19 +862,19 @@ const Leave: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl sm:rounded-2xl">
-                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Category</p>
-                    <p className="text-sm font-bold text-blue-900">{viewingRequest.type}</p>
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest">Category</p>
+                    <p className="text-sm font-bold text-black">{viewingRequest.type}</p>
                   </div>
                   <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl sm:rounded-2xl">
-                    <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Days Consumed</p>
-                    <p className="text-sm font-bold text-indigo-900">{viewingRequest.days} Business Days</p>
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest">Days Consumed</p>
+                    <p className="text-sm font-bold text-black">{viewingRequest.days} Business Days</p>
                   </div>
                 </div>
                 {viewingRequest.type === 'Sick Leave' && viewingRequest.medicalCertificate && (
                   <div className="p-4 bg-amber-50/50 border border-amber-100 rounded-xl sm:rounded-2xl">
-                    <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">Medical Certificate</p>
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1">Medical Certificate</p>
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-amber-900">Document attached</p>
+                      <p className="text-sm font-medium text-black">Document attached</p>
                       <button
                         className="text-xs text-amber-600 font-bold hover:text-amber-800"
                       >
@@ -886,15 +885,15 @@ const Leave: React.FC = () => {
                 )}
                 <div className="space-y-3 sm:space-y-4">
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Time Window</p>
-                    <p className="text-sm font-medium text-slate-700">{formatDate(viewingRequest.startDate)} — {formatDate(viewingRequest.endDate)}</p>
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1">Time Window</p>
+                    <p className="text-sm font-medium text-black">{formatDate(viewingRequest.startDate)} — {formatDate(viewingRequest.endDate)}</p>
                     {viewingRequest.type === 'Sick Leave' && new Date(viewingRequest.startDate) < new Date() && (
                       <p className="text-xs text-amber-600 font-bold mt-1">• Retroactive application (applied after recovery)</p>
                     )}
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Justification</p>
-                    <p className="text-sm text-slate-600 leading-relaxed italic">"{viewingRequest.reason}"</p>
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1">Justification</p>
+                    <p className="text-sm text-black leading-relaxed italic">"{viewingRequest.reason}"</p>
                   </div>
                 </div>
                 <button
@@ -919,10 +918,10 @@ const Leave: React.FC = () => {
               onClick={e => e.stopPropagation()}
             >
               <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">{editingRequest ? 'Modify Leave Request' : 'Request Time Off'}</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-black tracking-tight">{editingRequest ? 'Modify Leave Request' : 'Request Time Off'}</h2>
                 <button
                   onClick={() => { setShowApplyModal(false); setEditingRequest(null); setDateError(''); }}
-                  className="p-1.5 sm:p-2 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-lg transition-all"
+                  className="p-1.5 sm:p-2 hover:bg-rose-50 text-black hover:text-rose-500 rounded-lg transition-all"
                   title="Close form"
                   aria-label="Close leave request form"
                 >
@@ -933,7 +932,7 @@ const Leave: React.FC = () => {
               <form onSubmit={handleSubmit} className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 text-left">
                 {/* Leave Type */}
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 sm:mb-3">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-2 sm:mb-3">
                     Leave Category
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
@@ -942,9 +941,9 @@ const Leave: React.FC = () => {
                         key={type.id}
                         type="button"
                         onClick={() => handleLeaveTypeChange(type.label)}
-                        className={`text-black px-3 py-2 sm:px-4 sm:py-3 border rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${formData.type === type.label
-                          ? 'text-black border-blue-500 bg-blue-50 text-blue-700 shadow-sm'
-                          : 'border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300'
+                        className={`px-3 py-2 sm:px-4 sm:py-3 border rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${formData.type === type.label
+                          ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm'
+                          : 'border-gray-200 bg-gray-50 text-black hover:border-gray-300'
                           }`}
                       >
                         {type.label}
@@ -958,14 +957,14 @@ const Leave: React.FC = () => {
                   <div className="bg-amber-50 border border-amber-200 rounded-xl sm:rounded-2xl p-3 sm:p-4">
                     <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                       <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5 sm:mt-0" />
-                      <div className="text-[10px] sm:text-xs font-bold text-amber-800 uppercase tracking-tight">
+                      <div className="text-[10px] sm:text-xs font-bold text-black uppercase tracking-tight">
                         Medical Certificate Information
                       </div>
                     </div>
-                    <div className="text-[10px] sm:text-xs text-amber-700 leading-relaxed mb-3 sm:mb-4">
+                    <div className="text-[10px] sm:text-xs text-black leading-relaxed mb-3 sm:mb-4">
                       {medicalFile ? (
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-2 sm:p-3 rounded-xl border border-amber-100 gap-2">
-                          <span className="font-medium truncate text-xs">{medicalFileName}</span>
+                          <span className="font-medium truncate text-xs text-black">{medicalFileName}</span>
                           <button
                             type="button"
                             onClick={() => { setMedicalFile(null); setMedicalFileName(''); }}
@@ -978,7 +977,7 @@ const Leave: React.FC = () => {
                         <label className="cursor-pointer">
                           <div className="border-2 border-dashed border-amber-300 rounded-xl p-3 sm:p-4 text-center hover:bg-amber-50 transition-colors">
                             <div className="text-amber-600 font-medium mb-1 text-xs">Click to upload medical certificate</div>
-                            <div className="text-[10px] sm:text-xs text-amber-500">PDF, JPEG, PNG (Max 5MB)</div>
+                            <div className="text-[10px] sm:text-xs text-black">PDF, JPEG, PNG (Max 5MB)</div>
                             <input
                               type="file"
                               className="hidden"
@@ -989,7 +988,7 @@ const Leave: React.FC = () => {
                         </label>
                       )}
                     </div>
-                    <div className="text-[10px] sm:text-xs text-amber-600 bg-white/50 p-2 rounded-lg">
+                    <div className="text-[10px] sm:text-xs text-black bg-white/50 p-2 rounded-lg">
                       <span className="font-bold">Note:</span> Required for sick leave exceeding 3 days or for ongoing/future sick leave
                     </div>
                   </div>
@@ -998,7 +997,7 @@ const Leave: React.FC = () => {
                 {/* Dates */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label htmlFor="startDate" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 sm:mb-2">
+                    <label htmlFor="startDate" className="block text-[10px] font-black text-black uppercase tracking-widest mb-1 sm:mb-2">
                       Start Date
                     </label>
                     <input
@@ -1007,15 +1006,15 @@ const Leave: React.FC = () => {
                       value={formData.startDate}
                       onChange={e => handleDateChange('startDate', e.target.value)}
                       min={getMinDate()}
-                      className="text-black w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-sm"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-black"
                       required
                     />
                     {formData.type === 'Sick Leave' && (
-                      <p className="text-[10px] sm:text-xs text-gray-500 mt-1">For sick leave, you can select dates up to 60 days in the past</p>
+                      <p className="text-[10px] sm:text-xs text-black mt-1">For sick leave, you can select dates up to 60 days in the past</p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="endDate" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 sm:mb-2">
+                    <label htmlFor="endDate" className="block text-[10px] font-black text-black uppercase tracking-widest mb-1 sm:mb-2">
                       End Date
                     </label>
                     <input
@@ -1024,7 +1023,7 @@ const Leave: React.FC = () => {
                       value={formData.endDate}
                       onChange={e => handleDateChange('endDate', e.target.value)}
                       min={formData.startDate}
-                      className="text-black w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-sm"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-black"
                       required
                     />
                   </div>
@@ -1035,7 +1034,7 @@ const Leave: React.FC = () => {
                   <div className="bg-red-50 border border-red-100 rounded-xl p-3 sm:p-4">
                     <div className="flex items-start gap-2 sm:gap-3">
                       <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                      <div className="text-sm font-medium text-red-700">
+                      <div className="text-sm font-medium text-black">
                         {dateError}
                       </div>
                     </div>
@@ -1051,7 +1050,7 @@ const Leave: React.FC = () => {
                       </div>
                       <div>
                         <div className="text-[10px] font-black text-blue-100 uppercase tracking-widest">Duration</div>
-                        <div className="text-xl sm:text-2xl font-black tabular-nums">
+                        <div className="text-xl sm:text-2xl font-black text-white tabular-nums">
                           {calculateDays(formData.startDate, formData.endDate)} Days
                         </div>
                         {formData.type === 'Sick Leave' && new Date(formData.startDate) < new Date() && (
@@ -1063,7 +1062,7 @@ const Leave: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <div className="text-[10px] font-black text-blue-100 uppercase tracking-widest">Impact</div>
-                      <div className="text-sm font-bold opacity-80">
+                      <div className="text-sm font-bold text-white opacity-80">
                         {leaveBalance.available} → {Math.max(0, leaveBalance.available - calculateDays(formData.startDate, formData.endDate))}
                       </div>
                     </div>
@@ -1072,19 +1071,19 @@ const Leave: React.FC = () => {
 
                 {/* Reason */}
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 sm:mb-2">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1 sm:mb-2">
                     Reason
                   </label>
                   <textarea
                     value={formData.reason}
                     onChange={e => setFormData(prev => ({ ...prev, reason: e.target.value }))}
                     rows={3}
-                    className="text-black w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-sm resize-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-black resize-none"
                     placeholder="Provide details for your manager..."
                     required
                   />
                   {formData.type === 'Sick Leave' && (
-                    <p className="text-[10px] sm:text-xs text-gray-500 mt-1">Please mention symptoms and recovery details if applying for past dates</p>
+                    <p className="text-[10px] sm:text-xs text-black mt-1">Please mention symptoms and recovery details if applying for past dates</p>
                   )}
                 </div>
 
@@ -1092,7 +1091,7 @@ const Leave: React.FC = () => {
                 <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 sm:p-4">
                   <div className="flex items-start gap-2 sm:gap-3">
                     <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 mt-0.5" />
-                    <div className="text-[10px] sm:text-[11px] font-bold text-amber-700 leading-relaxed uppercase tracking-tighter">
+                    <div className="text-[10px] sm:text-[11px] font-bold text-black leading-relaxed uppercase tracking-tighter">
                       <p className="mb-1 underline">Policy Reminders</p>
                       <ul className="list-disc list-inside space-y-0.5 opacity-80">
                         <li>3-day advance notice required for annual leave</li>
@@ -1109,7 +1108,7 @@ const Leave: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => { setShowApplyModal(false); setEditingRequest(null); setDateError(''); }}
-                    className="px-4 py-2.5 sm:px-6 sm:py-3 bg-gray-100 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 active:scale-95 transition-all"
+                    className="px-4 py-2.5 sm:px-6 sm:py-3 bg-gray-100 text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 active:scale-95 transition-all"
                   >
                     Discard
                   </button>
@@ -1139,7 +1138,7 @@ const Leave: React.FC = () => {
 
       {/* Upcoming Leaves */}
       <div className="mt-8 sm:mt-12">
-        <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em] mb-4 sm:mb-6 ml-1">Upcoming Authorized Windows</h3>
+        <h3 className="text-xs font-black text-black uppercase tracking-[0.3em] mb-4 sm:mb-6 ml-1">Upcoming Authorized Windows</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {upcomingLeaves.map(request => (
             <div
@@ -1148,27 +1147,27 @@ const Leave: React.FC = () => {
             >
               <div className="absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 bg-blue-50 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12 group-hover:scale-110 transition-transform duration-500"></div>
               <div className="flex items-center justify-between mb-4 sm:mb-6 relative z-10">
-                <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">{request.type}</span>
+                <span className="text-[10px] font-black text-black uppercase tracking-widest">{request.type}</span>
                 <span className="text-[9px] font-black text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 uppercase tracking-widest">
                   Approved
                 </span>
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-gray-900 mb-2 tabular-nums">{request.days} <span className="text-sm font-bold text-gray-400 uppercase">Days</span></div>
-              <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+              <div className="text-2xl sm:text-3xl font-black text-black mb-2 tabular-nums">{request.days} <span className="text-sm font-bold text-black uppercase">Days</span></div>
+              <div className="text-[10px] font-black text-black uppercase tracking-widest">
                 {formatDate(request.startDate)} — {formatDate(request.endDate)}
               </div>
               <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-50 flex items-center gap-2">
                 <ArrowRight size={12} className="text-blue-500" />
-                <div className="text-[9px] font-bold text-gray-400 uppercase truncate" title={request.reason}>
+                <div className="text-[9px] font-bold text-black uppercase truncate" title={request.reason}>
                   {request.reason}
                 </div>
               </div>
             </div>
           ))}
           {upcomingLeaves.length === 0 && (
-            <div className="sm:col-span-2 lg:col-span-3 py-8 sm:py-10 bg-gray-50/50 rounded-xl sm:rounded-[2rem] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400">
-              <Calendar size={24} className="mb-2 opacity-20" />
-              <p className="text-[10px] font-black uppercase tracking-widest">No upcoming leave records detected</p>
+            <div className="sm:col-span-2 lg:col-span-3 py-8 sm:py-10 bg-gray-50/50 rounded-xl sm:rounded-[2rem] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-black">
+              <Calendar size={24} className="mb-2 opacity-20 text-black" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-black">No upcoming leave records detected</p>
             </div>
           )}
         </div>
