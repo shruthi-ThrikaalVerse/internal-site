@@ -24,7 +24,19 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
     try {
       // Use AuthContext login method which handles both token persistence and session verification
-      await auth?.login(email, password);
+      const loggedInUser = await auth?.login(email, password);
+
+      // Prevent non-employee roles from using the employee login page
+      if (loggedInUser && loggedInUser.role && loggedInUser.role !== 'employee') {
+        // Clear session and notify user to use the correct login
+        try { await auth?.logout(); } catch { }
+        toast.error('This account is not an employee. Please use the Admin login page.', {
+          position: 'top-right',
+          autoClose: 4000,
+        });
+        setIsLoading(false);
+        return;
+      }
 
       // Initialize per-user storage buckets
       try {

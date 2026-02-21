@@ -99,7 +99,7 @@ const LoginSelection: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <div 
+            <div
               onClick={handleEmployeeLogin}
               onMouseEnter={() => setHoveredCard('employee')}
               onMouseLeave={() => setHoveredCard(null)}
@@ -121,7 +121,7 @@ const LoginSelection: React.FC = () => {
               />
               <div className="relative bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-2xl p-8 transition-all duration-300 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10">
                 {/* Icon */}
-                <div 
+                <div
                   className="mb-6"
                   style={{
                     transform: hoveredCard === 'employee' ? 'scale(1.1)' : 'scale(1)',
@@ -193,7 +193,7 @@ const LoginSelection: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <div 
+            <div
               onClick={handleAdminLogin}
               onMouseEnter={() => setHoveredCard('admin')}
               onMouseLeave={() => setHoveredCard(null)}
@@ -215,7 +215,7 @@ const LoginSelection: React.FC = () => {
               />
               <div className="relative bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-2xl p-8 transition-all duration-300 hover:border-red-500/50 hover:shadow-xl hover:shadow-red-500/10">
                 {/* Icon */}
-                <div 
+                <div
                   className="mb-6"
                   style={{
                     transform: hoveredCard === 'admin' ? 'scale(1.1)' : 'scale(1)',

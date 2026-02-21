@@ -182,7 +182,7 @@ const AppRouter: React.FC = () => {
                 <section id="projects" className="bg-[var(--bg-secondary)] -mt-10">
                   <Projects />
                 </section>
-                
+
                 <section id="media" className="bg-[var(--bg-primary)]">
                   <Media />
                 </section>
