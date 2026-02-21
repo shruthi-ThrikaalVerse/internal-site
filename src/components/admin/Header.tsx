@@ -58,7 +58,7 @@ const Header: React.FC<{ setOpen: (val: boolean) => void }> = ({ setOpen }) => {
   const displayNotifs = notifTab === 'unread' ? unreadNotifications : readNotifications;
 
   return (
-    <header className="sticky top-0 z-40 bg-transparent border-b h-16 flex items-center justify-between px-4 lg:px-8">
+    <header className="sticky top-0 z-40 bg-white border-b h-16 flex items-center justify-between px-4 lg:px-8">
       <button aria-label="Open menu" onClick={() => setOpen(true)} className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
         <Icon name="Menu" className="w-6 h-6" />
       </button>

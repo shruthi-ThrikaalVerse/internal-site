@@ -1,9 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { useAuth } from '../../context/AuthContext.tsx';
 import { mockDepartmentHeadcount } from '../../mockData.ts';
+import { getPendingLeaveRequests, updateLeaveStatus as updateLeaveStatusAPI } from '../../api/leave.ts';
+import { getNotifications } from '../../api/notifications.ts';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { ParticipationStatus, PayslipData } from '../../types.ts';
 
@@ -42,8 +44,106 @@ const Dashboard: React.FC = () => {
   const [eventFilter, setEventFilter] = useState<'all' | 'mine'>('all');
   const [activityFilter, setActivityFilter] = useState<string>('all');
   const [showActivityFilter, setShowActivityFilter] = useState(false);
+  const [backendPendingLeaves, setBackendPendingLeaves] = useState<any[]>([]);
+  const [isLoadingLeaves, setIsLoadingLeaves] = useState(false);
+  const [backendActivities, setBackendActivities] = useState<any[]>([]);
+  const [isLoadingActivities, setIsLoadingActivities] = useState(false);
 
-  const pendingLeaves = leaves.filter(l => l.status === 'pending');
+  // Fetch pending leaves from backend
+  const fetchPendingLeaves = useCallback(async () => {
+    try {
+      setIsLoadingLeaves(true);
+      const data = await getPendingLeaveRequests();
+      if (Array.isArray(data)) {
+        const mapped = data.map((item: any) => ({
+          id: String(item.leaveId),
+          leaveId: item.leaveId,
+          employeeId: item.employeeId,
+          employeeName: (item.firstName || item.lastName) ? `${item.firstName || ''} ${item.lastName || ''}`.trim() : item.employeeId,
+          leaveType: item.category || item.type || 'Leave',
+          reason: item.reason || '',
+          status: (item.status || 'pending').toString().toLowerCase()
+        }));
+        setBackendPendingLeaves(mapped);
+      } else {
+        setBackendPendingLeaves([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch pending leaves', err);
+      setBackendPendingLeaves([]);
+    } finally {
+      setIsLoadingLeaves(false);
+    }
+  }, []);
+
+  // Fetch activities from backend notifications API
+  const fetchActivities = useCallback(async () => {
+    try {
+      setIsLoadingActivities(true);
+      const data = await getNotifications();
+      if (Array.isArray(data)) {
+        const mapped = data.map((notif: any) => {
+          // Determine activity type based on notification subject/message
+          let type = 'update';
+          const message = (notif.message || notif.subject || '').toLowerCase();
+          if (message.includes('check in') || message.includes('checked in')) type = 'checkin';
+          else if (message.includes('check out') || message.includes('checked out')) type = 'checkout';
+          else if (message.includes('leave') || message.includes('request')) type = 'leave';
+          else if (message.includes('document') || message.includes('upload')) type = 'document';
+          else if (message.includes('profile') || message.includes('update')) type = 'update';
+
+          return {
+            id: String(notif.id || notif.notificationId),
+            type,
+            employeeName: notif.createdBy || notif.employeeName || 'System',
+            time: notif.createdAt ? new Date(notif.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+            details: notif.message || notif.subject || 'Activity update'
+          };
+        });
+        setBackendActivities(mapped.reverse().slice(0, 10)); // Show latest 10 activities
+      } else {
+        setBackendActivities([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch activities', err);
+      setBackendActivities([]);
+    } finally {
+      setIsLoadingActivities(false);
+    }
+  }, []);
+
+  // Fetch pending leaves on component mount
+  useEffect(() => {
+    fetchPendingLeaves();
+    // Set up polling to refresh every 30 seconds
+    const intervalId = setInterval(fetchPendingLeaves, 30000);
+    return () => clearInterval(intervalId);
+  }, [fetchPendingLeaves]);
+
+  // Fetch activities on component mount
+  useEffect(() => {
+    fetchActivities();
+    // Set up polling to refresh every 30 seconds
+    const intervalId = setInterval(fetchActivities, 30000);
+    return () => clearInterval(intervalId);
+  }, [fetchActivities]);
+
+  const handleUpdateLeaveStatus = async (leaveId: string | number, status: 'approved' | 'rejected') => {
+    try {
+      await updateLeaveStatusAPI(leaveId, status);
+      // Remove from list
+      setBackendPendingLeaves(prev => prev.filter(l => l.id !== String(leaveId)));
+      notify(`Leave ${status} successfully`, 'success');
+      // Refresh the list
+      await fetchPendingLeaves();
+    } catch (err: any) {
+      console.error('Failed to update leave status', err);
+      notify(err.message || `Failed to ${status} leave`, 'error');
+    }
+  };
+
+  const pendingLeaves = backendPendingLeaves.length > 0 ? backendPendingLeaves : leaves.filter(l => l.status === 'pending');
+  const displayActivities = backendActivities.length > 0 ? backendActivities : activities;
   const activeCount = employees.filter(e => e.status === 'active').length;
   const inactiveCount = employees.length - activeCount;
 
@@ -80,7 +180,7 @@ const Dashboard: React.FC = () => {
   ];
 
   const filteredActivities = useMemo(() => {
-    let filtered = [...activities];
+    let filtered = [...displayActivities];
 
     if (activityFilter !== 'all') {
       filtered = filtered.filter(activity => activity.type === activityFilter);
@@ -89,7 +189,7 @@ const Dashboard: React.FC = () => {
     return filtered
       .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
       .slice(0, 5);
-  }, [activities, activityFilter]);
+  }, [displayActivities, activityFilter]);
 
   const handleTraceActivity = (type: string, name: string) => {
 
@@ -499,13 +599,13 @@ const Dashboard: React.FC = () => {
                   <p className="text-[11px] text-black mb-4 line-clamp-2 leading-relaxed italic">"{item.reason}"</p>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => updateLeaveStatus(item.id, 'approved')}
+                      onClick={() => handleUpdateLeaveStatus(item.leaveId || item.id, 'approved')}
                       className="flex-1 py-2 bg-indigo-600 text-white text-[10px] font-black rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all uppercase tracking-widest"
                     >
                       Approve
                     </button>
                     <button
-                      onClick={() => updateLeaveStatus(item.id, 'rejected')}
+                      onClick={() => handleUpdateLeaveStatus(item.leaveId || item.id, 'rejected')}
                       className="flex-1 py-2 bg-white border border-slate-200 text-black text-[10px] font-black rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest"
                     >
                       Ignore
