@@ -3,6 +3,7 @@
 // ============= Auth & User Types =============
 export interface User {
   id: string;
+  name?: string;
   fullName?: string;
   firstName?: string;
   lastName?: string;
@@ -18,7 +19,7 @@ export interface User {
   dateOfBirth?: string;
   manager?: string;
   reportingManager?: string;
-  role: 'admin' | 'manager' | 'auditor' | 'employee' | 'hr' | 'Employee' | 'Manager' | 'HR' | 'Admin';
+  role: 'admin' | 'manager' | 'auditor' | 'employee' | 'hr' | 'Employee' | 'Manager' | 'HR' | 'Admin' | 'SUPER_ADMIN' | 'ADMIN';
   userType?: 'Employee' | 'Manager' | 'HR' | 'Admin';
   avatar?: string;
   location?: string;
@@ -382,4 +383,49 @@ export interface AuditLog {
   ipAddress?: string | null;
   serviceName?: string; // user-service, employee-hub-service, etc.
   details?: any; // Extra JSON data
+}
+
+// ============= Projects =============
+export interface Project {
+  id: string;
+  name: string;
+  status: 'in-progress' | 'completed' | 'on-hold' | 'planning' | 'delayed';
+  progress: number;
+  description?: string;
+  team?: string[];
+  startDate?: string;
+  endDate?: string;
+  dueDate?: string;
+  manager?: string;
+  client?: string;
+}
+
+// ============= Super Admin Navigation =============
+export enum AppSection {
+  Dashboard = 'Dashboard',
+  EmployeeHub = 'EmployeeHub',
+  AdminHub = 'AdminHub',
+  AdminRequests = 'AdminRequests',
+  AuditLogs = 'AuditLogs',
+  Payroll = 'Payroll',
+  Projects = 'Projects',
+  Performance = 'Performance',
+  Reviews = 'Reviews',
+  Events = 'Events',
+  PaymentUpdates = 'PaymentUpdates',
+  Notifications = 'Notifications',
+  SystemMaintenance = 'SystemMaintenance',
+  Profile = 'Profile'
+}
+
+export interface AdminRequest {
+  id: string;
+  type: 'Leave' | 'Termination' | 'Promotion' | 'Other';
+  requestedBy: string;
+  requesterId: string;
+  targetId: string;
+  date: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  details: string;
+  metadata?: Record<string, any>;
 }

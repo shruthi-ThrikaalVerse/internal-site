@@ -11,7 +11,7 @@ import {
   AuditLog,
   PerformanceCycle,
   EmployeeDocument
-} from './types.ts';
+} from './types';
 
 const INDIAN_NAMES = [
   "Rajesh Kumar", "Priya Sharma", "Amit Patel", "Sneha Reddy", "Vikram Singh",

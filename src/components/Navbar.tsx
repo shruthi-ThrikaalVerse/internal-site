@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "./ThemeContext.tsx";
+import { useTheme } from "./ThemeContext";
 import thrikaalLogo from '../../public/thrikaal_logo.png';
 
 const Navbar = () => {

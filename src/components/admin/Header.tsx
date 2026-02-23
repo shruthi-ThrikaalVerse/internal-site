@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import GlobalSearch from './GlobalSearch.tsx';
-import Icon from './Icon.tsx';
+import GlobalSearch from './GlobalSearch';
+import Icon from './Icon';
 import { useAuth } from '../../context/AuthContext.tsx';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import * as LucideIcons from 'lucide-react';

@@ -217,6 +217,7 @@ const DatePicker = ({
           required={required}
         />
         <button
+          title="Toggle calendar picker"
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
@@ -230,6 +231,7 @@ const DatePicker = ({
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-4">
             <button
+              title="Go to previous month"
               type="button"
               onClick={() => {
                 if (view === 'days') {
@@ -246,6 +248,7 @@ const DatePicker = ({
             </button>
 
             <button
+              title="Change calendar view"
               type="button"
               onClick={() => {
                 if (view === 'days') {
@@ -270,6 +273,7 @@ const DatePicker = ({
             </button>
 
             <button
+              title="Go to next month"
               type="button"
               onClick={() => {
                 if (view === 'days') {

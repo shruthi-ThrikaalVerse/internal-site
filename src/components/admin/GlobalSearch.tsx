@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { NAV_ITEMS } from '../../constants.ts';
 import { useNavigate } from 'react-router-dom';
-import Icon from './Icon.tsx';
+import Icon from './Icon';
 
 const GlobalSearch: React.FC = () => {
   const { globalSearchTerm, setGlobalSearchTerm, employees, activities } = useHRMS();

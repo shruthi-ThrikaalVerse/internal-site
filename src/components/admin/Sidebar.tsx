@@ -1,13 +1,49 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { NAV_ITEMS } from '../../constants.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
-import Icon from './Icon.tsx';
+import Icon from './Icon';
 
 const Sidebar: React.FC<{ isOpen: boolean; setOpen: (val: boolean) => void }> = ({ isOpen, setOpen }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { logout } = useAuth();
-  const currentPath = location.pathname.replace(/^\/(admin\/)?/, '') || 'admin/dashboard';
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+    navigate('/admin/login');
+  };
+
+  // Map NAV_ITEMS IDs to actual route paths
+  const getRoutePath = (itemId: string) => {
+    const pathMap: Record<string, string> = {
+      'admin/dashboard': '/admin/dashboard',
+      'admin/employees': '/admin/employee-hub',
+      'admin/documents': '/admin/document-management',
+      'admin/attendance': '/admin/attendance-monitor',
+      'admin/leave': '/admin/leave-center',
+      'admin/requests': '/admin/requests',
+      'admin/tasks': '/admin/tasks',
+      'admin/events': '/admin/events',
+      'admin/notifications': '/admin/notifications',
+      'admin/payroll': '/admin/payroll-processing',
+      'admin/payslips': '/admin/payslips',
+      'admin/performance': '/admin/performance-management',
+      'admin/audit-logs': '/admin/audit-logs',
+      'admin/profile': '/admin/profile',
+    };
+    return pathMap[itemId] || `/${itemId}`;
+  };
+
+  // Check if current path matches the item
+  const isActive = (itemId: string) => {
+    const routePath = getRoutePath(itemId);
+    return location.pathname === routePath;
+  };
 
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -21,11 +57,11 @@ const Sidebar: React.FC<{ isOpen: boolean; setOpen: (val: boolean) => void }> = 
           {(NAV_ITEMS || []).map((item) => (
             <Link
               key={item.id}
-              to={`/${item.id}`}
+              to={getRoutePath(item.id)}
               onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 ${currentPath === item.id
-                  ? 'bg-indigo-600 text-white font-semibold shadow-xl shadow-indigo-200'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-indigo-600'
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 ${isActive(item.id)
+                ? 'bg-indigo-600 text-white font-semibold shadow-xl shadow-indigo-200'
+                : 'text-gray-500 hover:bg-gray-50 hover:text-indigo-600'
                 }`}
             >
               <Icon name={item.icon} className="w-5 h-5" />
@@ -36,7 +72,7 @@ const Sidebar: React.FC<{ isOpen: boolean; setOpen: (val: boolean) => void }> = 
 
         <div className="p-4 border-t">
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-rose-500 font-bold text-sm hover:bg-rose-50 transition-all active:scale-95"
           >
             <Icon name="LogOut" className="w-5 h-5" />

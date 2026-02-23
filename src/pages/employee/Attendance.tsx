@@ -772,6 +772,7 @@ const Attendance: React.FC = () => {
                     {isEditingLocation ? (
                       <input
                         type="text"
+                        title="Edit location name"
                         value={customLocationName}
                         onChange={(e) => setCustomLocationName(e.target.value)}
                         className="bg-white border border-blue-200 rounded px-2 py-1 text-xs font-bold w-full focus:ring-2 focus:ring-blue-100 outline-none text-black"

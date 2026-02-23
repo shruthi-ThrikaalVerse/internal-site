@@ -765,7 +765,12 @@ const DocumentManagement: React.FC = () => {
         <div className="space-y-6">
           <div className="flex flex-col gap-2">
             <label className="text-sm font-black text-black">Employee</label>
-            <select value={uploadForm.employeeId} onChange={(e) => setUploadForm(prev => ({ ...prev, employeeId: e.target.value }))} className="w-full p-3 border rounded-xl text-black">
+            <select
+              title="Select employee"
+              value={uploadForm.employeeId}
+              onChange={(e) => setUploadForm(prev => ({ ...prev, employeeId: e.target.value }))}
+              className="w-full p-3 border rounded-xl text-black"
+            >
               <option value="" className="text-black">Select employee</option>
               {employeesList.map(emp => (
                 <option key={emp.employeeId} value={emp.employeeId} className="text-black">{emp.fullName} • {emp.employeeId}</option>
@@ -775,14 +780,24 @@ const DocumentManagement: React.FC = () => {
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-black text-black">Document Type</label>
-            <select value={uploadForm.documentType} onChange={(e) => setUploadForm(prev => ({ ...prev, documentType: e.target.value }))} className="w-full p-3 border rounded-xl text-black">
+            <select
+              title="Select document type"
+              value={uploadForm.documentType}
+              onChange={(e) => setUploadForm(prev => ({ ...prev, documentType: e.target.value }))}
+              className="w-full p-3 border rounded-xl text-black"
+            >
               {docTypes.map(t => <option key={t} value={t} className="text-black">{t}</option>)}
             </select>
           </div>
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-black text-black">File</label>
-            <input type="file" onChange={handleUploadFileSelect} className="text-black" />
+            <input
+              type="file"
+              title="Upload document file"
+              onChange={handleUploadFileSelect}
+              className="text-black"
+            />
           </div>
 
           <div className="flex gap-2 justify-end">
