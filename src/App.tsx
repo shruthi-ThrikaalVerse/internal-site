@@ -5,26 +5,26 @@ import {
   Users, UserPlus, Zap, Settings, HelpCircle, Shield,
   LayoutDashboard, FileText, AlertCircle, DollarSign, GitBranch, BarChart3, Star, Calendar, TrendingUp, Wrench
 } from 'lucide-react';
-import { AppProvider, useApp } from './context/AppContext';
-import { AppSection } from './types';
+import { AppProvider, useApp } from './context/AppContext.js';
+import { AppSection } from './types.js';
 import {
   NAVIGATION_ITEMS, MOCK_LOGS, MOCK_PROJECTS,
   MOCK_PERFORMANCE_METRICS
-} from './constants';
-import { StatCard, SectionHeader } from './components/super_admin/UI';
-import { DashboardView } from './pages/super_admin/DashboardView';
-import { EmployeeHub } from './pages/super_admin/EmployeeHub';
-import { AdminHub } from './pages/super_admin/AdminHub';
-import { AdminRequests } from './pages/super_admin/AdminRequests';
-import { AuditLogsView } from './pages/super_admin/AuditLogsView';
-import { PayrollView } from './pages/super_admin/PayrollView';
-import { ProjectsView } from './pages/super_admin/ProjectsView';
-import { SystemMaintenance } from './pages/super_admin/SystemMaintenance';
-import { ReviewsView } from './pages/super_admin/ReviewsView';
-import { EventsView } from './pages/super_admin/EventsView';
-import { PaymentUpdatesView } from './pages/super_admin/PaymentUpdatesView';
-import { NotificationsView } from './pages/super_admin/NotificationsView';
-import { ProfileView } from './pages/super_admin/ProfileView';
+} from './constants.js';
+import { StatCard, SectionHeader } from './components/super_admin/UI.js';
+import { DashboardView } from './pages/super_admin/DashboardView.js';
+import { EmployeeHub } from './pages/super_admin/EmployeeHub.js';
+import { AdminHub } from './pages/super_admin/AdminHub.js';
+import { AdminRequests } from './pages/super_admin/AdminRequests.js';
+import { AuditLogsView } from './pages/super_admin/AuditLogsView.js';
+import { PayrollView } from './pages/super_admin/PayrollView.js';
+import { ProjectsView } from './pages/super_admin/ProjectsView.js';
+import { SystemMaintenance } from './pages/super_admin/SystemMaintenance.js';
+import { ReviewsView } from './pages/super_admin/ReviewsView.js';
+import { EventsView } from './pages/super_admin/EventsView.js';
+import { PaymentUpdatesView } from './pages/super_admin/PaymentUpdatesView.js';
+import { NotificationsView } from './pages/super_admin/NotificationsView.js';
+import { ProfileView } from './pages/super_admin/ProfileView.js';
 
 // Icon name to component mapper
 const iconMap: Record<string, React.ReactNode> = {

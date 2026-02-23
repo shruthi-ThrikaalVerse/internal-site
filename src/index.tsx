@@ -1,64 +1,64 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import App from './App';
+import App from './App.tsx';
 import './index.css';
-import LoginSelection from './components/LoginSelection';
+import LoginSelection from './components/LoginSelection.tsx';
 
 // Landing page components
-import Navbar from './components/Navbar';
-import Hero3D from './components/Hero3D';
-import About from './components/About';
-import Projects from './components/Projects';
-import Media from './components/Media';
-import career from './components/career';
-import Contact from './components/Contact';
-import Footer from './components/Footer';
-import ScrollToTop from './components/ScrollToTop';
-import { ThemeProvider } from './components/ThemeContext';
+import Navbar from './components/Navbar.tsx';
+import Hero3D from './components/Hero3D.tsx';
+import About from './components/About.tsx';
+import Projects from './components/Projects.tsx';
+import Media from './components/Media.tsx';
+import Career from './components/career.tsx';
+import Contact from './components/Contact.tsx';
+import Footer from './components/Footer.tsx';
+import ScrollToTop from './components/ScrollToTop.tsx';
+import { ThemeProvider } from './components/ThemeContext.tsx';
 
 // Employee login and dashboard
-import EmployeeLogin from './pages/employee/Login';
-import EmployeeDashboard from './pages/employee/Dashboard';
-import EmployeeLayout from './components/employee/Layout';
-import EmployeeAttendance from './pages/employee/Attendance';
-import EmployeeCalendar from './pages/employee/Calendar';
-import EmployeeLeave from './pages/employee/Leave';
-import EmployeePayroll from './pages/employee/Payroll';
-import EmployeeTasks from './pages/employee/Tasks';
-import EmployeePerformance from './pages/employee/Performance';
-import EmployeeDocuments from './pages/employee/Documents';
-import EmployeeRequests from './pages/employee/Requests';
-import EmployeeEvents from './pages/employee/Events';
-import EmployeeNotifications from './pages/employee/Notifications';
-import EmployeeProfile from './pages/employee/Profile';
+import EmployeeLogin from './pages/employee/Login.tsx';
+import EmployeeDashboard from './pages/employee/Dashboard.tsx';
+import EmployeeLayout from './components/employee/Layout.tsx';
+import EmployeeAttendance from './pages/employee/Attendance.tsx';
+import EmployeeCalendar from './pages/employee/Calendar.tsx';
+import EmployeeLeave from './pages/employee/Leave.tsx';
+import EmployeePayroll from './pages/employee/Payroll.tsx';
+import EmployeeTasks from './pages/employee/Tasks.tsx';
+import EmployeePerformance from './pages/employee/Performance.tsx';
+import EmployeeDocuments from './pages/employee/Documents.tsx';
+import EmployeeRequests from './pages/employee/Requests.tsx';
+import EmployeeEvents from './pages/employee/Events.tsx';
+import EmployeeNotifications from './pages/employee/Notifications.tsx';
+import EmployeeProfile from './pages/employee/Profile.tsx';
 
 // Admin login and dashboard
-import AdminLogin from './pages/admin/Login';
-import AdminDashboard from './pages/admin/Dashboard';
-import AdminLayoutWrapper from './components/admin/LayoutWrapper';
-import AdminAttendanceMonitor from './pages/admin/AttendanceMonitor';
-import AdminAuditLogs from './pages/admin/AuditLogs';
-import AdminDocumentManagement from './pages/admin/DocumentManagement';
-import AdminEmployeeHub from './pages/admin/EmployeeHub';
-import AdminEventsAdmin from './pages/admin/EventsAdmin';
-import AdminLeaveCenter from './pages/admin/LeaveCenter';
-import AdminNotificationsAdmin from './pages/admin/NotificationsAdmin';
-import AdminPayrollProcessing from './pages/admin/PayrollProcessing';
-import AdminPayslipsAdmin from './pages/admin/PayslipsAdmin';
-import AdminPerformanceManagement from './pages/admin/PerformanceManagement';
-import AdminProfile from './pages/admin/Profile';
-import AdminRequests from './pages/admin/Requests';
-import AdminTasks from './pages/admin/Tasks';
+import AdminLogin from './pages/admin/Login.tsx';
+import AdminDashboard from './pages/admin/Dashboard.tsx';
+import AdminLayoutWrapper from './components/admin/LayoutWrapper.tsx';
+import AdminAttendanceMonitor from './pages/admin/AttendanceMonitor.tsx';
+import AdminAuditLogs from './pages/admin/AuditLogs.tsx';
+import AdminDocumentManagement from './pages/admin/DocumentManagement.tsx';
+import AdminEmployeeHub from './pages/admin/EmployeeHub.tsx';
+import AdminEventsAdmin from './pages/admin/EventsAdmin.tsx';
+import AdminLeaveCenter from './pages/admin/LeaveCenter.tsx';
+import AdminNotificationsAdmin from './pages/admin/NotificationsAdmin.tsx';
+import AdminPayrollProcessing from './pages/admin/PayrollProcessing.tsx';
+import AdminPayslipsAdmin from './pages/admin/PayslipsAdmin.tsx';
+import AdminPerformanceManagement from './pages/admin/PerformanceManagement.tsx';
+import AdminProfile from './pages/admin/Profile.tsx';
+import AdminRequests from './pages/admin/Requests.tsx';
+import AdminTasks from './pages/admin/Tasks.tsx';
 
 // Super Admin
-import { LoginView as SuperAdminLogin } from './pages/super_admin/LoginView';
+import { LoginView as SuperAdminLogin } from './pages/super_admin/LoginView.tsx';
 
 // Contexts
-import { AppProvider } from './context/AppContext';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { LeaveProvider } from './context/LeaveContext';
-import { HRMSProvider } from './context/HRMSContext';
+import { AppProvider } from './context/AppContext.tsx';
+import { AuthProvider, useAuth } from './context/AuthContext.tsx';
+import { LeaveProvider } from './context/LeaveContext.tsx';
+import { HRMSProvider } from './context/HRMSContext.tsx';
 
 // Landing Page Component
 const LandingPageContent = () => (
@@ -70,7 +70,7 @@ const LandingPageContent = () => (
       <section id="about"><About /></section>
       <section id="projects"><Projects /></section>
       <section id="media"><Media /></section>
-      <section id="career"><career /></section>
+      <section id="career"><Career /></section>
       <section id="contact"><Contact /></section>
     </main>
     <Footer />

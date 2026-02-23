@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '../../context/AppContext.tsx';
+import { useApp } from '../../context/AppContext';
 
 export const LoginView = () => {
   const { setIsAuthenticated, isAuthenticated } = useApp();
@@ -39,6 +39,15 @@ export const LoginView = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0f172a] p-4 sm:p-6">
       <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
+        <div className="mb-4 text-left">
+          <button
+            type="button"
+            onClick={() => navigate('/login-selection')}
+            className="text-sm text-[#9aa8bd] hover:text-[#e6eef8] font-bold flex items-center gap-2"
+          >
+            ← Back
+          </button>
+        </div>
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-[#f37321] rounded-2xl shadow-xl shadow-[#f37321]/20 mb-4 text-white">
             <Shield size={32} />
