@@ -71,14 +71,16 @@ const About = () => {
       <style jsx>{`
         .about-container {
           max-width: 100%;
-          margin-top: 2rem;
+          /* INCREASED TOP MARGIN/PADDING TO PUSH SECTION DOWN */
+          margin-top: 6rem; /* Changed from 2rem to 6rem */
           padding: 0 1rem;
           padding-bottom: 0.5rem;
         }
 
         @media (min-width: 640px) {
           .about-container {
-            margin-top: 1rem;
+            /* INCREASED TABLET TOP MARGIN */
+            margin-top: 8rem; /* Changed from 1rem to 8rem */
             padding: 0 1.5rem;
             padding-bottom: 3rem;
           }
@@ -86,6 +88,8 @@ const About = () => {
 
         @media (min-width: 1024px) {
           .about-container {
+            /* INCREASED DESKTOP TOP MARGIN */
+            margin-top: 10rem; /* Added/Changed from no margin to 10rem */
             padding-bottom: 4rem;
           }
         }

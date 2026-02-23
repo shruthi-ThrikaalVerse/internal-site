@@ -14,12 +14,12 @@ const Media = () => {
 
         <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8">
           <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} className="aspect-video bg-white/5 rounded-xl overflow-hidden relative group hover:shadow-xl transition-shadow duration-500">
-            <img src="RD_team.webp" className="w-full h-full object-cover" alt="Corporate image 1" />
+            <img src={`${import.meta.env.BASE_URL}RD_team.webp`} className="w-full h-full object-cover" alt="Corporate image 1" />
             <div className="absolute bottom-4 left-4"><p className="text-xs font-bold text-white uppercase tracking-widest bg-black/50 px-3 py-2 rounded">Our RD Team</p></div>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="aspect-video bg-white/5 rounded-xl overflow-hidden relative group hover:shadow-xl transition-shadow duration-500">
-            <img src="FD_team.webp" className="w-full h-full object-cover" alt="Corporate image 2" />
+            <img src={`${import.meta.env.BASE_URL}FD_team.webp`} className="w-full h-full object-cover" alt="Corporate image 2" />
             <div className="absolute bottom-4 left-4"><p className="text-xs font-bold text-white uppercase tracking-widest bg-black/50 px-3 py-2 rounded">Our FD Team</p></div>
           </motion.div>
         </div>
