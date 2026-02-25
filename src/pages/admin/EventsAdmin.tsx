@@ -793,9 +793,28 @@ const EventsAdmin: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredEvents.length > 0 ? (
               filteredEvents.map((evt: any) => {
-                const eventGradient = EVENT_GRADIENTS[evt.type] || EVENT_GRADIENTS.company;
-                const eventBadgeStyle = EVENT_BADGE_STYLES[evt.type] || EVENT_BADGE_STYLES.company;
-                const timeBadgeStyle = TIME_BADGE_STYLES[evt.type] || TIME_BADGE_STYLES.company;
+                // normalize fields coming from API
+                const typeKey = (evt.type || evt.category || 'company').toString().toLowerCase();
+                const priorityKey = (evt.priority || 'normal').toString().toLowerCase();
+                const isOnline = evt.isOnline === true || (evt.meetingType && evt.meetingType.toString().toUpperCase() === 'VIRTUAL');
+                // meetingLink from API can be either virtual link or physical location
+                const locationText = (evt.location && evt.location.toString().trim()) || (evt.meetingLink && evt.meetingLink.toString().trim()) || '';
+                const isMeetingUrl = (() => {
+                  try {
+                    if (!locationText) return false;
+                    const u = new URL(locationText);
+                    return u.protocol === 'http:' || u.protocol === 'https:';
+                  } catch (e) {
+                    return false;
+                  }
+                })();
+
+                const eventGradient = EVENT_GRADIENTS[typeKey] || EVENT_GRADIENTS.company;
+                const eventBadgeStyle = EVENT_BADGE_STYLES[typeKey] || EVENT_BADGE_STYLES.company;
+                const timeBadgeStyle = TIME_BADGE_STYLES[typeKey] || TIME_BADGE_STYLES.company;
+
+                const displayType = typeKey; // e.g. 'company'
+                const displayPriority = priorityKey; // e.g. 'normal'
 
                 return (
                   <div
@@ -811,11 +830,9 @@ const EventsAdmin: React.FC = () => {
                     <div className="relative z-10">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-md ${eventBadgeStyle}`}>
-                            {EVENT_EMOJIS[evt.type]} {evt.type}
-                          </span>
-                          <span className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border shadow-md ${PRIORITY_BADGE_STYLES[evt.priority || 'normal']}`}>
-                            {evt.priority || 'normal'}
+                         
+                          <span className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border shadow-md ${PRIORITY_BADGE_STYLES[displayPriority]}`}>
+                            {displayPriority}
                           </span>
                         </div>
 
@@ -857,22 +874,16 @@ const EventsAdmin: React.FC = () => {
                         </div>
 
                         <div className="flex items-center gap-2 p-3 bg-white/60 backdrop-blur-sm border border-white/50 rounded-2xl shadow-sm">
-                          <Icon name={evt.isOnline ? 'Video' : 'MapPin'} className={`w-4 h-4 ${evt.isOnline ? 'text-blue-600' : 'text-emerald-600'}`} />
-                          <p className="text-[10px] font-bold text-slate-800 truncate">{evt.location}</p>
+                          <Icon name={isMeetingUrl ? 'ExternalLink' : 'MapPin'} className={`w-4 h-4 ${isMeetingUrl ? 'text-blue-600' : 'text-emerald-600'}`} />
+                          {isMeetingUrl ? (
+                            <a href={locationText} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-slate-800 underline truncate">
+                              {locationText}
+                            </a>
+                          ) : (
+                            <p className="text-[10px] font-bold text-slate-800 truncate">{locationText || 'Location TBD'}</p>
+                          )}
                         </div>
 
-                        <div className="flex items-center justify-between pt-4 border-t border-white/30">
-                          {evt.participations && evt.participations.length > 0 && (
-                            <div className="flex -space-x-2">
-                              <div className="w-8 h-8 rounded-full border-2 border-white bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-[8px] font-black text-white shadow-md">
-                                +{evt.participations.length}
-                              </div>
-                            </div>
-                          )}
-                          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm ${STATUS_COLORS[evt.status] || STATUS_COLORS.upcoming}`}>
-                            {evt.status}
-                          </span>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -902,18 +913,42 @@ const EventsAdmin: React.FC = () => {
 
               <tbody className="divide-y divide-slate-50/50">
                 {filteredEvents.map((evt: any) => {
-                  const eventColor = EVENT_BADGE_STYLES[evt.type] || EVENT_BADGE_STYLES.company;
+                  const typeKey = (evt.type || evt.category || 'company').toString().toLowerCase();
+                  const priorityKey = (evt.priority || 'normal').toString().toLowerCase();
+                  const isOnline = evt.isOnline === true || (evt.meetingType && evt.meetingType.toString().toUpperCase() === 'VIRTUAL');
+                  const locationText = (evt.location && evt.location.toString().trim()) || (evt.meetingLink && evt.meetingLink.toString().trim()) || '';
+                  const isMeetingUrl = (() => {
+                    try {
+                      if (!locationText) return false;
+                      const u = new URL(locationText);
+                      return u.protocol === 'http:' || u.protocol === 'https:';
+                    } catch (e) {
+                      return false;
+                    }
+                  })();
+                  const eventColor = EVENT_BADGE_STYLES[typeKey] || EVENT_BADGE_STYLES.company;
 
                   return (
                     <tr key={evt.id} className="hover:bg-white/50 transition-colors group">
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-3">
-                          <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shadow-md ${eventColor}`}>{EVENT_EMOJIS[evt.type]}</span>
+                          <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shadow-md ${eventColor}`}>{EVENT_EMOJIS[typeKey] || EVENT_EMOJIS.company}</span>
                           <div>
                             <p className="text-sm font-black text-slate-800">{evt.title}</p>
                             <p className="text-[10px] font-bold text-slate-500 uppercase">
                               {formatDisplayDate(evt.startDate)} • {evt.startTime}
                             </p>
+                            <div className="mt-1 flex items-center gap-2">
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${eventColor}`}>{typeKey}</span>
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${PRIORITY_BADGE_STYLES[priorityKey]}`}>{priorityKey}</span>
+                              {isMeetingUrl ? (
+                                <a href={locationText} target="_blank" rel="noopener noreferrer" className="text-[10px] text-slate-500 underline">
+                                  {locationText}
+                                </a>
+                              ) : (
+                                <span className="text-[10px] text-slate-500">{locationText || ''}</span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
