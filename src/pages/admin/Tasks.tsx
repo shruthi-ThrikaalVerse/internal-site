@@ -212,11 +212,12 @@ const DatePicker = ({
           readOnly
           value={value ? formatDisplayDate(value) : ''}
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700 cursor-pointer caret-transparent shadow-inner"
+          className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-black cursor-pointer caret-transparent shadow-inner"
           placeholder="Select deadline"
           required={required}
         />
         <button
+          title="Toggle calendar picker"
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
@@ -230,6 +231,7 @@ const DatePicker = ({
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-4">
             <button
+              title="Go to previous month"
               type="button"
               onClick={() => {
                 if (view === 'days') {
@@ -246,6 +248,7 @@ const DatePicker = ({
             </button>
 
             <button
+              title="Change calendar view"
               type="button"
               onClick={() => {
                 if (view === 'days') {
@@ -270,6 +273,7 @@ const DatePicker = ({
             </button>
 
             <button
+              title="Go to next month"
               type="button"
               onClick={() => {
                 if (view === 'days') {
@@ -975,7 +979,7 @@ const Tasks: React.FC = () => {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Create Assignment">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Task Title</label>
+            <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Task Title</label>
             <input
               required
               className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-slate-700 shadow-inner"
@@ -986,7 +990,7 @@ const Tasks: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Objective Description</label>
+            <label className="text-[10px] font-black text-black  uppercase tracking-widest ml-1">Objective Description</label>
             <textarea
               className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-slate-700 min-h-[100px] shadow-inner"
               placeholder="Provide specific details, success criteria, and context..."
@@ -996,7 +1000,7 @@ const Tasks: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assignee Selection</label>
+            <label className="text-[10px] font-black text-black  uppercase tracking-widest ml-1">Assignee Selection</label>
             <div className="flex gap-2">
               {(['employee', 'team', 'department'] as const).map(type => (
                 <button
@@ -1012,7 +1016,7 @@ const Tasks: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Entity</label>
+              <label className="text-[10px] font-black text-black  uppercase tracking-widest ml-1">Target Entity</label>
               <select
                 required
                 className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-600 shadow-inner"
@@ -1036,13 +1040,13 @@ const Tasks: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Priority & SLA Level</label>
+              <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Priority & SLA Level</label>
               <div className="grid grid-cols-2 gap-2">
                 {(['p1', 'p2', 'p3', 'p4'] as const).map(p => {
                   const isSelected = newTask.priority === p;
                   const gradientStyle = isSelected
                     ? PRIORITY_BADGE_STYLES[p as keyof typeof PRIORITY_BADGE_STYLES]
-                    : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50 shadow-sm';
+                    : 'bg-white border-slate-100 text-black hover:bg-slate-50 shadow-sm';
 
                   return (
                     <button
@@ -1060,7 +1064,7 @@ const Tasks: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Deadline</label>
+              <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Deadline</label>
               <div className="space-y-2">
                 <DatePicker
                   id="taskDueDate"

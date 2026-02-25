@@ -75,11 +75,11 @@ const Attendance: React.FC = () => {
   const [showCheckoutConfirm, setShowCheckoutConfirm] = useState(false);
 
   // Create user-specific storage key (scoped by user.id)
-  const attendanceStorageKey = useMemo(() => 
+  const attendanceStorageKey = useMemo(() =>
     getUserSpecificKey('attendance_records', auth?.user?.id),
     [auth?.user?.id]
   );
-  const notificationsStorageKey = useMemo(() => 
+  const notificationsStorageKey = useMemo(() =>
     getUserSpecificKey('user_notifications_v1', auth?.user?.id),
     [auth?.user?.id]
   );
@@ -147,11 +147,11 @@ const Attendance: React.FC = () => {
       const absentRecordId = `absent-${dateString}`;
 
       // Skip if record ID already exists, date exists, or if it's a holiday/weekend/working Saturday
-      if (existingIds.has(absentRecordId) || 
-          existingDates.has(dateString) || 
-          isHoliday(dateString) || 
-          isWeekend(date) || 
-          isWorkingSaturday(date)) {
+      if (existingIds.has(absentRecordId) ||
+        existingDates.has(dateString) ||
+        isHoliday(dateString) ||
+        isWeekend(date) ||
+        isWorkingSaturday(date)) {
         continue;
       }
 
@@ -590,11 +590,11 @@ const Attendance: React.FC = () => {
 
     if (idx > -1) {
       records[idx].locationName = customLocationName;
-      
+
       const finalRecords = generateAbsentRecords(records);
       localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
       setAttendanceRecords(finalRecords);
-      
+
       setTodayRecord(records[idx]);
     }
 
@@ -675,10 +675,10 @@ const Attendance: React.FC = () => {
       {/* Header Info */}
       <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 border border-slate-200 rounded-xl shadow-sm">
         <div className="text-center md:text-left">
-          <h1 className="text-2xl font-bold text-slate-900">Attendance Registry</h1>
-          <p className="text-slate-500 text-sm">Professional time-tracking and GPS-verified check-ins.</p>
+          <h1 className="text-2xl font-bold text-black">Attendance Registry</h1>
+          <p className="text-black text-sm">Professional time-tracking and GPS-verified check-ins.</p>
         </div>
-        <div className="mt-4 md:mt-0 px-6 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-700">
+        <div className="mt-4 md:mt-0 px-6 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-black">
           {currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
         </div>
       </div>
@@ -688,10 +688,10 @@ const Attendance: React.FC = () => {
         <div className="lg:col-span-8 space-y-6">
           <div className="bg-white rounded-xl border border-slate-200 p-10 flex flex-col items-center justify-center shadow-sm relative overflow-hidden">
             <div className="text-center">
-              <div className={`mb-6 inline-block px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${isPunchedIn ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+              <div className={`mb-6 inline-block px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${isPunchedIn ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-black'}`}>
                 {isPunchedIn ? 'Currently Checked In' : 'Ready for Check-in'}
               </div>
-              <div className="text-7xl font-black text-slate-900 tabular-nums tracking-tighter">
+              <div className="text-7xl font-black text-black tabular-nums tracking-tighter">
                 {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
               </div>
             </div>
@@ -708,9 +708,9 @@ const Attendance: React.FC = () => {
                 className={`w-full py-6 rounded-xl font-black text-lg transition-all flex items-center justify-center gap-3 shadow-lg active:scale-95 ${isPunchedIn
                   ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white hover:from-rose-600 hover:to-rose-700 shadow-rose-200'
                   : (isHoliday(getTodayString()) || (isWeekend(new Date()) && !isWorkingSaturday(new Date())))
-                    ? 'bg-gradient-to-r from-slate-300 to-slate-400 text-slate-600 cursor-not-allowed shadow-slate-200'
+                    ? 'bg-gradient-to-r from-slate-300 to-slate-400 text-black cursor-not-allowed shadow-slate-200'
                     : todayRecord?.timeOut
-                      ? 'bg-gradient-to-r from-green-300 to-green-400 text-green-700 cursor-not-allowed shadow-green-200'
+                      ? 'bg-gradient-to-r from-green-300 to-green-400 text-black cursor-not-allowed shadow-green-200'
                       : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-blue-200'
                   } disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none`}
               >
@@ -723,17 +723,17 @@ const Attendance: React.FC = () => {
                   </>
                 ) : todayRecord?.timeOut ? (
                   <>
-                    <CheckCircle size={24} className="text-green-600" />
+                    <CheckCircle size={24} className="text-black" />
                     <span>Already Checked Out Today</span>
                   </>
                 ) : isHoliday(getTodayString()) ? (
                   <>
-                    <Calendar size={24} className="text-slate-500" />
+                    <Calendar size={24} className="text-black" />
                     <span>Holiday Today</span>
                   </>
                 ) : (isWeekend(new Date()) && !isWorkingSaturday(new Date())) ? (
                   <>
-                    <Coffee size={24} className="text-slate-500" />
+                    <Coffee size={24} className="text-black" />
                     <span>Week Off</span>
                   </>
                 ) : isWorkingSaturday(new Date()) ? (
@@ -756,9 +756,9 @@ const Attendance: React.FC = () => {
                 ) : isHoliday(getTodayString()) ? (
                   <p className="text-sm text-amber-600 font-medium">Today is a company holiday</p>
                 ) : (isWeekend(new Date()) && !isWorkingSaturday(new Date())) ? (
-                  <p className="text-sm text-slate-600 font-medium">Weekend - no attendance required</p>
+                  <p className="text-sm text-black font-medium">Weekend - no attendance required</p>
                 ) : isWorkingSaturday(new Date()) &&
-                  <p className="text-sm text-orange-600 font-medium">Working Saturday - Check-in enabled</p>
+                <p className="text-sm text-orange-600 font-medium">Working Saturday - Check-in enabled</p>
                 }
               </div>
 
@@ -772,20 +772,19 @@ const Attendance: React.FC = () => {
                     {isEditingLocation ? (
                       <input
                         type="text"
+                        title="Edit location name"
                         value={customLocationName}
                         onChange={(e) => setCustomLocationName(e.target.value)}
-                        className="bg-white border border-blue-200 rounded px-2 py-1 text-xs font-bold w-full focus:ring-2 focus:ring-blue-100 outline-none"
+                        className="bg-white border border-blue-200 rounded px-2 py-1 text-xs font-bold w-full focus:ring-2 focus:ring-blue-100 outline-none text-black"
                         autoFocus
                       />
                     ) : (
                       <div className="truncate">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Logged Location</p>
-                        <p className="text-xs font-bold text-slate-700 truncate">{todayRecord?.locationName || 'Unknown'}</p>
+                        <p className="text-[9px] font-black text-black uppercase tracking-widest">Logged Location</p>
+                        <p className="text-xs font-bold text-black truncate">{todayRecord?.locationName || 'Unknown'}</p>
                       </div>
                     )}
                   </div>
-
-                  
                 </div>
               )}
             </div>
@@ -796,28 +795,28 @@ const Attendance: React.FC = () => {
             <div className="bg-white p-6 border border-slate-200 rounded-xl shadow-sm">
               <div className="flex items-center gap-3 mb-4">
                 <Navigation size={18} className="text-blue-500" />
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">GPS Coordinates</h3>
+                <h3 className="text-[10px] font-black text-black uppercase tracking-widest">GPS Coordinates</h3>
               </div>
-              <p className="text-sm font-bold text-slate-800">
+              <p className="text-sm font-bold text-black">
                 {location ? `${location.lat.toFixed(6)}° N` : 'Detecting...'}
               </p>
-              <p className="text-sm font-bold text-slate-800">
+              <p className="text-sm font-bold text-black">
                 {location ? `${location.lng.toFixed(6)}° E` : 'Please enable location'}
               </p>
             </div>
             <div className="bg-white p-6 border border-slate-200 rounded-xl shadow-sm">
               <div className="flex items-center gap-3 mb-4">
                 <Timer size={18} className="text-blue-500" />
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Logged Work Hours</h3>
+                <h3 className="text-[10px] font-black text-black uppercase tracking-widest">Logged Work Hours</h3>
               </div>
-              <p className="text-3xl font-black text-slate-900 tabular-nums tracking-tight">{workDuration}</p>
+              <p className="text-3xl font-black text-black tabular-nums tracking-tight">{workDuration}</p>
             </div>
           </div>
         </div>
 
         {/* Sidebar Logs */}
         <div className="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
-          <h3 className="font-bold text-slate-900 mb-8 flex items-center gap-3">
+          <h3 className="font-bold text-black mb-8 flex items-center gap-3">
             <Activity size={20} className="text-blue-600" /> Today's Timeline
           </h3>
           <div className="space-y-8 relative">
@@ -828,8 +827,8 @@ const Attendance: React.FC = () => {
                 <ArrowUpRight size={18} />
               </div>
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Check-In Time</p>
-                <p className="text-lg font-bold text-slate-800">
+                <p className="text-[10px] font-black text-black uppercase tracking-widest">Check-In Time</p>
+                <p className="text-lg font-bold text-black">
                   {todayRecord?.timeIn ? new Date(todayRecord.timeIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
                 </p>
               </div>
@@ -840,16 +839,16 @@ const Attendance: React.FC = () => {
                 <ArrowDownLeft size={18} />
               </div>
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Check-Out Time</p>
-                <p className="text-lg font-bold text-slate-800">
+                <p className="text-[10px] font-black text-black uppercase tracking-widest">Check-Out Time</p>
+                <p className="text-lg font-bold text-black">
                   {todayRecord?.timeOut ? new Date(todayRecord.timeOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
                 </p>
               </div>
             </div>
 
             <div className="pt-8 border-t border-slate-50 flex justify-between items-center">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Shift Status</span>
-              <span className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${todayRecord?.status === 'Present' ? 'bg-emerald-100 text-emerald-700' : todayRecord?.status === 'Working Saturday' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-500'}`}>
+              <span className="text-[10px] font-black text-black uppercase tracking-widest">Shift Status</span>
+              <span className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${todayRecord?.status === 'Present' ? 'bg-emerald-100 text-emerald-700' : todayRecord?.status === 'Working Saturday' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-black'}`}>
                 {todayRecord?.status || 'No Session'}
               </span>
             </div>
@@ -865,28 +864,28 @@ const Attendance: React.FC = () => {
               <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Square size={32} className="text-rose-500" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Confirm Check-Out</h3>
-              <p className="text-slate-600 mb-6">
+              <h3 className="text-xl font-bold text-black mb-2">Confirm Check-Out</h3>
+              <p className="text-black mb-6">
                 Are you sure you want to check out now? This will end your current work session.
               </p>
-              
+
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-slate-500">Current Duration:</span>
-                  <span className="text-lg font-bold text-slate-900">{workDuration}</span>
+                  <span className="text-sm font-medium text-black">Current Duration:</span>
+                  <span className="text-lg font-bold text-black">{workDuration}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-500">Check-in Time:</span>
-                  <span className="text-sm font-bold text-slate-800">
+                  <span className="text-sm font-medium text-black">Check-in Time:</span>
+                  <span className="text-sm font-bold text-black">
                     {todayRecord?.timeIn ? new Date(todayRecord.timeIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
                   </span>
                 </div>
               </div>
-              
+
               <div className="flex gap-3">
                 <button
                   onClick={cancelCheckOut}
-                  className="flex-1 py-3 px-4 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors"
+                  className="flex-1 py-3 px-4 border border-slate-300 text-black font-medium rounded-xl hover:bg-slate-50 transition-colors"
                 >
                   Cancel
                 </button>
@@ -908,70 +907,70 @@ const Attendance: React.FC = () => {
         <div className="px-4 sm:px-6 lg:px-8 py-6 border-b border-slate-100 bg-slate-50/30">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-center justify-between w-full md:w-auto">
-              <h2 className="font-bold text-slate-900 text-lg md:text-xl">Historical Registry</h2>
+              <h2 className="font-bold text-black text-lg md:text-xl">Historical Registry</h2>
               <button
                 onClick={clearFilters}
-                className="flex items-center gap-2 text-[10px] font-black text-slate-400 hover:text-blue-600 uppercase tracking-widest transition-colors md:hidden"
+                className="flex items-center gap-2 text-[10px] font-black text-black hover:text-blue-600 uppercase tracking-widest transition-colors md:hidden"
               >
                 <RotateCcw size={12} /> Clear
               </button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
               {/* Status Filter */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</label>
+                <label className="text-[9px] font-black text-black uppercase tracking-widest">Status</label>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                   title="Filter by attendance status"
-                  className="text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 px-3 py-2 rounded-lg outline-none focus:ring-4 focus:ring-blue-100 transition-all w-full"
+                  className="text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 px-3 py-2 rounded-lg outline-none focus:ring-4 focus:ring-blue-100 transition-all w-full text-black"
                 >
-                  <option>All</option>
-                  <option>Present</option>
-                  <option>Late</option>
-                  <option>Absent</option>
-                  <option>Working Saturday</option>
+                  <option className="text-black">All</option>
+                  <option className="text-black">Present</option>
+                  <option className="text-black">Late</option>
+                  <option className="text-black">Absent</option>
+                  <option className="text-black">Working Saturday</option>
                 </select>
               </div>
-              
+
               {/* From Date Input */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">From Date</label>
+                <label className="text-[9px] font-black text-black uppercase tracking-widest">From Date</label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black w-4 h-4 pointer-events-none" />
                   <input
                     type="date"
                     value={startDateFilter}
                     onChange={handleStartDateChange}
                     title="Filter from date"
                     max={maxDate}
-                    className="text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 pl-9 pr-3 py-2 rounded-lg outline-none focus:ring-4 focus:ring-blue-100 transition-all w-full"
+                    className="text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 pl-9 pr-3 py-2 rounded-lg outline-none focus:ring-4 focus:ring-blue-100 transition-all w-full text-black"
                   />
                 </div>
               </div>
-              
+
               {/* To Date Input */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">To Date</label>
+                <label className="text-[9px] font-black text-black uppercase tracking-widest">To Date</label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black w-4 h-4 pointer-events-none" />
                   <input
                     type="date"
                     value={endDateFilter}
                     onChange={handleEndDateChange}
                     title="Filter to date"
                     max={maxDate}
-                    className="text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 pl-9 pr-3 py-2 rounded-lg outline-none focus:ring-4 focus:ring-blue-100 transition-all w-full"
+                    className="text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 pl-9 pr-3 py-2 rounded-lg outline-none focus:ring-4 focus:ring-blue-100 transition-all w-full text-black"
                   />
                 </div>
               </div>
-              
+
               {/* Clear Filters Button (Desktop) */}
               <div className="flex items-end">
                 <button
                   onClick={clearFilters}
-                  className="hidden md:flex items-center gap-2 text-[10px] font-black text-slate-400 hover:text-blue-600 uppercase tracking-widest transition-colors h-10"
+                  className="hidden md:flex items-center gap-2 text-[10px] font-black text-black hover:text-blue-600 uppercase tracking-widest transition-colors h-10"
                 >
                   <RotateCcw size={12} /> Clear Filters
                 </button>
@@ -979,75 +978,75 @@ const Attendance: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Scrollable Records Container */}
         <div className="relative">
           {/* Fixed Table Header */}
           <div className="sticky top-0 z-10 bg-white border-b border-slate-100">
             <div className="grid grid-cols-5 px-4 sm:px-6 lg:px-8 py-4 bg-slate-50/50">
-              <div className="px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</div>
-              <div className="px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Time (In / Out)</div>
-              <div className="px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Location</div>
-              <div className="px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Work Hours</div>
-              <div className="px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Status</div>
+              <div className="px-2 text-[10px] font-black text-black uppercase tracking-widest">Date</div>
+              <div className="px-2 text-[10px] font-black text-black uppercase tracking-widest">Time (In / Out)</div>
+              <div className="px-2 text-[10px] font-black text-black uppercase tracking-widest">Location</div>
+              <div className="px-2 text-[10px] font-black text-black uppercase tracking-widest">Work Hours</div>
+              <div className="px-2 text-[10px] font-black text-black uppercase tracking-widest text-right">Status</div>
             </div>
           </div>
-          
+
           {/* Scrollable Records without scrollbar */}
           <div className="overflow-y-auto max-h-[400px] scrollbar-hide">
             <div className="divide-y divide-slate-100">
               {filteredRecords.map((rec) => {
                 const displayLocation = rec.locationName || 'N/A';
                 const workingHours = rec.workingHours || 0;
-                
+
                 return (
-                  <div 
-                    key={rec.id} 
+                  <div
+                    key={rec.id}
                     className="grid grid-cols-5 px-4 sm:px-6 lg:px-8 py-5 hover:bg-slate-50/50 transition-colors"
                   >
                     {/* Date */}
-                    <div className="px-2 font-bold text-slate-800 text-sm">
+                    <div className="px-2 font-bold text-black text-sm">
                       {new Date(rec.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
-                    
+
                     {/* Time (In / Out) */}
-                    <div className="px-2 text-slate-600 font-medium text-sm">
+                    <div className="px-2 text-black font-medium text-sm">
                       <div className="flex flex-col gap-1">
-                        <span>
+                        <span className="text-black">
                           {rec.timeIn ? new Date(rec.timeIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '--'}
                         </span>
-                        <span className="text-slate-400">-</span>
-                        <span>
+                        <span className="text-black">-</span>
+                        <span className="text-black">
                           {rec.timeOut ? new Date(rec.timeOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '--'}
                         </span>
                       </div>
                     </div>
-                    
+
                     {/* Location */}
                     <div className="px-2">
-                      <div className="flex items-center gap-2 text-slate-500">
+                      <div className="flex items-center gap-2">
                         <MapPin size={12} className="text-blue-500 flex-shrink-0" />
-                        <span 
-                          className="text-xs font-semibold truncate" 
+                        <span
+                          className="text-xs font-semibold text-black truncate"
                           title={displayLocation}
                         >
                           {displayLocation}
                         </span>
                       </div>
                     </div>
-                    
+
                     {/* Work Hours */}
-                    <div className="px-2 font-bold text-slate-700 tabular-nums text-sm">
+                    <div className="px-2 font-bold text-black tabular-nums text-sm">
                       {workingHours > 0 ? `${workingHours.toFixed(2)} hrs` : '--'}
                     </div>
-                    
+
                     {/* Status */}
                     <div className="px-2 text-right">
                       <span className={`inline-flex px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${rec.status === 'Present' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
                         rec.status === 'Late' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
                           rec.status === 'Absent' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
                             rec.status === 'Working Saturday' ? 'bg-orange-50 text-orange-600 border border-orange-100' :
-                              'bg-slate-50 text-slate-600 border border-slate-100'
+                              'bg-slate-50 text-black border border-slate-100'
                         }`}>
                         {rec.status}
                       </span>
@@ -1055,10 +1054,10 @@ const Attendance: React.FC = () => {
                   </div>
                 );
               })}
-              
+
               {/* Empty State */}
               {filteredRecords.length === 0 && (
-                <div className="py-10 text-center text-slate-400 text-xs font-bold uppercase tracking-widest px-4 sm:px-6 lg:px-8">
+                <div className="py-10 text-center text-black text-xs font-bold uppercase tracking-widest px-4 sm:px-6 lg:px-8">
                   No matching logs found
                 </div>
               )}
@@ -1066,7 +1065,7 @@ const Attendance: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Add CSS for hiding scrollbar */}
       <style>{`
         .scrollbar-hide {

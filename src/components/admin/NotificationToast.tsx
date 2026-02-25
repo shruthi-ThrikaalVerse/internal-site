@@ -1,6 +1,6 @@
 import React from 'react';
 import { useHRMS } from '../../context/HRMSContext.tsx';
-import Icon from './Icon.tsx';
+import Icon from './Icon';
 
 const NotificationToast: React.FC = () => {
   const { notifications, dismissNotification } = useHRMS();
@@ -11,13 +11,13 @@ const NotificationToast: React.FC = () => {
         <div
           key={n.id}
           className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border min-w-[300px] animate-in slide-in-from-right-full duration-300 ${n.type === 'success' ? 'bg-white border-green-100' :
-              n.type === 'warning' ? 'bg-white border-yellow-100' :
-                n.type === 'error' ? 'bg-white border-red-100' : 'bg-white border-blue-100'
+            n.type === 'warning' ? 'bg-white border-yellow-100' :
+              n.type === 'error' ? 'bg-white border-red-100' : 'bg-white border-blue-100'
             }`}
         >
           <div className={`p-2 rounded-xl ${n.type === 'success' ? 'bg-green-50 text-green-600' :
-              n.type === 'warning' ? 'bg-yellow-50 text-yellow-600' :
-                n.type === 'error' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
+            n.type === 'warning' ? 'bg-yellow-50 text-yellow-600' :
+              n.type === 'error' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
             }`}>
             <Icon name={
               n.type === 'success' ? 'CheckCircle' :

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import Sidebar from './Sidebar.tsx';
-import Header from './Header.tsx';
-import NotificationToast from './NotificationToast.tsx';
-import ErrorBoundary from './ErrorBoundary.tsx';
+import Sidebar from './Sidebar';
+import Header from './Header';
+import NotificationToast from './NotificationToast';
+import ErrorBoundary from './ErrorBoundary';
 
 const LayoutWrapper: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

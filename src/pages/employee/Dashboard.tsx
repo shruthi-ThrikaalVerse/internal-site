@@ -375,13 +375,13 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="flex gap-3">
             <button
-              onClick={() => navigate('/attendance')}
+              onClick={() => navigate('/employee/attendance')}
               className="px-4 md:px-6 py-2.5 md:py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold flex items-center gap-2 shadow-md shadow-blue-100"
             >
               <CheckCircle className="w-4 h-4 md:w-5 md:h-5" /> Mark Attendance
             </button>
             <button
-              onClick={() => navigate('/leave')}
+              onClick={() => navigate('/employee/leave')}
               className="px-4 md:px-6 py-2.5 md:py-3 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-semibold flex items-center gap-2"
             >
               <Plus className="w-4 h-4 md:w-5 md:h-5" /> Apply Leave
@@ -491,7 +491,7 @@ const Dashboard: React.FC = () => {
               <span>OUT: {todayStatus.checkOut}</span>
             </div>
             <button
-              onClick={() => navigate('/attendance')}
+              onClick={() => navigate('/employee/attendance')}
               className={`w-full py-2 rounded-lg font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 ${statusButton.color}`}
             >
               {statusButton.icon} {statusButton.text}
@@ -569,10 +569,10 @@ const Dashboard: React.FC = () => {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { label: 'Mark Attendance', path: '/attendance', icon: CheckCircle, color: 'bg-blue-100 text-blue-600' },
-              { label: 'Apply Leave', path: '/leave', icon: Plus, color: 'bg-green-100 text-green-600' },
-              { label: 'View Calendar', path: '/calendar', icon: Calendar, color: 'bg-purple-100 text-purple-600' },
-              { label: 'Support', path: '/requests', icon: MessageCircle, color: 'bg-amber-100 text-amber-600' },
+              { label: 'Mark Attendance', path: '/employee/attendance', icon: CheckCircle, color: 'bg-blue-100 text-blue-600' },
+              { label: 'Apply Leave', path: '/employee/leave', icon: Plus, color: 'bg-green-100 text-green-600' },
+              { label: 'View Calendar', path: '/employee/calendar', icon: Calendar, color: 'bg-purple-100 text-purple-600' },
+              { label: 'Support', path: '/employee/requests', icon: MessageCircle, color: 'bg-amber-100 text-amber-600' },
             ].map(action => (
               <button
                 key={action.label}

@@ -9,14 +9,14 @@ import { useLeave } from '../../context/LeaveContext.tsx';
 import { LeaveRequest } from '../../types.ts';
 
 const Leave: React.FC = () => {
-  const { 
-    leaveBalance, 
-    leaveRequests, 
-    setLeaveBalance, 
+  const {
+    leaveBalance,
+    leaveRequests,
+    setLeaveBalance,
     setLeaveRequests,
-    addLeaveRequest, 
-    updateLeaveRequest, 
-    deleteLeaveRequest 
+    addLeaveRequest,
+    updateLeaveRequest,
+    deleteLeaveRequest
   } = useLeave();
 
   const [showApplyModal, setShowApplyModal] = useState(false);
@@ -25,7 +25,7 @@ const Leave: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [dateError, setDateError] = useState('');
   const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
-  const [menuPosition, setMenuPosition] = useState<{top: number, right: number}>({top: 0, right: 0});
+  const [menuPosition, setMenuPosition] = useState<{ top: number, right: number }>({ top: 0, right: 0 });
   const actionMenuRef = useRef<HTMLDivElement>(null);
   const [viewingRequest, setViewingRequest] = useState<LeaveRequest | null>(null);
   const [editingRequest, setEditingRequest] = useState<LeaveRequest | null>(null);
@@ -64,26 +64,26 @@ const Leave: React.FC = () => {
 
   // Stats in the requested order
   const topRowStats = [
-    { 
-      label: 'Total Leaves', 
+    {
+      label: 'Total Leaves',
       value: leaveStats.totalLeaves,
       color: 'bg-blue-100 text-blue-600',
       icon: <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
     },
-    { 
-      label: 'Leaves Available', 
+    {
+      label: 'Leaves Available',
       value: leaveStats.leavesAvailable,
       color: 'bg-green-100 text-green-600',
       icon: <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
     },
-    { 
-      label: 'Leaves Used', 
+    {
+      label: 'Leaves Used',
       value: leaveStats.leavesUsed,
       color: 'bg-indigo-100 text-indigo-600',
       icon: <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
     },
-    { 
-      label: 'Carry Forwarded Leaves', 
+    {
+      label: 'Carry Forwarded Leaves',
       value: leaveStats.carryForwardedLeaves,
       color: 'bg-purple-100 text-purple-600',
       icon: <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -91,26 +91,26 @@ const Leave: React.FC = () => {
   ];
 
   const bottomRowStats = [
-    { 
-      label: 'Total Sick Leaves', 
+    {
+      label: 'Total Sick Leaves',
       value: leaveStats.totalSickLeaves,
       color: 'bg-amber-100 text-amber-600',
       icon: <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
     },
-    { 
-      label: 'Sick Leaves Available', 
+    {
+      label: 'Sick Leaves Available',
       value: leaveStats.sickLeavesAvailable,
       color: 'bg-cyan-100 text-cyan-600',
       icon: <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
     },
-    { 
-      label: 'Sick Leaves Used', 
+    {
+      label: 'Sick Leaves Used',
       value: leaveStats.sickLeavesUsed,
       color: 'bg-orange-100 text-orange-600',
       icon: <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
     },
-    { 
-      label: 'Loss of Pay', 
+    {
+      label: 'Loss of Pay',
       value: leaveStats.lossOfPay,
       color: 'bg-red-100 text-red-600',
       icon: <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -130,14 +130,14 @@ const Leave: React.FC = () => {
   const getMinDate = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     // For sick leave, allow dates up to 60 days in the past
     if (formData.type === 'Sick Leave') {
       const pastDate = new Date();
       pastDate.setDate(today.getDate() - 60);
       return pastDate.toISOString().split('T')[0];
     }
-    
+
     // For other leaves, only allow today or future dates (or editing mode)
     return editingRequest ? undefined : today.toISOString().split('T')[0];
   };
@@ -145,7 +145,7 @@ const Leave: React.FC = () => {
   // Validate dates with different rules for sick leave
   const validateDates = (start: string, end: string): boolean => {
     if (!start || !end) return true;
-    
+
     const startDate = new Date(start);
     const endDate = new Date(end);
     const today = new Date();
@@ -156,16 +156,16 @@ const Leave: React.FC = () => {
       // Allow past dates for sick leave, but not too far in the future
       const maxFutureDate = new Date(today);
       maxFutureDate.setDate(today.getDate() + 30);
-      
+
       if (startDate > maxFutureDate) {
         setDateError('Sick leave cannot be scheduled more than 30 days in advance');
         return false;
       }
-      
+
       // Maximum 60 days in the past for sick leave
       const minPastDate = new Date(today);
       minPastDate.setDate(today.getDate() - 60);
-      
+
       if (startDate < minPastDate) {
         setDateError('Sick leave can only be applied for dates within the last 60 days');
         return false;
@@ -198,7 +198,7 @@ const Leave: React.FC = () => {
   const handleDateChange = (field: 'startDate' | 'endDate', value: string) => {
     const newFormData = { ...formData, [field]: value };
     setFormData(newFormData);
-    
+
     if (newFormData.startDate && newFormData.endDate) {
       validateDates(newFormData.startDate, newFormData.endDate);
     } else {
@@ -207,8 +207,8 @@ const Leave: React.FC = () => {
   };
 
   const handleLeaveTypeChange = (type: string) => {
-    setFormData(prev => ({ 
-      ...prev, 
+    setFormData(prev => ({
+      ...prev,
       type,
       startDate: '', // Reset dates when changing type
       endDate: ''
@@ -227,13 +227,13 @@ const Leave: React.FC = () => {
         toast.error('Please upload PDF, JPEG, or PNG files only');
         return;
       }
-      
+
       // Check file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
         toast.error('File size should be less than 5MB');
         return;
       }
-      
+
       setMedicalFile(file);
       setMedicalFileName(file.name);
     }
@@ -241,66 +241,66 @@ const Leave: React.FC = () => {
 
   // Fetch user's leave requests from backend and map to local LeaveRequest shape
   const fetchMyLeaves = async (statusParam?: string) => {
-  setIsLoadingRequests(true);
-  try {
-    const params: any = {};
+    setIsLoadingRequests(true);
+    try {
+      const params: any = {};
 
-    // ✅ send uppercase to backend (safer)
-    if (statusParam && statusParam !== 'all') {
-      params.status = statusParam.toUpperCase(); // PENDING / APPROVED / REJECTED
+      // ✅ send uppercase to backend (safer)
+      if (statusParam && statusParam !== 'all') {
+        params.status = statusParam.toUpperCase(); // PENDING / APPROVED / REJECTED
+      }
+
+      // ✅ call the real backend URL (same style as apply API)
+      const response = await axios.get('http://localhost:8085/leave-requests/my-leaves', {
+        params,
+        withCredentials: true,
+      });
+
+      console.log("my-leaves response:", response.status, response.data);
+
+      const data = response.data;
+      if (Array.isArray(data)) {
+        const toStatus = (s: any): LeaveRequest['status'] => {
+          const v = String(s || 'pending').toLowerCase();
+          if (v === 'approved') return 'approved';
+          if (v === 'rejected') return 'rejected';
+          return 'pending';
+        };
+
+        const mapped: LeaveRequest[] = data.map((item: any, idx: number) => ({
+          id: item.id || `${Date.now()}-${idx}`,
+          type: item.category || item.type || 'Leave',
+          startDate: item.startDate,
+          endDate: item.endDate,
+          days: calculateDays(item.startDate, item.endDate),
+          status: toStatus(item.status),
+          reason: item.reason || '',
+          appliedDate: item.appliedDate
+            ? String(item.appliedDate).split('T')[0]
+            : new Date().toISOString().split('T')[0],
+          applicant: item.applicant || 'You',
+          medicalCertificate: item.attachment || item.medicalCertificate || undefined,
+        }));
+        setLeaveRequests(mapped);
+      } else {
+        console.error("Unexpected response shape:", data);
+        toast.error('Unexpected response from server');
+      }
+    } catch (err: any) {
+      console.error('Failed fetching leave requests', err);
+
+      // ✅ show backend message if present
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        'Failed to fetch leave requests';
+
+      toast.error(msg);
+    } finally {
+      setIsLoadingRequests(false);
     }
-
-    // ✅ call the real backend URL (same style as apply API)
-    const response = await axios.get('http://localhost:8085/leave-requests/my-leaves', {
-      params,
-      withCredentials: true,
-    });
-
-    console.log("my-leaves response:", response.status, response.data);
-
-    const data = response.data;
-    if (Array.isArray(data)) {
-      const toStatus = (s: any): LeaveRequest['status'] => {
-        const v = String(s || 'pending').toLowerCase();
-        if (v === 'approved') return 'approved';
-        if (v === 'rejected') return 'rejected';
-        return 'pending';
-      };
-
-      const mapped: LeaveRequest[] = data.map((item: any, idx: number) => ({
-        id: item.id || `${Date.now()}-${idx}`,
-        type: item.category || item.type || 'Leave',
-        startDate: item.startDate,
-        endDate: item.endDate,
-        days: calculateDays(item.startDate, item.endDate),
-        status: toStatus(item.status),
-        reason: item.reason || '',
-        appliedDate: item.appliedDate
-          ? String(item.appliedDate).split('T')[0]
-          : new Date().toISOString().split('T')[0],
-        applicant: item.applicant || 'You',
-        medicalCertificate: item.attachment || item.medicalCertificate || undefined,
-      }));
-      setLeaveRequests(mapped);
-    } else {
-      console.error("Unexpected response shape:", data);
-      toast.error('Unexpected response from server');
-    }
-  } catch (err: any) {
-    console.error('Failed fetching leave requests', err);
-
-    // ✅ show backend message if present
-    const msg =
-      err?.response?.data?.message ||
-      err?.response?.data?.error ||
-      err?.message ||
-      'Failed to fetch leave requests';
-
-    toast.error(msg);
-  } finally {
-    setIsLoadingRequests(false);
-  }
-};
+  };
 
 
   // Fetch on mount and whenever filter changes (pass status param when not 'all')
@@ -370,14 +370,14 @@ const Leave: React.FC = () => {
       const endDate = new Date(formData.endDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       // For sick leave extending into the future
       if (endDate > today && !medicalFile) {
         setDateError('Medical certificate is required for ongoing or future sick leave');
         setIsSubmitting(false);
         return;
       }
-      
+
       // For sick leave > 3 days in the past
       const daysDifference = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       if (days > 3 && daysDifference > 0 && !medicalFile) {
@@ -419,12 +419,11 @@ const Leave: React.FC = () => {
 
         const formDataObj = new FormData();
 
-        // Attach LeaveRequestDTO JSON as a string (not as Blob)
         // Attach LeaveRequestDTO as JSON Blob (Spring Boot compatible)
-          formDataObj.append(
-            "leaveRequestDTO",
-            new Blob([JSON.stringify(payload)], { type: "application/json" })
-          );
+        formDataObj.append(
+          "leaveRequestDTO",
+          new Blob([JSON.stringify(payload)], { type: "application/json" })
+        );
 
 
         // Attach medical file if exists
@@ -457,7 +456,7 @@ const Leave: React.FC = () => {
 
         if (!response.ok) {
           let errorMessage = 'Failed to submit leave request';
-          
+
           try {
             const errorData = await response.json();
             console.error('Error response data:', errorData);
@@ -465,7 +464,7 @@ const Leave: React.FC = () => {
           } catch (parseError) {
             console.error('Failed to parse error response:', parseError);
           }
-          
+
           if (response.status === 401) {
             toast.error('Authentication failed. Please log in again.');
           } else if (response.status === 403) {
@@ -477,7 +476,7 @@ const Leave: React.FC = () => {
           } else {
             toast.error(`${errorMessage} (Status: ${response.status})`);
           }
-          
+
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
@@ -485,13 +484,13 @@ const Leave: React.FC = () => {
         console.log('Response received:', responseData);
       } catch (err: any) {
         console.error('Leave request submission failed', err);
-        
+
         if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
           toast.error('Network error. Please check your connection or try again.');
         } else if (err.message && !err.message.includes('HTTP error')) {
           toast.error(`Failed to submit leave request: ${err.message}`);
         }
-        
+
         setIsSubmitting(false);
         return;
       }
@@ -568,8 +567,8 @@ const Leave: React.FC = () => {
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Leave Management</h1>
-            <p className="text-gray-600 text-sm mt-1">Request and track your administrative time-off</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-black tracking-tight">Leave Management</h1>
+            <p className="text-black text-sm mt-1">Request and track your administrative time-off</p>
           </div>
           <button
             onClick={() => {
@@ -586,7 +585,7 @@ const Leave: React.FC = () => {
 
         {/* Top Row Stats - The requested 4 sections */}
         <div className="mb-4">
-          <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em] mb-4 ml-1">Leave Overview</h3>
+          <h3 className="text-xs font-black text-black uppercase tracking-[0.3em] mb-4 ml-1">Leave Overview</h3>
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             {topRowStats.map((stat, index) => (
               <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -597,8 +596,8 @@ const Leave: React.FC = () => {
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider truncate">{stat.label}</div>
-                    <div className="text-xl sm:text-2xl font-bold text-gray-900">{stat.value}</div>
+                    <div className="text-[10px] sm:text-xs font-bold text-black uppercase tracking-wider truncate">{stat.label}</div>
+                    <div className="text-xl sm:text-2xl font-bold text-black">{stat.value}</div>
                   </div>
                 </div>
               </div>
@@ -608,7 +607,7 @@ const Leave: React.FC = () => {
 
         {/* Bottom Row Stats - Additional 4 sections */}
         <div className="mb-6 sm:mb-8">
-          <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em] mb-4 ml-1">Sick Leave Details</h3>
+          <h3 className="text-xs font-black text-black uppercase tracking-[0.3em] mb-4 ml-1">Sick Leave Details</h3>
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {bottomRowStats.map((stat, index) => (
               <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -619,8 +618,8 @@ const Leave: React.FC = () => {
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider truncate">{stat.label}</div>
-                    <div className="text-xl sm:text-2xl font-bold text-gray-900">{stat.value}</div>
+                    <div className="text-[10px] sm:text-xs font-bold text-black uppercase tracking-wider truncate">{stat.label}</div>
+                    <div className="text-xl sm:text-2xl font-bold text-black">{stat.value}</div>
                   </div>
                 </div>
               </div>
@@ -633,7 +632,7 @@ const Leave: React.FC = () => {
       <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 mb-4 sm:mb-6 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-            <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
+            <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-black flex-shrink-0" />
             <div className="flex flex-wrap gap-1 sm:gap-2 flex-1">
               {(['all', 'pending', 'approved', 'rejected'] as const).map(status => (
                 <button
@@ -641,7 +640,7 @@ const Leave: React.FC = () => {
                   onClick={() => setFilter(status)}
                   className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${filter === status
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-100'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    : 'bg-gray-100 text-black hover:bg-gray-200'
                     }`}
                 >
                   {status === 'all' ? 'All' : status}
@@ -650,7 +649,7 @@ const Leave: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-end">
-            <button className="p-2 sm:p-2.5 bg-gray-50 text-gray-500 hover:text-blue-600 rounded-lg border border-gray-200 transition-colors" title="Export data" aria-label="Export leave data">
+            <button className="p-2 sm:p-2.5 bg-gray-50 text-black hover:text-blue-600 rounded-lg border border-gray-200 transition-colors" title="Export data" aria-label="Export leave data">
               <Download className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
@@ -663,38 +662,38 @@ const Leave: React.FC = () => {
         <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
           <div className="grid grid-cols-12 bg-gray-50/50 px-4 sm:px-6 py-3 sm:py-4">
             <div className="col-span-5">
-              <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Type & Reason</div>
+              <div className="text-[9px] sm:text-[10px] font-black text-black uppercase tracking-widest">Type & Reason</div>
             </div>
             <div className="col-span-2 text-center">
-              <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Duration</div>
+              <div className="text-[9px] sm:text-[10px] font-black text-black uppercase tracking-widest">Duration</div>
             </div>
             <div className="col-span-3">
-              <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Date Window</div>
+              <div className="text-[9px] sm:text-[10px] font-black text-black uppercase tracking-widest">Date Window</div>
             </div>
             <div className="col-span-1">
-              <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</div>
+              <div className="text-[9px] sm:text-[10px] font-black text-black uppercase tracking-widest">Status</div>
             </div>
             <div className="col-span-1 text-right">
-              <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</div>
+              <div className="text-[9px] sm:text-[10px] font-black text-black uppercase tracking-widest">Actions</div>
             </div>
           </div>
         </div>
-        
+
         {/* Scrollable Table Data */}
         <div className="overflow-y-auto max-h-[500px] scrollbar-hide">
           {filteredRequests.map(request => (
-            <div 
-              key={request.id} 
+            <div
+              key={request.id}
               className="grid grid-cols-12 px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50/50 transition-colors border-b border-gray-100 last:border-b-0"
             >
               {/* Type & Reason */}
               <div className="col-span-5">
-                <div className="font-bold text-gray-900 text-xs sm:text-sm">{request.type}</div>
-                <div className="text-[10px] sm:text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                  <User className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                <div className="font-bold text-black text-xs sm:text-sm">{request.type}</div>
+                <div className="text-[10px] sm:text-xs text-black mt-0.5 flex items-center gap-1">
+                  <User className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-black" />
                   {request.applicant}
                 </div>
-                <div className="text-[10px] sm:text-xs text-gray-600 mt-1 sm:mt-2 bg-gray-100 px-2 py-1 rounded inline-block truncate max-w-full">
+                <div className="text-[10px] sm:text-xs text-black bg-gray-100 px-2 py-1 rounded inline-block truncate max-w-full">
                   "{request.reason}"
                 </div>
                 {request.type === 'Sick Leave' && request.medicalCertificate && (
@@ -704,20 +703,20 @@ const Leave: React.FC = () => {
                   </div>
                 )}
               </div>
-              
+
               {/* Duration */}
               <div className="col-span-2 flex items-center justify-center">
-                <div className="text-xs sm:text-sm font-bold text-gray-900">
-                  {request.days} <span className="text-[9px] sm:text-[10px] text-gray-400 uppercase">Days</span>
+                <div className="text-xs sm:text-sm font-bold text-black">
+                  {request.days} <span className="text-[9px] sm:text-[10px] text-black uppercase">Days</span>
                 </div>
               </div>
-              
+
               {/* Date Window */}
               <div className="col-span-3">
-                <div className="text-[10px] sm:text-xs font-medium text-gray-700">
+                <div className="text-[10px] sm:text-xs font-medium text-black">
                   {formatDate(request.startDate)} - {formatDate(request.endDate)}
                 </div>
-                <div className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
+                <div className="text-[8px] sm:text-[9px] font-black text-black uppercase tracking-widest mt-0.5">
                   Applied: {formatDate(request.appliedDate)}
                 </div>
                 {request.type === 'Sick Leave' && new Date(request.startDate) < new Date() && (
@@ -726,7 +725,7 @@ const Leave: React.FC = () => {
                   </div>
                 )}
               </div>
-              
+
               {/* Status */}
               <div className="col-span-1 flex items-center">
                 <div className={`inline-flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${getStatusColor(request.status)}`}>
@@ -736,7 +735,7 @@ const Leave: React.FC = () => {
                   </span>
                 </div>
               </div>
-              
+
               {/* Actions */}
               <div className="col-span-1 flex items-center justify-end">
                 <div className="flex items-center gap-0.5 sm:gap-1">
@@ -750,7 +749,7 @@ const Leave: React.FC = () => {
                       });
                       setActiveActionMenu(activeActionMenu === request.id ? null : request.id);
                     }}
-                    className={`p-1.5 sm:p-2 rounded-lg transition-all ${activeActionMenu === request.id ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-500'}`}
+                    className={`p-1.5 sm:p-2 rounded-lg transition-all ${activeActionMenu === request.id ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-black'}`}
                     title="More actions"
                     aria-label="More actions for this leave request"
                   >
@@ -760,12 +759,12 @@ const Leave: React.FC = () => {
               </div>
             </div>
           ))}
-          
+
           {/* Empty State */}
           {filteredRequests.length === 0 && (
-            <div className="py-16 sm:py-20 text-center text-gray-400 px-4 sm:px-6">
-              <FileText size={32} className="mx-auto opacity-10 mb-3 sm:mb-4" />
-              <p className="text-xs font-black uppercase tracking-widest">No matching leave records found</p>
+            <div className="py-16 sm:py-20 text-center text-black px-4 sm:px-6">
+              <FileText size={32} className="mx-auto opacity-10 mb-3 sm:mb-4 text-black" />
+              <p className="text-xs font-black uppercase tracking-widest text-black">No matching leave records found</p>
             </div>
           )}
         </div>
@@ -775,11 +774,11 @@ const Leave: React.FC = () => {
       {activeActionMenu && (
         <>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-40" 
+          <div
+            className="fixed inset-0 z-40"
             onClick={() => setActiveActionMenu(null)}
           />
-          
+
           {/* Dropdown Menu */}
           <div
             ref={actionMenuRef}
@@ -792,18 +791,18 @@ const Leave: React.FC = () => {
             {(() => {
               const request = leaveRequests.find(r => r.id === activeActionMenu);
               if (!request) return null;
-              
+
               return (
                 <>
                   <button
                     onClick={() => handleViewDetails(request)}
-                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-black hover:bg-gray-100 flex items-center gap-2"
                   >
                     <Eye size={14} /> View Details
                   </button>
                   <button
                     onClick={() => handleDownloadSummary(request)}
-                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-black hover:bg-gray-100 flex items-center gap-2"
                   >
                     <Download size={14} /> Download
                   </button>
@@ -841,10 +840,10 @@ const Leave: React.FC = () => {
               onClick={e => e.stopPropagation()}
             >
               <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">Leave Details</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-black tracking-tight">Leave Details</h2>
                 <button
                   onClick={() => setViewingRequest(null)}
-                  className="p-1.5 sm:p-2 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-lg transition-all"
+                  className="text-black p-1.5 sm:p-2 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-lg transition-all"
                   title="Close details"
                   aria-label="Close leave request details"
                 >
@@ -854,8 +853,8 @@ const Leave: React.FC = () => {
               <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-slate-50 rounded-xl sm:rounded-2xl border border-slate-100">
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Request ID</p>
-                    <p className="text-sm font-bold text-slate-900">REQ-00{viewingRequest.id}</p>
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest">Request ID</p>
+                    <p className="text-sm font-bold text-black">REQ-00{viewingRequest.id}</p>
                   </div>
                   <div className={`px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusColor(viewingRequest.status)}`}>
                     {viewingRequest.status}
@@ -863,20 +862,20 @@ const Leave: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl sm:rounded-2xl">
-                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Category</p>
-                    <p className="text-sm font-bold text-blue-900">{viewingRequest.type}</p>
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest">Category</p>
+                    <p className="text-sm font-bold text-black">{viewingRequest.type}</p>
                   </div>
                   <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl sm:rounded-2xl">
-                    <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Days Consumed</p>
-                    <p className="text-sm font-bold text-indigo-900">{viewingRequest.days} Business Days</p>
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest">Days Consumed</p>
+                    <p className="text-sm font-bold text-black">{viewingRequest.days} Business Days</p>
                   </div>
                 </div>
                 {viewingRequest.type === 'Sick Leave' && viewingRequest.medicalCertificate && (
                   <div className="p-4 bg-amber-50/50 border border-amber-100 rounded-xl sm:rounded-2xl">
-                    <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">Medical Certificate</p>
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1">Medical Certificate</p>
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-amber-900">Document attached</p>
-                      <button 
+                      <p className="text-sm font-medium text-black">Document attached</p>
+                      <button
                         className="text-xs text-amber-600 font-bold hover:text-amber-800"
                       >
                         View
@@ -886,15 +885,15 @@ const Leave: React.FC = () => {
                 )}
                 <div className="space-y-3 sm:space-y-4">
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Time Window</p>
-                    <p className="text-sm font-medium text-slate-700">{formatDate(viewingRequest.startDate)} — {formatDate(viewingRequest.endDate)}</p>
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1">Time Window</p>
+                    <p className="text-sm font-medium text-black">{formatDate(viewingRequest.startDate)} — {formatDate(viewingRequest.endDate)}</p>
                     {viewingRequest.type === 'Sick Leave' && new Date(viewingRequest.startDate) < new Date() && (
                       <p className="text-xs text-amber-600 font-bold mt-1">• Retroactive application (applied after recovery)</p>
                     )}
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Justification</p>
-                    <p className="text-sm text-slate-600 leading-relaxed italic">"{viewingRequest.reason}"</p>
+                    <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1">Justification</p>
+                    <p className="text-sm text-black leading-relaxed italic">"{viewingRequest.reason}"</p>
                   </div>
                 </div>
                 <button
@@ -919,10 +918,10 @@ const Leave: React.FC = () => {
               onClick={e => e.stopPropagation()}
             >
               <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">{editingRequest ? 'Modify Leave Request' : 'Request Time Off'}</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-black tracking-tight">{editingRequest ? 'Modify Leave Request' : 'Request Time Off'}</h2>
                 <button
                   onClick={() => { setShowApplyModal(false); setEditingRequest(null); setDateError(''); }}
-                  className="p-1.5 sm:p-2 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-lg transition-all"
+                  className="text-black p-1.5 sm:p-2 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-lg transition-all"
                   title="Close form"
                   aria-label="Close leave request form"
                 >
@@ -933,10 +932,10 @@ const Leave: React.FC = () => {
               <form onSubmit={handleSubmit} className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 text-left">
                 {/* Leave Type */}
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 sm:mb-3">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-2 sm:mb-3">
                     Leave Category
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <div className="text-black grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                     {leaveTypes.map(type => (
                       <button
                         key={type.id}
@@ -944,7 +943,7 @@ const Leave: React.FC = () => {
                         onClick={() => handleLeaveTypeChange(type.label)}
                         className={`px-3 py-2 sm:px-4 sm:py-3 border rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${formData.type === type.label
                           ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm'
-                          : 'border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300'
+                          : 'border-gray-200 bg-gray-50 text-black hover:border-gray-300'
                           }`}
                       >
                         {type.label}
@@ -958,14 +957,14 @@ const Leave: React.FC = () => {
                   <div className="bg-amber-50 border border-amber-200 rounded-xl sm:rounded-2xl p-3 sm:p-4">
                     <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                       <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5 sm:mt-0" />
-                      <div className="text-[10px] sm:text-xs font-bold text-amber-800 uppercase tracking-tight">
+                      <div className="text-[10px] sm:text-xs font-bold text-black uppercase tracking-tight">
                         Medical Certificate Information
                       </div>
                     </div>
-                    <div className="text-[10px] sm:text-xs text-amber-700 leading-relaxed mb-3 sm:mb-4">
+                    <div className="text-[10px] sm:text-xs text-black leading-relaxed mb-3 sm:mb-4">
                       {medicalFile ? (
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-2 sm:p-3 rounded-xl border border-amber-100 gap-2">
-                          <span className="font-medium truncate text-xs">{medicalFileName}</span>
+                          <span className="font-medium truncate text-xs text-black">{medicalFileName}</span>
                           <button
                             type="button"
                             onClick={() => { setMedicalFile(null); setMedicalFileName(''); }}
@@ -978,7 +977,7 @@ const Leave: React.FC = () => {
                         <label className="cursor-pointer">
                           <div className="border-2 border-dashed border-amber-300 rounded-xl p-3 sm:p-4 text-center hover:bg-amber-50 transition-colors">
                             <div className="text-amber-600 font-medium mb-1 text-xs">Click to upload medical certificate</div>
-                            <div className="text-[10px] sm:text-xs text-amber-500">PDF, JPEG, PNG (Max 5MB)</div>
+                            <div className="text-[10px] sm:text-xs text-black">PDF, JPEG, PNG (Max 5MB)</div>
                             <input
                               type="file"
                               className="hidden"
@@ -989,7 +988,7 @@ const Leave: React.FC = () => {
                         </label>
                       )}
                     </div>
-                    <div className="text-[10px] sm:text-xs text-amber-600 bg-white/50 p-2 rounded-lg">
+                    <div className="text-[10px] sm:text-xs text-black bg-white/50 p-2 rounded-lg">
                       <span className="font-bold">Note:</span> Required for sick leave exceeding 3 days or for ongoing/future sick leave
                     </div>
                   </div>
@@ -998,7 +997,7 @@ const Leave: React.FC = () => {
                 {/* Dates */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label htmlFor="startDate" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 sm:mb-2">
+                    <label htmlFor="startDate" className="block text-[10px] font-black text-black uppercase tracking-widest mb-1 sm:mb-2">
                       Start Date
                     </label>
                     <input
@@ -1007,15 +1006,15 @@ const Leave: React.FC = () => {
                       value={formData.startDate}
                       onChange={e => handleDateChange('startDate', e.target.value)}
                       min={getMinDate()}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-sm"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-black"
                       required
                     />
                     {formData.type === 'Sick Leave' && (
-                      <p className="text-[10px] sm:text-xs text-gray-500 mt-1">For sick leave, you can select dates up to 60 days in the past</p>
+                      <p className="text-[10px] sm:text-xs text-black mt-1">For sick leave, you can select dates up to 60 days in the past</p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="endDate" className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 sm:mb-2">
+                    <label htmlFor="endDate" className="block text-[10px] font-black text-black uppercase tracking-widest mb-1 sm:mb-2">
                       End Date
                     </label>
                     <input
@@ -1024,7 +1023,7 @@ const Leave: React.FC = () => {
                       value={formData.endDate}
                       onChange={e => handleDateChange('endDate', e.target.value)}
                       min={formData.startDate}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-sm"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-black"
                       required
                     />
                   </div>
@@ -1035,7 +1034,7 @@ const Leave: React.FC = () => {
                   <div className="bg-red-50 border border-red-100 rounded-xl p-3 sm:p-4">
                     <div className="flex items-start gap-2 sm:gap-3">
                       <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                      <div className="text-sm font-medium text-red-700">
+                      <div className="text-sm font-medium text-black">
                         {dateError}
                       </div>
                     </div>
@@ -1051,7 +1050,7 @@ const Leave: React.FC = () => {
                       </div>
                       <div>
                         <div className="text-[10px] font-black text-blue-100 uppercase tracking-widest">Duration</div>
-                        <div className="text-xl sm:text-2xl font-black tabular-nums">
+                        <div className="text-xl sm:text-2xl font-black text-white tabular-nums">
                           {calculateDays(formData.startDate, formData.endDate)} Days
                         </div>
                         {formData.type === 'Sick Leave' && new Date(formData.startDate) < new Date() && (
@@ -1063,7 +1062,7 @@ const Leave: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <div className="text-[10px] font-black text-blue-100 uppercase tracking-widest">Impact</div>
-                      <div className="text-sm font-bold opacity-80">
+                      <div className="text-sm font-bold text-white opacity-80">
                         {leaveBalance.available} → {Math.max(0, leaveBalance.available - calculateDays(formData.startDate, formData.endDate))}
                       </div>
                     </div>
@@ -1072,19 +1071,19 @@ const Leave: React.FC = () => {
 
                 {/* Reason */}
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 sm:mb-2">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1 sm:mb-2">
                     Reason
                   </label>
                   <textarea
                     value={formData.reason}
                     onChange={e => setFormData(prev => ({ ...prev, reason: e.target.value }))}
                     rows={3}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-sm resize-none"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-black resize-none"
                     placeholder="Provide details for your manager..."
                     required
                   />
                   {formData.type === 'Sick Leave' && (
-                    <p className="text-[10px] sm:text-xs text-gray-500 mt-1">Please mention symptoms and recovery details if applying for past dates</p>
+                    <p className="text-[10px] sm:text-xs text-black mt-1">Please mention symptoms and recovery details if applying for past dates</p>
                   )}
                 </div>
 
@@ -1092,7 +1091,7 @@ const Leave: React.FC = () => {
                 <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 sm:p-4">
                   <div className="flex items-start gap-2 sm:gap-3">
                     <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 mt-0.5" />
-                    <div className="text-[10px] sm:text-[11px] font-bold text-amber-700 leading-relaxed uppercase tracking-tighter">
+                    <div className="text-[10px] sm:text-[11px] font-bold text-black leading-relaxed uppercase tracking-tighter">
                       <p className="mb-1 underline">Policy Reminders</p>
                       <ul className="list-disc list-inside space-y-0.5 opacity-80">
                         <li>3-day advance notice required for annual leave</li>
@@ -1109,7 +1108,7 @@ const Leave: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => { setShowApplyModal(false); setEditingRequest(null); setDateError(''); }}
-                    className="px-4 py-2.5 sm:px-6 sm:py-3 bg-gray-100 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 active:scale-95 transition-all"
+                    className="px-4 py-2.5 sm:px-6 sm:py-3 bg-gray-100 text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 active:scale-95 transition-all"
                   >
                     Discard
                   </button>
@@ -1139,7 +1138,7 @@ const Leave: React.FC = () => {
 
       {/* Upcoming Leaves */}
       <div className="mt-8 sm:mt-12">
-        <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em] mb-4 sm:mb-6 ml-1">Upcoming Authorized Windows</h3>
+        <h3 className="text-xs font-black text-black uppercase tracking-[0.3em] mb-4 sm:mb-6 ml-1">Upcoming Authorized Windows</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {upcomingLeaves.map(request => (
             <div
@@ -1148,32 +1147,32 @@ const Leave: React.FC = () => {
             >
               <div className="absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 bg-blue-50 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12 group-hover:scale-110 transition-transform duration-500"></div>
               <div className="flex items-center justify-between mb-4 sm:mb-6 relative z-10">
-                <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">{request.type}</span>
+                <span className="text-[10px] font-black text-black uppercase tracking-widest">{request.type}</span>
                 <span className="text-[9px] font-black text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 uppercase tracking-widest">
                   Approved
                 </span>
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-gray-900 mb-2 tabular-nums">{request.days} <span className="text-sm font-bold text-gray-400 uppercase">Days</span></div>
-              <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+              <div className="text-2xl sm:text-3xl font-black text-black mb-2 tabular-nums">{request.days} <span className="text-sm font-bold text-black uppercase">Days</span></div>
+              <div className="text-[10px] font-black text-black uppercase tracking-widest">
                 {formatDate(request.startDate)} — {formatDate(request.endDate)}
               </div>
               <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-50 flex items-center gap-2">
                 <ArrowRight size={12} className="text-blue-500" />
-                <div className="text-[9px] font-bold text-gray-400 uppercase truncate" title={request.reason}>
+                <div className="text-[9px] font-bold text-black uppercase truncate" title={request.reason}>
                   {request.reason}
                 </div>
               </div>
             </div>
           ))}
           {upcomingLeaves.length === 0 && (
-            <div className="sm:col-span-2 lg:col-span-3 py-8 sm:py-10 bg-gray-50/50 rounded-xl sm:rounded-[2rem] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400">
-              <Calendar size={24} className="mb-2 opacity-20" />
-              <p className="text-[10px] font-black uppercase tracking-widest">No upcoming leave records detected</p>
+            <div className="sm:col-span-2 lg:col-span-3 py-8 sm:py-10 bg-gray-50/50 rounded-xl sm:rounded-[2rem] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-black">
+              <Calendar size={24} className="mb-2 opacity-20 text-black" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-black">No upcoming leave records detected</p>
             </div>
           )}
         </div>
       </div>
-      
+
       {/* Add CSS for hiding scrollbar */}
       <style>{`
         .scrollbar-hide {

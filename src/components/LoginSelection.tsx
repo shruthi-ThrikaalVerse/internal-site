@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 
 const LoginSelection: React.FC = () => {
   const navigate = useNavigate();
-  const [hoveredCard, setHoveredCard] = useState<'employee' | 'admin' | null>(null);
+  const [hoveredCard, setHoveredCard] = useState<'employee' | 'admin' | 'super_admin' | null>(null);
 
   const handleEmployeeLogin = () => {
     navigate('/employee/login');
@@ -13,6 +13,10 @@ const LoginSelection: React.FC = () => {
 
   const handleAdminLogin = () => {
     navigate('/admin/login');
+  };
+
+  const handleSuperAdminLogin = () => {
+    navigate('/super-admin/login');
   };
 
   const handleBack = () => {
@@ -92,18 +96,18 @@ const LoginSelection: React.FC = () => {
         </div>
 
         {/* Cards Grid */}
-        <div className="grid md:grid-cols-2 gap-8 px-4">
+        <div className="grid md:grid-cols-3 gap-8 px-4 items-stretch">
           {/* Employee Card */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <div 
+            <div
               onClick={handleEmployeeLogin}
               onMouseEnter={() => setHoveredCard('employee')}
               onMouseLeave={() => setHoveredCard(null)}
-              className="relative cursor-pointer"
+              className="relative cursor-pointer h-full w-full"
             >
               <motion.div
                 style={{
@@ -119,9 +123,9 @@ const LoginSelection: React.FC = () => {
                   scale: hoveredCard === 'employee' ? 1.05 : 1,
                 }}
               />
-              <div className="relative bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-2xl p-8 transition-all duration-300 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10">
+              <div className="relative bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-2xl p-8 transition-all duration-300 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 h-full flex flex-col w-full">
                 {/* Icon */}
-                <div 
+                <div
                   className="mb-6"
                   style={{
                     transform: hoveredCard === 'employee' ? 'scale(1.1)' : 'scale(1)',
@@ -154,7 +158,7 @@ const LoginSelection: React.FC = () => {
                 </p>
 
                 {/* Features List */}
-                <ul className="space-y-2 mb-6">
+                <ul className="space-y-2 mb-6 flex-1">
                   <li className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                     Dashboard & Analytics
@@ -173,7 +177,6 @@ const LoginSelection: React.FC = () => {
                 <button
                   onClick={handleEmployeeLogin}
                   className="w-full py-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-105 active:scale-95"
-                  style={{ cursor: 'pointer' }}
                 >
                   <motion.span
                     whileHover={{ scale: 1.05 }}
@@ -193,11 +196,11 @@ const LoginSelection: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <div 
+            <div
               onClick={handleAdminLogin}
               onMouseEnter={() => setHoveredCard('admin')}
               onMouseLeave={() => setHoveredCard(null)}
-              className="relative cursor-pointer"
+              className="relative cursor-pointer h-full w-full"
             >
               <motion.div
                 style={{
@@ -213,9 +216,9 @@ const LoginSelection: React.FC = () => {
                   scale: hoveredCard === 'admin' ? 1.05 : 1,
                 }}
               />
-              <div className="relative bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-2xl p-8 transition-all duration-300 hover:border-red-500/50 hover:shadow-xl hover:shadow-red-500/10">
+              <div className="relative bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-2xl p-8 transition-all duration-300 hover:border-red-500/50 hover:shadow-xl hover:shadow-red-500/10 h-full flex flex-col w-full">
                 {/* Icon */}
-                <div 
+                <div
                   className="mb-6"
                   style={{
                     transform: hoveredCard === 'admin' ? 'scale(1.1)' : 'scale(1)',
@@ -248,7 +251,7 @@ const LoginSelection: React.FC = () => {
                 </p>
 
                 {/* Features List */}
-                <ul className="space-y-2 mb-6">
+                <ul className="space-y-2 mb-6 flex-1">
                   <li className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
                     Employee Management
@@ -267,7 +270,6 @@ const LoginSelection: React.FC = () => {
                 <button
                   onClick={handleAdminLogin}
                   className="w-full py-3 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold hover:shadow-lg hover:shadow-red-500/30 transition-all duration-300 hover:scale-105 active:scale-95"
-                  style={{ cursor: 'pointer' }}
                 >
                   <motion.span
                     whileHover={{ scale: 1.05 }}
@@ -275,6 +277,99 @@ const LoginSelection: React.FC = () => {
                     style={{ display: 'block' }}
                   >
                     Login as Admin
+                  </motion.span>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Super Admin Card */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+          >
+            <div
+              onClick={handleSuperAdminLogin}
+              onMouseEnter={() => setHoveredCard('super_admin')}
+              onMouseLeave={() => setHoveredCard(null)}
+              className="relative cursor-pointer h-full w-full"
+            >
+              <motion.div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: '1rem',
+                  background: 'linear-gradient(to right bottom, rgba(168, 85, 247, 0.2), rgba(147, 51, 234, 0.2))',
+                  filter: 'blur(24px)',
+                  transition: 'all 300ms'
+                }}
+                animate={{
+                  opacity: hoveredCard === 'super_admin' ? 1 : 0.5,
+                  scale: hoveredCard === 'super_admin' ? 1.05 : 1,
+                }}
+              />
+              <div className="relative bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-2xl p-8 transition-all duration-300 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 h-full flex flex-col w-full">
+                {/* Icon */}
+                <div
+                  className="mb-6"
+                  style={{
+                    transform: hoveredCard === 'super_admin' ? 'scale(1.1)' : 'scale(1)',
+                    transition: 'transform 0.3s'
+                  }}
+                >
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center mx-auto">
+                    <svg
+                      className="w-8 h-8 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <h2 className="text-2xl font-bold text-[var(--text-primary)] text-center mb-3">
+                  Super Admin Portal
+                </h2>
+                <p className="text-[var(--text-secondary)] text-center mb-6">
+                  Full access to all systems, enterprise settings, audits, and strategic management.
+                </p>
+
+                {/* Features List */}
+                <ul className="space-y-2 mb-6 flex-1">
+                  <li className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                    System Maintenance
+                  </li>
+                  <li className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                    Audit Management
+                  </li>
+                  <li className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                    Enterprise Control
+                  </li>
+                </ul>
+
+                {/* Button */}
+                <button
+                  onClick={handleSuperAdminLogin}
+                  className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-300 hover:scale-105 active:scale-95"
+                >
+                  <motion.span
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{ display: 'block' }}
+                  >
+                    Login as Super Admin
                   </motion.span>
                 </button>
               </div>

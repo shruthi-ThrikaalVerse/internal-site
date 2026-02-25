@@ -1,298 +1,297 @@
+import React, { useMemo, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  Search, Bell, LogOut, Menu, X,
+  Users, UserPlus, Zap, Settings, HelpCircle, Shield,
+  LayoutDashboard, FileText, AlertCircle, DollarSign, GitBranch, BarChart3, Star, Calendar, TrendingUp, Wrench
+} from 'lucide-react';
+import { AppProvider, useApp } from './context/AppContext.js';
+import { AppSection } from './types.js';
+import {
+  NAVIGATION_ITEMS, MOCK_LOGS, MOCK_PROJECTS,
+  MOCK_PERFORMANCE_METRICS
+} from './constants.js';
+import { StatCard, SectionHeader } from './components/super_admin/UI.js';
+import { DashboardView } from './pages/super_admin/DashboardView.js';
+import { EmployeeHub } from './pages/super_admin/EmployeeHub.js';
+import { AdminHub } from './pages/super_admin/AdminHub.js';
+import { AdminRequests } from './pages/super_admin/AdminRequests.js';
+import { AuditLogsView } from './pages/super_admin/AuditLogsView.js';
+import { PayrollView } from './pages/super_admin/PayrollView.js';
+import { ProjectsView } from './pages/super_admin/ProjectsView.js';
+import { SystemMaintenance } from './pages/super_admin/SystemMaintenance.js';
+import { ReviewsView } from './pages/super_admin/ReviewsView.js';
+import { EventsView } from './pages/super_admin/EventsView.js';
+import { PaymentUpdatesView } from './pages/super_admin/PaymentUpdatesView.js';
+import { NotificationsView } from './pages/super_admin/NotificationsView.js';
+import { ProfileView } from './pages/super_admin/ProfileView.js';
 
-import React from 'react';
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-// Contexts
-import { ThemeProvider } from './components/ThemeContext.tsx';
-import { AuthProvider, useAuth } from './context/AuthContext.tsx';
-import { HRMSProvider } from './context/HRMSContext.tsx';
-import { LeaveProvider } from './context/LeaveContext.tsx';
-
-// Public Components
-import Navbar from './components/Navbar.tsx';
-import Hero3D from './components/Hero3D.tsx';
-import About from './components/About.tsx';
-import Projects from './components/Projects.tsx';
-/*import Team from './components/Team.tsx';*/
-import Media from './components/Media.tsx';
-import Contact from './components/Contact.tsx';
-import Career from './components/career.tsx';
-import ScrollToTop from './components/ScrollToTop.tsx';
-import LoginSelection from './components/LoginSelection.tsx';
-import Footer from './components/Footer.tsx';
-
-// Admin Pages
-import AdminDashboard from './pages/admin/Dashboard.tsx';
-import EmployeeHub from './pages/admin/EmployeeHub.tsx';
-import DocumentManagement from './pages/admin/DocumentManagement.tsx';
-import AttendanceMonitor from './pages/admin/AttendanceMonitor.tsx';
-import LeaveCenterAdmin from './pages/admin/LeaveCenter.tsx';
-import TasksAdmin from './pages/admin/Tasks.tsx';
-import EventsAdmin from './pages/admin/EventsAdmin.tsx';
-import NotificationsAdmin from './pages/admin/NotificationsAdmin.tsx';
-import PayrollProcessing from './pages/admin/PayrollProcessing.tsx';
-import PayslipsAdmin from './pages/admin/PayslipsAdmin.tsx';
-import PerformanceManagement from './pages/admin/PerformanceManagement.tsx';
-import ProfileAdmin from './pages/admin/Profile.tsx';
-import AuditLogsPage from './pages/admin/AuditLogs.tsx';
-import LoginPageAdmin from './pages/admin/Login.tsx';
-import RegisterPageAdmin from './pages/admin/Register.tsx';
-import AdminRequests from './pages/admin/Requests.tsx';
-
-// Admin Components
-import LayoutWrapper from './components/admin/LayoutWrapper.tsx';
-import { ProtectedRoute, PublicRoute } from './components/admin/RouteGuards.tsx';
-
-// Employee Pages
-import EmployeeDashboard from './pages/employee/Dashboard.tsx';
-import EmployeeLeave from './pages/employee/Leave.tsx';
-import Attendance from './pages/employee/Attendance.tsx';
-import Calendar from './pages/employee/Calendar.tsx';
-import Documents from './pages/employee/Documents.tsx';
-import Notifications from './pages/employee/Notifications.tsx';
-import Payroll from './pages/employee/Payroll.tsx';
-import Performance from './pages/employee/Performance.tsx';
-import ProfileEmployee from './pages/employee/Profile.tsx';
-import Requests from './pages/employee/Requests.tsx';
-import TasksEmployee from './pages/employee/Tasks.tsx';
-import Events from './pages/employee/Events.tsx';
-import LoginPageEmployee from './pages/employee/Login.tsx';
-
-// Employee Components
-import EmployeeLayout from './components/employee/Layout.tsx';
-
-// ============= Layout Wrappers with Logout Handlers =============
-const AdminLayoutWrapper: React.FC<{ children: React.ReactNode; onLogout: () => Promise<void> }> = ({
-  children,
-  onLogout: handleLogout
-}) => {
-  React.useEffect(() => {
-    // Make logout available globally for components
-    (window as any).__handleLogout = handleLogout;
-  }, [handleLogout]);
-
-  return <LayoutWrapper>{children}</LayoutWrapper>;
+// Icon name to component mapper
+const iconMap: Record<string, React.ReactNode> = {
+  'LayoutDashboard': <LayoutDashboard size={20} />,
+  'Users': <Users size={20} />,
+  'Settings': <Settings size={20} />,
+  'FileText': <FileText size={20} />,
+  'AlertCircle': <AlertCircle size={20} />,
+  'DollarSign': <DollarSign size={20} />,
+  'GitBranch': <GitBranch size={20} />,
+  'BarChart3': <BarChart3 size={20} />,
+  'Star': <Star size={20} />,
+  'Calendar': <Calendar size={20} />,
+  'TrendingUp': <TrendingUp size={20} />,
+  'Bell': <Bell size={20} />,
+  'Wrench': <Wrench size={20} />
 };
 
-const EmployeeLayoutWrapper: React.FC<{ children: React.ReactNode; onLogout: () => Promise<void> }> = ({
-  children,
-  onLogout: handleLogout
-}) => {
-  React.useEffect(() => {
-    // Make logout available globally for components
-    (window as any).__handleLogout = handleLogout;
-  }, [handleLogout]);
-
-  return (
-    <EmployeeLayout onLogout={handleLogout}>
-      {children}
-    </EmployeeLayout>
-  );
+// Map AppSection to URL paths
+const sectionToUrlMap: Record<string, string> = {
+  [AppSection.Dashboard]: '/super-admin/dashboard',
+  [AppSection.Projects]: '/super-admin/projects',
+  [AppSection.EmployeeHub]: '/super-admin/employees',
+  [AppSection.AdminHub]: '/super-admin/admin-hub',
+  [AppSection.AdminRequests]: '/super-admin/requests',
+  [AppSection.AuditLogs]: '/super-admin/audit-logs',
+  [AppSection.Payroll]: '/super-admin/payroll',
+  [AppSection.Performance]: '/super-admin/performance',
+  [AppSection.Reviews]: '/super-admin/reviews',
+  [AppSection.Events]: '/super-admin/events',
+  [AppSection.PaymentUpdates]: '/super-admin/payments',
+  [AppSection.Notifications]: '/super-admin/notifications',
+  [AppSection.SystemMaintenance]: '/super-admin/system',
+  [AppSection.Profile]: '/super-admin/profile',
 };
 
-interface AuthContextType {
-  user: any | null;
-  isAuthenticated: boolean;
-  logout?: () => void;
-}
-
-const AppRouter: React.FC = () => {
-  const auth = useAuth();
-  const location = useLocation();
+const AppContent: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const {
+    isAuthenticated, setIsAuthenticated,
+    activeSection, setActiveSection,
+    globalSearch, setGlobalSearch,
+    sidebarOpen, setSidebarOpen,
+    mobileSidebarOpen, setMobileSidebarOpen,
+    employees, admins, currentUser
+  } = useApp();
 
-  if (auth?.isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
-        <div className="w-full max-w-5xl px-6">
-          <div className="animate-pulse">
-            <div className="h-6 bg-slate-200 rounded mb-6" />
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !location.pathname.includes('/login')) {
+      navigate('/super-admin/login', { replace: true });
+    }
+  }, [isAuthenticated, navigate, location.pathname]);
 
-            <div className="flex gap-6">
-              <div className="w-64 space-y-4">
-                <div className="h-4 bg-slate-200 rounded" />
-                <div className="h-4 bg-slate-200 rounded w-5/6" />
-                <div className="h-48 bg-slate-200 rounded mt-4" />
-              </div>
+  // Sync active section with URL
+  useEffect(() => {
+    const sectionMap: Record<string, typeof AppSection[keyof typeof AppSection]> = {
+      '/super-admin/dashboard': AppSection.Dashboard,
+      '/super-admin/projects': AppSection.Projects,
+      '/super-admin/employees': AppSection.EmployeeHub,
+      '/super-admin/admin-hub': AppSection.AdminHub,
+      '/super-admin/requests': AppSection.AdminRequests,
+      '/super-admin/audit-logs': AppSection.AuditLogs,
+      '/super-admin/payroll': AppSection.Payroll,
+      '/super-admin/performance': AppSection.Performance,
+      '/super-admin/reviews': AppSection.Reviews,
+      '/super-admin/events': AppSection.Events,
+      '/super-admin/payments': AppSection.PaymentUpdates,
+      '/super-admin/notifications': AppSection.Notifications,
+      '/super-admin/system': AppSection.SystemMaintenance,
+      '/super-admin/profile': AppSection.Profile,
+    };
 
-              <div className="flex-1 space-y-4">
-                <div className="h-6 bg-slate-200 rounded w-3/4" />
-                <div className="h-4 bg-slate-200 rounded" />
-                <div className="h-4 bg-slate-200 rounded" />
-                <div className="grid grid-cols-3 gap-4 mt-4">
-                  <div className="h-24 bg-slate-200 rounded" />
-                  <div className="h-24 bg-slate-200 rounded" />
-                  <div className="h-24 bg-slate-200 rounded" />
-                </div>
-                <div className="h-4 bg-slate-200 rounded mt-6" />
-                <div className="h-4 bg-slate-200 rounded w-2/3" />
-              </div>
+    const path = location.pathname.replace('/internal-site', '');
+    const section = sectionMap[path];
+
+    if (section && section !== activeSection) {
+      setActiveSection(section);
+    }
+  }, [location.pathname, activeSection, setActiveSection]);
+
+  const currentUserRole = currentUser?.role || 'EMPLOYEE';
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [setSidebarOpen]);
+
+  const q = globalSearch.toLowerCase();
+  const filteredEmployees = useMemo(() => employees.filter(e => !q || e.name!.toLowerCase().includes(q) || (e.designation || '').toLowerCase().includes(q)), [q, employees]);
+  const filteredAdmins = useMemo(() => admins.filter(a => !q || (a.name || '').toLowerCase().includes(q) || (a.firstName || '').toLowerCase().includes(q)), [q, admins]);
+  const filteredLogs = useMemo(() => MOCK_LOGS.filter(l => !q || l.action.toLowerCase().includes(q)), [q]);
+  const filteredProjects = useMemo(() => MOCK_PROJECTS.filter(p => !q || p.name.toLowerCase().includes(q)), [q]);
+
+  // RBAC Filtering for Sidebar
+  const authorizedNavItems = useMemo(() => {
+    return NAVIGATION_ITEMS.filter(item => {
+      if (currentUserRole === 'SUPER_ADMIN') return true;
+      // Restricted modules for lower tiers
+      const restrictedForStandardAdmins = [AppSection.SystemMaintenance, AppSection.AuditLogs, AppSection.AdminRequests];
+      return !restrictedForStandardAdmins.includes(item.id);
+    });
+  }, [currentUserRole]);
+
+  const currentView = useMemo(() => {
+    switch (activeSection) {
+      case AppSection.Dashboard:
+        return <DashboardView filteredEmployees={filteredEmployees} filteredAdmins={filteredAdmins} filteredProjects={filteredProjects} filteredLogs={filteredLogs} totalEmployees={employees.length} activeProjects={MOCK_PROJECTS.filter(p => p.status === 'in-progress').length} />;
+      case AppSection.EmployeeHub:
+        return <EmployeeHub />;
+      case AppSection.AdminHub:
+        return <AdminHub />;
+      case AppSection.AdminRequests:
+        return <AdminRequests />;
+      case AppSection.AuditLogs:
+        return <AuditLogsView />;
+      case AppSection.Payroll:
+        return <PayrollView />;
+      case AppSection.Projects:
+        return <ProjectsView />;
+      case AppSection.Performance:
+        return (
+          <div className="space-y-6">
+            <SectionHeader title="Performance Analytics" description="Enterprise-wide high-level organization metrics." />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {MOCK_PERFORMANCE_METRICS.map((m, idx) => (
+                <StatCard key={idx} title={m.name} value={`${m.value}%`} icon={<Zap size={20} />} trend={m.trend as 'up' | 'down' | 'stable'} trendValue="+5%" />
+              ))}
             </div>
           </div>
+        );
+      case AppSection.Reviews:
+        return <ReviewsView />;
+      case AppSection.Events:
+        return <EventsView />;
+      case AppSection.PaymentUpdates:
+        return <PaymentUpdatesView />;
+      case AppSection.Notifications:
+        return <NotificationsView />;
+      case AppSection.SystemMaintenance:
+        return <SystemMaintenance />;
+      case AppSection.Profile:
+        return <ProfileView />;
+      default: return <div className="p-20 text-center text-[#9aa8bd] italic bg-[#0b1220] rounded-2xl border border-[#1f2937] flex flex-col items-center gap-4">
+        <HelpCircle size={48} className="text-[#1f2937]" />
+        <div>Module "{(activeSection as string).toUpperCase()}" content coming in the next release.</div>
+      </div>;
+    }
+  }, [activeSection, filteredEmployees, filteredAdmins, filteredProjects, filteredLogs, employees]);
+
+  // Redirect happens in useEffect above if not authenticated
+
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full bg-[#0b1220] border-r border-[#1f2937]">
+      <div className="p-6 border-b border-[#1f2937] shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#f37321] to-[#e06410] rounded-xl flex items-center justify-center text-white font-black shrink-0 shadow-lg shadow-[#f37321]/20">S</div>
+          {(sidebarOpen || mobileSidebarOpen) && <span className="text-[#e6eef8] font-bold text-xl tracking-tight truncate">SuperAdmin</span>}
         </div>
       </div>
-    );
-  }
-
-  const handleLogout = async () => {
-    try {
-      await fetch('http://localhost:8085/api/users/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-    } catch (err) {
-      console.warn('Logout request failed:', err);
-    } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('HRMS_AUTH_SESSION_V1');
-      auth?.logout?.();
-      toast.info('Logged out successfully. See you soon!', {
-        position: 'top-right',
-        autoClose: 3000,
-      });
-      navigate('/');
-    }
-  };
+      <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
+        {authorizedNavItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => {
+              const url = sectionToUrlMap[item.id];
+              if (url) {
+                navigate(url);
+              }
+              setMobileSidebarOpen(false);
+            }}
+            className={`w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-all ${activeSection === item.id ? 'bg-[#f37321] text-white shadow-xl shadow-[#f37321]/20 font-bold' : 'text-[#9aa8bd] hover:bg-[#0f172a] hover:text-[#e6eef8]'}`}
+          >
+            <span className="shrink-0">{iconMap[item.iconName] || <HelpCircle size={20} />}</span>
+            {(sidebarOpen || mobileSidebarOpen) && <span className="text-sm truncate">{item.label}</span>}
+          </button>
+        ))}
+      </nav>
+      <div className="p-4 border-t border-[#1f2937] shrink-0">
+        <button
+          onClick={() => setIsAuthenticated(false)}
+          title="Logout"
+          className="flex items-center gap-4 w-full px-3 py-3 rounded-xl text-[#9aa8bd] hover:bg-rose-500/10 hover:text-rose-400 transition-all font-bold"
+        >
+          <LogOut size={20} />
+          {(sidebarOpen || mobileSidebarOpen) && <span className="text-sm">Logout</span>}
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <>
-      {(location.pathname === '/' || location.pathname === '/#/') && (
-        <>
-          <Navbar />
-          <ScrollToTop />
-        </>
+    <div className="min-h-screen flex text-[#e6eef8] bg-[#0f172a] overflow-x-hidden selection:bg-[#f37321]/30">
+      {/* Mobile Backdrop */}
+      {mobileSidebarOpen && (
+        <div className="fixed inset-0 bg-[#020617]/95 backdrop-blur-sm z-[80] lg:hidden animate-in fade-in duration-300" onClick={() => setMobileSidebarOpen(false)} />
       )}
 
-      <Routes>
-        {/* Public Landing Page - Always accessible */}
-        <Route
-          path="/"
-          element={
-            <div className="public-layout relative min-h-screen transition-colors duration-500 bg-[var(--bg-primary)] text-[var(--text-primary)]">
-              <main>
-                <section id="home">
-                  <Hero3D />
-                </section>
-                <section id="about" className="py-2 sm:py-24 pb-20 bg-gradient-to-b from-[var(--bg-primary)] to-[var(--bg-secondary)]">
-                  <About />
-                </section>
-                <section id="projects" className="bg-[var(--bg-secondary)] -mt-10">
-                  <Projects />
-                </section>
-                
-                <section id="media" className="bg-[var(--bg-primary)]">
-                  <Media />
-                </section>
-                <section id="career" className="bg-[var(--bg-primary)]">
-                  <Career />
-                </section>
-                <section id="contact" className="bg-gradient-to-t from-[var(--bg-secondary)] to-[var(--bg-primary)]">
-                  <Contact />
-                </section>
-                <Footer />
-              </main>
+      {/* Mobile Sidebar */}
+      <aside className={`fixed inset-y-0 left-0 z-[90] w-72 transform transition-transform duration-500 ease-in-out lg:hidden ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <SidebarContent />
+      </aside>
+
+      {/* Desktop Sidebar */}
+      <aside className={`hidden lg:flex fixed inset-y-0 left-0 z-50 bg-[#0b1220] transition-all duration-300 flex-col shadow-2xl shadow-black/50 ${sidebarOpen ? 'w-64' : 'w-20'}`}>
+        <SidebarContent />
+      </aside>
+
+      {/* Main Container */}
+      <main className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
+        <header className="h-20 bg-[#0b1220]/80 backdrop-blur-xl border-b border-[#1f2937] sticky top-0 z-40 flex items-center px-6 sm:px-8 justify-between">
+          <div className="flex items-center gap-4 flex-1">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle sidebar" className="hidden lg:flex p-2 hover:bg-[#1f2937] rounded-xl text-[#9aa8bd] transition-colors">{sidebarOpen ? <X size={20} /> : <Menu size={20} />}</button>
+            <button onClick={() => setMobileSidebarOpen(true)} title="Open sidebar" className="lg:hidden p-2 hover:bg-[#1f2937] rounded-xl text-[#9aa8bd] transition-colors"><Menu size={20} /></button>
+            <div className="flex items-center gap-3 bg-[#0f172a] border border-[#1f2937] px-4 py-2.5 rounded-xl w-full max-w-lg focus-within:border-[#f37321] focus-within:ring-4 focus-within:ring-[#f37321]/5 transition-all">
+              <Search size={18} className="text-[#9aa8bd] shrink-0" />
+              <input
+                type="text"
+                placeholder="Search across authorized modules..."
+                className="bg-transparent border-none focus:ring-0 text-sm w-full text-[#e6eef8] outline-none placeholder-[#9aa8bd]/40"
+                value={globalSearch}
+                onChange={(e) => setGlobalSearch(e.target.value)}
+              />
             </div>
-          }
-        />
+          </div>
+          <div className="flex items-center gap-4 ml-4">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-[#f37321]/10 text-[#f37321] rounded-lg border border-[#1f2937]/20">
+              <div className="w-2 h-2 bg-[#f37321] rounded-full animate-pulse shadow-[0_0_8px_#f37321]"></div>
+              <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Production Node</span>
+            </div>
+            <button
+              onClick={() => setActiveSection(AppSection.Notifications)}
+              title="View notifications"
+              className="relative p-2.5 text-[#9aa8bd] hover:bg-[#1f2937] rounded-xl transition-all"
+            >
+              <Bell size={20} />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#f37321] rounded-full ring-4 ring-[#0b1220] animate-bounce"></span>
+            </button>
+            <div
+              onClick={() => setActiveSection(AppSection.Profile)}
+              title="View profile"
+              className="w-10 h-10 rounded-xl border-2 border-[#1f2937] bg-slate-800 overflow-hidden cursor-pointer hover:border-[#f37321] transition-all group shrink-0 shadow-lg"
+            >
+              <img src={currentUser?.avatar || "https://picsum.photos/seed/admin/200"} alt="Admin" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+            </div>
+          </div>
+        </header>
 
-        {/* Login Selection Page */}
-        <Route path="/login-selection" element={<LoginSelection />} />
-
-        {/* Admin Auth Routes */}
-        <Route path="/admin/login" element={<LoginPageAdmin />} />
-        <Route path="/admin/register" element={<RegisterPageAdmin />} />
-
-        {/* Admin Dashboard Routes */}
-        <Route
-          path="/admin/*"
-          element={
-            auth?.isAuthenticated && (auth?.user?.role === 'admin' || auth?.user?.role === 'manager') ? (
-              <AdminLayoutWrapper onLogout={handleLogout}>
-                <Routes>
-                  <Route path="/" element={<Navigate to="dashboard" />} />
-                  <Route path="dashboard" element={<AdminDashboard />} />
-                  <Route path="employees" element={<EmployeeHub />} />
-                  <Route path="documents" element={<DocumentManagement />} />
-                  <Route path="attendance" element={<AttendanceMonitor />} />
-                  <Route path="leave" element={<LeaveCenterAdmin />} />
-                  <Route path="tasks" element={<TasksAdmin />} />
-                  <Route path="events" element={<EventsAdmin />} />
-                  <Route path="notifications" element={<NotificationsAdmin />} />
-                  <Route path="requests" element={<AdminRequests />} />
-                  <Route path="payroll" element={<PayrollProcessing />} />
-                  <Route path="payslips" element={<PayslipsAdmin />} />
-                  <Route path="performance" element={<PerformanceManagement />} />
-                  <Route path="audit-logs" element={<AuditLogsPage />} />
-                  <Route path="profile" element={<ProfileAdmin />} />
-                  <Route path="*" element={<Navigate to="dashboard" />} />
-                </Routes>
-              </AdminLayoutWrapper>
-            ) : (
-              <Navigate to="/admin/login" />
-            )
-          }
-        />
-
-        {/* Employee Auth Route */}
-        <Route path="/employee/login" element={<LoginPageEmployee />} />
-
-        {/* Employee Dashboard Routes */}
-        <Route
-          path="/employee/*"
-          element={
-            auth?.isAuthenticated && auth?.user?.role !== 'admin' && auth?.user?.role !== 'manager' ? (
-              <EmployeeLayoutWrapper onLogout={handleLogout}>
-                <Routes>
-                  <Route path="/" element={<Navigate to="dashboard" />} />
-                  <Route path="dashboard" element={<EmployeeDashboard />} />
-                  <Route path="leave" element={<EmployeeLeave />} />
-                  <Route path="attendance" element={<Attendance />} />
-                  <Route path="calendar" element={<Calendar />} />
-                  <Route path="documents" element={<Documents />} />
-                  <Route path="notifications" element={<Notifications />} />
-                  <Route path="payroll" element={<Payroll />} />
-                  <Route path="performance" element={<Performance />} />
-                  <Route path="profile" element={<ProfileEmployee />} />
-                  <Route path="requests" element={<Requests />} />
-                  <Route path="tasks" element={<TasksEmployee />} />
-                  <Route path="events" element={<Events />} />
-                  <Route path="*" element={<Navigate to="dashboard" />} />
-                </Routes>
-              </EmployeeLayoutWrapper>
-            ) : (
-              <Navigate to="/employee/login" />
-            )
-          }
-        />
-
-        {/* Catch all */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </>
+        <div className="p-6 sm:p-10 max-w-screen-2xl mx-auto w-full min-h-[calc(100vh-80px)] overflow-x-hidden">
+          <div className="animate-in fade-in slide-in-from-bottom-6 duration-1000">
+            {currentView}
+          </div>
+        </div>
+      </main>
+    </div>
   );
 };
 
-const App: React.FC = () => {
-  return (
-    <ThemeProvider>
-      <AuthProvider>
-        <HRMSProvider>
-          <LeaveProvider>
-            <ToastContainer
-              position="top-right"
-              autoClose={3000}
-              aria-label="Notification messages"
-            />
-            <AppRouter />
-          </LeaveProvider>
-        </HRMSProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  );
-};
-
+const App: React.FC = () => <AppContent />;
 
 export default App;

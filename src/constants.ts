@@ -1,3 +1,5 @@
+import { Project } from './types';
+
 export const COLORS = {
   primary: '#3b82f6',
   success: '#22c55e',
@@ -67,7 +69,7 @@ export const PROJECTS = [
     id: 2,
     title: "Prabhas Cine Universe",
     category: "Cinema & OTT Ecosystem",
-    image: "/bf038ade-7ce0-46b2-a7a4-517a629e2efb.png",
+    image: "https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?q=80&w=1200&auto=format&fit=crop",
 
     description:
       "A premium cinematic ecosystem offering film education, OTT services, industry union systems, and movie performance analytics."
@@ -157,4 +159,95 @@ export const JOBS = [
     description: "Develop cutting-edge machine learning models for predictive analytics and automation systems.",
     location: "Bangalore"
   }
+];
+// ============= Super Admin Constants =============
+import { AppSection } from './types';
+
+export const NAVIGATION_ITEMS = [
+  { id: AppSection.Dashboard, label: 'Dashboard', iconName: 'LayoutDashboard' },
+  { id: AppSection.EmployeeHub, label: 'Employees', iconName: 'Users' },
+  { id: AppSection.AdminHub, label: 'Admin Hub', iconName: 'Settings' },
+  { id: AppSection.AdminRequests, label: 'Requests', iconName: 'FileText' },
+  { id: AppSection.AuditLogs, label: 'Audit Logs', iconName: 'AlertCircle' },
+  { id: AppSection.Payroll, label: 'Payroll', iconName: 'DollarSign' },
+  { id: AppSection.Projects, label: 'Projects', iconName: 'GitBranch' },
+  { id: AppSection.Performance, label: 'Performance', iconName: 'BarChart3' },
+  { id: AppSection.Reviews, label: 'Reviews', iconName: 'Star' },
+  { id: AppSection.Events, label: 'Events', iconName: 'Calendar' },
+  { id: AppSection.PaymentUpdates, label: 'Payments', iconName: 'TrendingUp' },
+  { id: AppSection.Notifications, label: 'Notifications', iconName: 'Bell' },
+  { id: AppSection.SystemMaintenance, label: 'System', iconName: 'Wrench' },
+  { id: AppSection.Profile, label: 'Profile', iconName: 'Users' },
+];
+
+export const MOCK_LOGS = [
+  { id: '1', action: 'User Login', timestamp: '2024-01-15 09:30 AM', user: 'admin@company.com', status: 'Success', category: 'Authentication', severity: 'low' },
+  { id: '2', action: 'Employee Added', timestamp: '2024-01-15 10:15 AM', user: 'admin@company.com', status: 'Success', category: 'User Management', severity: 'medium' },
+  { id: '3', action: 'Leave Approved', timestamp: '2024-01-15 11:00 AM', user: 'manager@company.com', status: 'Success', category: 'Leave Management', severity: 'low' },
+  { id: '4', action: 'Payroll Generated', timestamp: '2024-01-15 02:30 PM', user: 'payroll@company.com', status: 'Success', category: 'Payroll', severity: 'high' },
+  { id: '5', action: 'Report Exported', timestamp: '2024-01-15 03:45 PM', user: 'admin@company.com', status: 'Success', category: 'Reports', severity: 'medium' },
+];
+
+export const MOCK_PROJECTS: Project[] = [
+  { id: '1', name: 'HRMS Platform', status: 'in-progress', progress: 75, client: 'Internal', dueDate: '2024-03-15', team: ['John Doe', 'Jane Smith', 'Bob Wilson', 'Alice Brown', 'Charlie Davis'] },
+  { id: '2', name: 'Mobile App Dev', status: 'in-progress', progress: 60, client: 'Tech Corp', dueDate: '2024-02-28', team: ['Jane Smith', 'Bob Wilson', 'Alice Brown'] },
+  { id: '3', name: 'Analytics Dashboard', status: 'completed', progress: 100, client: 'Acme Inc', dueDate: '2024-01-10', team: ['John Doe', 'Charlie Davis', 'Alice Brown'] },
+  { id: '4', name: 'AI Integration', status: 'delayed', progress: 45, client: 'Innovation Lab', dueDate: '2024-01-31', team: ['Bob Wilson', 'John Doe'] },
+  { id: '5', name: 'Security Upgrade', status: 'in-progress', progress: 80, client: 'Internal', dueDate: '2024-02-15', team: ['Jane Smith', 'Alice Brown', 'Charlie Davis', 'Bob Wilson', 'John Doe'] },
+];
+
+export const MOCK_PERFORMANCE_METRICS = [
+  { name: 'Employee Satisfaction', value: 94, trend: 'up' },
+  { name: 'Attendance Rate', value: 96, trend: 'up' },
+  { name: 'productivity Index', value: 88, trend: 'stable' },
+];
+
+export const MOCK_EMPLOYEES = [
+  { id: 'emp-01', name: 'John Doe', email: 'john@company.com', role: 'Employee', avatar: 'https://picsum.photos/seed/emp1/200', status: 'active', designation: 'Senior Developer', department: 'Engineering' },
+  { id: 'emp-02', name: 'Jane Smith', email: 'jane@company.com', role: 'Employee', avatar: 'https://picsum.photos/seed/emp2/200', status: 'active', designation: 'Product Manager', department: 'Product' },
+  { id: 'emp-03', name: 'Bob Wilson', email: 'bob@company.com', role: 'Employee', avatar: 'https://picsum.photos/seed/emp3/200', status: 'active', designation: 'Designer', department: 'Design' },
+  { id: 'emp-04', name: 'Alice Brown', email: 'alice@company.com', role: 'Employee', avatar: 'https://picsum.photos/seed/emp4/200', status: 'active', designation: 'Data Analyst', department: 'Analytics' },
+  { id: 'emp-05', name: 'Charlie Davis', email: 'charlie@company.com', role: 'Employee', avatar: 'https://picsum.photos/seed/emp5/200', status: 'inactive', designation: 'QA Engineer', department: 'Quality' },
+];
+
+export const MOCK_ADMINS = [
+  { id: 'admin-01', name: 'Admin One', firstName: 'Admin', lastName: 'One', email: 'admin1@company.com', role: 'ADMIN', avatar: 'https://picsum.photos/seed/admin1/200', status: 'active' },
+  { id: 'admin-02', name: 'Admin Two', firstName: 'Admin', lastName: 'Two', email: 'admin2@company.com', role: 'ADMIN', avatar: 'https://picsum.photos/seed/admin2/200', status: 'active' },
+];
+
+export const MOCK_REQUESTS = [
+  { id: 'req-01', type: 'Leave', requestedBy: 'John Doe', requesterId: 'emp-01', targetId: 'emp-01', date: '2024-01-15', status: 'Pending', details: 'Annual Leave Request' },
+  { id: 'req-02', type: 'Termination', requestedBy: 'Admin One', requesterId: 'admin-01', targetId: 'emp-05', date: '2024-01-14', status: 'Pending', details: 'End of Contract' },
+];
+
+export const MOCK_REVIEWS = [
+  { id: 'rev-01', employeeName: 'John Doe', rating: 4.5, feedback: 'Excellent performance and leadership', date: '2024-01-10', reviewerName: 'Sarah Manager', status: 'completed', cycle: 'Q4 2023' },
+  { id: 'rev-02', employeeName: 'Jane Smith', rating: 4.8, feedback: 'Outstanding contribution to projects', date: '2024-01-12', reviewerName: 'Mike Director', status: 'completed', cycle: 'Q4 2023' },
+  { id: 'rev-03', employeeName: 'Bob Wilson', rating: 4.2, feedback: 'Good team collaboration', date: '2024-01-15', reviewerName: 'Sarah Manager', status: 'pending', cycle: 'Q4 2023' },
+];
+
+export const MOCK_PAYMENT_UPDATES = [
+  { id: 'pay-01', employeeName: 'John Doe', amount: '$5,000', status: 'approved', date: '2024-01-15', updateType: 'salary', details: 'Monthly salary processed successfully' },
+  { id: 'pay-02', employeeName: 'Jane Smith', amount: '$4,800', status: 'approved', date: '2024-01-14', updateType: 'bonus', details: 'Q4 performance bonus' },
+  { id: 'pay-03', employeeName: 'Bob Wilson', amount: '$4,200', status: 'pending', date: '2024-01-13', updateType: 'salary', details: 'Monthly salary pending verification' },
+];
+
+export const MOCK_EVENTS = [
+  { id: 'evt-01', title: 'Team Meeting', type: 'meeting', date: '2024-02-20', participants: 25, attendees: 23, time: '10:00 AM' },
+  { id: 'evt-02', title: 'Company Retreat', type: 'celebration', date: '2024-03-15', participants: 150, attendees: 142, time: '09:00 AM' },
+  { id: 'evt-03', title: 'Training Session', type: 'training', date: '2024-02-25', participants: 40, attendees: 38, time: '02:00 PM' },
+];
+
+export const MOCK_NOTIFICATIONS = [
+  { id: 'ntf-01', title: 'System Update', message: 'New payroll features available', date: '2024-01-15', priority: 'medium', status: 'sent', recipient: 'All Admins' },
+  { id: 'ntf-02', title: 'Review Reminder', message: 'Performance reviews due this week', date: '2024-01-14', priority: 'high', status: 'sent', recipient: 'Department Heads' },
+  { id: 'ntf-03', title: 'Leave Approval', message: 'Your leave request has been approved', date: '2024-01-13', priority: 'low', status: 'sent', recipient: 'emp-01' },
+];
+
+export const MOCK_PAYROLL = [
+  { id: 'payroll-rec-01', employeeName: 'John Doe', amount: 5000, date: '2024-01-15', method: 'Bank Transfer', status: 'processed' },
+  { id: 'payroll-rec-02', employeeName: 'Jane Smith', amount: 4800, date: '2024-01-15', method: 'Bank Transfer', status: 'processed' },
+  { id: 'payroll-rec-03', employeeName: 'Bob Wilson', amount: 4200, date: '2024-01-15', method: 'Bank Transfer', status: 'processed' },
+  { id: 'payroll-rec-04', employeeName: 'Alice Brown', amount: 5200, date: '2024-01-15', method: 'Bank Transfer', status: 'processed' },
+  { id: 'payroll-rec-05', employeeName: 'Charlie Davis', amount: 3800, date: '2024-01-15', method: 'Bank Transfer', status: 'processed' },
 ];

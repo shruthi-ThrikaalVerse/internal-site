@@ -101,7 +101,7 @@ const Tasks: React.FC = () => {
 
       // fallback for overlay scrollbars (which report 0 width) - use a small safe offset when scroll exists
       setScrollbarWidth(computedScrollbarWidth || (elHasScroll || docHasScroll ? 12 : 0));
-    }; 
+    };
 
     checkScroll();
 
@@ -127,17 +127,17 @@ const Tasks: React.FC = () => {
 
 
   const statuses = [
-    { id: 'todo', label: 'To Do', color: 'bg-gray-100 text-gray-800', icon: Circle },
-    { id: 'in_progress', label: 'In Progress', color: 'bg-blue-100 text-blue-800', icon: Clock },
-    { id: 'review', label: 'On Review', color: 'bg-yellow-100 text-yellow-800', icon: AlertCircle },
-    { id: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800', icon: CheckCircle }
+    { id: 'todo', label: 'To Do', color: 'bg-gray-100 text-gray-800', icon: Circle, iconColor: 'text-gray-600' },
+    { id: 'in_progress', label: 'In Progress', color: 'bg-blue-100 text-blue-800', icon: Clock, iconColor: 'text-blue-600' },
+    { id: 'review', label: 'On Review', color: 'bg-yellow-100 text-yellow-800', icon: AlertCircle, iconColor: 'text-yellow-600' },
+    { id: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800', icon: CheckCircle, iconColor: 'text-green-600' }
   ];
 
   const priorities = [
-    { id: 'urgent', label: 'P1-High', color: 'bg-red-500 text-white', borderColor: 'border-l-red-500', icon: AlertCircle },
-    { id: 'high', label: 'P2-Medium', color: 'bg-orange-500 text-white', borderColor: 'border-l-orange-500', icon: TrendingUp },
-    { id: 'medium', label: 'P3-Medium', color: 'bg-yellow-500 text-white', borderColor: 'border-l-yellow-500', icon: Circle },
-    { id: 'low', label: 'P4-Low', color: 'bg-green-500 text-white', borderColor: 'border-l-green-500', icon: Circle }
+    { id: 'urgent', label: 'P1-High', color: 'bg-red-500 text-white', borderColor: 'border-l-red-500', icon: AlertCircle, iconColor: 'text-red-500' },
+    { id: 'high', label: 'P2-Medium', color: 'bg-orange-500 text-white', borderColor: 'border-l-orange-500', icon: TrendingUp, iconColor: 'text-orange-500' },
+    { id: 'medium', label: 'P3-Medium', color: 'bg-yellow-500 text-white', borderColor: 'border-l-yellow-500', icon: Circle, iconColor: 'text-yellow-500' },
+    { id: 'low', label: 'P4-Low', color: 'bg-green-500 text-white', borderColor: 'border-l-green-500', icon: Circle, iconColor: 'text-green-500' }
   ];
 
   useEffect(() => {
@@ -155,7 +155,7 @@ const Tasks: React.FC = () => {
       'MEDIUM': 'medium',
       'LOW': 'low',
     };
-    
+
     const statusMap: { [key: string]: Task['status'] } = {
       'PENDING': 'todo',
       'TODO': 'todo',
@@ -176,7 +176,7 @@ const Tasks: React.FC = () => {
     } else if (item.taskType) {
       taskType = item.taskType;
     }
-    
+
     return {
       id: item.taskId || String(Math.random()),
       title: item.title || 'Task',
@@ -209,12 +209,12 @@ const Tasks: React.FC = () => {
           apiGetSelfTasks().catch(() => []),
         ]);
 
-        const myTasks = (Array.isArray(myTasksData) && myTasksData.length > 0) 
-          ? myTasksData.map(mapTaskData) 
+        const myTasks = (Array.isArray(myTasksData) && myTasksData.length > 0)
+          ? myTasksData.map(mapTaskData)
           : [];
-        
-        const selfTasks = (Array.isArray(selfTasksData) && selfTasksData.length > 0) 
-          ? selfTasksData.map(mapTaskData).map(t => ({ ...t, taskType: 'self' as Task['taskType'] })) 
+
+        const selfTasks = (Array.isArray(selfTasksData) && selfTasksData.length > 0)
+          ? selfTasksData.map(mapTaskData).map(t => ({ ...t, taskType: 'self' as Task['taskType'] }))
           : [];
 
         // Categorize tasks by assigneeType (now captured in mapTaskData)
@@ -242,154 +242,154 @@ const Tasks: React.FC = () => {
       }
 
       const mockTasks: Task[] = [
-      {
-        id: '1',
-        title: 'Update Design System Components',
-        project: 'Design System',
-        status: 'in_progress',
-        priority: 'high',
-        dueDate: '2024-03-25',
-        estimatedHours: 8,
-        timeLogged: 14400,
-        description: 'Update button components with new variants and add documentation for developers.',
-        tags: ['design', 'components', 'documentation'],
-        assignee: 'Alex Chen',
-        assignedBy: 'Project Manager',
-        createdAt: '2024-03-10',
-        comments: [
-          { id: 'c1', text: 'Please add hover states to all variants', author: 'Design Lead', date: '2024-03-15', avatar: 'DC' }
-        ],
-        attachments: [],
-        logs: [{ id: 'l1', duration: 7200, date: '2024-03-18', note: 'Initial component updates' }]
-      },
-      {
-        id: '2',
-        title: 'Fix Authentication Bug',
-        project: 'Platform',
-        status: 'review',
-        priority: 'urgent',
-        dueDate: '2024-03-20',
-        estimatedHours: 4,
-        timeLogged: 14400,
-        description: 'Fix OAuth token expiration issue affecting user sessions.',
-        tags: ['backend', 'security', 'bug'],
-        assignee: 'Sam Wilson',
-        assignedBy: 'Tech Lead',
-        createdAt: '2024-03-12',
-        comments: [],
-        attachments: [],
-        logs: [{ id: 'l2', duration: 14400, date: '2024-03-17', note: 'Debug session' }]
-      },
-      {
-        id: '3',
-        title: 'Write API Documentation',
-        project: 'Developer Platform',
-        status: 'todo',
-        priority: 'medium',
-        dueDate: '2024-04-01',
-        estimatedHours: 12,
-        timeLogged: 0,
-        description: 'Create comprehensive API documentation for new endpoints.',
-        tags: ['documentation', 'api', 'backend'],
-        assignee: 'Taylor Reed',
-        assignedBy: 'Project Manager',
-        createdAt: '2024-03-15',
-        comments: [],
-        attachments: [],
-        logs: []
-      },
-      {
-        id: '4',
-        title: 'Mobile App UI Redesign',
-        project: 'Mobile App',
-        status: 'in_progress',
-        priority: 'low',
-        dueDate: '2024-04-10',
-        estimatedHours: 20,
-        timeLogged: 18000,
-        description: 'Redesign the mobile app UI for better user experience.',
-        tags: ['mobile', 'ui', 'design'],
-        assignee: 'Jordan Lee',
-        assignedBy: 'UX Lead',
-        createdAt: '2024-03-01',
-        comments: [],
-        attachments: [],
-        logs: []
-      },
-      {
-        id: '5',
-        title: 'Fix Payment Gateway Issue',
-        project: 'E-commerce',
-        status: 'todo',
-        priority: 'urgent',
-        dueDate: '2024-03-15',
-        estimatedHours: 6,
-        timeLogged: 0,
-        description: 'Payment gateway integration is failing for certain cards.',
-        tags: ['payment', 'bug', 'critical'],
-        assignee: 'Chris Brown',
-        assignedBy: 'Operations',
-        createdAt: '2024-03-05',
-        comments: [],
-        attachments: [],
-        logs: []
-      },
-      {
-        id: '6',
-        title: 'Update User Dashboard',
-        project: 'Web Platform',
-        status: 'completed',
-        priority: 'low',
-        dueDate: '2024-03-30',
-        estimatedHours: 10,
-        timeLogged: 36000,
-        description: 'Add new widgets to user dashboard.',
-        tags: ['frontend', 'dashboard', 'ui'],
-        assignee: 'Morgan Taylor',
-        assignedBy: 'Product Manager',
-        createdAt: '2024-02-28',
-        comments: [],
-        attachments: [],
-        logs: []
-      },
-      {
-        id: '7',
-        title: 'Security Audit Report',
-        project: 'Platform',
-        status: 'todo',
-        priority: 'high',
-        dueDate: '2024-03-18',
-        estimatedHours: 16,
-        timeLogged: 7200,
-        description: 'Complete security audit and generate report.',
-        tags: ['security', 'audit', 'report'],
-        assignee: 'Security Team',
-        assignedBy: 'CISO',
-        createdAt: '2024-03-01',
-        comments: [],
-        attachments: [],
-        logs: []
-      },
-      {
-        id: '8',
-        title: 'Database Migration',
-        project: 'Backend',
-        status: 'in_progress',
-        priority: 'medium',
-        dueDate: '2024-03-22',
-        estimatedHours: 24,
-        timeLogged: 43200,
-        description: 'Migrate database to new version with zero downtime.',
-        tags: ['database', 'migration', 'backend'],
-        assignee: 'Database Team',
-        assignedBy: 'Tech Lead',
-        createdAt: '2024-02-20',
-        comments: [],
-        attachments: [],
-        logs: []
-      }
-    ];
-      
+        {
+          id: '1',
+          title: 'Update Design System Components',
+          project: 'Design System',
+          status: 'in_progress',
+          priority: 'high',
+          dueDate: '2024-03-25',
+          estimatedHours: 8,
+          timeLogged: 14400,
+          description: 'Update button components with new variants and add documentation for developers.',
+          tags: ['design', 'components', 'documentation'],
+          assignee: 'Alex Chen',
+          assignedBy: 'Project Manager',
+          createdAt: '2024-03-10',
+          comments: [
+            { id: 'c1', text: 'Please add hover states to all variants', author: 'Design Lead', date: '2024-03-15', avatar: 'DC' }
+          ],
+          attachments: [],
+          logs: [{ id: 'l1', duration: 7200, date: '2024-03-18', note: 'Initial component updates' }]
+        },
+        {
+          id: '2',
+          title: 'Fix Authentication Bug',
+          project: 'Platform',
+          status: 'review',
+          priority: 'urgent',
+          dueDate: '2024-03-20',
+          estimatedHours: 4,
+          timeLogged: 14400,
+          description: 'Fix OAuth token expiration issue affecting user sessions.',
+          tags: ['backend', 'security', 'bug'],
+          assignee: 'Sam Wilson',
+          assignedBy: 'Tech Lead',
+          createdAt: '2024-03-12',
+          comments: [],
+          attachments: [],
+          logs: [{ id: 'l2', duration: 14400, date: '2024-03-17', note: 'Debug session' }]
+        },
+        {
+          id: '3',
+          title: 'Write API Documentation',
+          project: 'Developer Platform',
+          status: 'todo',
+          priority: 'medium',
+          dueDate: '2024-04-01',
+          estimatedHours: 12,
+          timeLogged: 0,
+          description: 'Create comprehensive API documentation for new endpoints.',
+          tags: ['documentation', 'api', 'backend'],
+          assignee: 'Taylor Reed',
+          assignedBy: 'Project Manager',
+          createdAt: '2024-03-15',
+          comments: [],
+          attachments: [],
+          logs: []
+        },
+        {
+          id: '4',
+          title: 'Mobile App UI Redesign',
+          project: 'Mobile App',
+          status: 'in_progress',
+          priority: 'low',
+          dueDate: '2024-04-10',
+          estimatedHours: 20,
+          timeLogged: 18000,
+          description: 'Redesign the mobile app UI for better user experience.',
+          tags: ['mobile', 'ui', 'design'],
+          assignee: 'Jordan Lee',
+          assignedBy: 'UX Lead',
+          createdAt: '2024-03-01',
+          comments: [],
+          attachments: [],
+          logs: []
+        },
+        {
+          id: '5',
+          title: 'Fix Payment Gateway Issue',
+          project: 'E-commerce',
+          status: 'todo',
+          priority: 'urgent',
+          dueDate: '2024-03-15',
+          estimatedHours: 6,
+          timeLogged: 0,
+          description: 'Payment gateway integration is failing for certain cards.',
+          tags: ['payment', 'bug', 'critical'],
+          assignee: 'Chris Brown',
+          assignedBy: 'Operations',
+          createdAt: '2024-03-05',
+          comments: [],
+          attachments: [],
+          logs: []
+        },
+        {
+          id: '6',
+          title: 'Update User Dashboard',
+          project: 'Web Platform',
+          status: 'completed',
+          priority: 'low',
+          dueDate: '2024-03-30',
+          estimatedHours: 10,
+          timeLogged: 36000,
+          description: 'Add new widgets to user dashboard.',
+          tags: ['frontend', 'dashboard', 'ui'],
+          assignee: 'Morgan Taylor',
+          assignedBy: 'Product Manager',
+          createdAt: '2024-02-28',
+          comments: [],
+          attachments: [],
+          logs: []
+        },
+        {
+          id: '7',
+          title: 'Security Audit Report',
+          project: 'Platform',
+          status: 'todo',
+          priority: 'high',
+          dueDate: '2024-03-18',
+          estimatedHours: 16,
+          timeLogged: 7200,
+          description: 'Complete security audit and generate report.',
+          tags: ['security', 'audit', 'report'],
+          assignee: 'Security Team',
+          assignedBy: 'CISO',
+          createdAt: '2024-03-01',
+          comments: [],
+          attachments: [],
+          logs: []
+        },
+        {
+          id: '8',
+          title: 'Database Migration',
+          project: 'Backend',
+          status: 'in_progress',
+          priority: 'medium',
+          dueDate: '2024-03-22',
+          estimatedHours: 24,
+          timeLogged: 43200,
+          description: 'Migrate database to new version with zero downtime.',
+          tags: ['database', 'migration', 'backend'],
+          assignee: 'Database Team',
+          assignedBy: 'Tech Lead',
+          createdAt: '2024-02-20',
+          comments: [],
+          attachments: [],
+          logs: []
+        }
+      ];
+
       const teamTasks = mockTasks.filter((t) => t.taskType === 'team' || t.assignee?.includes('Team'));
       const selfTasks = mockTasks.filter((t) => t.id.startsWith('self-'));
       const individualTasks = mockTasks.filter((t) => !t.assignee?.includes('Team'));
@@ -400,7 +400,7 @@ const Tasks: React.FC = () => {
         team: teamTasks,
         individual: individualTasks,
       });
-      
+
       setTasks(mockTasks);
     })();
   };
@@ -408,18 +408,18 @@ const Tasks: React.FC = () => {
   // Handle category and filter changes
   useEffect(() => {
     const categoryTasks = allTasks[selectedCategory] || [];
-    
+
     // Apply status and priority filters
     let filteredTasks = categoryTasks;
-    
+
     if (selectedStatus !== 'all') {
       filteredTasks = filteredTasks.filter((t) => t.status === selectedStatus);
     }
-    
+
     if (selectedPriority !== 'all') {
       filteredTasks = filteredTasks.filter((t) => t.priority === selectedPriority);
     }
-    
+
     setTasks(filteredTasks);
   }, [selectedCategory, selectedStatus, selectedPriority, allTasks]);
 
@@ -632,12 +632,14 @@ const Tasks: React.FC = () => {
       return null;
     }
 
+    const StatusIcon = status.icon;
+
     return (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg ${status.color}`}>
-              <status.icon size={20} />
+              <StatusIcon size={20} className={status.iconColor} />
             </div>
             <div>
               {(() => {
@@ -663,7 +665,7 @@ const Tasks: React.FC = () => {
             <button
               type="button"
               onClick={() => toggleStatusSection(status.id as keyof typeof showStatusSections)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               {showStatusSections[status.id as keyof typeof showStatusSections] ? (
                 <X size={20} />
@@ -698,6 +700,8 @@ const Tasks: React.FC = () => {
     const priority = priorities.find(p => p.id === task.priority);
     const isBreached = isTaskBreached(task);
     const status = statuses.find(s => s.id === task.status);
+    const PriorityIcon = priority?.icon;
+    const StatusIcon = status?.icon;
 
     return (
       <div
@@ -706,33 +710,37 @@ const Tasks: React.FC = () => {
       >
         <div className="flex justify-between items-start mb-3">
           <div className="flex items-center gap-2">
-            {priority && (
-              <span className={`px-2 py-1 text-xs font-medium rounded ${priority.color}`}>
-                {priority.label}
-              </span>
+            {priority && PriorityIcon && (
+              <PriorityIcon size={16} className={priority.iconColor} />
             )}
-          </div>
-          {status && (
-            <span className={`px-2 py-1 text-xs font-medium rounded ${status.color}`}>
-              {status.label}
+            <span className={`px-2 py-1 text-xs font-medium rounded ${priority?.color}`}>
+              {priority?.label}
             </span>
+          </div>
+          {status && StatusIcon && (
+            <div className="flex items-center gap-1">
+              <StatusIcon size={14} className={status.iconColor} />
+              <span className={`px-2 py-1 text-xs font-medium rounded ${status.color}`}>
+                {status.label}
+              </span>
+            </div>
           )}
         </div>
 
         <h4 className="font-medium text-gray-900 text-sm mb-2 line-clamp-2">{task.title}</h4>
 
-        <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+        <div className="flex items-center justify-between text-xs mb-3">
           <span className="font-medium text-gray-700">{task.project}</span>
           <div className="flex items-center gap-2">
             {task.memberCount && task.memberCount > 0 && (
               <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded">
-                <Users size={12} />
+                <Users size={12} className="text-blue-500" />
                 <span className="font-medium">{task.memberCount}</span>
               </div>
             )}
             {task.assignee && (
-              <div className="flex items-center gap-1">
-                <User size={12} />
+              <div className="flex items-center gap-1 text-gray-600">
+                <User size={12} className="text-gray-500" />
                 <span>{task.assignee.split(' ')[0]}</span>
               </div>
             )}
@@ -761,14 +769,14 @@ const Tasks: React.FC = () => {
           </div>
         )}
 
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <div className={`flex items-center gap-1 ${isBreached ? 'text-red-600 font-medium' : ''}`}>
-            <Calendar size={12} />
+        <div className="flex items-center justify-between text-xs">
+          <div className={`flex items-center gap-1 ${isBreached ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+            <Calendar size={12} className={isBreached ? 'text-red-500' : 'text-gray-400'} />
             <span>{formatDate(task.dueDate)}</span>
             {isBreached && <AlertTriangle size={12} className="text-red-500" />}
           </div>
-          <div className="flex items-center gap-1">
-            <Clock size={12} />
+          <div className="flex items-center gap-1 text-gray-500">
+            <Clock size={12} className="text-gray-400" />
             <span>{formatDuration(task.timeLogged)}</span>
           </div>
         </div>
@@ -794,6 +802,8 @@ const Tasks: React.FC = () => {
           const priority = priorities.find(p => p.id === task.priority);
           const status = statuses.find(s => s.id === task.status);
           const isBreached = isTaskBreached(task);
+          const PriorityIcon = priority?.icon;
+          const StatusIcon = status?.icon;
 
           return (
             <div
@@ -804,31 +814,41 @@ const Tasks: React.FC = () => {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                 <div className="flex-1">
                   <div className="flex items-start gap-3">
-                    <div className={`px-2 py-1 text-xs font-medium rounded ${priority?.color}`}>
-                      {priority?.label}
-                    </div>
+                    {priority && PriorityIcon && (
+                      <PriorityIcon size={16} className={`${priority.iconColor} mt-1`} />
+                    )}
                     <div>
-                      <h4 className="font-medium text-gray-900">{task.title}</h4>
-                      <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
-                        <span>{task.project}</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                          <User size={12} />
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 text-xs font-medium rounded ${priority?.color}`}>
+                          {priority?.label}
+                        </span>
+                      </div>
+                      <h4 className="font-medium text-gray-900 mt-1">{task.title}</h4>
+                      <div className="flex items-center flex-wrap gap-3 mt-2 text-sm">
+                        <span className="text-gray-600">{task.project}</span>
+                        <span className="text-gray-400">•</span>
+                        <span className="flex items-center gap-1 text-gray-600">
+                          <User size={12} className="text-gray-500" />
                           {task.assignee || 'Unassigned'}
                         </span>
                         {task.memberCount && task.memberCount > 0 && (
                           <>
-                            <span>•</span>
+                            <span className="text-gray-400 hidden md:inline">•</span>
                             <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">
-                              <Users size={12} />
+                              <Users size={12} className="text-blue-500" />
                               {task.memberCount} members
                             </span>
                           </>
                         )}
-                        <span>•</span>
-                        <span>By: {task.assignedBy || '-'}</span>
+                        {task.assignedBy && (
+                          <>
+                            <span className="text-gray-400 hidden md:inline">•</span>
+                            <span className="text-gray-600">By: {task.assignedBy}</span>
+                          </>
+                        )}
                         {isBreached && (
-                          <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded">
+                          <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded flex items-center gap-1">
+                            <AlertTriangle size={12} className="text-red-500" />
                             Breached
                           </span>
                         )}
@@ -837,28 +857,31 @@ const Tasks: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-4 items-center">
-                  <div className={`flex items-center gap-1 ${isBreached ? 'text-red-600 font-medium' : ''}`}>
-                    <Calendar size={14} />
+                <div className="flex flex-wrap gap-4 items-center md:ml-4">
+                  <div className={`flex items-center gap-1 ${isBreached ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+                    <Calendar size={14} className={isBreached ? 'text-red-500' : 'text-gray-400'} />
                     <span className="text-sm">{formatDate(task.dueDate)}</span>
-                    {isBreached && <AlertTriangle size={14} className="text-red-500 ml-1" />}
                   </div>
 
                   <div className="flex items-center gap-1 text-sm text-gray-500">
-                    <Clock size={14} />
+                    <Clock size={14} className="text-gray-400" />
                     <span>{formatDuration(task.timeLogged)}</span>
                   </div>
 
-                  {status && (
-                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${status.color}`}>
-                      {status.label}
-                    </span>
+                  {status && StatusIcon && (
+                    <div className="flex items-center gap-1">
+                      <StatusIcon size={14} className={status.iconColor} />
+                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${status.color}`}>
+                        {status.label}
+                      </span>
+                    </div>
                   )}
 
                   {task.tags.length > 0 && (
                     <div className="flex gap-1">
                       {task.tags.slice(0, 2).map(tag => (
-                        <span key={tag} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">
+                        <span key={tag} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded flex items-center gap-1">
+                          <Tag size={10} className="text-gray-500" />
                           {tag}
                         </span>
                       ))}
@@ -896,7 +919,7 @@ const Tasks: React.FC = () => {
               onClick={exportToCSV}
               className="flex items-center gap-2 px-3 md:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm"
             >
-              <Download size={16} />
+              <Download size={16} className="text-blue-500" />
               <span className="font-medium hidden md:inline">Export</span>
             </button>
             <button
@@ -913,11 +936,11 @@ const Tasks: React.FC = () => {
         {/* Task Category Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6 md:mb-8">
           {[
-            { id: 'my' as const, label: 'My Tasks', icon: CheckCircle, color: 'blue' },
-            { id: 'team' as const, label: 'Team Tasks', icon: Users, color: 'purple' },
-            { id: 'individual' as const, label: 'Individual Tasks', icon: User, color: 'green' },
-            { id: 'department' as const, label: 'Dept Tasks', icon: Building2, color: 'red' },
-            { id: 'self' as const, label: 'Self Assign Tasks', icon: Zap, color: 'orange' },
+            { id: 'my' as const, label: 'My Tasks', icon: CheckCircle, color: 'blue', iconColor: 'text-blue-600' },
+            { id: 'team' as const, label: 'Team Tasks', icon: Users, color: 'purple', iconColor: 'text-purple-600' },
+            { id: 'individual' as const, label: 'Individual Tasks', icon: User, color: 'green', iconColor: 'text-green-600' },
+            { id: 'department' as const, label: 'Dept Tasks', icon: Building2, color: 'red', iconColor: 'text-red-600' },
+            { id: 'self' as const, label: 'Self Assign Tasks', icon: Zap, color: 'orange', iconColor: 'text-orange-600' },
           ].map((category) => {
             const Icon = category.icon;
             const categoryCount = allTasks[category.id]?.length || 0;
@@ -940,7 +963,7 @@ const Tasks: React.FC = () => {
                 }}
                 className={`p-4 rounded-lg border border-gray-200 transition-all cursor-pointer ${colorClasses[category.color]}`}
               >
-                <Icon size={24} className="mb-2" />
+                <Icon size={24} className={`mb-2 ${category.iconColor}`} />
                 <h3 className="font-semibold text-gray-900 text-sm">{category.label}</h3>
                 <p className="text-lg font-bold text-gray-900 mt-1">{categoryCount}</p>
               </button>
@@ -954,32 +977,29 @@ const Tasks: React.FC = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedStatus('all')}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                selectedStatus === 'all'
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${selectedStatus === 'all'
+                ? 'bg-gray-900 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               All
             </button>
-            {[
-              { id: 'todo', label: 'To Do' },
-              { id: 'in_progress', label: 'In Progress' },
-              { id: 'review', label: 'On Review' },
-              { id: 'completed', label: 'Completed' },
-            ].map((status) => (
-              <button
-                key={status.id}
-                onClick={() => setSelectedStatus(status.id)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  selectedStatus === status.id
+            {statuses.map((status) => {
+              const StatusIcon = status.icon;
+              return (
+                <button
+                  key={status.id}
+                  onClick={() => setSelectedStatus(status.id)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${selectedStatus === status.id
                     ? 'bg-gray-900 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {status.label}
-              </button>
-            ))}
+                    }`}
+                >
+                  <StatusIcon size={14} className={selectedStatus === status.id ? 'text-white' : status.iconColor} />
+                  {status.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -989,32 +1009,29 @@ const Tasks: React.FC = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedPriority('all')}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                selectedPriority === 'all'
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${selectedPriority === 'all'
+                ? 'bg-gray-900 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               All
             </button>
-            {[
-              { id: 'urgent', label: 'P1-Urgent' },
-              { id: 'high', label: 'P2-High' },
-              { id: 'medium', label: 'P3-Medium' },
-              { id: 'low', label: 'P4-Low' },
-            ].map((priority) => (
-              <button
-                key={priority.id}
-                onClick={() => setSelectedPriority(priority.id)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  selectedPriority === priority.id
+            {priorities.map((priority) => {
+              const PriorityIcon = priority.icon;
+              return (
+                <button
+                  key={priority.id}
+                  onClick={() => setSelectedPriority(priority.id)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${selectedPriority === priority.id
                     ? 'bg-gray-900 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {priority.label}
-              </button>
-            ))}
+                    }`}
+                >
+                  <PriorityIcon size={14} className={selectedPriority === priority.id ? 'text-white' : priority.iconColor} />
+                  {priority.label}
+                </button>
+              );
+            })}
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 md:mb-6 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -1024,7 +1041,10 @@ const Tasks: React.FC = () => {
             className={`bg-white rounded-lg border border-gray-200 p-3 md:p-4 cursor-pointer transition-all hover:shadow-md min-w-[120px] ${getCardFilterStyle('all', 'all')}`}
           >
             <div className="text-lg md:text-2xl font-bold text-gray-900">{tasks.length}</div>
-            <div className="text-xs md:text-sm text-gray-600">Total Tasks</div>
+            <div className="text-xs md:text-sm text-gray-600 flex items-center gap-1">
+              <CheckCircle size={14} className="text-blue-500" />
+              Total Tasks
+            </div>
           </div>
 
           {/* Self-assign Tasks */}
@@ -1035,7 +1055,10 @@ const Tasks: React.FC = () => {
             <div className="text-lg md:text-2xl font-bold text-gray-600">
               {tasks.filter(t => t.status === 'todo').length}
             </div>
-            <div className="text-xs md:text-sm text-gray-600">To Do</div>
+            <div className="text-xs md:text-sm text-gray-600 flex items-center gap-1">
+              <Circle size={14} className="text-gray-500" />
+              To Do
+            </div>
           </div>
 
           {/* In Progress */}
@@ -1046,7 +1069,10 @@ const Tasks: React.FC = () => {
             <div className="text-lg md:text-2xl font-bold text-blue-600">
               {tasks.filter(t => t.status === 'in_progress').length}
             </div>
-            <div className="text-xs md:text-sm text-gray-600">In Progress</div>
+            <div className="text-xs md:text-sm text-gray-600 flex items-center gap-1">
+              <Clock size={14} className="text-blue-500" />
+              In Progress
+            </div>
           </div>
 
           {/* On Review */}
@@ -1057,7 +1083,10 @@ const Tasks: React.FC = () => {
             <div className="text-lg md:text-2xl font-bold text-yellow-600">
               {tasks.filter(t => t.status === 'review').length}
             </div>
-            <div className="text-xs md:text-sm text-gray-600">On Review</div>
+            <div className="text-xs md:text-sm text-gray-600 flex items-center gap-1">
+              <AlertCircle size={14} className="text-yellow-500" />
+              On Review
+            </div>
           </div>
 
           {/* Breached */}
@@ -1068,7 +1097,10 @@ const Tasks: React.FC = () => {
             <div className="text-lg md:text-2xl font-bold text-red-600">
               {tasks.filter(isTaskBreached).length}
             </div>
-            <div className="text-xs md:text-sm text-gray-600">Breached</div>
+            <div className="text-xs md:text-sm text-red-600 flex items-center gap-1">
+              <AlertTriangle size={14} className="text-red-500" />
+              Breached
+            </div>
           </div>
 
           {/* Low Priority */}
@@ -1079,7 +1111,10 @@ const Tasks: React.FC = () => {
             <div className="text-lg md:text-2xl font-bold text-green-500">
               {tasks.filter(t => t.priority === 'low').length}
             </div>
-            <div className="text-xs md:text-sm text-gray-600">Low</div>
+            <div className="text-xs md:text-sm text-gray-600 flex items-center gap-1">
+              <Circle size={14} className="text-green-500" />
+              Low
+            </div>
           </div>
 
           {/* Medium Priority */}
@@ -1090,7 +1125,10 @@ const Tasks: React.FC = () => {
             <div className="text-lg md:text-2xl font-bold text-yellow-500">
               {tasks.filter(t => t.priority === 'medium').length}
             </div>
-            <div className="text-xs md:text-sm text-gray-600">Medium</div>
+            <div className="text-xs md:text-sm text-gray-600 flex items-center gap-1">
+              <Circle size={14} className="text-yellow-500" />
+              Medium
+            </div>
           </div>
 
           {/* High Priority */}
@@ -1101,14 +1139,17 @@ const Tasks: React.FC = () => {
             <div className="text-lg md:text-2xl font-bold text-orange-500">
               {tasks.filter(t => t.priority === 'high').length}
             </div>
-            <div className="text-xs md:text-sm text-gray-600">High</div>
+            <div className="text-xs md:text-sm text-gray-600 flex items-center gap-1">
+              <TrendingUp size={14} className="text-orange-500" />
+              High
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Container with Fixed Header and Scrollable Content */}
       <div className="flex flex-col" style={{ height: 'calc(100vh - 200px)' }}>
-          {/* FIXED: Scrollable Tasks Area with Hidden Scrollbar */}
+        {/* FIXED: Scrollable Tasks Area with Hidden Scrollbar */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto mt-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" style={{ scrollbarGutter: windowWidth < 1024 ? 'stable' : undefined }}>
           <div className="sticky top-0 z-10 bg-gray-50 pt-2 pb-4" style={{ paddingRight: hasVerticalScroll && windowWidth < 1024 ? `${scrollbarWidth + 8}px` : undefined }}>
             {/* Mobile Filters Toggle */}
@@ -1120,15 +1161,15 @@ const Tasks: React.FC = () => {
                 style={{ paddingRight: hasVerticalScroll && windowWidth < 1024 ? `${scrollbarWidth + 8}px` : undefined }}
               >
                 <div className="flex items-center gap-3">
-                  <Filter size={20} />
-                  <span className="font-medium">Filters</span>
+                  <Filter size={20} className="text-blue-500" />
+                  <span className="font-medium text-gray-700">Filters</span>
                   {selectedCardFilter || filterStatus !== 'all' || filterPriority !== 'all' || filterProject !== 'all' || searchQuery ? (
                     <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                       Active
                     </span>
                   ) : null}
                 </div>
-                {showMobileFilters ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                {showMobileFilters ? <ChevronUp size={20} className="text-gray-600" /> : <ChevronDown size={20} className="text-gray-600" />}
               </button>
             </div>
 
@@ -1138,7 +1179,7 @@ const Tasks: React.FC = () => {
                 <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                   <div className="flex flex-wrap gap-3 w-full">
                     <div className="flex items-center gap-2">
-                      <Filter size={16} className="text-gray-400" />
+                      <Filter size={16} className="text-blue-500" />
                       <select
                         aria-label="Filter by status"
                         value={filterStatus}
@@ -1153,7 +1194,7 @@ const Tasks: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Tag size={16} className="text-gray-400" />
+                      <Tag size={16} className="text-purple-500" />
                       <select
                         aria-label="Filter by priority"
                         value={filterPriority}
@@ -1168,7 +1209,7 @@ const Tasks: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <FileText size={16} className="text-gray-400" />
+                      <FileText size={16} className="text-green-500" />
                       <select
                         aria-label="Filter by project"
                         value={filterProject}
@@ -1183,7 +1224,7 @@ const Tasks: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2 flex-1">
-                      <Search size={16} className="text-gray-400" />
+                      <Search size={16} className="text-gray-500" />
                       <input
                         type="text"
                         placeholder="Search tasks..."
@@ -1197,8 +1238,9 @@ const Tasks: React.FC = () => {
                       <button
                         type="button"
                         onClick={clearAllFilters}
-                        className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors whitespace-nowrap"
+                        className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors whitespace-nowrap flex items-center gap-2"
                       >
+                        <X size={14} className="text-red-500" />
                         Clear Filters
                       </button>
                     </div>
@@ -1213,7 +1255,7 @@ const Tasks: React.FC = () => {
                         title="Board view"
                         aria-label="Switch to board view"
                       >
-                        <Grid size={20} />
+                        <Grid size={20} className={viewMode === 'board' ? 'text-blue-600' : 'text-gray-500'} />
                       </button>
                       <button
                         type="button"
@@ -1222,7 +1264,7 @@ const Tasks: React.FC = () => {
                         title="List view"
                         aria-label="Switch to list view"
                       >
-                        <List size={20} />
+                        <List size={20} className={viewMode === 'list' ? 'text-blue-600' : 'text-gray-500'} />
                       </button>
                     </div>
                   </div>
@@ -1231,7 +1273,8 @@ const Tasks: React.FC = () => {
 
               {/* Tasks Info Header */}
               <div className="flex items-center justify-between mt-2 px-1">
-                <h2 className="text-base md:text-lg font-semibold text-gray-900">
+                <h2 className="text-base md:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <CheckCircle size={18} className="text-green-500" />
                   Tasks ({filteredTasks.length})
                   {selectedCardFilter?.type === 'breached' && ' • Breached Tasks'}
                   {filterStatus !== 'all' && ` • Filtered: ${statuses.find(s => s.id === filterStatus)?.label}`}
@@ -1244,121 +1287,128 @@ const Tasks: React.FC = () => {
                 </div>
               </div>
             </div>
-          {viewMode === 'board' ? (
-            filteredTasks.length > 0 || selectedCardFilter?.type === 'breached' ? (
-              <div className="space-y-6 pb-6">
-                {/* Breached Section */}
-                {selectedCardFilter?.type === 'breached' && (
-                  <div className="bg-white rounded-xl border border-red-200 overflow-hidden">
-                    <div className="flex items-center justify-between p-4 border-b border-red-200">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-red-100">
-                          <AlertOctagon size={20} className="text-red-600" />
+            {viewMode === 'board' ? (
+              filteredTasks.length > 0 || selectedCardFilter?.type === 'breached' ? (
+                <div className="space-y-6 pb-6">
+                  {/* Breached Section */}
+                  {selectedCardFilter?.type === 'breached' && (
+                    <div className="bg-white rounded-xl border border-red-200 overflow-hidden">
+                      <div className="flex items-center justify-between p-4 border-b border-red-200">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-red-100">
+                            <AlertOctagon size={20} className="text-red-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-red-900">Breached Tasks</h3>
+                            <p className="text-sm text-red-600">{filteredTasks.length} overdue tasks</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-red-900">Breached Tasks</h3>
-                          <p className="text-sm text-red-600">{filteredTasks.length} overdue tasks</p>
+                        <div className="flex items-center gap-3">
+                          <span className="px-3 py-1 bg-red-100 text-red-700 text-sm font-medium rounded-full">
+                            {filteredTasks.length}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setShowBreachedSection(!showBreachedSection)}
+                            className="text-gray-600 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            {showBreachedSection ? <X size={20} /> : <Plus size={20} />}
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="px-3 py-1 bg-red-100 text-red-700 text-sm font-medium rounded-full">
-                          {filteredTasks.length}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setShowBreachedSection(!showBreachedSection)}
-                          className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          {showBreachedSection ? <X size={20} /> : <Plus size={20} />}
-                        </button>
-                      </div>
-                    </div>
 
-                    {showBreachedSection && (
-                      <div className="p-4">
-                        {filteredTasks.length > 0 ? (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {filteredTasks.map(task => (
-                              <div
-                                key={task.id}
-                                onClick={() => setSelectedTask(task)}
-                                className={`bg-white rounded-lg border border-red-300 p-4 hover:shadow-md transition-all cursor-pointer ${getPriorityBorder(task.priority)} border-l-4 border-t-2 border-t-red-500`}
-                              >
-                                <div className="flex justify-between items-start mb-3">
-                                  <div className="flex items-center gap-2">
-                                    <AlertTriangle size={16} className="text-red-500" />
-                                    <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">
-                                      Breached
-                                    </span>
-                                  </div>
-                                  <span className={`px-2 py-1 text-xs font-medium rounded ${priorities.find(p => p.id === task.priority)?.color}`}>
-                                    {getSlaLabel(task.priority)}
-                                  </span>
-                                </div>
-                                <h4 className="font-medium text-gray-900 text-sm mb-2 line-clamp-2">{task.title}</h4>
-                                <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                                  <span className="font-medium text-gray-700">{task.project}</span>
-                                  <div className="flex items-center gap-2">
-                                    {task.memberCount && task.memberCount > 0 && (
-                                      <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded">
-                                        <Users size={12} />
-                                        <span className="font-medium">{task.memberCount}</span>
+                      {showBreachedSection && (
+                        <div className="p-4">
+                          {filteredTasks.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {filteredTasks.map(task => {
+                                const priority = priorities.find(p => p.id === task.priority);
+                                const PriorityIcon = priority?.icon;
+                                return (
+                                  <div
+                                    key={task.id}
+                                    onClick={() => setSelectedTask(task)}
+                                    className={`bg-white rounded-lg border border-red-300 p-4 hover:shadow-md transition-all cursor-pointer ${getPriorityBorder(task.priority)} border-l-4 border-t-2 border-t-red-500`}
+                                  >
+                                    <div className="flex justify-between items-start mb-3">
+                                      <div className="flex items-center gap-2">
+                                        <AlertTriangle size={16} className="text-red-500" />
+                                        <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">
+                                          Breached
+                                        </span>
                                       </div>
-                                    )}
-                                    <div className="flex items-center gap-1">
-                                      <User size={12} />
-                                      <span>{task.assignee?.split(' ')[0] || 'Unassigned'}</span>
+                                      <div className="flex items-center gap-1">
+                                        {PriorityIcon && <PriorityIcon size={14} className={priority?.iconColor} />}
+                                        <span className={`px-2 py-1 text-xs font-medium rounded ${priority?.color}`}>
+                                          {getSlaLabel(task.priority)}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <h4 className="font-medium text-gray-900 text-sm mb-2 line-clamp-2">{task.title}</h4>
+                                    <div className="flex items-center justify-between text-xs mb-3">
+                                      <span className="font-medium text-gray-700">{task.project}</span>
+                                      <div className="flex items-center gap-2">
+                                        {task.memberCount && task.memberCount > 0 && (
+                                          <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded">
+                                            <Users size={12} className="text-blue-500" />
+                                            <span className="font-medium">{task.memberCount}</span>
+                                          </div>
+                                        )}
+                                        <div className="flex items-center gap-1 text-gray-600">
+                                          <User size={12} className="text-gray-500" />
+                                          <span>{task.assignee?.split(' ')[0] || 'Unassigned'}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs text-red-600 font-medium">
+                                      <div className="flex items-center gap-1">
+                                        <Calendar size={12} className="text-red-500" />
+                                        <span>Due: {formatDate(task.dueDate)}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Clock size={12} className="text-red-400" />
+                                        <span>{formatDuration(task.timeLogged)}</span>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                                <div className="flex items-center justify-between text-xs text-red-600 font-medium">
-                                  <div className="flex items-center gap-1">
-                                    <Calendar size={12} />
-                                    <span>Due: {formatDate(task.dueDate)}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Clock size={12} />
-                                    <span>{formatDuration(task.timeLogged)}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8">
-                            <AlertOctagon size={48} className="mx-auto text-gray-300 mb-3" />
-                            <p className="text-gray-500">No breached tasks found with current filters</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8">
+                              <AlertOctagon size={48} className="mx-auto text-gray-300 mb-3" />
+                              <p className="text-gray-500">No breached tasks found with current filters</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                {/* Status Sections */}
-                {selectedCardFilter?.type !== 'breached' && (
-                  <>
-                    {statuses.map(status => (
-                      <StatusSection key={status.id} status={status} />
-                    ))}
-                  </>
-                )}
-              </div>
+                  {/* Status Sections */}
+                  {selectedCardFilter?.type !== 'breached' && (
+                    <>
+                      {statuses.map(status => (
+                        <StatusSection key={status.id} status={status} />
+                      ))}
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+                  <FileText size={48} className="mx-auto text-gray-300 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No matching tasks found</h3>
+                  <p className="text-gray-500">Try adjusting your filters or create a new task.</p>
+                </div>
+              )
             ) : (
-              <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                <FileText size={48} className="mx-auto text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No matching tasks found</h3>
-                <p className="text-gray-500">Try adjusting your filters or create a new task.</p>
+              <div className="pb-6">
+                {renderTaskList()}
               </div>
-            )
-          ) : (
-            <div className="pb-6">
-              {renderTaskList()}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
 
       {/* Selected Task Modal */}
       {selectedTask && (
@@ -1377,13 +1427,15 @@ const Tasks: React.FC = () => {
                       <div className="flex flex-wrap items-center gap-2 mt-2">
                         <span className="text-sm text-gray-600">{selectedTask.project}</span>
                         <span className="text-sm text-gray-400 hidden md:inline">•</span>
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-gray-600 flex items-center gap-1">
+                          <Calendar size={14} className="text-gray-400" />
                           Created {formatDate(selectedTask.createdAt)}
                         </span>
                         {isTaskBreached(selectedTask) && (
                           <>
                             <span className="text-sm text-gray-400 hidden md:inline">•</span>
-                            <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">
+                            <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded flex items-center gap-1">
+                              <AlertTriangle size={12} className="text-red-500" />
                               Breached
                             </span>
                           </>
@@ -1393,7 +1445,7 @@ const Tasks: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setSelectedTask(null)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors"
                       title="Close task details"
                       aria-label="Close task details"
                     >
@@ -1408,11 +1460,14 @@ const Tasks: React.FC = () => {
                           type="button"
                           key={tab}
                           onClick={() => setActiveTab(tab)}
-                          className={`pb-4 px-1 text-sm font-medium border-b-2 transition-colors capitalize whitespace-nowrap ${activeTab === tab
+                          className={`pb-4 px-1 text-sm font-medium border-b-2 transition-colors capitalize whitespace-nowrap flex items-center gap-2 ${activeTab === tab
                             ? 'border-blue-500 text-blue-600'
                             : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                         >
+                          {tab === 'overview' && <FileText size={16} className={activeTab === tab ? 'text-blue-500' : 'text-gray-400'} />}
+                          {tab === 'comments' && <CheckCircle size={16} className={activeTab === tab ? 'text-blue-500' : 'text-gray-400'} />}
+                          {tab === 'files' && <Download size={16} className={activeTab === tab ? 'text-blue-500' : 'text-gray-400'} />}
                           {tab}
                         </button>
                       ))}
@@ -1423,31 +1478,46 @@ const Tasks: React.FC = () => {
                     {activeTab === 'overview' && (
                       <>
                         <div>
-                          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Description</h3>
+                          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
+                            <FileText size={18} className="text-blue-500" />
+                            Description
+                          </h3>
                           <p className="text-gray-700 text-sm md:text-base">{selectedTask.description}</p>
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                           <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
-                            <div className="text-sm text-gray-600">Status</div>
-                            <div className="font-medium text-gray-900 mt-1 text-sm md:text-base capitalize">
+                            <div className="text-sm text-gray-600 flex items-center gap-1 mb-1">
+                              <CheckCircle size={14} className="text-green-500" />
+                              Status
+                            </div>
+                            <div className="font-medium text-gray-900 mt-1 text-sm md:text-base capitalize flex items-center gap-1">
                               {selectedTask.status === 'todo' ? 'To Do' : selectedTask.status.replace('_', ' ')}
                             </div>
                           </div>
                           <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
-                            <div className="text-sm text-gray-600">SLA</div>
+                            <div className="text-sm text-gray-600 flex items-center gap-1 mb-1">
+                              <AlertCircle size={14} className="text-orange-500" />
+                              SLA
+                            </div>
                             <div className="font-medium text-gray-900 mt-1 text-sm md:text-base">
                               {getSlaLabel(selectedTask.priority)}
                             </div>
                           </div>
                           <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
-                            <div className="text-sm text-gray-600">Due Date</div>
+                            <div className="text-sm text-gray-600 flex items-center gap-1 mb-1">
+                              <Calendar size={14} className="text-blue-500" />
+                              Due Date
+                            </div>
                             <div className="font-medium text-gray-900 mt-1 text-sm md:text-base">
                               {formatDate(selectedTask.dueDate)}
                             </div>
                           </div>
                           <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
-                            <div className="text-sm text-gray-600">Estimated</div>
+                            <div className="text-sm text-gray-600 flex items-center gap-1 mb-1">
+                              <Clock size={14} className="text-purple-500" />
+                              Estimated
+                            </div>
                             <div className="font-medium text-gray-900 mt-1 text-sm md:text-base">
                               {selectedTask.estimatedHours}h
                             </div>
@@ -1456,13 +1526,19 @@ const Tasks: React.FC = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                           <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
-                            <div className="text-sm text-gray-600">Assigned To</div>
+                            <div className="text-sm text-gray-600 flex items-center gap-1 mb-1">
+                              <User size={14} className="text-indigo-500" />
+                              Assigned To
+                            </div>
                             <div className="font-medium text-gray-900 mt-1 text-sm md:text-base">
                               {selectedTask.assignee || 'Unassigned'}
                             </div>
                           </div>
                           <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
-                            <div className="text-sm text-gray-600">Assigned By</div>
+                            <div className="text-sm text-gray-600 flex items-center gap-1 mb-1">
+                              <User size={14} className="text-teal-500" />
+                              Assigned By
+                            </div>
                             <div className="font-medium text-gray-900 mt-1 text-sm md:text-base">
                               {selectedTask.assignedBy || '-'}
                             </div>
@@ -1471,13 +1547,17 @@ const Tasks: React.FC = () => {
 
                         {selectedTask.tags.length > 0 && (
                           <div>
-                            <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Tags</h3>
+                            <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
+                              <Tag size={18} className="text-purple-500" />
+                              Tags
+                            </h3>
                             <div className="flex flex-wrap gap-2">
                               {selectedTask.tags.map(tag => (
                                 <span
                                   key={tag}
-                                  className="px-2 md:px-3 py-1 bg-blue-100 text-blue-800 text-xs md:text-sm rounded-full"
+                                  className="px-2 md:px-3 py-1 bg-blue-100 text-blue-800 text-xs md:text-sm rounded-full flex items-center gap-1"
                                 >
+                                  <Tag size={10} className="text-blue-600" />
                                   {tag}
                                 </span>
                               ))}
@@ -1486,21 +1566,28 @@ const Tasks: React.FC = () => {
                         )}
 
                         <div>
-                          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Manual Status Update</h3>
+                          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
+                            <Clock size={18} className="text-green-500" />
+                            Manual Status Update
+                          </h3>
                           <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                            {statuses.map(status => (
-                              <button
-                                type="button"
-                                key={status.id}
-                                onClick={() => updateTaskStatus(selectedTask.id, status.id as Task['status'])}
-                                className={`px-3 md:px-4 py-2 md:py-3 rounded-lg border transition-colors text-sm ${selectedTask.status === status.id
-                                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                  : 'border-gray-200 hover:border-gray-300'
-                                  }`}
-                              >
-                                {status.label}
-                              </button>
-                            ))}
+                            {statuses.map(status => {
+                              const StatusIcon = status.icon;
+                              return (
+                                <button
+                                  type="button"
+                                  key={status.id}
+                                  onClick={() => updateTaskStatus(selectedTask.id, status.id as Task['status'])}
+                                  className={`flex items-center justify-center gap-2 px-3 md:px-4 py-2 md:py-3 rounded-lg border transition-colors text-sm ${selectedTask.status === status.id
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                    }`}
+                                >
+                                  <StatusIcon size={14} className={status.iconColor} />
+                                  {status.label}
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       </>
@@ -1512,7 +1599,10 @@ const Tasks: React.FC = () => {
                   <div className="space-y-4 md:space-y-6">
                     {(selectedTask.taskType === 'self' || allTasks.self.some(t => t.id === selectedTask.id)) && (
                       <div>
-                        <h3 className="font-semibold text-gray-900 mb-3 md:mb-4">Quick Actions</h3>
+                        <h3 className="font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
+                          <Zap size={18} className="text-yellow-500" />
+                          Quick Actions
+                        </h3>
                         <div className="space-y-2 md:space-y-3">
                           <button
                             type="button"
@@ -1521,7 +1611,7 @@ const Tasks: React.FC = () => {
                             }}
                             className="w-full flex items-center gap-3 px-3 md:px-4 py-2 md:py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                           >
-                            <Zap size={16} />
+                            <Zap size={16} className="text-yellow-500" />
                             <span>Start Task</span>
                           </button>
                           <button
@@ -1553,7 +1643,7 @@ const Tasks: React.FC = () => {
                             }}
                             className="w-full flex items-center gap-3 px-3 md:px-4 py-2 md:py-3 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors text-sm"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={16} className="text-red-500" />
                             <span>Delete Task</span>
                           </button>
                         </div>
@@ -1562,13 +1652,19 @@ const Tasks: React.FC = () => {
 
                     {selectedTask.teamMembers && selectedTask.teamMembers.length > 0 && (
                       <div>
-                        <h3 className="font-semibold text-gray-900 mb-3 md:mb-4">Team Members</h3>
+                        <h3 className="font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
+                          <Users size={18} className="text-blue-500" />
+                          Team Members
+                        </h3>
                         <div className="space-y-2">
                           {selectedTask.teamMembers.map((member, idx) => (
                             <div key={idx} className="bg-gray-50 p-3 rounded-lg">
                               <div className="flex items-start justify-between gap-2">
                                 <div>
-                                  <div className="font-medium text-sm text-gray-900">{member.name}</div>
+                                  <div className="font-medium text-sm text-gray-900 flex items-center gap-1">
+                                    <User size={12} className="text-gray-500" />
+                                    {member.name}
+                                  </div>
                                   <div className="text-xs text-gray-600 mt-1">{member.employeeId}</div>
                                   <div className="text-xs text-gray-600">{member.email}</div>
                                 </div>
@@ -1580,12 +1676,18 @@ const Tasks: React.FC = () => {
                     )}
 
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-3 md:mb-4">Progress</h3>
+                      <h3 className="font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
+                        <TrendingUp size={18} className="text-green-500" />
+                        Progress
+                      </h3>
                       <div className="space-y-3 md:space-y-4">
                         <div>
                           <div className="flex justify-between text-sm text-gray-600 mb-1">
-                            <span>Time Logged</span>
-                            <span>{formatDuration(selectedTask.timeLogged)}</span>
+                            <span className="flex items-center gap-1">
+                              <Clock size={14} className="text-gray-400" />
+                              Time Logged
+                            </span>
+                            <span className="font-medium">{formatDuration(selectedTask.timeLogged)}</span>
                           </div>
                           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                             <div
@@ -1608,7 +1710,10 @@ const Tasks: React.FC = () => {
                     </div>
 
                     <div className="pt-4 md:pt-6 border-t border-gray-200">
-                      <div className="text-sm text-gray-600 mb-2">Task Information</div>
+                      <div className="text-sm text-gray-600 mb-2 flex items-center gap-1">
+                        <FileText size={14} className="text-gray-400" />
+                        Task Information
+                      </div>
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-gray-500 text-sm">ID:</span>
@@ -1620,8 +1725,18 @@ const Tasks: React.FC = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500 text-sm">Breached:</span>
-                          <span className={`font-medium text-sm ${isTaskBreached(selectedTask) ? 'text-red-500' : 'text-green-500'}`}>
-                            {isTaskBreached(selectedTask) ? 'Yes' : 'No'}
+                          <span className={`font-medium text-sm flex items-center gap-1 ${isTaskBreached(selectedTask) ? 'text-red-500' : 'text-green-500'}`}>
+                            {isTaskBreached(selectedTask) ? (
+                              <>
+                                <AlertTriangle size={12} className="text-red-500" />
+                                Yes
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle size={12} className="text-green-500" />
+                                No
+                              </>
+                            )}
                           </span>
                         </div>
                       </div>
@@ -1644,11 +1759,14 @@ const Tasks: React.FC = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="sticky top-0 bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between z-10">
-                <h2 className="text-xl font-semibold text-gray-900">Create New Self-Assigned Task</h2>
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <Plus size={20} className="text-blue-500" />
+                  Create New Self-Assigned Task
+                </h2>
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors"
                   title="Close modal"
                   aria-label="Close create task modal"
                 >
@@ -1658,7 +1776,8 @@ const Tasks: React.FC = () => {
               <form onSubmit={handleAddTask} className="p-6 space-y-6">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+                      <FileText size={14} className="text-blue-500" />
                       Task Title <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1666,12 +1785,13 @@ const Tasks: React.FC = () => {
                       type="text"
                       required
                       placeholder="Enter task title"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
+                      className="text-black w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+                      <FileText size={14} className="text-green-500" />
                       Description <span className="text-red-500">*</span>
                     </label>
                     <textarea
@@ -1679,7 +1799,7 @@ const Tasks: React.FC = () => {
                       rows={4}
                       required
                       placeholder="Describe the task..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm md:text-base"
+                      className="text-black w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm md:text-base"
                     />
                   </div>
                 </div>
@@ -1688,8 +1808,9 @@ const Tasks: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="px-4 md:px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm md:text-base"
+                    className="px-4 md:px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm md:text-base flex items-center gap-2"
                   >
+                    <X size={14} className="text-red-500" />
                     Cancel
                   </button>
                   <button
@@ -1698,6 +1819,7 @@ const Tasks: React.FC = () => {
                     className="px-4 md:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2 text-sm md:text-base"
                   >
                     {isSubmitting && <Loader2 size={16} className="animate-spin" />}
+                    <Plus size={16} />
                     Create Self-Assigned Task
                   </button>
                 </div>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "./ThemeContext.tsx";
+import { useTheme } from "./ThemeContext";
 import thrikaalLogo from '../../public/thrikaal_logo.png';
 
 const Navbar = () => {
@@ -331,8 +331,7 @@ const Navbar = () => {
                           transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         />
                       )}
-                      <span className="relative z-10 flex items-center gap-2">
-                        <span className="text-lg">{item.icon}</span>
+                      <span className="relative z-10">
                         {item.label}
                       </span>
                     </motion.button>
@@ -340,9 +339,8 @@ const Navbar = () => {
 
                   {/* More dropdown for remaining items */}
                   <div className="relative group">
-                    <motion.button
-                      className="relative px-3 py-2 text-sm font-medium tracking-wide rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all duration-300 flex items-center gap-1"
-                      whileHover={{ scale: 1.05 }}
+                    <div
+                      className="relative px-3 py-2 text-sm font-medium tracking-wide rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all duration-300 flex items-center gap-1 cursor-pointer"
                     >
                       <span>More</span>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -355,14 +353,13 @@ const Navbar = () => {
                           <button
                             key={item.id}
                             onClick={() => scrollTo(item.id)}
-                            className="w-full px-4 py-2 text-left text-sm hover:bg-[var(--border-color)] flex items-center gap-2"
+                            className="w-full px-4 py-2 text-left text-sm hover:bg-[var(--border-color)]"
                           >
-                            <span className="text-lg">{item.icon}</span>
                             {item.label}
                           </button>
                         ))}
                       </div>
-                    </motion.button>
+                    </div>
                   </div>
                 </div>
 
@@ -471,8 +468,7 @@ const Navbar = () => {
                           transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         />
                       )}
-                      <span className="relative z-10 flex items-center gap-2">
-                        <span className="text-lg">{item.icon}</span>
+                      <span className="relative z-10">
                         {item.label}
                       </span>
                     </motion.button>
@@ -659,7 +655,7 @@ const Navbar = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
               onClick={() => setMobileOpen(false)}
             />
             <motion.div
@@ -667,7 +663,7 @@ const Navbar = () => {
               initial="closed"
               animate="open"
               exit="closed"
-              className="fixed top-0 right-0 bottom-0 w-80 z-50 lg:hidden overflow-hidden"
+              className="fixed top-0 right-0 bottom-0 w-80 z-50 overflow-hidden"
               style={{
                 background: `linear-gradient(135deg, var(--bg-primary) 0%, ${currentAccent.dark}20 100%)`,
                 backdropFilter: 'blur(10px)',
@@ -744,7 +740,6 @@ const Navbar = () => {
                           style={{ backgroundColor: currentAccent.light }}
                         />
                       )}
-                      <span className="text-2xl">{item.icon}</span>
                       <div>
                         <span className="font-medium">{item.label}</span>
                         <p className="text-xs opacity-60">Click to navigate</p>

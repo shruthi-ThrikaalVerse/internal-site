@@ -192,7 +192,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = async () => {
     // Get current user ID before clearing
     const currentUserId = user?.id;
-    
+
     try {
       await fetch(`${API_BASE_URL}/api/users/logout`, {
         method: 'POST',

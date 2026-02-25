@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from './Sidebar.tsx';
-import Header from './Header.tsx';
+import Sidebar from './Sidebar';
+import Header from './Header';
 import { Menu } from 'lucide-react'; // Added Menu import
 
 interface LayoutProps {
@@ -18,7 +18,7 @@ const Layout: React.FC<LayoutProps> = ({ onLogout, children }) => {
     const checkIfMobile = () => {
       const mobile = window.innerWidth < 1024; // lg breakpoint
       setIsMobile(mobile);
-      
+
       if (mobile) {
         // On mobile, sidebar is closed by default
         setIsSidebarOpen(false);
@@ -75,7 +75,7 @@ const Layout: React.FC<LayoutProps> = ({ onLogout, children }) => {
 
       {/* Sidebar */}
       <div className={`${isMobile ? 'fixed inset-y-0 left-0 z-40' : 'relative'}`}>
-        <Sidebar 
+        <Sidebar
           isOpen={isMobile ? isSidebarOpen : true}
           isCollapsed={isCollapsed}
           isMobile={isMobile}
@@ -86,7 +86,7 @@ const Layout: React.FC<LayoutProps> = ({ onLogout, children }) => {
       </div>
 
       {/* Main Content Area */}
-      <div 
+      <div
         className={`
           flex flex-col flex-1 min-w-0 overflow-hidden
           transition-all duration-300 ease-in-out
@@ -94,13 +94,13 @@ const Layout: React.FC<LayoutProps> = ({ onLogout, children }) => {
         `}
       >
         {/* You'll need to create or update the Header component */}
-        <Header 
-          toggleSidebar={toggleSidebar} 
+        <Header
+          toggleSidebar={toggleSidebar}
           isSidebarCollapsed={isCollapsed}
           isMobile={isMobile}
         />
-        
-        <main 
+
+        <main
           className={`
             flex-1 relative overflow-y-auto focus:outline-none
             ${isMobile ? 'p-4 sm:p-6' : 'p-4 md:p-6 lg:p-8'}
