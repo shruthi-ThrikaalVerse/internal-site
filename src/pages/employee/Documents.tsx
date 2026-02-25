@@ -10,10 +10,10 @@ import {
   Tag as TagIcon, Clock, Sparkles, Command, SlidersHorizontal, Shield, Wand2, BrainCircuit,
   Mail, Inbox, FileCheck, Receipt, BadgeCheck, Globe, Key, FileCode,
   Star, TrendingUp, PieChart, ArrowUpRight, ArrowDownLeft, Bell, Settings,
-  Grid3x3, PanelLeft, PanelRight, PanelTop, SearchX, Plus, Menu
+  Grid3x3, PanelLeft, PanelRight, PanelTop, SearchX, Plus, Menu, AlertTriangle
 } from 'lucide-react';
 import { getUserSpecificKey } from '../../utils/storage.ts';
-import { getMyDocuments } from '../../api/documents.js';
+import { getMyDocuments, uploadDocument } from '../../api/documents.js';
 import { useAuth } from '../../context/AuthContext.tsx';
 import { GoogleGenAI, Type } from "@google/genai";
 
@@ -33,6 +33,8 @@ interface DocumentRecord {
   aiSummary?: string;
   starred?: boolean;
   tags?: string[];
+  fileUrl?: string;
+  fileType?: string;
 }
 
 const Documents: React.FC = () => {
@@ -48,6 +50,21 @@ const Documents: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Upload States
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadCategory, setUploadCategory] = useState('Personal');
+  const [uploadSubCategory, setUploadSubCategory] = useState('Aadhar Card');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+
+  // Preview States
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewType, setPreviewType] = useState<string>('');
 
   // AI States
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -64,6 +81,10 @@ const Documents: React.FC = () => {
     setDocuments([]);
     setIsAnalyzing(false);
     setIsSummarizing(false);
+    setShowUploadModal(false);
+    setUploadFile(null);
+    setUploadError('');
+    setUploadSuccess(false);
   }, [user?.id]);
 
   const librarySchema = [
@@ -102,7 +123,9 @@ const Documents: React.FC = () => {
               notes: '',
               color: getColorForCategory('Personal'),
               starred: index % 3 === 0,
-              tags: []
+              tags: [],
+              fileUrl: d.fileUrl || '',
+              fileType: d.fileType || ''
             } as DocumentRecord;
           });
           setDocuments(mapped);
@@ -143,10 +166,131 @@ const Documents: React.FC = () => {
     return `bg-gradient-to-br ${colors[category] || colors.Personal}`;
   };
 
+  const handleUploadClick = () => {
+    setShowUploadModal(true);
+    setUploadError('');
+    setUploadSuccess(false);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setUploadError('File size exceeds 10MB limit');
+        return;
+      }
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        setUploadError('File type not supported. Please upload PDF, image, or document files.');
+        return;
+      }
+      setUploadFile(file);
+      setUploadError('');
+    }
+  };
+
+  const handleUploadSubmit = async () => {
+    if (!uploadFile) {
+      setUploadError('Please select a file to upload');
+      return;
+    }
+
+    if (!user?.id) {
+      setUploadError('User information not available');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError('');
+
+    try {
+      const result = await uploadDocument(uploadFile, {
+        employeeId: user.id,
+        documentType: uploadSubCategory
+      });
+
+      // Create a local URL for preview
+      const localUrl = URL.createObjectURL(uploadFile);
+
+      // Add new document to the list
+      const newDoc: DocumentRecord = {
+        id: String(result.id || Date.now()),
+        name: uploadFile.name,
+        category: uploadCategory,
+        subCategory: uploadSubCategory,
+        type: uploadFile.type.includes('pdf') ? 'PDF' : uploadFile.type.includes('image') ? 'JPG' : 'FILE',
+        size: `${Math.round(uploadFile.size / 1024)} KB`,
+        uploaded: new Date().toISOString().split('T')[0],
+        status: 'Pending',
+        access: 'Private',
+        notes: '',
+        color: getColorForCategory(uploadCategory),
+        starred: false,
+        tags: [],
+        fileUrl: localUrl,
+        fileType: uploadFile.type
+      };
+
+      setDocuments(prev => [newDoc, ...prev]);
+      const updated = [newDoc, ...documents];
+      localStorage.setItem(getUserSpecificKey('user_documents_v8'), JSON.stringify(updated));
+
+      setUploadSuccess(true);
+      setTimeout(() => {
+        setShowUploadModal(false);
+        setUploadFile(null);
+        setUploadCategory('Personal');
+        setUploadSubCategory('Aadhar Card');
+        setUploadSuccess(false);
+      }, 2000);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Upload failed. Please try again.';
+      setUploadError(errorMsg);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleDocumentClick = (doc: DocumentRecord) => {
     setSelectedDoc(doc);
     setShowDocModal(true);
     setRecentlyViewed(prev => [doc.id, ...prev.filter(id => id !== doc.id)].slice(0, 5));
+  };
+
+  const handleDownload = (doc: DocumentRecord, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+
+    if (doc.fileUrl) {
+      // If we have a file URL, create a link and click it
+      const link = document.createElement('a');
+      link.href = doc.fileUrl;
+      link.download = doc.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      // Fallback: create a dummy download
+      alert(`Downloading ${doc.name}`);
+    }
+  };
+
+  const handlePreview = (doc: DocumentRecord, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+
+    if (doc.fileUrl) {
+      setPreviewUrl(doc.fileUrl);
+      setPreviewType(doc.fileType || '');
+      setShowPreviewModal(true);
+    } else {
+      // If no file URL, try to open in new tab with blob data
+      alert(`Preview not available for ${doc.name}`);
+    }
   };
 
   const toggleStarred = (docId: string, e: React.MouseEvent) => {
@@ -231,14 +375,24 @@ const Documents: React.FC = () => {
     <div className="min-h-screen bg-slate-50">
       <div className="flex flex-col lg:flex-row">
         {/* Mobile Header - Only visible on mobile */}
-        <div className="lg:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 sticky top-0 z-30">
+        <div className="lg:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30 w-full">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 hover:bg-slate-100 rounded-lg"
+            >
+              <Menu size={24} />
+            </button>
+            <h1 className="text-lg font-semibold text-slate-900 truncate">Documents</h1>
+          </div>
+          {/* Mobile Upload Button */}
           <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 hover:bg-slate-100 rounded-lg"
+            onClick={handleUploadClick}
+            className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex-shrink-0"
+            aria-label="Upload document"
           >
-            <Menu size={24} />
+            <Plus size={20} />
           </button>
-          <h1 className="text-lg font-semibold text-slate-900">Documents</h1>
         </div>
 
         {/* Sidebar - Hidden on mobile, shown on desktop */}
@@ -251,13 +405,16 @@ const Documents: React.FC = () => {
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="lg:hidden absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-lg"
+                  aria-label="Close sidebar menu"
                 >
                   <X size={20} />
                 </button>
               )}
 
-              {/* Quick Actions */}
-              <button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl p-3 flex items-center justify-center gap-2 mb-4">
+              {/* Quick Actions - Desktop */}
+              <button
+                onClick={handleUploadClick}
+                className="hidden lg:flex w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl p-3 items-center justify-center gap-2 mb-4 hover:shadow-lg transition-all">
                 <Plus size={20} />
                 <span className="text-sm font-medium">Upload Document</span>
               </button>
@@ -343,7 +500,7 @@ const Documents: React.FC = () => {
         {/* Main Content */}
         <main className="flex-1 min-w-0 overflow-hidden">
           {/* Search and Filters Bar */}
-          <div className="bg-white border-b border-slate-200 sticky top-0 lg:top-[57px] z-20">
+          <div className="bg-white border-b border-slate-200 sticky top-14 lg:top-0 z-20">
             <div className="px-4 py-3">
               <div className="flex items-center gap-2">
                 <div className="flex-1 relative">
@@ -362,7 +519,7 @@ const Documents: React.FC = () => {
                 >
                   <SlidersHorizontal size={18} />
                 </button>
-                <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
+                <div className="hidden sm:flex gap-1 p-1 bg-slate-100 rounded-lg">
                   <button
                     onClick={() => setViewMode('grid')}
                     className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-600'}`}
@@ -506,6 +663,24 @@ const Documents: React.FC = () => {
                         {doc.status === 'Verified' && <CheckCircle size={8} />}
                         {doc.status}
                       </span>
+
+                      {/* Quick action buttons for grid view */}
+                      <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-slate-100">
+                        <button
+                          onClick={(e) => handlePreview(doc, e)}
+                          className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                          title="Preview"
+                        >
+                          <Eye size={14} className="text-slate-600" />
+                        </button>
+                        <button
+                          onClick={(e) => handleDownload(doc, e)}
+                          className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                          title="Download"
+                        >
+                          <Download size={14} className="text-slate-600" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -568,10 +743,18 @@ const Documents: React.FC = () => {
                             </span>
 
                             <div className="flex items-center gap-1">
-                              <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
+                              <button
+                                onClick={(e) => handlePreview(doc, e)}
+                                className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                                title="Preview"
+                              >
                                 <Eye size={14} className="text-slate-600" />
                               </button>
-                              <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
+                              <button
+                                onClick={(e) => handleDownload(doc, e)}
+                                className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                                title="Download"
+                              >
                                 <Download size={14} className="text-slate-600" />
                               </button>
                             </div>
@@ -587,10 +770,159 @@ const Documents: React.FC = () => {
         </main>
       </div>
 
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <FileUp size={20} className="text-blue-600" />
+                Upload Document
+              </h2>
+              <button
+                onClick={() => {
+                  setShowUploadModal(false);
+                  setUploadFile(null);
+                  setUploadError('');
+                  setUploadSuccess(false);
+                }}
+                className="p-2 hover:bg-slate-100 rounded-lg"
+              >
+                <X size={18} className="text-slate-400" />
+              </button>
+            </div>
+
+            {uploadSuccess ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle size={32} className="text-emerald-600" />
+                </div>
+                <h3 className="text-base font-semibold text-slate-900 mb-1">Upload Successful!</h3>
+                <p className="text-sm text-slate-500">Your document has been uploaded and is pending verification.</p>
+              </div>
+            ) : (
+              <>
+                {/* Error Message */}
+                {uploadError && (
+                  <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 mb-4 flex items-start gap-2">
+                    <AlertTriangle size={16} className="text-rose-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-rose-700">{uploadError}</p>
+                  </div>
+                )}
+
+                {/* File Input */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-slate-900 mb-2">Select File</label>
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all ${uploadFile
+                      ? 'border-emerald-400 bg-emerald-50'
+                      : 'border-slate-300 bg-slate-50 hover:border-blue-400'
+                      }`}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      aria-label="Upload document file"
+                    />
+                    {uploadFile ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <FileCheck size={20} className="text-emerald-600" />
+                        <div>
+                          <p className="font-medium text-slate-900">{uploadFile.name}</p>
+                          <p className="text-xs text-slate-500">{Math.round(uploadFile.size / 1024)} KB</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <FileUp size={24} className="mx-auto text-slate-400 mb-2" />
+                        <p className="text-sm font-medium text-slate-900">Click to browse or drag file</p>
+                        <p className="text-xs text-slate-500 mt-1">PDF, DOC, DOCX, JPG, PNG up to 10MB</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Category Selection */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-slate-900 mb-2">Category</label>
+                  <select
+                    value={uploadCategory}
+                    onChange={(e) => {
+                      setUploadCategory(e.target.value);
+                      const folder = librarySchema.find(f => f.id === e.target.value);
+                      setUploadSubCategory(folder?.subs[0] || '');
+                    }}
+                    aria-label="Select document category"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm text-slate-900 bg-white"
+                  >
+                    {librarySchema.map(folder => (
+                      <option key={folder.id} value={folder.id} className="text-slate-900">{folder.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* SubCategory Selection */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-slate-900 mb-2">Document Type</label>
+                  <select
+                    value={uploadSubCategory}
+                    onChange={(e) => setUploadSubCategory(e.target.value)}
+                    aria-label="Select document type"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm text-slate-900 bg-white"
+                  >
+                    {librarySchema
+                      .find(f => f.id === uploadCategory)
+                      ?.subs.map(sub => (
+                        <option key={sub} value={sub} className="text-slate-900">{sub}</option>
+                      ))}
+                  </select>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setShowUploadModal(false);
+                      setUploadFile(null);
+                      setUploadError('');
+                    }}
+                    className="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-lg font-medium hover:bg-slate-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleUploadSubmit}
+                    disabled={!uploadFile || isUploading}
+                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <FileUp size={16} />
+                        Upload
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Document Details Modal */}
       {showDocModal && selectedDoc && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60">
-          <div className="w-full bg-white rounded-t-xl max-h-[90vh] overflow-y-auto">
+          <div className="w-full bg-white rounded-t-xl max-h-[90vh] overflow-y-auto sm:max-w-lg sm:rounded-xl">
             {/* Modal Header */}
             <div className="px-4 py-3 border-b border-slate-200 flex items-start justify-between sticky top-0 bg-white">
               <div className="flex items-center gap-3">
@@ -701,15 +1033,78 @@ const Documents: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-2">
-                <button className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2">
+                <button
+                  onClick={() => handleDownload(selectedDoc)}
+                  className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
+                >
                   <Download size={16} />
                   Download
                 </button>
-                <button className="flex-1 bg-slate-100 text-slate-700 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2">
+                <button
+                  onClick={() => {
+                    handlePreview(selectedDoc);
+                    setShowDocModal(false);
+                  }}
+                  className="flex-1 bg-slate-100 text-slate-700 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors"
+                >
                   <Eye size={16} />
                   Preview
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {showPreviewModal && previewUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+          <div className="relative w-full h-full max-w-4xl max-h-[90vh] bg-white rounded-xl overflow-hidden">
+            {/* Preview Header */}
+            <div className="absolute top-0 left-0 right-0 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between z-10">
+              <h3 className="text-sm font-semibold text-slate-900">Document Preview</h3>
+              <button
+                onClick={() => {
+                  setShowPreviewModal(false);
+                  setPreviewUrl(null);
+                }}
+                className="p-2 hover:bg-slate-100 rounded-lg"
+              >
+                <X size={18} className="text-slate-400" />
+              </button>
+            </div>
+
+            {/* Preview Content */}
+            <div className="w-full h-full pt-16 pb-4 px-4 overflow-auto">
+              {previewType.includes('image') ? (
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="max-w-full max-h-full object-contain mx-auto"
+                />
+              ) : previewType.includes('pdf') ? (
+                <iframe
+                  src={previewUrl}
+                  className="w-full h-full min-h-[600px]"
+                  title="PDF Preview"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <FileText size={48} className="mx-auto text-slate-400 mb-3" />
+                    <p className="text-sm text-slate-600">Preview not available for this file type</p>
+                    <button
+                      onClick={() => {
+                        setShowPreviewModal(false);
+                        setShowDocModal(true);
+                      }}
+                      className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                    >
+                      Back to Details
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
