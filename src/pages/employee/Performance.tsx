@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { User as UserIcon, Star, Calendar, Loader, Award, TrendingUp, Target, PieChart as PieChartIcon, BarChart3, Filter, ChevronDown, ChevronUp } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Sector } from 'recharts';
+import { User as UserIcon, Star, Calendar, Loader, TrendingUp, BarChart3, Filter, ChevronDown, ChevronUp, Sparkles, Zap, ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, ComposedChart } from 'recharts';
 
 // Types
 interface Review {
@@ -69,6 +69,7 @@ const StarRating: React.FC<{ rating: number; size?: number; showNumber?: boolean
             {[1, 2, 3, 4, 5].map((star) => {
                 const fillPercentage = Math.min(Math.max((rating - (star - 1)) * 100, 0), 100);
                 return (
+                    // eslint-disable-next-line
                     <div
                         key={star}
                         className="relative"
@@ -105,35 +106,14 @@ const StarRating: React.FC<{ rating: number; size?: number; showNumber?: boolean
     );
 };
 
-// Custom Active Shape for Pie Chart
-const renderActiveShape = (props: any) => {
-    const RADIAN = Math.PI / 180;
-    const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
-    const sin = Math.sin(-RADIAN * midAngle);
-    const cos = Math.cos(-RADIAN * midAngle);
-    const sx = cx + (outerRadius + 10) * cos;
-    const sy = cy + (outerRadius + 10) * sin;
-    const mx = cx + (outerRadius + 30) * cos;
-    const my = cy + (outerRadius + 30) * sin;
-    const ex = mx + (cos >= 0 ? 1 : -1) * 22;
-    const ey = my;
-    const textAnchor = cos >= 0 ? 'start' : 'end';
-
-    return (
-        <g>
-            <Sector cx={cx} cy={cy} innerRadius={innerRadius} outerRadius={outerRadius + 10} startAngle={startAngle} endAngle={endAngle} fill={fill} />
-            <Sector cx={cx} cy={cy} startAngle={startAngle} endAngle={endAngle} innerRadius={outerRadius + 12} outerRadius={outerRadius + 16} fill={fill} />
-            <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" />
-            <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
-            <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="#333" className="font-medium">
-                {payload.name}
-            </text>
-            <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey + 15} textAnchor={textAnchor} fill="#666" className="text-sm">
-                {value} reviews ({(percent * 100).toFixed(1)}%)
-            </text>
-        </g>
-    );
-};
+// Gradient Background Component
+const GradientBg = () => (
+    <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-pink-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+    </div>
+);
 
 // Main Dashboard Component
 const EmployeePerformanceDashboard: React.FC = () => {
@@ -142,7 +122,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
     const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
     const [selectedTimeRange, setSelectedTimeRange] = useState<string>('current');
     const [activeRatingPieIndex, setActiveRatingPieIndex] = useState<number>(0);
-    const [showMobileFilters, setShowMobileFilters] = useState(false);
 
     // TODO: Replace with actual API call to fetch employee data
     const [currentEmployee, setCurrentEmployee] = useState({
@@ -353,467 +332,331 @@ const EmployeePerformanceDashboard: React.FC = () => {
         return filteredReviews.length;
     }, [filteredReviews]);
 
-    // Mobile filters toggle component
-    const MobileFiltersToggle = () => (
-        <div className="md:hidden w-full">
-            <button
-                type="button"
-                onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="w-full flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl shadow-sm"
-            >
-                <div className="flex items-center gap-3">
-                    <Filter size={20} className="text-blue-600" />
-                    <span className="font-medium text-gray-900">Filter Options</span>
-                    {selectedTimeRange !== 'current' || selectedPeriod !== 'monthly' ? (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                            Active
-                        </span>
-                    ) : null}
-                </div>
-                {showMobileFilters ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-            </button>
-        </div>
-    );
-
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-6">
-            {/* Header */}
-            <div className="mb-6 md:mb-8">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">Performance Dashboard</h1>
-                        <p className="text-gray-600 mt-1 text-sm md:text-base">Your performance reviews and analytics</p>
-                    </div>
-                    <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-xl shadow-sm border border-gray-200">
-                        <div className="p-2 bg-gradient-to-r from-blue-100 to-blue-50 rounded-lg">
-                            <UserIcon size={20} className="text-blue-600" />
-                        </div>
+        <div className="min-h-screen bg-slate-50">
+            <GradientBg />
+
+            {/* Hero Header */}
+            <div className="relative z-10 pt-8 md:pt-12 px-4 md:px-8 pb-8">
+                <div className="max-w-7xl mx-auto">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div>
-                            <div className="text-xs md:text-sm text-gray-500">Signed in as</div>
-                            <div className="font-semibold text-gray-900 text-sm md:text-base">
-                                {currentEmployee.firstName && currentEmployee.lastName
-                                    ? `${currentEmployee.firstName} ${currentEmployee.lastName}`
-                                    : 'Loading...'}
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
+                                    <Sparkles size={24} className="text-white" />
+                                </div>
+                                <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Performance Hub</h1>
                             </div>
+                            <p className="text-gray-600 text-lg md:text-xl">Track your growth and achievements</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Main Content Container */}
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Left Column - Stats and Charts */}
-                <div className="lg:w-2/3 space-y-6">
-                    {/* Filter Controls */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6 shadow-sm">
-                        <MobileFiltersToggle />
-
-                        {/* Desktop Filters */}
-                        <div className={`${showMobileFilters ? 'block' : 'hidden md:block'}`}>
-                            <div className="mb-4">
-                                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                    <Filter size={20} className="text-blue-600" />
-                                    Filter Reviews by Period
-                                </h2>
-                                <p className="text-gray-600 text-sm mt-1">Select time period to view ratings</p>
+            {/* Main Content */}
+            <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 pb-12">
+                {/* Control Bar */}
+                <div className="mb-8 backdrop-blur-xl bg-white bg-opacity-70 border border-white border-opacity-30 rounded-2xl p-5 md:p-6 shadow-lg">
+                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                        <div className="flex items-center gap-3 flex-1">
+                            <Filter size={20} className="text-blue-600" />
+                            <div>
+                                <div className="text-sm font-semibold text-gray-900">Filter Reviews</div>
+                                <div className="text-xs text-gray-500">Select period to view analytics</div>
                             </div>
-
-                            <div className="flex flex-col md:flex-row gap-4">
-                                {/* Period Tabs */}
-                                <div className="flex bg-gray-100 p-1 rounded-lg w-full md:w-auto">
-                                    {(['monthly', 'quarterly', 'yearly'] as const).map((period) => (
-                                        <button
-                                            key={period}
-                                            onClick={() => {
-                                                setSelectedPeriod(period);
-                                                setSelectedTimeRange('current'); // Reset to current period
-                                            }}
-                                            className={`flex-1 md:flex-none px-3 md:px-4 py-2 text-sm rounded-md transition-all ${selectedPeriod === period
-                                                ? 'bg-white text-blue-600 shadow-sm font-medium'
-                                                : 'text-gray-600 hover:text-gray-900'
-                                                }`}
-                                        >
-                                            {period.charAt(0).toUpperCase() + period.slice(1)}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                {/* Time Range Selector */}
-                                <div className="relative flex-1">
-                                    <select
-                                        aria-label="Select time range"
-                                        value={selectedTimeRange}
-                                        onChange={(e) => setSelectedTimeRange(e.target.value)}
-                                        className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm bg-white appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black"
+                        </div>
+                        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                            <div className="flex bg-gray-100 p-1 rounded-lg">
+                                {(['monthly', 'quarterly', 'yearly'] as const).map((period) => (
+                                    <button
+                                        key={period}
+                                        onClick={() => {
+                                            setSelectedPeriod(period);
+                                            setSelectedTimeRange('current');
+                                        }}
+                                        className={`px-3 md:px-4 py-2 text-xs md:text-sm font-medium rounded-md transition-all ${selectedPeriod === period
+                                            ? 'bg-white text-blue-600 shadow-md'
+                                            : 'text-gray-600 hover:text-gray-900'
+                                            }`}
                                     >
-                                        <option value="current">
-                                            Current {selectedPeriod === 'monthly' ? 'Month' : selectedPeriod === 'quarterly' ? 'Quarter' : 'Year'}
-                                        </option>
-                                        {getAllTimeRanges.map(range => (
-                                            <option key={range} value={range}>
-                                                {range}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 ">
-                                        <Calendar size={16} className="text-black mb-2" />
-                                    </div>
-                                </div>
+                                        {period.charAt(0).toUpperCase() + period.slice(1)}
+                                    </button>
+                                ))}
                             </div>
-
-                            {/* Active Filter Info */}
-                            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                    <div className="flex items-center gap-2">
-                                        <div className="text-sm font-medium text-blue-700">Active Filter:</div>
-                                        <div className="bg-white px-3 py-1 rounded-lg border border-blue-200 text-sm font-semibold text-blue-600">
-                                            {getFilterDisplayText()}
-                                        </div>
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                        Showing <span className="font-semibold text-blue-600">{filteredReviewsCount}</span> of{' '}
-                                        <span className="font-semibold">{totalReviews}</span> total reviews
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                        <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl border border-blue-100 p-4 md:p-6 shadow-sm">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="text-xs md:text-sm text-gray-500 mb-1">Period Rating</div>
-                                    <div className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
-                                        {averageRating.toFixed(1)}
-                                        <span className="text-sm md:text-lg text-gray-500">/5</span>
-                                    </div>
-                                    <div className="text-xs text-gray-500 mt-1">For {getFilterDisplayText()}</div>
-                                </div>
-
-                            </div>
-                            <div className="mt-3 md:mt-4">
-                                <StarRating rating={averageRating} size={16} />
-                            </div>
-                        </div>
-
-                        <div className="bg-gradient-to-br from-white to-emerald-50 rounded-xl border border-emerald-100 p-4 md:p-6 shadow-sm">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="text-xs md:text-sm text-gray-500 mb-1">Overall Rating</div>
-                                    <div className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
-                                        {overallAverageRating.toFixed(1)}
-                                        <span className="text-sm md:text-lg text-gray-500">/5</span>
-                                    </div>
-                                    <div className="text-xs text-gray-500 mt-1">All {totalReviews} reviews</div>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <div className="bg-gradient-to-br from-white to-green-50 rounded-xl border border-green-100 p-4 md:p-6 shadow-sm">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="text-xs md:text-sm text-gray-500 mb-1">Latest Rating</div>
-                                    <div className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
-                                        {latestReview ? `${latestReview.rating.toFixed(1)}` : '-'}
-                                        <span className="text-sm md:text-lg text-gray-500">/5</span>
-                                    </div>
-                                </div>
-
-                            </div>
-                            <div className="mt-3 md:mt-4">
-                                {latestReview && <StarRating rating={latestReview.rating} size={14} />}
-                                <div className="text-xs md:text-sm text-gray-600 mt-1">
-                                    {latestReview ? latestReview.month : 'N/A'}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-gradient-to-br from-white to-purple-50 rounded-xl border border-purple-100 p-4 md:p-6 shadow-sm">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="text-xs md:text-sm text-gray-500 mb-1">Position</div>
-                                    <div className="text-sm md:text-lg font-bold text-gray-900 line-clamp-2">
-                                        {currentEmployee.position || 'N/A'}
-                                    </div>
-                                </div>
-
-                            </div>
-                            <div className="mt-3 md:mt-4 text-xs md:text-sm text-gray-600 line-clamp-2">
-                                {currentEmployee.department || 'N/A'}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Charts Section */}
-                    <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 md:gap-6">
-                        {/* Rating Distribution Pie Chart */}
-                        <div className="bg-white rounded-xl md:rounded-2xl border border-gray-200 p-4 md:p-6 shadow-lg">
-                            <div className="flex items-center justify-between mb-4 md:mb-6">
-                                <div>
-                                    <h2 className="text-base md:text-lg lg:text-xl font-bold text-gray-900 flex items-center gap-2">
-                                        <div className="p-2 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg">
-                                            <PieChartIcon size={16} className="md:size-6 text-blue-600" />
-                                        </div>
-                                        Rating Distribution
-                                    </h2>
-                                    <p className="text-gray-600 text-xs md:text-sm mt-1">
-                                        {getFilterDisplayText()} • {filteredReviewsCount} reviews
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="h-60 md:h-80">
-                                {getRatingDistributionData.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie
-                                                {...({ activeIndex: activeRatingPieIndex } as any)}
-                                                {...({ activeShape: renderActiveShape } as any)}
-                                                data={getRatingDistributionData}
-                                                cx="50%"
-                                                cy="50%"
-                                                innerRadius={40}
-                                                outerRadius={70}
-                                                paddingAngle={2}
-                                                dataKey="value"
-                                                onMouseEnter={(_, index) => setActiveRatingPieIndex(index)}
-                                            >
-                                                {getRatingDistributionData.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.color} stroke="#fff" strokeWidth={2} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip
-                                                formatter={(value) => [`${value} reviews`, 'Count']}
-                                                contentStyle={{
-                                                    backgroundColor: 'white',
-                                                    border: '1px solid #e5e7eb',
-                                                    borderRadius: '0.5rem'
-                                                }}
-                                            />
-                                            <Legend
-                                                verticalAlign="bottom"
-                                                height={36}
-                                                formatter={(value) => (
-                                                    <span className="text-xs md:text-sm text-gray-700">{value}</span>
-                                                )}
-                                            />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center h-full">
-                                        <PieChartIcon size={48} className="text-gray-300 mb-3" />
-                                        <p className="text-gray-500">No rating data available</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Performance Trend Chart */}
-                        <div className="bg-white rounded-xl md:rounded-2xl border border-gray-200 p-4 md:p-6 shadow-lg">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 md:mb-6">
-                                <div>
-                                    <h2 className="text-base md:text-lg lg:text-xl font-bold text-gray-900 flex items-center gap-2">
-                                        <div className="p-2 bg-gradient-to-r from-green-50 to-green-100 rounded-lg">
-                                            <BarChart3 size={16} className="md:size-6 text-green-600" />
-                                        </div>
-                                        Performance Trend
-                                    </h2>
-                                    <p className="text-gray-600 text-xs md:text-sm mt-1">
-                                        {selectedPeriod === 'monthly' ? 'Monthly view' :
-                                            selectedPeriod === 'quarterly' ? 'Quarterly view' :
-                                                'Yearly view'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="h-60 md:h-80">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart
-                                        data={getTrendChartData}
-                                        margin={{ top: 20, right: 20, left: 0, bottom: 60 }}
-                                    >
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-                                        <XAxis
-                                            dataKey="period"
-                                            angle={-45}
-                                            textAnchor="end"
-                                            height={60}
-                                            tick={{ fontSize: 10 }}
-                                            stroke="#6b7280"
-                                        />
-                                        <YAxis
-                                            domain={[0, 5]}
-                                            tick={{ fontSize: 10 }}
-                                            stroke="#6b7280"
-                                            label={{
-                                                value: 'Rating',
-                                                angle: -90,
-                                                position: 'insideLeft',
-                                                offset: -10,
-                                                style: { textAnchor: 'middle', fill: '#6b7280', fontSize: 12 }
-                                            }}
-                                        />
-                                        <Tooltip
-                                            content={({ active, payload }) => {
-                                                if (active && payload && payload.length) {
-                                                    const data = payload[0].payload;
-                                                    return (
-                                                        <div className="bg-white p-3 border border-gray-200 rounded-xl shadow-lg">
-                                                            <div className="font-semibold text-gray-900 text-sm">{data.period}</div>
-                                                            <div className="space-y-1 text-xs mt-2">
-                                                                <div className="flex items-center justify-between gap-4">
-                                                                    <span className="text-gray-600">Average Rating:</span>
-                                                                    <span className="font-medium text-blue-600">{data.average.toFixed(1)}/5</span>
-                                                                </div>
-                                                                <div className="flex items-center justify-between">
-                                                                    <span className="text-gray-600">Reviews:</span>
-                                                                    <span className="font-medium">{data.count}</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                }
-                                                return null;
-                                            }}
-                                        />
-                                        <Bar
-                                            dataKey="average"
-                                            name="Average Rating"
-                                            radius={[4, 4, 0, 0]}
-                                            fill="#3B82F6"
-                                        />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
+                            <select
+                                aria-label="Select time range"
+                                value={selectedTimeRange}
+                                onChange={(e) => setSelectedTimeRange(e.target.value)}
+                                className="px-4 py-2 border border-gray-200 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                                <option value="current">Current {selectedPeriod === 'yearly' ? 'Year' : selectedPeriod === 'quarterly' ? 'Quarter' : 'Month'}</option>
+                                {getAllTimeRanges.map(range => (
+                                    <option key={range} value={range}>{range}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                 </div>
 
-                {/* Right Column - Sticky Recent Reviews */}
-                <div className="lg:w-1/3">
-                    <div className="sticky top-6 h-[calc(100vh-150px)] flex flex-col">
-                        <div className="bg-white rounded-xl md:rounded-2xl border border-gray-200 shadow-lg overflow-hidden flex flex-col h-full">
-                            {/* Recent Reviews Header */}
-                            <div className="p-4 md:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h2 className="text-lg md:text-xl font-bold text-gray-900">Recent Reviews</h2>
-                                        <p className="text-gray-600 text-sm mt-1">
-                                            All reviews • Latest first
-                                        </p>
-                                    </div>
-                                    <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                                        {recentReviews.length} reviews
-                                    </div>
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Period Rating Card */}
+                    <div className="group backdrop-blur-xl bg-gradient-to-br from-white via-blue-50 to-white border border-white border-opacity-30 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl group-hover:scale-110 transition-transform">
+                                <Zap size={20} className="text-blue-600" />
+                            </div>
+                            <span className="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">Period</span>
+                        </div>
+                        <div className="mb-3">
+                            <div className="text-4xl font-bold text-gray-900">{averageRating.toFixed(1)}</div>
+                            <div className="text-sm text-gray-600 mt-1">{getFilterDisplayText()}</div>
+                        </div>
+                        <div className="mt-4">
+                            <StarRating rating={averageRating} size={16} />
+                        </div>
+                    </div>
+
+                    {/* Overall Rating Card */}
+                    <div className="group backdrop-blur-xl bg-gradient-to-br from-white via-emerald-50 to-white border border-white border-opacity-30 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-3 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-xl group-hover:scale-110 transition-transform">
+                                <Star size={20} className="text-emerald-600" />
+                            </div>
+                            <span className="text-xs font-semibold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">Overall</span>
+                        </div>
+                        <div className="mb-3">
+                            <div className="text-4xl font-bold text-gray-900">{overallAverageRating.toFixed(1)}</div>
+                            <div className="text-sm text-gray-600 mt-1">All {totalReviews} reviews</div>
+                        </div>
+                        <div className="flex items-center gap-2 mt-4">
+                            <div className="flex gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                                ))}
+                            </div>
+                            <span className="text-xs text-emerald-600 font-medium">Excellent</span>
+                        </div>
+                    </div>
+
+                    {/* Latest Review Card */}
+                    <div className="group backdrop-blur-xl bg-gradient-to-br from-white via-purple-50 to-white border border-white border-opacity-30 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-3 bg-gradient-to-br from-purple-100 to-purple-50 rounded-xl group-hover:scale-110 transition-transform">
+                                <Clock size={20} className="text-purple-600" />
+                            </div>
+                            <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">Latest</span>
+                        </div>
+                        <div className="mb-3">
+                            <div className="text-4xl font-bold text-gray-900">{latestReview ? `${latestReview.rating.toFixed(1)}` : '-'}</div>
+                            <div className="text-sm text-gray-600 mt-1">{latestReview ? latestReview.month : 'N/A'}</div>
+                        </div>
+                        {latestReview && (
+                            <div className="mt-4">
+                                <StarRating rating={latestReview.rating} size={14} />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Position Card */}
+                    <div className="group backdrop-blur-xl bg-gradient-to-br from-white via-pink-50 to-white border border-white border-opacity-30 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-3 bg-gradient-to-br from-pink-100 to-pink-50 rounded-xl group-hover:scale-110 transition-transform">
+                                <TrendingUp size={20} className="text-pink-600" />
+                            </div>
+                            <span className="text-xs font-semibold text-pink-600 bg-pink-100 px-2 py-1 rounded-full">Role</span>
+                        </div>
+                        <div className="mb-2">
+                            <div className="text-lg font-bold text-gray-900 line-clamp-1">{currentEmployee.position || 'N/A'}</div>
+                            <div className="text-sm text-gray-600 mt-1 line-clamp-1">{currentEmployee.department || 'N/A'}</div>
+                        </div>
+                        <div className="mt-4 flex items-center gap-2 text-xs text-pink-600">
+                            <div className="w-2 h-2 rounded-full bg-pink-400"></div>
+                            Active
+                        </div>
+                    </div>
+                </div>
+
+                {/* Charts Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+                    {/* Rating Distribution */}
+                    <div className="backdrop-blur-xl bg-white bg-opacity-70 border border-white border-opacity-30 rounded-2xl p-6 shadow-lg overflow-hidden">
+                        <div className="mb-6">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg">
+                                    <BarChart3 size={20} className="text-blue-600" />
+                                </div>
+                                <h3 className="text-lg font-bold text-gray-900">Rating Distribution</h3>
+                            </div>
+                            <p className="text-sm text-gray-600">{getFilterDisplayText()} • {filteredReviewsCount} reviews</p>
+                        </div>
+                        <div className="h-72">
+                            {getRatingDistributionData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={getRatingDistributionData}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={50}
+                                            outerRadius={90}
+                                            paddingAngle={3}
+                                            dataKey="value"
+                                        >
+                                            {getRatingDistributionData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: 'white',
+                                                border: '1px solid #e5e7eb',
+                                                borderRadius: '0.75rem',
+                                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                                            }}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-gray-400">
+                                    <p>No data available</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Trend Chart */}
+                    <div className="backdrop-blur-xl bg-white bg-opacity-70 border border-white border-opacity-30 rounded-2xl p-6 shadow-lg overflow-hidden">
+                        <div className="mb-6">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-lg">
+                                    <TrendingUp size={20} className="text-emerald-600" />
+                                </div>
+                                <h3 className="text-lg font-bold text-gray-900">Performance Trend</h3>
+                            </div>
+                            <p className="text-sm text-gray-600">Ratings over time</p>
+                        </div>
+                        <div className="h-72">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={getTrendChartData} margin={{ top: 20, right: 20, left: 0, bottom: 50 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                                    <XAxis
+                                        dataKey="period"
+                                        angle={-45}
+                                        textAnchor="end"
+                                        height={60}
+                                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                                        stroke="#e5e7eb"
+                                    />
+                                    <YAxis
+                                        domain={[0, 5]}
+                                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                                        stroke="#e5e7eb"
+                                    />
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: 'white',
+                                            border: '1px solid #e5e7eb',
+                                            borderRadius: '0.75rem',
+                                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                                        }}
+                                        content={({ active, payload }) => {
+                                            if (active && payload?.[0]) {
+                                                const data = payload[0].payload;
+                                                return (
+                                                    <div className="p-3 space-y-1">
+                                                        <div className="font-semibold text-gray-900">{data.period}</div>
+                                                        <div className="text-sm text-blue-600">Rating: {data.average}/5</div>
+                                                        <div className="text-sm text-gray-600">Reviews: {data.count}</div>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                    <Bar dataKey="average" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Recent Reviews */}
+            <div className="mt-8">
+                <div className="backdrop-blur-xl bg-white bg-opacity-70 border border-white border-opacity-30 rounded-2xl p-6 shadow-lg overflow-hidden">
+                    <div className="mb-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-lg">
+                                    <Star size={20} className="text-yellow-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900">Latest Reviews</h3>
+                                    <p className="text-sm text-gray-600">Your most recent performance feedback</p>
                                 </div>
                             </div>
-
-                            {/* Reviews List - Scrollable */}
-                            <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] p-4 md:p-6">
-                                {isLoading ? (
-                                    <div className="flex justify-center items-center py-12">
-                                        <Loader size={28} className="animate-spin text-blue-500" />
-                                    </div>
-                                ) : recentReviews.length === 0 ? (
-                                    <div className="text-center py-12">
-                                        <Star size={40} className="mx-auto mb-4 text-gray-300" />
-                                        <p className="text-gray-600">No reviews found</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {recentReviews.map(review => (
-                                            <div key={review.id} className="group p-4 border border-gray-100 rounded-xl hover:shadow-md transition-all duration-300 hover:border-blue-100">
-                                                <div className="flex flex-col gap-3">
-                                                    {/* Review Header */}
-                                                    <div className="flex items-start justify-between">
-                                                        <div>
-                                                            <div className="flex items-center gap-2 mb-1">
-                                                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                                                    <UserIcon size={14} className="text-blue-600" />
-                                                                </div>
-                                                                <div>
-                                                                    <h3 className="font-semibold text-gray-900 text-sm">{review.reviewer}</h3>
-                                                                    <div className="text-xs text-blue-600">
-                                                                        {review.reviewerRole}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <div className="text-lg font-bold text-blue-600">
-                                                                {review.rating.toFixed(1)}
-                                                                <span className="text-xs text-gray-500">/5</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Rating */}
-                                                    <div className="flex items-center justify-between">
-                                                        <StarRating rating={review.rating} size={14} />
-                                                        <div className={`px-2 py-1 text-xs font-medium rounded-full ${review.rating >= 4.5 ? 'bg-emerald-100 text-emerald-700' :
-                                                            review.rating >= 4.0 ? 'bg-blue-100 text-blue-700' :
-                                                                review.rating >= 3.5 ? 'bg-yellow-100 text-yellow-700' :
-                                                                    'bg-gray-100 text-gray-700'
-                                                            }`}>
-                                                            {review.rating >= 4.5 ? 'Excellent' :
-                                                                review.rating >= 4.0 ? 'Good' :
-                                                                    review.rating >= 3.5 ? 'Average' : 'Needs Improvement'}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Comment */}
-                                                    <p className="text-gray-700 text-sm line-clamp-2 mt-2">
-                                                        {review.comment}
-                                                    </p>
-
-                                                    {/* Footer */}
-                                                    <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
-                                                        <div className="flex items-center gap-1">
-                                                            <Calendar size={12} />
-                                                            {new Date(review.date).toLocaleDateString('en-US', {
-                                                                month: 'short',
-                                                                day: 'numeric',
-                                                                year: 'numeric'
-                                                            })}
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-blue-600 font-medium">
-                                                                {review.quarter}
-                                                            </span>
-                                                            <span className="text-gray-400">•</span>
-                                                            <span className="text-gray-600">
-                                                                {review.month}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Footer */}
-                            <div className="p-4 border-t border-gray-200 bg-gray-50">
-                                <div className="text-center">
-                                    <div className="text-sm text-gray-600 mb-1">
-                                        Showing {recentReviews.length} of {totalReviews} reviews
-                                    </div>
-                                    <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-                                        <div className="flex items-center gap-1">
-                                            <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                                            <span>Overall: {overallAverageRating.toFixed(1)}/5</span>
-                                        </div>
-                                        <span className="text-gray-300">•</span>
-                                        <span>{totalReviews} total reviews</span>
-                                    </div>
-                                </div>
+                            <div className="text-sm font-semibold bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
+                                {recentReviews.length}
                             </div>
                         </div>
                     </div>
+
+                    {isLoading ? (
+                        <div className="flex justify-center items-center py-16">
+                            <Loader size={32} className="animate-spin text-blue-500" />
+                        </div>
+                    ) : recentReviews.length === 0 ? (
+                        <div className="text-center py-16">
+                            <Star size={48} className="mx-auto mb-4 text-gray-300" />
+                            <p className="text-gray-600">No reviews yet</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {recentReviews.map((review) => (
+                                <div key={review.id} className="group bg-gradient-to-br from-white via-gray-50 to-white border border-gray-200 rounded-xl p-4 hover:shadow-lg hover:border-blue-200 transition-all duration-300">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex items-center gap-3 flex-1">
+                                            <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                <UserIcon size={18} className="text-white" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <h4 className="font-semibold text-gray-900 text-sm truncate">{review.reviewer}</h4>
+                                                <p className="text-xs text-blue-600 truncate">{review.reviewerRole}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right flex-shrink-0">
+                                            <div className="text-2xl font-bold text-blue-600">{review.rating.toFixed(1)}</div>
+                                            <div className="text-xs text-gray-500">/5</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <StarRating rating={review.rating} size={14} />
+                                    </div>
+
+                                    <p className="text-sm text-gray-700 mb-4 line-clamp-2 h-10">
+                                        "{review.comment}"
+                                    </p>
+
+                                    <div className={`py-2 px-3 rounded-lg text-xs font-medium text-center ${review.rating >= 4.5 ? 'bg-emerald-100 text-emerald-700' :
+                                        review.rating >= 4.0 ? 'bg-blue-100 text-blue-700' :
+                                            review.rating >= 3.5 ? 'bg-yellow-100 text-yellow-700' :
+                                                'bg-gray-100 text-gray-700'
+                                        }`}>
+                                        {review.rating >= 4.5 ? '⭐ Excellent' :
+                                            review.rating >= 4.0 ? '✓ Good' :
+                                                review.rating >= 3.5 ? '~ Average' : '↗ Needs Work'}
+                                    </div>
+
+                                    <div className="border-t border-gray-100 mt-4 pt-3 text-xs text-gray-500 flex items-center justify-between">
+                                        <span>{new Date(review.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                        <span className="text-blue-600 font-medium">{review.quarter}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
