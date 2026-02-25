@@ -17,224 +17,7 @@ interface Review {
     monthNum: number;
 }
 
-// Current logged-in employee
-const currentEmployee = {
-    id: 'emp-123',
-    firstName: 'Rajesh',
-    lastName: 'Kumar',
-    employeeId: 'EMP-789',
-    department: 'Engineering',
-    position: 'Senior Developer',
-    hireDate: '2022-03-15'
-};
 
-// RAW DATA - Complete review data
-const RAW_REVIEWS_DATA: Review[] = [
-    {
-        id: 'r-1',
-        employeeId: 'emp-123',
-        reviewer: 'Sarah Johnson',
-        reviewerRole: 'Engineering Manager',
-        rating: 4.5,
-        comment: 'Excellent work on the project delivery. Rajesh consistently meets deadlines and produces high-quality code.',
-        date: '2024-03-15',
-        quarter: 'Q1 2024',
-        month: 'March 2024',
-        year: 2024,
-        monthNum: 3
-    },
-    {
-        id: 'r-2',
-        employeeId: 'emp-123',
-        reviewer: 'Michael Chen',
-        reviewerRole: 'Product Lead',
-        rating: 4.0,
-        comment: 'Great teamwork and communication skills. Always willing to help team members.',
-        date: '2024-02-20',
-        quarter: 'Q1 2024',
-        month: 'February 2024',
-        year: 2024,
-        monthNum: 2
-    },
-    {
-        id: 'r-3',
-        employeeId: 'emp-123',
-        reviewer: 'Priya Sharma',
-        reviewerRole: 'Senior Developer',
-        rating: 4.8,
-        comment: 'Strong technical skills demonstrated in the recent system architecture redesign.',
-        date: '2024-01-10',
-        quarter: 'Q1 2024',
-        month: 'January 2024',
-        year: 2024,
-        monthNum: 1
-    },
-    {
-        id: 'r-4',
-        employeeId: 'emp-123',
-        reviewer: 'Robert Williams',
-        reviewerRole: 'Director',
-        rating: 4.2,
-        comment: 'Consistent performer with good initiative. Shows leadership potential.',
-        date: '2023-12-05',
-        quarter: 'Q4 2023',
-        month: 'December 2023',
-        year: 2023,
-        monthNum: 12
-    },
-    {
-        id: 'r-5',
-        employeeId: 'emp-123',
-        reviewer: 'David Lee',
-        reviewerRole: 'Team Lead',
-        rating: 3.8,
-        comment: 'Good work but needs to improve documentation. Technical skills are solid.',
-        date: '2023-11-15',
-        quarter: 'Q4 2023',
-        month: 'November 2023',
-        year: 2023,
-        monthNum: 11
-    },
-    {
-        id: 'r-6',
-        employeeId: 'emp-123',
-        reviewer: 'Emma Wilson',
-        reviewerRole: 'CTO',
-        rating: 4.6,
-        comment: 'Excellent problem-solving abilities. Handled the production issue exceptionally well.',
-        date: '2023-10-22',
-        quarter: 'Q4 2023',
-        month: 'October 2023',
-        year: 2023,
-        monthNum: 10
-    },
-    {
-        id: 'r-7',
-        employeeId: 'emp-123',
-        reviewer: 'Alex Martinez',
-        reviewerRole: 'Engineering Manager',
-        rating: 4.3,
-        comment: 'Great leadership and mentoring skills. Helped onboard 2 new team members successfully.',
-        date: '2023-09-30',
-        quarter: 'Q3 2023',
-        month: 'September 2023',
-        year: 2023,
-        monthNum: 9
-    },
-    {
-        id: 'r-8',
-        employeeId: 'emp-123',
-        reviewer: 'Lisa Brown',
-        reviewerRole: 'Product Manager',
-        rating: 4.1,
-        comment: 'Good collaboration with product team. Understands business requirements well.',
-        date: '2023-08-15',
-        quarter: 'Q3 2023',
-        month: 'August 2023',
-        year: 2023,
-        monthNum: 8
-    },
-    {
-        id: 'r-9',
-        employeeId: 'emp-123',
-        reviewer: 'James Wilson',
-        reviewerRole: 'Senior Developer',
-        rating: 4.7,
-        comment: 'Outstanding performance in the recent hackathon. Innovative solution for data processing.',
-        date: '2023-07-20',
-        quarter: 'Q3 2023',
-        month: 'July 2023',
-        year: 2023,
-        monthNum: 7
-    },
-    {
-        id: 'r-10',
-        employeeId: 'emp-123',
-        reviewer: 'Maria Garcia',
-        reviewerRole: 'Director of Engineering',
-        rating: 4.4,
-        comment: 'Consistently delivers high-quality work. Good team player and communicator.',
-        date: '2023-06-10',
-        quarter: 'Q2 2023',
-        month: 'June 2023',
-        year: 2023,
-        monthNum: 6
-    },
-    {
-        id: 'r-11',
-        employeeId: 'emp-123',
-        reviewer: 'Thomas Anderson',
-        reviewerRole: 'Tech Lead',
-        rating: 3.9,
-        comment: 'Solid performance. Could improve on taking more ownership of projects.',
-        date: '2023-05-18',
-        quarter: 'Q2 2023',
-        month: 'May 2023',
-        year: 2023,
-        monthNum: 5
-    },
-    {
-        id: 'r-12',
-        employeeId: 'emp-123',
-        reviewer: 'Sophia Chen',
-        reviewerRole: 'Engineering Manager',
-        rating: 4.5,
-        comment: 'Excellent work on the microservices migration project. Met all deadlines.',
-        date: '2023-04-05',
-        quarter: 'Q2 2023',
-        month: 'April 2023',
-        year: 2023,
-        monthNum: 4
-    }
-];
-
-// Static Data for Charts
-const STATIC_CHART_DATA = {
-    // Monthly trend data for 2024
-    monthlyTrend2024: [
-        { period: 'Jan 2024', average: 4.8, count: 1 },
-        { period: 'Feb 2024', average: 4.0, count: 1 },
-        { period: 'Mar 2024', average: 4.5, count: 1 }
-    ],
-    
-    // Quarterly trend data
-    quarterlyTrend: [
-        { period: 'Q1 2024', average: 4.4, count: 3 },
-        { period: 'Q4 2023', average: 4.2, count: 3 },
-        { period: 'Q3 2023', average: 4.4, count: 3 },
-        { period: 'Q2 2023', average: 4.3, count: 3 }
-    ],
-    
-    // Yearly trend data
-    yearlyTrend: [
-        { period: '2024', average: 4.4, count: 3 },
-        { period: '2023', average: 4.3, count: 9 }
-    ],
-    
-    // Rating distribution data for different time periods
-    ratingDistributionAll: [
-        { name: '4.5 ★', value: 3, rating: 4.5, color: '#34D399' },
-        { name: '4.0 ★', value: 3, rating: 4.0, color: '#3B82F6' },
-        { name: '4.8 ★', value: 1, rating: 4.8, color: '#10B981' },
-        { name: '4.2 ★', value: 1, rating: 4.2, color: '#60A5FA' },
-        { name: '3.8 ★', value: 1, rating: 3.8, color: '#F59E0B' },
-        { name: '4.6 ★', value: 1, rating: 4.6, color: '#10B981' },
-        { name: '4.3 ★', value: 1, rating: 4.3, color: '#3B82F6' },
-        { name: '4.1 ★', value: 1, rating: 4.1, color: '#60A5FA' }
-    ],
-    
-    // Current month rating distribution
-    ratingDistributionCurrentMonth: [
-        { name: '4.5 ★', value: 1, rating: 4.5, color: '#34D399' }
-    ],
-    
-    // Current quarter rating distribution
-    ratingDistributionCurrentQuarter: [
-        { name: '4.5 ★', value: 1, rating: 4.5, color: '#34D399' },
-        { name: '4.0 ★', value: 1, rating: 4.0, color: '#3B82F6' },
-        { name: '4.8 ★', value: 1, rating: 4.8, color: '#10B981' }
-    ]
-};
 
 // Helper functions
 const getMonthName = (dateString: string) => new Date(dateString).toLocaleDateString('en-US', { month: 'long' });
@@ -361,16 +144,26 @@ const EmployeePerformanceDashboard: React.FC = () => {
     const [activeRatingPieIndex, setActiveRatingPieIndex] = useState<number>(0);
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+    // TODO: Replace with actual API call to fetch employee data
+    const [currentEmployee, setCurrentEmployee] = useState({
+        id: '',
+        firstName: '',
+        lastName: '',
+        employeeId: '',
+        department: '',
+        position: '',
+        hireDate: ''
+    });
+
     // Get current date info
     const currentInfo = useMemo(() => getCurrentDateInfo(), []);
 
-    // Initialize with raw reviews data
+    // TODO: Replace with actual API call to fetch reviews
     useEffect(() => {
         setIsLoading(true);
-        // Sort reviews by date (newest first)
-        const sortedReviews = [...RAW_REVIEWS_DATA].sort((a, b) => 
-            new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
+        // Fetch reviews from API
+        // const reviews = await api.performance.getReviews();
+        const sortedReviews: Review[] = [];
         setAllReviews(sortedReviews);
         setTimeout(() => setIsLoading(false), 300);
     }, []);
@@ -428,51 +221,112 @@ const EmployeePerformanceDashboard: React.FC = () => {
         return allReviews.slice(0, 8); // Show 8 most recent reviews
     }, [allReviews]);
 
-    // Get static rating distribution data based on selection
+    // Get rating distribution data dynamically based on filtered reviews
     const getRatingDistributionData = useMemo(() => {
-        const selectedValue = selectedTimeRange === 'current' 
-            ? getCurrentPeriodValue() 
-            : selectedTimeRange;
-        
-        if (selectedPeriod === 'monthly') {
-            if (selectedValue === 'March 2024') {
-                return STATIC_CHART_DATA.ratingDistributionCurrentMonth;
-            }
-        } else if (selectedPeriod === 'quarterly') {
-            if (selectedValue === 'Q1 2024') {
-                return STATIC_CHART_DATA.ratingDistributionCurrentQuarter;
-            }
+        if (filteredReviews.length === 0) {
+            return [];
         }
-        
-        // Default to all reviews distribution
-        return STATIC_CHART_DATA.ratingDistributionAll;
-    }, [selectedPeriod, selectedTimeRange, currentInfo]);
 
-    // Get static trend chart data based on selection
+        // Group reviews by rating
+        const ratingGroups: Record<number, { count: number; color: string }> = {};
+        filteredReviews.forEach(review => {
+            const roundedRating = Math.round(review.rating * 2) / 2; // Round to nearest 0.5
+            if (!ratingGroups[roundedRating]) {
+                ratingGroups[roundedRating] = { count: 0, color: RATING_COLORS[roundedRating.toFixed(1)] || '#3B82F6' };
+            }
+            ratingGroups[roundedRating].count += 1;
+        });
+
+        // Convert to array and sort by rating descending
+        return Object.entries(ratingGroups)
+            .map(([rating, data]) => ({
+                name: `${rating} ★`,
+                value: data.count,
+                rating: parseFloat(rating),
+                color: data.color
+            }))
+            .sort((a, b) => b.rating - a.rating);
+    }, [filteredReviews]);
+
+    // Get trend chart data dynamically based on selected period
     const getTrendChartData = useMemo(() => {
-        if (selectedPeriod === 'monthly') {
-            return STATIC_CHART_DATA.monthlyTrend2024;
-        } else if (selectedPeriod === 'quarterly') {
-            return STATIC_CHART_DATA.quarterlyTrend;
-        } else {
-            return STATIC_CHART_DATA.yearlyTrend;
+        if (allReviews.length === 0) {
+            return [];
         }
-    }, [selectedPeriod]);
+
+        if (selectedPeriod === 'monthly') {
+            // Group by month and calculate averages
+            const monthGroups: Record<string, { ratings: number[]; period: string }> = {};
+            allReviews.forEach(review => {
+                if (!monthGroups[review.month]) {
+                    monthGroups[review.month] = { ratings: [], period: review.month };
+                }
+                monthGroups[review.month].ratings.push(review.rating);
+            });
+
+            return Object.values(monthGroups)
+                .map(group => ({
+                    period: group.period,
+                    average: Math.round((group.ratings.reduce((a, b) => a + b, 0) / group.ratings.length) * 10) / 10,
+                    count: group.ratings.length
+                }))
+                .sort((a, b) => new Date(a.period).getTime() - new Date(b.period).getTime());
+        } else if (selectedPeriod === 'quarterly') {
+            // Group by quarter and calculate averages
+            const quarterGroups: Record<string, { ratings: number[]; period: string }> = {};
+            allReviews.forEach(review => {
+                if (!quarterGroups[review.quarter]) {
+                    quarterGroups[review.quarter] = { ratings: [], period: review.quarter };
+                }
+                quarterGroups[review.quarter].ratings.push(review.rating);
+            });
+
+            return Object.values(quarterGroups)
+                .map(group => ({
+                    period: group.period,
+                    average: Math.round((group.ratings.reduce((a, b) => a + b, 0) / group.ratings.length) * 10) / 10,
+                    count: group.ratings.length
+                }))
+                .sort((a, b) => {
+                    const yearA = parseInt(a.period.split(' ')[1]);
+                    const quarterA = parseInt(a.period.split(' ')[0].replace('Q', ''));
+                    const yearB = parseInt(b.period.split(' ')[1]);
+                    const quarterB = parseInt(b.period.split(' ')[0].replace('Q', ''));
+                    if (yearA !== yearB) return yearA - yearB;
+                    return quarterA - quarterB;
+                });
+        } else {
+            // Group by year and calculate averages
+            const yearGroups: Record<string, { ratings: number[]; period: string }> = {};
+            allReviews.forEach(review => {
+                const year = review.year.toString();
+                if (!yearGroups[year]) {
+                    yearGroups[year] = { ratings: [], period: year };
+                }
+                yearGroups[year].ratings.push(review.rating);
+            });
+
+            return Object.values(yearGroups)
+                .map(group => ({
+                    period: group.period,
+                    average: Math.round((group.ratings.reduce((a, b) => a + b, 0) / group.ratings.length) * 10) / 10,
+                    count: group.ratings.length
+                }))
+                .sort((a, b) => parseInt(a.period) - parseInt(b.period));
+        }
+    }, [allReviews, selectedPeriod]);
 
     // Statistics
     const averageRating = useMemo(() => {
         if (filteredReviews.length === 0) {
-            // Return default average based on selection
-            if (selectedPeriod === 'monthly' && selectedTimeRange === 'current') return 4.5;
-            if (selectedPeriod === 'quarterly' && selectedTimeRange === 'current') return 4.4;
-            return 4.3;
+            return 0;
         }
         const total = filteredReviews.reduce((sum, r) => sum + r.rating, 0);
         return Math.round((total / filteredReviews.length) * 10) / 10;
     }, [filteredReviews, selectedPeriod, selectedTimeRange]);
 
     const overallAverageRating = useMemo(() => {
-        if (allReviews.length === 0) return 4.3;
+        if (allReviews.length === 0) return 0;
         const total = allReviews.reduce((sum, r) => sum + r.rating, 0);
         return Math.round((total / allReviews.length) * 10) / 10;
     }, [allReviews]);
@@ -496,13 +350,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
     // Get filtered reviews count
     const filteredReviewsCount = useMemo(() => {
-        if (selectedTimeRange === 'current') {
-            if (selectedPeriod === 'monthly') return 1; // March 2024
-            if (selectedPeriod === 'quarterly') return 3; // Q1 2024
-            return 3; // 2024
-        }
         return filteredReviews.length;
-    }, [filteredReviews, selectedPeriod, selectedTimeRange]);
+    }, [filteredReviews]);
 
     // Mobile filters toggle component
     const MobileFiltersToggle = () => (
@@ -541,7 +390,11 @@ const EmployeePerformanceDashboard: React.FC = () => {
                         </div>
                         <div>
                             <div className="text-xs md:text-sm text-gray-500">Signed in as</div>
-                            <div className="font-semibold text-gray-900 text-sm md:text-base">{currentEmployee.firstName} {currentEmployee.lastName}</div>
+                            <div className="font-semibold text-gray-900 text-sm md:text-base">
+                                {currentEmployee.firstName && currentEmployee.lastName
+                                    ? `${currentEmployee.firstName} ${currentEmployee.lastName}`
+                                    : 'Loading...'}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -554,7 +407,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                     {/* Filter Controls */}
                     <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6 shadow-sm">
                         <MobileFiltersToggle />
-                        
+
                         {/* Desktop Filters */}
                         <div className={`${showMobileFilters ? 'block' : 'hidden md:block'}`}>
                             <div className="mb-4">
@@ -638,7 +491,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                                     </div>
                                     <div className="text-xs text-gray-500 mt-1">For {getFilterDisplayText()}</div>
                                 </div>
-                                
+
                             </div>
                             <div className="mt-3 md:mt-4">
                                 <StarRating rating={averageRating} size={16} />
@@ -655,7 +508,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                                     </div>
                                     <div className="text-xs text-gray-500 mt-1">All {totalReviews} reviews</div>
                                 </div>
-                                
+
                             </div>
                         </div>
 
@@ -664,16 +517,16 @@ const EmployeePerformanceDashboard: React.FC = () => {
                                 <div>
                                     <div className="text-xs md:text-sm text-gray-500 mb-1">Latest Rating</div>
                                     <div className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
-                                        {latestReview ? `${latestReview.rating.toFixed(1)}` : '4.5'}
+                                        {latestReview ? `${latestReview.rating.toFixed(1)}` : '-'}
                                         <span className="text-sm md:text-lg text-gray-500">/5</span>
                                     </div>
                                 </div>
-                                
+
                             </div>
                             <div className="mt-3 md:mt-4">
-                                <StarRating rating={latestReview?.rating || 4.5} size={14} />
+                                {latestReview && <StarRating rating={latestReview.rating} size={14} />}
                                 <div className="text-xs md:text-sm text-gray-600 mt-1">
-                                    {latestReview ? latestReview.month : 'March 2024'}
+                                    {latestReview ? latestReview.month : 'N/A'}
                                 </div>
                             </div>
                         </div>
@@ -682,12 +535,14 @@ const EmployeePerformanceDashboard: React.FC = () => {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <div className="text-xs md:text-sm text-gray-500 mb-1">Position</div>
-                                    <div className="text-sm md:text-lg font-bold text-gray-900 line-clamp-2">{currentEmployee.position}</div>
+                                    <div className="text-sm md:text-lg font-bold text-gray-900 line-clamp-2">
+                                        {currentEmployee.position || 'N/A'}
+                                    </div>
                                 </div>
-                                
+
                             </div>
                             <div className="mt-3 md:mt-4 text-xs md:text-sm text-gray-600 line-clamp-2">
-                                {currentEmployee.department}
+                                {currentEmployee.department || 'N/A'}
                             </div>
                         </div>
                     </div>

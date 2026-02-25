@@ -464,6 +464,7 @@ root.render(
               <Route path="/employee/requests" element={<EmployeeRequestsPage />} />
               <Route path="/employee/events" element={<EmployeeEventsPage />} />
               <Route path="/employee/notifications" element={<EmployeeNotificationsPage />} />
+              <Route path="/employee/notifications/:id" element={<EmployeeNotificationsPage />} />
               <Route path="/employee/profile" element={<EmployeeProfilePage />} />
 
               {/* Admin routes */}

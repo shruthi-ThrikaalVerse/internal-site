@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, Bell, Menu, User as UserIcon, ChevronDown, Check, Info, AlertTriangle, MessageSquare, Shield, Clock, X } from 'lucide-react';
 import { getUserSpecificKey } from '../../utils/storage.ts';
 
@@ -30,7 +30,15 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     };
 
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+
+    // Close notifications dropdown when a navigation originates elsewhere
+    const handleCloseDropdown = () => setShowNotifications(false);
+    window.addEventListener('closeNotificationsDropdown', handleCloseDropdown as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('closeNotificationsDropdown', handleCloseDropdown as EventListener);
+    };
   }, []);
 
   const loadUserData = () => {
@@ -49,10 +57,13 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     setNotifications(saved);
   };
 
+  const navigate = useNavigate();
+
   const markAsRead = (id: string) => {
     const updated = notifications.map(n => n.id === id ? { ...n, read: true } : n);
     localStorage.setItem(getUserSpecificKey('user_notifications_v1'), JSON.stringify(updated));
     setNotifications(updated);
+    // let other tabs/components know
     window.dispatchEvent(new Event('storage'));
   };
 
@@ -83,6 +94,18 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     }
   };
 
+  const mapTypeToPath = (type?: string, id?: string) => {
+    if (!type) return undefined;
+    switch (type) {
+      case 'performance': return '/employee/performance';
+      case 'attendance': return '/employee/attendance';
+      case 'events': return '/employee/events';
+      case 'login_activity': return '/employee/attendance';
+      case 'system_updates': return `/employee/notifications/${id || ''}`;
+      default: return undefined;
+    }
+  };
+
   const getDisplayInitial = () => {
     const firstName = user?.firstName || '';
     const name = user?.name || '';
@@ -96,21 +119,21 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <header className="h-16 md:h-20 bg-transparent border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 lg:px-10 z-40 sticky top-0">
+    <header className="h-16 md:h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 lg:px-10 z-50 sticky top-0">
       {/* Left Section: Menu Toggle & Search */}
-      <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0">
+      <div className="flex items-center gap-2 md:gap-6 flex-1 min-w-0">
         <button
           onClick={toggleSidebar}
           className="p-2 md:p-3 hover:bg-slate-100 rounded-2xl text-slate-500 transition-all active:scale-90 flex-shrink-0"
           aria-label="Toggle Sidebar"
         >
-          <Menu size={20} className="md:size-22" />
+          <Menu size={20} className="md:size-22 text-black" />
         </button>
-        
+
         {/* Desktop Search Bar */}
         <div className="hidden md:flex items-center flex-1 max-w-xl">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 size-5" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-black size-5" />
             <input
               type="text"
               placeholder="Search reports, employees, documents..."
@@ -122,15 +145,15 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         {/* Mobile Search Button */}
         <button
           onClick={() => setShowMobileSearch(true)}
-          className="md:hidden p-2 hover:bg-slate-100 rounded-2xl text-slate-500 transition-all active:scale-90"
+          className="md:hidden p-2 hover:bg-slate-100 rounded-2xl text-slate-500 transition-all active:scale-90 flex-shrink-0"
           aria-label="Open Search"
         >
-          <Search size={20} />
+          <Search size={20} className="text-black" />
         </button>
 
         {/* Mobile Search Overlay */}
         {showMobileSearch && (
-          <div className="fixed inset-0 bg-white z-50 md:hidden flex items-center px-4">
+          <div className="fixed inset-0 bg-white z-[9998] md:hidden flex flex-col px-4 py-4">
             <div className="w-full" ref={searchRef}>
               <div className="flex items-center gap-3 mb-6">
                 <button
@@ -143,7 +166,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 <h2 className="text-lg font-bold text-slate-800">Search</h2>
               </div>
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 size-5" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-black size-5" />
                 <input
                   type="text"
                   placeholder="Search reports, employees, documents..."
@@ -190,12 +213,32 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
           {showNotifications && (
             <div className="absolute right-0 mt-3 md:mt-4 w-screen max-w-xs md:w-96 bg-white rounded-2xl md:rounded-[2rem] shadow-2xl border border-slate-100 py-2 z-50 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300 max-h-[80vh]">
               <div className="px-4 md:px-8 py-4 md:py-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-                <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Alerts</span>
-                {unreadCount > 0 && (
-                  <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 md:px-3 py-1 rounded-lg border border-blue-100">
-                    {unreadCount} New
-                  </span>
-                )}
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Alerts</span>
+                  {unreadCount > 0 && (
+                    <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 md:px-3 py-1 rounded-lg border border-blue-100">
+                      {unreadCount} New
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      try {
+                        setNotifications([]);
+                        localStorage.removeItem(getUserSpecificKey('user_notifications_v1'));
+                      } catch (e) {
+                        // ignore
+                      }
+                      // notify other tabs/components
+                      window.dispatchEvent(new Event('storage'));
+                    }}
+                    className="text-sm text-rose-600 hover:text-rose-700 font-medium px-2 py-1 rounded-md"
+                    aria-label="Clear notifications"
+                  >
+                    Clear
+                  </button>
+                </div>
               </div>
               <div className="max-h-[300px] md:max-h-[450px] overflow-y-auto custom-scrollbar">
                 {notifications.length > 0 ? (
@@ -206,7 +249,27 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                       return (
                         <div
                           key={n.id}
-                          onClick={() => markAsRead(n.id)}
+                          onClick={() => {
+                            // mark read, close dropdown and navigate without full refresh
+                            markAsRead(n.id);
+                            setShowNotifications(false);
+
+                            // Resolve redirect path: explicit `redirectPath` -> action.url -> type mapping -> fallback detail
+                            const redirect = (n.redirectPath || n.redirect || (n.action && n.action.url) || mapTypeToPath(n.type, n.id));
+
+                            if (redirect) {
+                              if (/^https?:\/\//i.test(redirect)) {
+                                window.open(redirect, '_blank');
+                              } else {
+                                navigate(redirect);
+                              }
+                            } else {
+                              navigate(`/employee/notifications/${n.id}`);
+                            }
+
+                            // notify other components to close dropdowns
+                            window.dispatchEvent(new Event('closeNotificationsDropdown'));
+                          }}
                           className={`w-full text-left px-4 md:px-8 py-4 md:py-5 hover:bg-slate-50 flex items-start gap-3 md:gap-4 transition-colors border-b border-slate-50 last:border-0 group cursor-pointer ${!n.read ? 'bg-blue-50/10' : 'opacity-70'}`}
                         >
                           <div className={`mt-1 p-2 rounded-xl md:rounded-xl flex-shrink-0 group-hover:scale-110 transition-transform ${n.color}`}>
@@ -232,9 +295,9 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                   </div>
                 )}
               </div>
-              <Link 
-                to="/notifications" 
-                onClick={() => setShowNotifications(false)} 
+              <Link
+                to="/employee/notifications"
+                onClick={() => setShowNotifications(false)}
                 className="block text-center py-3 md:py-4 bg-slate-50 border-t border-slate-100 text-[10px] font-black text-blue-600 uppercase tracking-wider hover:bg-blue-50 transition-colors"
               >
                 Open Notifications Hub
@@ -264,37 +327,37 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               <p className="text-xs font-black text-slate-900 leading-none truncate max-w-[120px]">{displayName}</p>
               <p className="text-[10px] text-slate-400 uppercase tracking-[0.1em] font-black mt-0.5">{displayRole}</p>
             </div>
-            <ChevronDown 
-              size={14} 
-              className={`text-slate-400 transition-transform duration-300 flex-shrink-0 ${showProfileMenu ? 'rotate-180' : ''}`} 
+            <ChevronDown
+              size={14}
+              className={`text-slate-400 transition-transform duration-300 flex-shrink-0 ${showProfileMenu ? 'rotate-180' : ''}`}
             />
           </button>
 
           {showProfileMenu && (
             <div className="absolute right-0 mt-3 md:mt-4 w-60 bg-white rounded-2xl md:rounded-[2rem] shadow-2xl border border-slate-100 py-3 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
               <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-50 mb-2 bg-slate-50/30">
-                <p className="text-sm font-black text-slate-800 leading-tight truncate">
+                <p className="text-sm font-black text-black leading-tight truncate">
                   {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.name || 'Employee'}
                 </p>
-                <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                <p className="text-[10px] text-black truncate mt-0.5">
                   {user?.email || 'portal@company.com'}
                 </p>
               </div>
               <div className="px-1 md:px-2 space-y-1">
-                <Link 
-                  to="/profile" 
-                  onClick={() => setShowProfileMenu(false)} 
-                  className="w-full text-left px-4 md:px-5 py-2.5 md:py-3 text-sm font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl flex items-center gap-3 transition-colors"
+                <Link
+                  to="/profile"
+                  onClick={() => setShowProfileMenu(false)}
+                  className="w-full text-left px-4 md:px-5 py-2.5 md:py-3 text-sm font-bold text-black hover:bg-blue-50 hover:text-blue-600 rounded-xl flex items-center gap-3 transition-colors"
                 >
-                  <UserIcon size={16} className="md:size-18" /> 
+                  <UserIcon size={16} className="md:size-18" />
                   <span>My Profile</span>
                 </Link>
-                <Link 
-                  to="/notifications" 
-                  onClick={() => setShowProfileMenu(false)} 
-                  className="w-full text-left px-4 md:px-5 py-2.5 md:py-3 text-sm font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 rounded-xl flex items-center gap-3 transition-colors"
+                <Link
+                  to="/employee/notifications"
+                  onClick={() => setShowProfileMenu(false)}
+                  className="w-full text-left px-4 md:px-5 py-2.5 md:py-3 text-sm font-bold text-black hover:bg-blue-50 hover:text-blue-600 rounded-xl flex items-center gap-3 transition-colors"
                 >
-                  <Bell size={16} className="md:size-18" /> 
+                  <Bell size={16} className="md:size-18" />
                   <span>Activity Log</span>
                 </Link>
               </div>
