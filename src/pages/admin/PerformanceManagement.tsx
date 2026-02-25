@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { Task } from '../../types.ts';
-import { getTasks as getTasksFromAPI } from '../../api/tasks.ts';
+import { getTasks as getTasksFromAPI, addTaskReview as addTaskReviewAPI } from '../../api/tasks.ts';
 import { getTeams as getTeamsFromAPI } from '../../api/teams.ts';
 import { getAllEmployees as getEmployeesFromAPI } from '../../api/users.ts';
 interface PerformanceData {
@@ -634,8 +634,9 @@ const EmployeePerformanceDashboard: React.FC = () => {
       try {
         setApiTasksLoading(true);
         const data = await getTasksFromAPI();
+        console.debug('Raw tasks data from getTasksFromAPI():', data);
 
-        // Normalize task data to match Task interface
+        // Normalize task data to match Task interface and preserve assignedEmployees from API
         const normalizedTasks = Array.isArray(data) ? data.map((task: any) => {
           const assigneeType = (task.assigneeType || 'employee').toLowerCase();
           const assignedTo = assigneeType === 'team' ? (task.teamId || task.assignedTo) : (task.assignedTo || task.employeeId);
@@ -653,13 +654,15 @@ const EmployeePerformanceDashboard: React.FC = () => {
             createdBy: task.createdBy,
             teamId: task.teamId,
             teamName: task.teamName,
+            // preserve assignedEmployees array from API (if provided)
+            assignedEmployees: Array.isArray(task.assignedEmployees) ? task.assignedEmployees : (Array.isArray(task.assigned_employees) ? task.assigned_employees : []),
             comments: task.comments || [],
             attachments: task.attachments || [],
             tags: task.tags || [],
           };
         }) : [];
         setApiTasks(normalizedTasks);
-        console.log('Tasks fetched from API:', normalizedTasks);
+        console.debug('Tasks fetched from API (normalized):', normalizedTasks);
       } catch (error) {
         console.error('Failed to fetch tasks from API:', error);
         setApiTasks([]);
@@ -926,9 +929,20 @@ const EmployeePerformanceDashboard: React.FC = () => {
   );
 
   const openReviewModal = (task: Task) => {
+    console.debug('Opening review modal for task:', task);
     setSelectedTaskForReview(task);
-    if (task.assigneeType === 'employee') setReviewEmployeeId(task.assignedTo);
-    else setReviewEmployeeId('');
+    // If task has a single assigned employee (from API), auto-select for any assignee type
+    const taskAssigned = (task as any).assignedEmployees || (task as any).assigned_employees || [];
+    if (Array.isArray(taskAssigned) && taskAssigned.length === 1) {
+      const emp = taskAssigned[0];
+      const empId = emp?.employeeId || emp?.id || task.assignedTo || '';
+      setReviewEmployeeId(empId);
+    } else if ((task.assigneeType || '').toLowerCase() === 'employee') {
+      // fallback: if this is an employee-assigned task, try to use assignedTo
+      setReviewEmployeeId(task.assignedTo || '');
+    } else {
+      setReviewEmployeeId('');
+    }
     setReviewRating(5);
     setReviewComment('');
     setIsReviewModalOpen(true);
@@ -956,32 +970,25 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
     (async () => {
       try {
-        const res = await fetch(`http://localhost:8085/api/tasks/tasks/${encodeURIComponent(selectedTaskForReview.id)}`, {
-          method: 'POST',
-          credentials: 'include',
-          headers,
-          body: JSON.stringify({ employeeId: reviewEmployeeId, rating: ratingEnum, comments: reviewComment })
-        });
+        const payload = { employeeId: reviewEmployeeId, rating: ratingEnum, comments: reviewComment };
+        console.debug('Calling addTaskReviewAPI for task', selectedTaskForReview?.id, payload);
+        const resp = await addTaskReviewAPI(selectedTaskForReview!.id, payload);
+        console.debug('addTaskReviewAPI response', resp);
 
-        if (res.ok) {
-          const data = await res.json().catch(() => null);
-          addTaskReview({
-            taskId: selectedTaskForReview.id,
-            employeeId: reviewEmployeeId,
-            reviewer: 'Admin',
-            rating: reviewRating,
-            comment: reviewComment,
-            date: new Date().toISOString().split('T')[0]
-          });
-          loadPerformanceData();
-          closeReviewModal();
-        } else {
-          const err = await res.json().catch(() => ({}));
-          notify(err.message || 'Failed to submit review', 'error');
-        }
-      } catch (err) {
+        // Update local reviews and UI
+        addTaskReview({
+          taskId: selectedTaskForReview.id,
+          employeeId: reviewEmployeeId,
+          reviewer: 'Admin',
+          rating: reviewRating,
+          comment: reviewComment,
+          date: new Date().toISOString().split('T')[0]
+        });
+        loadPerformanceData();
+        closeReviewModal();
+      } catch (err: any) {
         console.error('Failed to submit review', err);
-        notify('Network error while submitting review', 'error');
+        notify(err?.message || 'Network error while submitting review', 'error');
       }
     })();
   };
@@ -995,7 +1002,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
       setApiTasksLoading(true);
       const data = await getTasksFromAPI();
 
-      // Normalize task data to match Task interface
+      // Normalize task data to match Task interface and preserve assignedEmployees from API
       const normalizedTasks = Array.isArray(data) ? data.map((task: any) => {
         const assigneeType = (task.assigneeType || 'employee').toLowerCase();
         const assignedTo = assigneeType === 'team' ? (task.teamId || task.assignedTo) : (task.assignedTo || task.employeeId);
@@ -1013,6 +1020,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
           createdBy: task.createdBy,
           teamId: task.teamId,
           teamName: task.teamName,
+          // preserve assignedEmployees array from API (if provided)
+          assignedEmployees: Array.isArray(task.assignedEmployees) ? task.assignedEmployees : (Array.isArray(task.assigned_employees) ? task.assigned_employees : []),
           comments: task.comments || [],
           attachments: task.attachments || [],
           tags: task.tags || [],
@@ -1795,62 +1804,56 @@ const EmployeePerformanceDashboard: React.FC = () => {
               <div>
                 <label className="text-sm font-medium text-gray-900 mb-2 block">Review For</label>
 
-                {selectedTaskForReview.assigneeType === 'employee' && (
-                  <select
-                    title="Select employee for review"
-                    value={reviewEmployeeId}
-                    onChange={(e) => setReviewEmployeeId(e.target.value)}
-                    className="text-black w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
-                  >
-                    <option value="" className="text-black">Select employee</option>
-                    <option value={selectedTaskForReview.assignedTo} className="text-gray-900">{selectedTaskForReview.assigneeName}</option>
-                  </select>
-                )}
-                {selectedTaskForReview.assigneeType === 'team' && (
-                  (() => {
-                    // Get team member IDs from selected task
-                    let memberIds: string[] = [];
-                    // Debug info
-                    console.log('=== TEAM TASK DEBUG ===');
-                    console.log('Task:', selectedTaskForReview);
-                    console.log('assignedTo:', selectedTaskForReview.assignedTo);
-                    console.log('API Teams count:', apiTeams.length);
-                    console.log('Custom Teams count:', customTeams.length);
-                    if (!selectedTaskForReview.assignedTo) {
-                      console.log('ERROR: assignedTo is null/undefined');
-                      return (
-                        <select
-                          disabled
-                          className="text-blackw-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900 opacity-50"
-                        >
-                          <option className="text-gray-900">Error: No team ID found</option>
-                        </select>
-                      );
-                    }
+                {selectedTaskForReview.assigneeType === 'employee' && (() => {
+                  const taskAssigned = (selectedTaskForReview as any).assignedEmployees || (selectedTaskForReview as any).assigned_employees || [];
+                  // If API provided a single assigned employee, show read-only display and don't render a select
+                  if (Array.isArray(taskAssigned) && taskAssigned.length === 1) {
+                    const ae = taskAssigned[0];
+                    const empId = ae?.employeeId || ae?.id || selectedTaskForReview.assignedTo || '';
+                    const empLabel = ae?.employeeName || ae?.fullName || ae?.employeeEmail || empId;
+                    console.debug('Render read-only employee for single-employee task', empId, empLabel);
+                    return (
+                      <div className="px-4 py-3 border border-gray-200 rounded-lg bg-white text-gray-900">
+                        <div className="text-sm font-medium">{empLabel}</div>
+                        <div className="text-xs text-gray-500">{empId}</div>
+                      </div>
+                    );
+                  }
 
-                    // Search for team in apiTeams
-                    const apiTeam = apiTeams.find(t => {
-                      const matches = (t.teamId === selectedTaskForReview.assignedTo ||
-                        t.id === selectedTaskForReview.assignedTo);
-                      console.log(`Checking API team - id: "${t.id}", teamId: "${t.teamId}", matches: ${matches}`);
-                      return matches;
-                    });
+                  // Fallback: render a select for employee (preselected if reviewEmployeeId already set)
+                  return (
+                    (console.debug('Render employee select', selectedTaskForReview), (
+                      <select
+                        title="Select employee for review"
+                        value={reviewEmployeeId}
+                        onChange={(e) => setReviewEmployeeId(e.target.value)}
+                        className="text-black w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
+                      >
+                        <option value="" className="text-black">Select employee</option>
+                        <option value={selectedTaskForReview.assignedTo} className="text-gray-900">{selectedTaskForReview.assigneeName ? `${selectedTaskForReview.assigneeName} (${selectedTaskForReview.assignedTo})` : selectedTaskForReview.assignedTo}</option>
+                      </select>
+                    ))
+                  );
+                })()}
+                {selectedTaskForReview.assigneeType === 'team' && (() => {
+                  const taskAssigned = (selectedTaskForReview as any).assignedEmployees || (selectedTaskForReview as any).assigned_employees || [];
+                  // If API provided a single assigned employee for this team task, show read-only
+                  if (Array.isArray(taskAssigned) && taskAssigned.length === 1) {
+                    const ae = taskAssigned[0];
+                    const empId = ae?.employeeId || ae?.id || selectedTaskForReview.assignedTo || '';
+                    const empLabel = ae?.employeeName || ae?.fullName || ae?.employeeEmail || empId;
+                    console.debug('Render read-only employee for single-team task', empId, empLabel);
+                    return (
+                      <div className="px-4 py-3 border border-gray-200 rounded-lg bg-white text-gray-900">
+                        <div className="text-sm font-medium">{empLabel}</div>
+                        <div className="text-xs text-gray-500">{empId}</div>
+                      </div>
+                    );
+                  }
 
-                    if (apiTeam) {
-                      memberIds = apiTeam.employeeIds || [];
-                      console.log('✓ Found team in API teams:', apiTeam.name, 'Members:', memberIds);
-                    } else {
-                      // Search in custom teams
-                      const customTeam = customTeams.find(t => t.id === selectedTaskForReview.assignedTo);
-                      if (customTeam) {
-                        memberIds = customTeam.memberIds || [];
-                        console.log('✓ Found team in custom teams:', customTeam.name, 'Members:', memberIds);
-                      } else {
-                        console.log('✗ Team NOT found! Looking for ID:', selectedTaskForReview.assignedTo);
-                        console.log('Available API teams:', apiTeams.map(t => ({ id: t.id, teamId: t.teamId, name: t.name })));
-                        console.log('Available custom teams:', customTeams.map(t => ({ id: t.id, name: t.name })));
-                      }
-                    }
+                  // Prefer assignedEmployees embedded in the task payload from API
+                  if (Array.isArray(taskAssigned) && taskAssigned.length > 0) {
+                    console.debug('Render team select from taskAssigned', taskAssigned, selectedTaskForReview);
                     return (
                       <select
                         title="Select employee for review"
@@ -1859,51 +1862,106 @@ const EmployeePerformanceDashboard: React.FC = () => {
                         className="text-black w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
                       >
                         <option value="" className="text-gray-900">Select employee</option>
-                        {memberIds.length === 0 ? (
-                          <>
-                            <option disabled className="text-gray-900">Loading team members...</option>
-                            <option disabled className="text-gray-900">If this persists, there may be an issue loading the team data</option>
-                          </>
-                        ) : (
-                          memberIds.map((memberId: string) => {
-                            // Use API employees first, fallback to context employees
-                            const allEmployees = apiEmployees.length > 0 ? apiEmployees : employees;
-                            const emp = allEmployees.find(e => e.id === memberId || e.employeeId === memberId);
-                            if (emp) {
-                              console.log(`✓ Found employee for ${memberId}:`, emp);
-                              const empName = emp.fullName || emp.name || Object.values(emp).find(v => typeof v === 'string' && v.length > 2) || 'Unknown';
-                              console.log(`  Name resolved to: ${empName}`);
-                            } else {
-                              console.log(`✗ No employee found for member ID: ${memberId}`);
-                            }
-                            return emp ? (
-                              <option key={memberId} value={emp.id || emp.employeeId} className="text-gray-900">
-                                {emp.fullName || emp.name || emp['firstName'] || emp['lastName'] || 'Unknown'}
-                              </option>
-                            ) : null;
-                          })
-                        )}
+                        {taskAssigned.map((ae: any) => (
+                          <option key={ae.employeeId || ae.id} value={ae.employeeId || ae.id} className="text-gray-900">
+                            {ae.employeeId || ae.id || ae.employeeName || ae.employee_name || ae.fullName || ae.employeeEmail || 'Unknown'}
+                          </option>
+                        ))}
                       </select>
                     );
-                  })()
-                )}
-                {selectedTaskForReview.assigneeType === 'department' && (
-                  <select
-                    title="Select employee for review"
-                    value={reviewEmployeeId}
-                    onChange={(e) => setReviewEmployeeId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
-                  >
-                    <option value="" className="text-gray-900">Select employee</option>
-                    {(apiEmployees.length > 0 ? apiEmployees : employees)
-                      .filter(e => e.department === selectedTaskForReview.assignedTo)
-                      .map(emp => (
-                        <option key={emp.id} value={emp.id || emp.employeeId} className="text-gray-900">
-                          {emp.fullName || emp.name || 'Unknown'}
-                        </option>
-                      ))}
-                  </select>
-                )}
+                  }
+
+                  // Fallback: resolve via apiTeams -> memberIds -> apiEmployees/context
+                  let memberIds: string[] = [];
+                  console.log('=== TEAM TASK DEBUG (fallback) ===');
+                  console.log('Task:', selectedTaskForReview);
+                  console.log('assignedTo:', selectedTaskForReview.assignedTo);
+                  if (!selectedTaskForReview.assignedTo) {
+                    return (
+                      <select
+                        disabled
+                        className="text-blackw-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900 opacity-50"
+                      >
+                        <option className="text-gray-900">Error: No team ID found</option>
+                      </select>
+                    );
+                  }
+
+                  const apiTeam = apiTeams.find(t => (t.teamId === selectedTaskForReview.assignedTo || t.id === selectedTaskForReview.assignedTo));
+                  if (apiTeam) {
+                    memberIds = apiTeam.employeeIds || [];
+                    console.log('✓ Found team in API teams:', apiTeam.name, 'Members:', memberIds);
+                  } else {
+                    const customTeam = customTeams.find(t => t.id === selectedTaskForReview.assignedTo);
+                    if (customTeam) {
+                      memberIds = customTeam.memberIds || [];
+                      console.log('✓ Found team in custom teams:', customTeam.name, 'Members:', memberIds);
+                    } else {
+                      console.log('✗ Team NOT found! Looking for ID:', selectedTaskForReview.assignedTo);
+                    }
+                  }
+
+                  console.debug('Render team select fallback with memberIds', memberIds);
+                  return (
+                    <select
+                      title="Select employee for review"
+                      value={reviewEmployeeId}
+                      onChange={(e) => setReviewEmployeeId(e.target.value)}
+                      className="text-black w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
+                    >
+                      <option value="" className="text-gray-900">Select employee</option>
+                      {memberIds.length === 0 ? (
+                        <>
+                          <option disabled className="text-gray-900">Loading team members...</option>
+                          <option disabled className="text-gray-900">If this persists, there may be an issue loading the team data</option>
+                        </>
+                      ) : (
+                        memberIds.map((memberId: string) => {
+                          const allEmployees = apiEmployees.length > 0 ? apiEmployees : employees;
+                          const emp = allEmployees.find(e => e.id === memberId || e.employeeId === memberId);
+                          return (
+                            <option key={memberId} value={emp?.id || emp?.employeeId || memberId} className="text-gray-900">
+                              {emp ? (emp.fullName || emp.name || emp['firstName'] || emp['lastName'] || emp.employeeId || memberId) : memberId}
+                            </option>
+                          );
+                        })
+                      )}
+                    </select>
+                  );
+                })()}
+                {selectedTaskForReview.assigneeType === 'department' && (() => {
+                  const taskAssigned = (selectedTaskForReview as any).assignedEmployees || (selectedTaskForReview as any).assigned_employees || [];
+                  if (Array.isArray(taskAssigned) && taskAssigned.length === 1) {
+                    const ae = taskAssigned[0];
+                    const empId = ae?.employeeId || ae?.id || selectedTaskForReview.assignedTo || '';
+                    const empLabel = ae?.employeeName || ae?.fullName || ae?.employeeEmail || empId;
+                    console.debug('Render read-only employee for single-department task', empId, empLabel);
+                    return (
+                      <div className="px-4 py-3 border border-gray-200 rounded-lg bg-white text-gray-900">
+                        <div className="text-sm font-medium">{empLabel}</div>
+                        <div className="text-xs text-gray-500">{empId}</div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <select
+                      title="Select employee for review"
+                      value={reviewEmployeeId}
+                      onChange={(e) => setReviewEmployeeId(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
+                    >
+                      <option value="" className="text-gray-900">Select employee</option>
+                      {(apiEmployees.length > 0 ? apiEmployees : employees)
+                        .filter(e => e.department === selectedTaskForReview.assignedTo)
+                        .map(emp => (
+                          <option key={emp.id} value={emp.id || emp.employeeId} className="text-gray-900">
+                            {emp.fullName || emp.name || 'Unknown'}
+                          </option>
+                        ))}
+                    </select>
+                  );
+                })()}
               </div>
 
               <div>
