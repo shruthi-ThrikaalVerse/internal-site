@@ -905,9 +905,7 @@ const EventsAdmin: React.FC = () => {
               <thead className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50">
                 <tr className="border-b border-slate-100/50">
                   <th className="px-8 py-5 text-[10px] font-black text-slate-600 uppercase tracking-widest">🎯 Event</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-600 uppercase tracking-widest">👥 Target</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-600 uppercase tracking-widest">📊 Status</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-600 uppercase tracking-widest text-right">⚡ Actions</th>
+                  <th className="px-8 py-5 text-[10px] font-black text-slate-600 uppercase tracking-widest">👥 Target</th>                  <th className="px-8 py-5 text-[10px] font-black text-slate-600 uppercase tracking-widest text-right">⚡ Actions</th>
                 </tr>
               </thead>
 
@@ -927,6 +925,45 @@ const EventsAdmin: React.FC = () => {
                     }
                   })();
                   const eventColor = EVENT_BADGE_STYLES[typeKey] || EVENT_BADGE_STYLES.company;
+                  // audience may come from API under different key (targetType) or uppercase
+                  let audienceLabel = (
+                    evt.audience ||
+                    (evt.targetType && evt.targetType.toString().toLowerCase()) ||
+                    'all'
+                  ).toString().toLowerCase();
+                  // API sometimes doesn't return audience/targetType at all, just employeeIds or departments array.
+                  if (
+                    (!evt.audience && !evt.targetType) &&
+                    Array.isArray(evt.employeeIds) &&
+                    evt.employeeIds.length > 0
+                  ) {
+                    audienceLabel = 'selected';
+                  }
+                  if (
+                    (!evt.audience && !evt.targetType) &&
+                    Array.isArray(evt.departments) &&
+                    evt.departments.length > 0
+                  ) {
+                    audienceLabel = 'department';
+                  }
+
+                  // derive display string for badge
+                  let targetDisplay = audienceLabel;
+                  if (audienceLabel === 'selected') {
+                    // prefer the explicit targetEmployeeIds field (our local form) if present
+                    const count = Array.isArray(evt.targetEmployeeIds)
+                      ? evt.targetEmployeeIds.length
+                      : Array.isArray(evt.employeeIds)
+                      ? evt.employeeIds.length
+                      : 0;
+                    targetDisplay = count ? `${count} selected` : 'selected';
+                  } else if (audienceLabel === 'department') {
+                    targetDisplay = evt.targetDepartment
+                      ? evt.targetDepartment
+                      : Array.isArray(evt.departments) && evt.departments.length
+                      ? evt.departments[0]
+                      : 'department';
+                  }
 
                   return (
                     <tr key={evt.id} className="hover:bg-white/50 transition-colors group">
@@ -954,12 +991,10 @@ const EventsAdmin: React.FC = () => {
                       </td>
 
                       <td className="px-8 py-6">
-                        <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm ${eventColor}`}>{evt.audience}</span>
+                        <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm ${eventColor}`}>{targetDisplay}</span>
                       </td>
 
-                      <td className="px-8 py-6">
-                        <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm ${STATUS_COLORS[evt.status] || STATUS_COLORS.upcoming}`}>{evt.status}</span>
-                      </td>
+                      
 
                       <td className="px-8 py-6 text-right">
                         <div className="flex items-center justify-end gap-1">
