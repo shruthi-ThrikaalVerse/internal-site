@@ -54,7 +54,7 @@ const GlobalSearch: React.FC = () => {
             setShowResults(true);
           }}
           placeholder="Search employees, modules, activity..."
-          className="w-full pl-10 pr-4 py-2 bg-gray-50 border-gray-100 rounded-2xl text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none border"
+          className="w-full pl-10 pr-4 py-2 bg-gray-50 border-gray-100 rounded-2xl text-sm text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none border"
         />
       </div>
 

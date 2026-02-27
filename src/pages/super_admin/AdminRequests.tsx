@@ -74,45 +74,45 @@ export const AdminRequests = () => {
         description="Review and process administrative workflows initiated by department heads."
       />
 
-      <div className="bg-[#0b1220] rounded-3xl border border-[#1f2937] overflow-hidden shadow-2xl">
+      <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[1000px]">
-            <thead className="bg-[#0f172a]/80 backdrop-blur-md border-b border-[#1f2937]">
+            <thead className="bg-gray-50 backdrop-blur-md border-b border-gray-200">
               <tr>
-                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">Request ID & Type</th>
-                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">Initiated By</th>
-                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">Submission Date</th>
-                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">Target Entity</th>
-                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">Status</th>
-                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em] text-right">Actions</th>
+                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Request ID & Type</th>
+                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Initiated By</th>
+                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Submission Date</th>
+                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Target Entity</th>
+                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Status</th>
+                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#1f2937]">
+            <tbody className="divide-y divide-gray-200">
               {filteredRequests.map((req) => (
-                <tr key={req.id} className="hover:bg-[#0f172a] transition-all group border-l-2 border-transparent hover:border-[#f37321]">
+                <tr key={req.id} className="hover:bg-gray-50 transition-all group border-l-2 border-transparent hover:border-blue-300">
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-xl border ${req.type === 'Termination' ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' : 'bg-[#f37321]/10 border-[#f37321]/20 text-[#f37321]'}`}>
+                      <div className={`p-3 rounded-xl border ${req.type === 'Termination' ? 'bg-rose-50 border-rose-200 text-rose-500' : 'bg-blue-100 border-blue-200 text-blue-600'}`}>
                         <GitPullRequest size={18} />
                       </div>
                       <div>
-                        <div className="font-bold text-[#e6eef8] tracking-tight">{req.type}</div>
-                        <div className="text-[10px] font-mono text-[#9aa8bd]">{req.id.toUpperCase()}</div>
+                        <div className="font-bold text-gray-900 tracking-tight">{req.type}</div>
+                        <div className="text-[10px] font-mono text-gray-500">{req.id.toUpperCase()}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-8 py-5">
-                    <div className="flex items-center gap-2 text-sm text-[#e6eef8] font-semibold">
-                      <User size={14} className="text-[#9aa8bd]" /> {req.requestedBy}
+                    <div className="flex items-center gap-2 text-sm text-gray-900 font-semibold">
+                      <User size={14} className="text-gray-400" /> {req.requestedBy}
                     </div>
                   </td>
                   <td className="px-8 py-5">
-                    <div className="flex items-center gap-2 text-sm text-[#9aa8bd]">
+                    <div className="flex items-center gap-2 text-sm text-gray-900">
                       <Calendar size={14} /> {req.date}
                     </div>
                   </td>
                   <td className="px-8 py-5">
-                    <div className="text-sm font-medium text-[#e6eef8]">
+                    <div className="text-sm font-medium text-gray-900">
                       {req.targetId ? employees.find(e => e.id === req.targetId)?.name || 'N/A' : 'New Candidate'}
                     </div>
                   </td>
@@ -125,7 +125,7 @@ export const AdminRequests = () => {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => setViewingRequest(req)}
-                        className="p-2.5 bg-[#1f2937] text-[#9aa8bd] hover:text-[#e6eef8] rounded-xl transition-all"
+                        className="p-2.5 bg-gray-100 text-gray-500 hover:text-gray-900 rounded-xl transition-all"
                         title="View Details"
                       >
                         <Eye size={18} />
@@ -153,7 +153,7 @@ export const AdminRequests = () => {
                       {isSuperAdmin && req.status === 'Approved' && req.type === 'Recruitment' && (
                         <button
                           onClick={() => handleRecruitmentProcessing(req)}
-                          className="px-4 py-2 bg-[#f37321] text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#e06410] transition-all flex items-center gap-2"
+                          className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all flex items-center gap-2"
                         >
                           <UserPlus size={14} /> Hire Now
                         </button>
@@ -178,12 +178,12 @@ export const AdminRequests = () => {
           <div className="space-y-8 pb-4">
             <div className={`p-6 rounded-[2rem] border overflow-hidden relative shadow-2xl ${viewingRequest.type === 'Termination' ? 'bg-rose-500/5 border-rose-500/20' : 'bg-[#f37321]/5 border-[#f37321]/20'}`}>
               <div className="flex items-start gap-6">
-                <div className={`p-5 rounded-2xl ${viewingRequest.type === 'Termination' ? 'bg-rose-500/10 text-rose-500' : 'bg-[#f37321]/10 text-[#f37321]'}`}>
+                <div className={`p-5 rounded-2xl ${viewingRequest.type === 'Termination' ? 'bg-rose-500/10 text-rose-500' : 'bg-blue-600/10 text-gray-900'}`}>
                   {viewingRequest.type === 'Termination' ? <Trash2 size={32} /> : viewingRequest.type === 'Promotion' ? <UserPlus size={32} /> : <Calendar size={32} />}
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-[#e6eef8] tracking-tight">{viewingRequest.type}</h3>
-                  <p className="text-[10px] text-[#9aa8bd] font-black uppercase tracking-widest mt-1">Submission Reference: {viewingRequest.id}</p>
+                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">{viewingRequest.type}</h3>
+                  <p className="text-[10px] text-gray-900 font-black uppercase tracking-widest mt-1">Submission Reference: {viewingRequest.id}</p>
                   <div className="flex gap-2 mt-4">
                     <Badge color={viewingRequest.status === 'Approved' ? 'green' : viewingRequest.status === 'Rejected' ? 'red' : 'yellow'}>
                       {viewingRequest.status.toUpperCase()}
@@ -194,30 +194,30 @@ export const AdminRequests = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4 p-6 rounded-2xl bg-[#0f172a]/50 border border-[#1f2937]">
-                <h4 className="text-[10px] font-black text-[#9aa8bd] uppercase tracking-widest flex items-center gap-2">
-                  <User size={14} className="text-[#f37321]" /> Initiator Context
+              <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
+                <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                  <User size={14} className="text-blue-600" /> Initiator Context
                 </h4>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-[#9aa8bd]">Requested By</span>
-                    <span className="text-[#e6eef8] font-bold">{viewingRequest.requestedBy}</span>
+                    <span className="text-gray-900">Requested By</span>
+                    <span className="text-gray-900 font-bold">{viewingRequest.requestedBy}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#9aa8bd]">Request Date</span>
-                    <span className="text-[#e6eef8] font-bold">{viewingRequest.date}</span>
+                    <span className="text-gray-900">Request Date</span>
+                    <span className="text-gray-900 font-bold">{viewingRequest.date}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4 p-6 rounded-2xl bg-[#0f172a]/50 border border-[#1f2937]">
-                <h4 className="text-[10px] font-black text-[#9aa8bd] uppercase tracking-widest flex items-center gap-2">
-                  <Info size={14} className="text-[#f37321]" /> Target Context
+              <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
+                <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                  <Info size={14} className="text-blue-600" /> Target Context
                 </h4>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-[#9aa8bd]">Target Employee</span>
-                    <span className="text-[#e6eef8] font-bold">
+                    <span className="text-gray-900">Target Employee</span>
+                    <span className="text-gray-900 font-bold">
                       {viewingRequest.targetId ? employees.find(e => e.id === viewingRequest.targetId)?.name || 'N/A' : 'External Vacancy'}
                     </span>
                   </div>
@@ -225,11 +225,11 @@ export const AdminRequests = () => {
               </div>
             </div>
 
-            <div className="p-6 rounded-2xl bg-[#0f172a]/50 border border-[#1f2937]">
-              <h4 className="text-[10px] font-black text-[#9aa8bd] uppercase tracking-widest flex items-center gap-2 mb-4">
-                <FileText size={14} className="text-[#f37321]" /> Justification & Details
+            <div className="p-6 rounded-2xl bg-white border border-gray-200">
+              <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                <FileText size={14} className="text-blue-600" /> Justification & Details
               </h4>
-              <p className="text-sm text-[#e6eef8] leading-relaxed italic">
+              <p className="text-sm text-gray-700 leading-relaxed italic">
                 "{viewingRequest.details}"
               </p>
             </div>
@@ -262,9 +262,9 @@ export const AdminRequests = () => {
         onSave={handleAddEmployee}
       >
         <div className="space-y-10 pb-4">
-          <div className="p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl flex gap-4 items-center">
+          <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl flex gap-4 items-center">
             <UserPlus size={24} className="text-emerald-500" />
-            <p className="text-xs text-[#9aa8bd] font-medium leading-relaxed">
+            <p className="text-xs text-gray-900 font-medium leading-relaxed">
               Onboarding authorized based on approved recruitment requisition.
             </p>
           </div>

@@ -11,7 +11,7 @@ export const NotificationsView = () => {
         title="System Notifications"
         description="Broadcast announcements and monitor system-wide alerts."
         actions={
-          <button className="flex items-center gap-2 bg-[#f37321] px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-[#f37321]/20 hover:bg-[#e06410] transition-all">
+          <button className="flex items-center gap-2 bg-blue-600 px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all focus:ring-4 focus:ring-blue-500/50">
             <Megaphone size={18} />
             Broadcast Alert
           </button>
@@ -20,7 +20,7 @@ export const NotificationsView = () => {
 
       <div className="grid grid-cols-1 gap-4">
         {MOCK_NOTIFICATIONS.map((notif) => (
-          <div key={notif.id} className="bg-[#0b1220] border border-[#1f2937] rounded-2xl p-5 hover:border-[#f37321]/30 transition-all group">
+          <div key={notif.id} className="bg-white border border-gray-200 rounded-2xl p-5 hover:border-blue-200 transition-all group">
             <div className="flex items-start gap-4">
               <div className={`p-3 rounded-xl border shrink-0 ${notif.priority === 'high' ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' :
                 notif.priority === 'medium' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
@@ -31,14 +31,14 @@ export const NotificationsView = () => {
 
               <div className="flex-1 min-w-0">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
-                  <h3 className="font-bold text-[#e6eef8] truncate group-hover:text-[#f37321] transition-colors">{notif.title}</h3>
+                  <h3 className="font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">{notif.title}</h3>
                   <div className="flex items-center gap-2">
                     <Badge color={notif.status === 'sent' ? 'green' : 'slate'}>{notif.status.toUpperCase()}</Badge>
-                    <span className="text-[10px] font-bold text-[#9aa8bd] uppercase">{notif.date}</span>
+                    <span className="text-[10px] font-bold text-gray-500 uppercase">{notif.date}</span>
                   </div>
                 </div>
-                <p className="text-sm text-[#9aa8bd] mb-3 leading-relaxed">{notif.message}</p>
-                <div className="flex items-center gap-4 text-[10px] font-bold text-[#9aa8bd] uppercase tracking-widest">
+                <p className="text-sm text-gray-500 mb-3 leading-relaxed">{notif.message}</p>
+                <div className="flex items-center gap-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                   <span className="flex items-center gap-1.5"><Send size={12} /> To: {notif.recipient}</span>
                   <span className="flex items-center gap-1.5"><Clock size={12} /> Priority: {notif.priority}</span>
                 </div>
