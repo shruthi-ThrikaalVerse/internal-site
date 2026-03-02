@@ -48,7 +48,9 @@ export const NAV_ITEMS = [
   { id: 'admin/payslips', label: 'Payslips Module', icon: 'ReceiptText' },
   { id: 'admin/performance', label: 'Reviews Rating', icon: 'Star' },
   { id: 'admin/audit-logs', label: 'Audit Logs', icon: 'Activity' },
+  { id: 'admin/resignation', label: 'Resignation', icon: 'LogOut' },
   { id: 'admin/profile', label: 'My Profile', icon: 'UserCircle' },
+  
 ];
 
 // Backwards-compat aliases used by some components

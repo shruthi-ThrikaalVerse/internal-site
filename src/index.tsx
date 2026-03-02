@@ -52,6 +52,7 @@ import AdminPerformanceManagement from './pages/admin/PerformanceManagement.tsx'
 import AdminProfile from './pages/admin/Profile.tsx';
 import AdminRequests from './pages/admin/Requests.tsx';
 import AdminTasks from './pages/admin/Tasks.tsx';
+import AdminResignation from './pages/admin/Resignation.tsx';
 
 // Super Admin
 import { LoginView as SuperAdminLogin } from './pages/super_admin/LoginView.tsx';
@@ -384,6 +385,12 @@ const AdminTasksPage = () => (
   </AdminPageWithLogout>
 );
 
+const AdminResignationPage = () => (
+  <AdminPageWithLogout>
+    <AdminResignation />
+  </AdminPageWithLogout>
+);
+
 // Login Route Guards - prevent access if already authenticated
 const EmployeeLoginGuard = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -479,8 +486,9 @@ root.render(
               <Route path="/employee/events" element={<EmployeeEventsPage />} />
               <Route path="/employee/notifications" element={<EmployeeNotificationsPage />} />
               <Route path="/employee/notifications/:id" element={<EmployeeNotificationsPage />} />
-              <Route path="/employee/profile" element={<EmployeeProfilePage />} />
               <Route path="/employee/resignation" element={<EmployeeResignationPage />} />
+              <Route path="/employee/profile" element={<EmployeeProfilePage />} />
+              
 
               {/* Admin routes */}
               <Route path="/admin/login" element={<AdminLoginGuard />} />
@@ -499,6 +507,7 @@ root.render(
               <Route path="/admin/profile" element={<AdminProfilePage />} />
               <Route path="/admin/requests" element={<AdminRequestsPage />} />
               <Route path="/admin/tasks" element={<AdminTasksPage />} />
+              <Route path="/admin/resignation" element={<AdminResignationPage />} />
 
               {/* Super Admin */}
               <Route path="/super-admin/login" element={<SuperAdminLogin />} />
