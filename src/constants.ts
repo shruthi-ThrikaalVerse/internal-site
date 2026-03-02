@@ -181,11 +181,11 @@ export const NAVIGATION_ITEMS = [
 ];
 
 export const MOCK_LOGS = [
-  { id: '1', action: 'User Login', timestamp: '2024-01-15 09:30 AM', user: 'admin@company.com', status: 'Success', category: 'Authentication', severity: 'low' },
-  { id: '2', action: 'Employee Added', timestamp: '2024-01-15 10:15 AM', user: 'admin@company.com', status: 'Success', category: 'User Management', severity: 'medium' },
-  { id: '3', action: 'Leave Approved', timestamp: '2024-01-15 11:00 AM', user: 'manager@company.com', status: 'Success', category: 'Leave Management', severity: 'low' },
-  { id: '4', action: 'Payroll Generated', timestamp: '2024-01-15 02:30 PM', user: 'payroll@company.com', status: 'Success', category: 'Payroll', severity: 'high' },
-  { id: '5', action: 'Report Exported', timestamp: '2024-01-15 03:45 PM', user: 'admin@company.com', status: 'Success', category: 'Reports', severity: 'medium' },
+  { id: '1', action: 'LOGIN_SUCCESS', timestamp: '2024-01-15 09:30 AM', user: 'admin@company.com', level: 'LOGIN', message: 'User login successful', module: 'AUTH', entity: 'User' },
+  { id: '2', action: 'CREATE_EMPLOYEE', timestamp: '2024-01-15 10:15 AM', user: 'admin@company.com', level: 'CREATE', message: 'New employee record created', module: 'EMPLOYEE_HUB', entity: 'Employee' },
+  { id: '3', action: 'UPDATE_LEAVE', timestamp: '2024-01-15 11:00 AM', user: 'manager@company.com', level: 'UPDATE', message: 'Leave request status updated to approved', module: 'LEAVE', entity: 'LeaveRequest' },
+  { id: '4', action: 'GENERATE_PAYROLL', timestamp: '2024-01-15 02:30 PM', user: 'payroll@company.com', level: 'CREATE', message: 'Payroll processing completed', module: 'PAYROLL', entity: 'PayrollRun' },
+  { id: '5', action: 'EXPORT_REPORT', timestamp: '2024-01-15 03:45 PM', user: 'admin@company.com', level: 'INFO', message: 'System report exported to CSV format', module: 'REPORTS', entity: 'Report' },
 ];
 
 export const MOCK_PROJECTS: Project[] = [

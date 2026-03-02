@@ -2,22 +2,27 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Activity, Star } from 'lucide-react';
 
-export const StatCard = ({ title, value, icon, trend, trendValue }: { 
-  title: string; value: string; icon: React.ReactNode; trend?: 'up' | 'down' | 'stable'; trendValue?: string 
+export const StatCard = ({ title, value, icon, trend, trendValue }: {
+  title: string; value: string; icon: React.ReactNode; trend?: 'up' | 'down' | 'stable'; trendValue?: string
 }) => (
-  <div className="bg-[#0b1220] p-4 sm:p-6 rounded-xl shadow-lg border border-[#1f2937] flex items-start justify-between transition-all hover:border-[#f37321]/30 hover:shadow-[#f37321]/5">
-    <div>
-      <p className="text-[#9aa8bd] text-xs sm:text-sm font-medium">{title}</p>
-      <h3 className="text-xl sm:text-2xl font-bold mt-1 text-[#e6eef8]">{value}</h3>
+  <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group overflow-hidden relative">
+    <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:scale-150 transition-transform">
+      {icon}
+    </div>
+    <div className="flex items-center justify-between mb-4">
+      <div className={`p-3 rounded-2xl ${/* keep passed color such as bg-blue-500 */ ''} bg-opacity-10 group-hover:scale-110 transition-transform`}>
+        {icon}
+      </div>
       {trend && (
-        <div className={`flex items-center mt-2 text-[10px] sm:text-xs font-semibold ${trend === 'up' ? 'text-emerald-400' : trend === 'down' ? 'text-rose-400' : 'text-amber-400'}`}>
-          {trend === 'up' ? <TrendingUp size={14} className="mr-1" /> : trend === 'down' ? <TrendingDown size={14} className="mr-1" /> : <Activity size={14} className="mr-1" />}
-          {trendValue}
-        </div>
+        <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${trend === 'up' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+          {trend === 'up' ? '+' : ''}{trend}% this month
+        </span>
       )}
     </div>
-    <div className="p-2 sm:p-3 bg-[#0f172a] rounded-lg text-[#f37321] shrink-0 border border-[#1f2937]">
-      {icon}
+    <h3 className="text-gray-900 text-[10px] font-black uppercase tracking-widest">{title}</h3>
+    <div className="flex items-baseline gap-2 mt-1">
+      <p className="text-3xl font-black text-gray-900">{value}</p>
+      {trendValue && <span className="text-xs font-bold text-gray-900">{trendValue}</span>}
     </div>
   </div>
 );
@@ -25,8 +30,8 @@ export const StatCard = ({ title, value, icon, trend, trendValue }: {
 export const SectionHeader = ({ title, description, actions }: { title: string; description: string; actions?: React.ReactNode }) => (
   <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 sm:mb-8 gap-4">
     <div>
-      <h2 className="text-xl sm:text-2xl font-bold text-[#e6eef8]">{title}</h2>
-      <p className="text-[#9aa8bd] text-xs sm:text-sm">{description}</p>
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h2>
+      <p className="text-gray-500 text-xs sm:text-sm">{description}</p>
     </div>
     <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto">
       {actions}
@@ -53,10 +58,10 @@ export const StarRating = ({ rating }: { rating: number }) => {
   return (
     <div className="flex items-center gap-0.5 shrink-0">
       {[1, 2, 3, 4, 5].map((s) => (
-        <Star 
-          key={s} 
-          size={12} 
-          className={s <= rating ? "fill-amber-400 text-amber-400" : "text-[#1f2937] fill-[#1f2937]"} 
+        <Star
+          key={s}
+          size={12}
+          className={s <= rating ? "fill-amber-400 text-amber-400" : "text-[#1f2937] fill-[#1f2937]"}
         />
       ))}
     </div>

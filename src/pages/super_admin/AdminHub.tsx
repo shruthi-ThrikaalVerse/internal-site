@@ -142,7 +142,7 @@ export const AdminHub = () => {
                 actions={
                     <button
                         onClick={handleAddNew}
-                        className="flex items-center justify-center gap-2 bg-[#f37321] px-5 py-3 rounded-xl text-sm font-bold shadow-2xl shadow-[#f37321]/20 hover:bg-[#e06410] transition-all transform hover:scale-[1.05] active:scale-[0.95] w-full sm:w-auto text-white"
+                        className="flex items-center justify-center gap-2 bg-blue-600 px-5 py-3 rounded-xl text-sm font-bold shadow-2xl shadow-blue-200 hover:bg-blue-700 transition-all transform hover:scale-[1.05] active:scale-[0.95] w-full sm:w-auto text-white"
                     >
                         <UserPlus size={18} />
                         <span>New Admin</span>
@@ -158,18 +158,18 @@ export const AdminHub = () => {
                             <ShieldAlert size={24} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-black text-[#e6eef8] tracking-tight">Admin Privilege Termination</h3>
-                            <p className="text-xs text-[#9aa8bd] font-medium uppercase tracking-widest">Only accessible by Super Admin Tier</p>
+                            <h3 className="text-lg font-black text-gray-900 tracking-tight">Admin Privilege Termination</h3>
+                            <p className="text-xs text-gray-500 font-medium uppercase tracking-widest">Only accessible by Super Admin Tier</p>
                         </div>
                     </div>
-                    <p className="text-sm text-[#9aa8bd] mb-6 max-w-2xl leading-relaxed">
+                    <p className="text-sm text-gray-500 mb-6 max-w-2xl leading-relaxed">
                         Directly deactivate administrator accounts to revoke all system-wide access instantly. This action is tracked in the audit logs and requires secondary verification.
                     </p>
                 </div>
             )}
 
             {/* Filter Bar */}
-            <div className="bg-[#0b1220]/50 p-4 rounded-2xl border border-[#1f2937] backdrop-blur-sm mb-6 flex flex-col sm:flex-row items-center gap-4">
+            <div className="bg-white/50 p-4 rounded-2xl border border-gray-200 backdrop-blur-sm mb-6 flex flex-col sm:flex-row items-center gap-4">
                 <div className="flex-1 flex gap-3 w-full">
                     <div className="flex-1 max-w-xs">
                         <FormSelect
@@ -184,7 +184,7 @@ export const AdminHub = () => {
                     <button
                         onClick={handleResetFilters}
                         title="Reset filters"
-                        className="h-[44px] px-4 bg-rose-500/10 text-rose-500 rounded-xl hover:bg-rose-500/20 transition-all border border-rose-500/20 self-end mb-1"
+                        className="h-[44px] px-4 bg-gray-100 text-gray-900 rounded-xl hover:bg-gray-200 transition-all border border-gray-200 self-end mb-1"
                     >
                         <RotateCcw size={16} />
                     </button>
@@ -192,34 +192,34 @@ export const AdminHub = () => {
             </div>
 
             {/* Admins Table */}
-            <div className="bg-[#0b1220] rounded-3xl border border-[#1f2937] overflow-hidden shadow-2xl">
+            <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-2xl">
                 <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full text-left border-collapse min-w-[1100px]">
-                        <thead className="bg-[#0f172a]/80 backdrop-blur-md border-b border-[#1f2937]">
+                        <thead className="bg-gray-50 backdrop-blur-md border-b border-gray-200">
                             <tr>
-                                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">Administrator Identity</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">Security Tier</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">Status</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">Email Address</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">Joining Date</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em] text-right">Actions</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Administrator Identity</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Security Tier</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Status</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Email Address</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Joining Date</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#1f2937]">
+                        <tbody className="divide-y divide-gray-200">
                             {filteredAdmins.map((a) => (
-                                <tr key={a.id} className={`hover:bg-[#0f172a] transition-all group border-l-2 border-transparent hover:border-emerald-500 ${a.status === 'inactive' ? 'opacity-50 grayscale' : ''}`}>
+                                <tr key={a.id} className={`hover:bg-gray-50 transition-all group border-l-2 border-transparent hover:border-blue-500 ${a.status === 'inactive' ? 'opacity-50 grayscale' : ''}`}>
                                     <td className="px-8 py-5 cursor-pointer" onClick={() => setViewingUser(a)}>
                                         <div className="flex items-center gap-4">
                                             <div className="relative shrink-0">
-                                                <img src={a.avatar} alt={a.name} className="w-12 h-12 rounded-xl border border-[#1f2937] shadow-xl group-hover:scale-105 transition-transform object-cover" />
-                                                <Shield className={`absolute -bottom-1 -right-1 w-4 h-4 p-0.5 rounded-full border border-[#0b1220] ${a.role.includes('SUPER') ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'}`} />
+                                                <img src={a.avatar} alt={a.name} className="w-12 h-12 rounded-xl border border-gray-200 shadow-xl group-hover:scale-105 transition-transform object-cover" />
+                                                <Shield className={`absolute -bottom-1 -right-1 w-4 h-4 p-0.5 rounded-full border border-white ${a.role.includes('SUPER') ? 'bg-blue-600 text-white' : 'bg-emerald-500 text-white'}`} />
                                             </div>
                                             <div className="min-w-0">
-                                                <div className="font-bold text-[#e6eef8] group-hover:text-[#f37321] transition-colors truncate">
+                                                <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
                                                     {a.firstName ? `${a.firstName} ${a.lastName}` : a.name}
                                                 </div>
                                                 <div className="flex items-center gap-2 mt-0.5">
-                                                    <span className="text-[10px] text-[#9aa8bd] font-mono opacity-70">UID: {a.employeeId || a.id.toUpperCase()}</span>
+                                                    <span className="text-[10px] text-gray-500 font-mono opacity-70">UID: {a.employeeId || a.id.toUpperCase()}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -231,13 +231,13 @@ export const AdminHub = () => {
                                         <Badge color={a.status === 'active' ? 'green' : a.status === 'pending' ? 'yellow' : 'red'}>{a.status.toUpperCase()}</Badge>
                                     </td>
                                     <td className="px-8 py-5">
-                                        <div className="flex items-center gap-2 text-[11px] text-[#9aa8bd] font-mono bg-[#1f2937]/30 px-3 py-1.5 rounded-lg border border-[#1f2937]/50 w-fit group-hover:text-[#e6eef8] group-hover:border-[#f37321]/30 transition-all">
-                                            <Mail size={12} className="text-[#f37321]" /> {a.email}
+                                        <div className="flex items-center gap-2 text-[11px] text-gray-900 font-mono bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 w-fit group-hover:text-blue-600 group-hover:border-blue-300 transition-all">
+                                            <Mail size={12} className="text-blue-600" /> {a.email}
                                         </div>
                                     </td>
                                     <td className="px-8 py-5">
-                                        <div className="flex items-center gap-2 text-[11px] text-[#9aa8bd] font-bold">
-                                            <Calendar size={12} className="text-[#f37321]" />
+                                        <div className="flex items-center gap-2 text-[11px] text-gray-900 font-bold">
+                                            <Calendar size={12} className="text-blue-600" />
                                             {a.dateOfJoining || a.joiningDate || '2024-01-01'}
                                         </div>
                                     </td>
@@ -248,14 +248,14 @@ export const AdminHub = () => {
                                                     <button
                                                         onClick={() => setConfirmDemoteId(a.id)}
                                                         title="Demote to Employee Tier"
-                                                        className="p-2.5 bg-[#f37321]/10 hover:bg-[#f37321] text-[#f37321] hover:text-white rounded-xl transition-all active:scale-90"
+                                                        className="p-2.5 bg-blue-600/10 hover:bg-blue-600 text-blue-600 hover:text-white rounded-xl transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                                                     >
                                                         <TrendingDown size={18} />
                                                     </button>
                                                     <button
                                                         onClick={() => setConfirmTerminateId(a.id)}
                                                         title="Directly Terminate Admin Access"
-                                                        className="p-2.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl transition-all active:scale-90"
+                                                        className="p-2.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-rose-500/30"
                                                     >
                                                         <Trash2 size={18} />
                                                     </button>
@@ -264,7 +264,7 @@ export const AdminHub = () => {
                                             <button
                                                 onClick={() => handleEdit(a)}
                                                 title="Manage Security Tiers"
-                                                className="p-2.5 bg-[#1f2937] hover:bg-emerald-500 text-[#9aa8bd] hover:text-white rounded-xl transition-all active:scale-90"
+                                                className="p-2.5 bg-gray-100 hover:bg-blue-600 text-gray-500 hover:text-white rounded-xl transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                                             >
                                                 <ShieldCheck size={18} />
                                             </button>
@@ -275,11 +275,11 @@ export const AdminHub = () => {
                         </tbody>
                     </table>
                     {filteredAdmins.length === 0 && (
-                        <div className="p-24 text-center flex flex-col items-center gap-4 bg-[#0b1220]">
-                            <ShieldQuestion size={64} className="text-[#374151] animate-pulse" />
+                        <div className="p-24 text-center flex flex-col items-center gap-4 bg-white">
+                            <ShieldQuestion size={64} className="text-gray-300 animate-pulse" />
                             <div className="space-y-1">
-                                <h4 className="text-[#e6eef8] font-bold text-lg">No Admins Found</h4>
-                                <p className="text-[#9aa8bd] text-sm max-w-xs">Verify your search criteria or check the system logs.</p>
+                                <h4 className="text-gray-900 font-bold text-lg">No Admins Found</h4>
+                                <p className="text-gray-500 text-sm max-w-xs">Verify your search criteria or check the system logs.</p>
                             </div>
                         </div>
                     )}
@@ -295,16 +295,16 @@ export const AdminHub = () => {
                     onSave={() => setViewingUser(null)}
                 >
                     <div className="space-y-8">
-                        <div className="relative p-8 rounded-[2rem] bg-gradient-to-br from-[#1f2937] to-[#0b1220] border border-emerald-500/20 overflow-hidden shadow-2xl">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full -mr-32 -mt-32 blur-[100px]"></div>
+                        <div className="relative p-8 rounded-[2rem] bg-gradient-to-br from-gray-100 to-white border border-gray-200 overflow-hidden shadow-2xl">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -mr-32 -mt-32 blur-[100px]"></div>
                             <div className="flex flex-col items-center text-center">
                                 <div className="relative mb-6">
-                                    <img src={viewingUser.avatar} className="w-32 h-32 rounded-[2.5rem] border-4 border-[#0b1220] shadow-2xl object-cover" alt={viewingUser.name} />
-                                    <div className={`absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl flex items-center justify-center border-4 border-[#0b1220] bg-emerald-500 shadow-lg`}>
+                                    <img src={viewingUser.avatar} className="w-32 h-32 rounded-[2.5rem] border-4 border-gray-200 shadow-2xl object-cover" alt={viewingUser.name} />
+                                    <div className={`absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl flex items-center justify-center border-4 border-white bg-emerald-500 shadow-lg`}>
                                         <Shield size={20} className="text-white" />
                                     </div>
                                 </div>
-                                <h3 className="text-3xl font-black text-[#e6eef8] tracking-tight">{viewingUser.name}</h3>
+                                <h3 className="text-3xl font-black text-gray-900 tracking-tight">{viewingUser.name}</h3>
                                 <p className="text-emerald-400 font-bold uppercase tracking-widest text-sm mt-1 mb-4">{viewingUser.role}</p>
                                 <div className="flex gap-2">
                                     <Badge color="green">ADMINISTRATIVE ACCESS</Badge>
@@ -316,19 +316,19 @@ export const AdminHub = () => {
                         {/* Demote & Terminate Action Boxes (Only for Super Admin, cannot target self) */}
                         {isSuperAdmin && viewingUser.id !== currentUser?.id && viewingUser.status === 'active' && (
                             <div className="space-y-4">
-                                <div className="p-6 rounded-[1.5rem] bg-[#f37321]/5 border border-[#f37321]/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="p-6 rounded-[1.5rem] bg-blue-50 border border-blue-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                                     <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-[#f37321]/10 rounded-xl text-[#f37321]">
+                                        <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
                                             <TrendingDown size={24} />
                                         </div>
                                         <div>
-                                            <h4 className="text-sm font-black text-[#e6eef8] tracking-tight">Access Demotion</h4>
-                                            <p className="text-[10px] text-[#9aa8bd] font-medium uppercase tracking-widest">Target tier: Admin → Employee</p>
+                                            <h4 className="text-sm font-black text-gray-900 tracking-tight">Access Demotion</h4>
+                                            <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Target tier: Admin → Employee</p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => handleDemoteFromModal(viewingUser.id)}
-                                        className="w-full sm:w-auto px-6 py-3 bg-[#f37321] text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#e06410] transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#f37321]/20 active:scale-95"
+                                        className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-200 active:scale-95"
                                     >
                                         Demote <ChevronRight size={14} />
                                     </button>
@@ -340,8 +340,8 @@ export const AdminHub = () => {
                                             <Trash2 size={24} />
                                         </div>
                                         <div>
-                                            <h4 className="text-sm font-black text-[#e6eef8] tracking-tight">Account Deactivation</h4>
-                                            <p className="text-[10px] text-[#9aa8bd] font-medium uppercase tracking-widest">Terminate all administrative keys</p>
+                                            <h4 className="text-sm font-black text-gray-900 tracking-tight">Account Deactivation</h4>
+                                            <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Terminate all administrative keys</p>
                                         </div>
                                     </div>
                                     <button
@@ -355,34 +355,34 @@ export const AdminHub = () => {
                         )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-4 p-6 rounded-2xl bg-[#0f172a]/50 border border-[#1f2937]">
-                                <h4 className="text-[10px] font-black text-[#9aa8bd] uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
+                                <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
                                     <Smartphone size={14} className="text-emerald-500" /> Communication Channels
                                 </h4>
                                 <div className="space-y-3 text-xs">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-[#9aa8bd]">Admin Email</span>
-                                        <span className="text-[#e6eef8] font-semibold">{viewingUser.email}</span>
+                                        <span className="text-gray-500">Admin Email</span>
+                                        <span className="text-gray-900 font-semibold">{viewingUser.email}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <span className="text-[#9aa8bd]">Operational Location</span>
-                                        <span className="text-[#e6eef8] font-medium">{viewingUser.location || 'Central Command Hub'}</span>
+                                        <span className="text-gray-500">Operational Location</span>
+                                        <span className="text-gray-900 font-medium">{viewingUser.location || 'Central Command Hub'}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-4 p-6 rounded-2xl bg-[#0f172a]/50 border border-[#1f2937]">
-                                <h4 className="text-[10px] font-black text-[#9aa8bd] uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
+                                <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
                                     <Fingerprint size={14} className="text-emerald-500" /> Security Context
                                 </h4>
                                 <div className="space-y-3 text-xs">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-[#9aa8bd]">Security UID</span>
+                                        <span className="text-gray-500">Security UID</span>
                                         <span className="text-emerald-400 font-mono font-bold tracking-tighter">{viewingUser.employeeId || viewingUser.id}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <span className="text-[#9aa8bd]">Elevation Date</span>
-                                        <span className="text-[#e6eef8] font-semibold">{viewingUser.dateOfJoining}</span>
+                                        <span className="text-gray-500">Elevation Date</span>
+                                        <span className="text-gray-900 font-semibold">{viewingUser.dateOfJoining}</span>
                                     </div>
                                 </div>
                             </div>
@@ -395,19 +395,19 @@ export const AdminHub = () => {
             {confirmDemoteId && (
                 <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-[#020617]/95 backdrop-blur-md" onClick={() => setConfirmDemoteId(null)} />
-                    <div className="relative bg-[#0b1220] border border-[#f37321]/20 p-8 rounded-[2.5rem] max-w-md w-full text-center shadow-2xl animate-in zoom-in-95 duration-300">
-                        <div className="w-20 h-20 bg-[#f37321]/10 text-[#f37321] rounded-3xl flex items-center justify-center mx-auto mb-6 border border-[#f37321]/20">
+                    <div className="relative bg-white border border-blue-100 p-8 rounded-[2.5rem] max-w-md w-full text-center shadow-2xl animate-in zoom-in-95 duration-300">
+                        <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-blue-100">
                             <TrendingDown size={40} />
                         </div>
-                        <h3 className="text-2xl font-black text-white mb-2 tracking-tight">Revoke Admin Tiers?</h3>
-                        <p className="text-[#9aa8bd] text-sm leading-relaxed mb-8">
+                        <h3 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">Revoke Admin Tiers?</h3>
+                        <p className="text-gray-500 text-sm leading-relaxed mb-8">
                             You are about to demote this administrator to a standard Employee tier. They will lose all system-wide management privileges instantly and be moved to the Employee Hub.
                         </p>
                         <div className="flex gap-3">
-                            <button onClick={() => setConfirmDemoteId(null)} className="flex-1 py-4 bg-[#1f2937] text-[#9aa8bd] rounded-2xl font-bold hover:text-white transition-all active:scale-95">Cancel</button>
+                            <button onClick={() => setConfirmDemoteId(null)} className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-bold hover:text-white transition-all active:scale-95">Cancel</button>
                             <button
                                 onClick={() => { demoteToEmployee(confirmDemoteId); setConfirmDemoteId(null); }}
-                                className="flex-1 py-4 bg-[#f37321] text-white rounded-2xl font-bold hover:bg-[#e06410] transition-all shadow-xl shadow-[#f37321]/20 active:scale-95"
+                                className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-95"
                             >
                                 Confirm Demote
                             </button>
@@ -420,16 +420,16 @@ export const AdminHub = () => {
             {confirmTerminateId && (
                 <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-[#020617]/95 backdrop-blur-md" onClick={() => setConfirmTerminateId(null)} />
-                    <div className="relative bg-[#0b1220] border border-rose-500/20 p-8 rounded-[2.5rem] max-w-md w-full text-center shadow-2xl animate-in zoom-in-95 duration-300">
+                    <div className="relative bg-white border border-rose-100 p-8 rounded-[2.5rem] max-w-md w-full text-center shadow-2xl animate-in zoom-in-95 duration-300">
                         <div className="w-20 h-20 bg-rose-500/10 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-rose-500/20">
                             <Trash2 size={40} />
                         </div>
-                        <h3 className="text-2xl font-black text-white mb-2 tracking-tight">Deactivate Administrator?</h3>
-                        <p className="text-[#9aa8bd] text-sm leading-relaxed mb-8">
+                        <h3 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">Deactivate Administrator?</h3>
+                        <p className="text-gray-500 text-sm leading-relaxed mb-8">
                             This action will permanently terminate this administrator's system access. Their account status will be set to 'Terminated' (Inactive). This action is irreversible.
                         </p>
                         <div className="flex gap-3">
-                            <button onClick={() => setConfirmTerminateId(null)} className="flex-1 py-4 bg-[#1f2937] text-[#9aa8bd] rounded-2xl font-bold hover:text-white transition-all active:scale-95">Cancel</button>
+                            <button onClick={() => setConfirmTerminateId(null)} className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-bold hover:text-white transition-all active:scale-95">Cancel</button>
                             <button
                                 onClick={() => { terminateAdmin(confirmTerminateId); setConfirmTerminateId(null); }}
                                 className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-bold hover:bg-rose-600 transition-all shadow-xl shadow-rose-500/20 active:scale-95"
@@ -449,19 +449,19 @@ export const AdminHub = () => {
                 onSave={handleSave}
             >
                 <div className="space-y-10 pb-4">
-                    <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-gradient-to-br from-[#0f172a] to-[#0b1220] rounded-[2rem] border border-[#1f2937] relative shadow-2xl">
+                    <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-gradient-to-br from-gray-100 to-white rounded-[2rem] border border-gray-200 relative shadow-2xl">
                         <div className="relative">
-                            <div className="w-24 h-24 rounded-2xl border-2 border-[#1f2937] flex items-center justify-center bg-[#0f172a] shadow-2xl overflow-hidden">
+                            <div className="w-24 h-24 rounded-2xl border-2 border-gray-200 flex items-center justify-center bg-white shadow-2xl overflow-hidden">
                                 <img src={`https://picsum.photos/seed/${formState.email || 'admin'}/200`} className="w-full h-full object-cover" alt="Admin Avatar" />
                             </div>
-                            <div className="absolute -bottom-2 -right-2 p-2 bg-emerald-500 text-white rounded-lg shadow-lg border-2 border-[#0b1220]">
+                            <div className="absolute -bottom-2 -right-2 p-2 bg-emerald-500 text-white rounded-lg shadow-lg border-2 border-white">
                                 <Fingerprint size={16} />
                             </div>
                         </div>
                         <div className="flex-1 text-center sm:text-left">
-                            <h4 className="text-2xl font-black text-[#e6eef8] tracking-tight mb-1">{formState.firstName || 'New'} {formState.lastName || 'Identity'}</h4>
-                            <p className="text-[#9aa8bd] text-xs font-bold uppercase tracking-widest flex items-center justify-center sm:justify-start gap-2">
-                                <ShieldCheck size={12} className="text-[#f37321]" /> Access Level: {formState.role}
+                            <h4 className="text-2xl font-black text-gray-900 tracking-tight mb-1">{formState.firstName || 'New'} {formState.lastName || 'Identity'}</h4>
+                            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest flex items-center justify-center sm:justify-start gap-2">
+                                <ShieldCheck size={12} className="text-blue-600" /> Access Level: {formState.role}
                             </p>
                             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-4">
                                 <Badge color="blue">ADMINISTRATIVE PROTOCOL</Badge>
@@ -502,8 +502,8 @@ export const AdminHub = () => {
                     <div className="p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl flex gap-4 items-start">
                         <ShieldAlert size={24} className="text-emerald-500 shrink-0 mt-0.5" />
                         <div>
-                            <h5 className="text-[11px] font-black text-emerald-500 uppercase tracking-[0.1em] mb-1">Administrative Protocols</h5>
-                            <p className="text-[10px] text-[#9aa8bd] leading-relaxed font-semibold">
+                            <h5 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.1em] mb-1">Administrative Protocols</h5>
+                            <p className="text-gray-500 text-[10px] leading-relaxed font-semibold">
                                 Provisioning or modifying administrative access requires multi-factor authorization. Security authorization for this module is fixed to "ADMIN" by system policy.
                             </p>
                         </div>

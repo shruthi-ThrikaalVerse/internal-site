@@ -1,14 +1,14 @@
 // @ts-nocheck
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import ceoImg from '../../public/ceo_img.png';
 
 const About = () => {
-  const founder = {
+  const founder = useMemo(() => ({
     name: "VAGYA NAIK BHUKYA",
     role: "Founder & Chairperson",
     image: ceoImg
-  };
+  }), []);
 
   return (
     <div className="about-container mb-4">
@@ -27,11 +27,9 @@ const About = () => {
                   src={founder.image}
                   alt={`${founder.name} - ${founder.role}`}
                   className="about-img"
-                  loading="eager"
-                  decoding="auto"
+                  loading="lazy"
+                  decoding="async"
                   crossOrigin="anonymous"
-                  onError={(e) => console.error('Image failed to load:', founder.image, e)}
-                  onLoad={() => console.log('Image loaded successfully:', founder.image)}
                 />
                 <div className="about-overlay">
                   <div className="about-overlay-text">
@@ -160,7 +158,9 @@ const About = () => {
           border: 1px solid;
           border-color: var(--border-color);
           border-radius: 50%;
-          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+          animation: pulse 3s ease-in-out infinite;
+          will-change: opacity;
+          transform: translateZ(0);
         }
 
         .about-border-mid {
@@ -192,10 +192,11 @@ const About = () => {
         .about-glow {
           width: 66.666%;
           height: 66.666%;
-          background: linear-gradient(to bottom right, var(--accent-green), var(--accent-teal));
+          background: radial-gradient(circle, var(--accent-green), var(--accent-teal));
           border-radius: 50%;
-          filter: blur(80px);
-          opacity: 0.1;
+          opacity: 0.08;
+          filter: blur(40px);
+          will-change: transform;
         }
 
         .about-founder-image {
@@ -206,10 +207,12 @@ const About = () => {
           overflow: hidden;
           border: 4px solid;
           border-color: rgba(255, 255, 255, 0.1);
-          box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
           background-color: var(--bg-secondary);
           group: group;
           background: linear-gradient(135deg, #333, #555);
+          will-change: transform;
+          transform: translateZ(0);
         }
 
         .about-img {
@@ -258,13 +261,17 @@ const About = () => {
         .about-rotate-1 {
           position: absolute;
           inset: 0;
-          animation: spin-slow 10s linear infinite;
+          animation: spin-slow 15s linear infinite;
+          will-change: transform;
+          transform: translateZ(0);
         }
 
         .about-rotate-2 {
           position: absolute;
           inset: 0;
-          animation: spin-reverse-slow 7s linear infinite;
+          animation: spin-reverse-slow 10s linear infinite;
+          will-change: transform;
+          transform: translateZ(0);
         }
 
         .about-dot {
@@ -279,7 +286,7 @@ const About = () => {
           left: 50%;
           transform: translateX(-50%);
           background-color: var(--accent-orange);
-          box-shadow: 0 0 20px var(--accent-orange);
+          box-shadow: 0 0 15px var(--accent-orange);
         }
 
         .about-dot-teal {
@@ -287,7 +294,7 @@ const About = () => {
           left: 50%;
           transform: translateX(-50%);
           background-color: var(--accent-teal);
-          box-shadow: 0 0 20px var(--accent-teal);
+          box-shadow: 0 0 15px var(--accent-teal);
         }
 
         .about-content-section {
@@ -429,4 +436,4 @@ const About = () => {
   );
 };
 
-export default About;
+export default memo(About);

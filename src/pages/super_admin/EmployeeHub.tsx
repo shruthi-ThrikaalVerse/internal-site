@@ -161,7 +161,7 @@ export const EmployeeHub = () => {
       />
 
       {/* Filter Bar */}
-      <div className="bg-[#0b1220]/50 p-4 rounded-2xl border border-[#1f2937] backdrop-blur-sm mb-6 flex flex-col gap-4">
+      <div className="bg-white/50 p-4 rounded-2xl border border-gray-200 backdrop-blur-sm mb-6 flex flex-col gap-4">
         <div className="flex flex-col md:flex-row items-center gap-4">
           <div className="w-full md:w-auto flex-1 flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
@@ -184,7 +184,7 @@ export const EmployeeHub = () => {
           <div className="w-full md:w-auto pt-2 flex gap-2">
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className={`flex-1 md:w-auto h-[44px] px-6 rounded-xl transition-all flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest border ${showAdvanced ? 'bg-[#f37321] text-white border-transparent' : 'bg-[#1f2937] text-[#9aa8bd] hover:text-[#e6eef8] border-transparent hover:border-[#f37321]/20'}`}
+              className={`flex-1 md:w-auto h-[44px] px-6 rounded-xl transition-all flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest border ${showAdvanced ? 'bg-blue-600 text-white border-transparent' : 'bg-gray-100 text-gray-500 hover:text-blue-600 border-transparent hover:border-blue-300'}`}
             >
               <Filter size={16} />
               Advanced {activeFilterCount > 0 && `(${activeFilterCount})`}
@@ -202,7 +202,7 @@ export const EmployeeHub = () => {
         </div>
 
         {showAdvanced && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 mt-2 bg-[#0f172a]/50 rounded-xl border border-[#1f2937] animate-in slide-in-from-top-4 duration-300">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 mt-2 bg-gray-50 rounded-xl border border-gray-200 animate-in slide-in-from-top-4 duration-300">
             <div>
               <FormSelect
                 label="Employment Type"
@@ -224,33 +224,33 @@ export const EmployeeHub = () => {
       </div>
 
       {/* Main Table Container */}
-      <div className="bg-[#0b1220] rounded-3xl border border-[#1f2937] overflow-hidden shadow-2xl shadow-black/40">
+      <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-2xl shadow-black/10">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-collapse min-w-[1200px]">
-            <thead className="bg-[#0f172a]/80 backdrop-blur-md border-b border-[#1f2937]">
+            <thead className="bg-gray-50 backdrop-blur-md border-b border-gray-200">
               <tr>
-                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">Profile Identity</th>
-                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">Role & Unit</th>
-                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">System Status</th>
-                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">Contact Details</th>
-                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em]">Deployment</th>
-                <th className="px-8 py-5 text-[10px] font-black text-[#9aa8bd] uppercase tracking-[0.2em] text-right">Actions</th>
+                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Profile Identity</th>
+                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Role & Unit</th>
+                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">System Status</th>
+                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Contact Details</th>
+                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Deployment</th>
+                <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#1f2937]">
+            <tbody className="divide-y divide-gray-200">
               {filteredEmployees.map((e) => (
-                <tr key={e.id} className="hover:bg-[#0f172a] transition-all group border-l-2 border-transparent hover:border-[#f37321]">
+                <tr key={e.id} className="hover:bg-gray-100 transition-all group border-l-2 border-transparent hover:border-blue-200">
                   <td className="px-8 py-5 cursor-pointer" onClick={() => setViewingUser(e)}>
                     <div className="flex items-center gap-4">
                       <div className="relative shrink-0">
-                        <img src={e.avatar} alt={e.name} className="w-14 h-14 rounded-2xl border border-[#1f2937] shadow-xl group-hover:scale-105 transition-transform object-cover" />
-                        <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-[3px] border-[#0b1220] ${e.status === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : e.status === 'pending' ? 'bg-amber-500 shadow-[0_0_8px_#f59e0b]' : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'}`}></span>
+                        <img src={e.avatar} alt={e.name} className="w-14 h-14 rounded-2xl border border-gray-200 shadow-xl group-hover:scale-105 transition-transform object-cover" />
+                        <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-[3px] border-white ${e.status === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : e.status === 'pending' ? 'bg-amber-500 shadow-[0_0_8px_#f59e0b]' : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'}`}></span>
                       </div>
                       <div className="min-w-0">
-                        <div className="font-bold text-[#e6eef8] group-hover:text-[#f37321] transition-colors truncate text-base">{e.name}</div>
-                        <div className="text-[10px] text-[#9aa8bd] font-bold tracking-tight opacity-70 truncate">{e.designation || e.role}</div>
+                        <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors truncate text-base">{e.name}</div>
+                        <div className="text-[10px] text-gray-900 font-bold tracking-tight opacity-70 truncate">{e.designation || e.role}</div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[9px] text-[#f37321] font-mono bg-[#f37321]/10 px-1.5 py-0.5 rounded border border-[#f37321]/20 tracking-tighter uppercase">ID: {e.employeeId || e.id.padStart(4, '0')}</span>
+                          <span className="text-[9px] text-gray-900 font-mono bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 tracking-tighter uppercase">ID: {e.employeeId || e.id.padStart(4, '0')}</span>
                         </div>
                       </div>
                     </div>
@@ -258,8 +258,8 @@ export const EmployeeHub = () => {
                   <td className="px-8 py-5">
                     <div className="space-y-2">
                       <Badge color="blue">{e.department?.toUpperCase()}</Badge>
-                      <div className="flex items-center gap-1.5 text-[10px] text-[#9aa8bd] font-bold bg-[#1f2937]/50 w-fit px-2 py-1 rounded-lg">
-                        <Clock size={12} className="text-[#f37321]" /> {e.employmentType || 'Full-time'}
+                      <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-bold bg-gray-100 w-fit px-2 py-1 rounded-lg">
+                        <Clock size={12} className="text-blue-600" /> {e.employmentType || 'Full-time'}
                       </div>
                     </div>
                   </td>
@@ -270,21 +270,21 @@ export const EmployeeHub = () => {
                   </td>
                   <td className="px-8 py-5">
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-xs text-[#9aa8bd] hover:text-[#f37321] transition-colors cursor-default">
-                        <Mail size={14} className="shrink-0 text-[#f37321]" /> <span className="truncate max-w-[160px]">{e.email}</span>
+                      <div className="flex items-center gap-2 text-xs text-gray-900 hover:text-blue-600 transition-colors cursor-default">
+                        <Mail size={14} className="shrink-0 text-blue-600" /> <span className="truncate max-w-[160px] text-gray-900 group-hover:text-blue-600">{e.email}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] text-[#9aa8bd] font-mono bg-[#1f2937]/30 px-2 py-1 rounded-lg w-fit">
-                        <Smartphone size={12} className="shrink-0 text-[#f37321]" /> {e.phone || 'N/A'}
+                      <div className="flex items-center gap-2 text-[10px] text-gray-900 font-mono bg-gray-50 px-2 py-1 rounded-lg w-fit">
+                        <Smartphone size={12} className="shrink-0 text-blue-600" /> {e.phone || 'N/A'}
                       </div>
                     </div>
                   </td>
                   <td className="px-8 py-5">
                     <div className="space-y-1.5">
-                      <div className="flex items-center gap-1.5 text-xs text-[#e6eef8] font-semibold">
-                        <MapPin size={14} className="text-[#f37321]" /> {e.location || 'Global Remote'}
+                      <div className="flex items-center gap-1.5 text-xs text-gray-900 font-semibold">
+                        <MapPin size={14} className="text-blue-600" /> {e.location || 'Global Remote'}
                       </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-[#9aa8bd] font-bold">
-                        <Calendar size={12} className="text-[#f37321]" /> Since {e.dateOfJoining || e.joiningDate || '2023-01-01'}
+                      <div className="flex items-center gap-1.5 text-[10px] text-gray-900 font-bold">
+                        <Calendar size={12} className="text-blue-600" /> Since {e.dateOfJoining || e.joiningDate || '2023-01-01'}
                       </div>
                     </div>
                   </td>
@@ -294,7 +294,7 @@ export const EmployeeHub = () => {
                         <button
                           onClick={() => setConfirmPromoteId(e.id)}
                           title="Elevate Record to Admin"
-                          className="p-3 bg-[#f37321]/10 hover:bg-[#f37321] text-[#f37321] hover:text-white rounded-xl transition-all active:scale-90"
+                          className="p-3 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-xl transition-all active:scale-90 focus:ring-4 focus:ring-blue-500/50"
                         >
                           <TrendingUp size={18} />
                         </button>
@@ -302,7 +302,7 @@ export const EmployeeHub = () => {
                       <button
                         onClick={() => handleEdit(e)}
                         title="Modify Registry"
-                        className="p-3 bg-[#1f2937] hover:bg-[#1f2937]/80 text-[#9aa8bd] hover:text-[#e6eef8] rounded-xl transition-all active:scale-90"
+                        className="p-3 bg-gray-200 hover:bg-gray-300 text-gray-500 hover:text-gray-900 rounded-xl transition-all active:scale-90"
                       >
                         <Shield size={18} />
                       </button>
@@ -333,17 +333,17 @@ export const EmployeeHub = () => {
           onSave={() => setViewingUser(null)}
         >
           <div className="space-y-8">
-            <div className="relative p-8 rounded-[2rem] bg-gradient-to-br from-[#1f2937] to-[#0b1220] border border-[#f37321]/20 overflow-hidden shadow-2xl">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-[#f37321]/10 rounded-full -mr-32 -mt-32 blur-[100px]"></div>
+            <div className="relative p-8 rounded-[2rem] bg-gradient-to-br from-gray-100 to-white border border-blue-100 overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -mr-32 -mt-32 blur-[100px]"></div>
               <div className="flex flex-col items-center text-center">
                 <div className="relative mb-6">
-                  <img src={viewingUser.avatar} className="w-32 h-32 rounded-[2.5rem] border-4 border-[#0b1220] shadow-2xl object-cover" alt={viewingUser.name} />
-                  <div className={`absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl flex items-center justify-center border-4 border-[#0b1220] ${viewingUser.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500 shadow-lg'}`}>
+                  <img src={viewingUser.avatar} className="w-32 h-32 rounded-[2.5rem] border-4 border-gray-200 shadow-2xl object-cover" alt={viewingUser.name} />
+                  <div className={`absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl flex items-center justify-center border-4 border-white ${viewingUser.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500 shadow-lg'}`}>
                     <CheckCircle2 size={20} className="text-white" />
                   </div>
                 </div>
-                <h3 className="text-3xl font-black text-[#e6eef8] tracking-tight">{viewingUser.name}</h3>
-                <p className="text-[#f37321] font-bold uppercase tracking-widest text-sm mt-1 mb-4">{viewingUser.designation}</p>
+                <h3 className="text-3xl font-black text-gray-900 tracking-tight">{viewingUser.name}</h3>
+                <p className="text-blue-600 font-bold uppercase tracking-widest text-sm mt-1 mb-4">{viewingUser.designation}</p>
                 <div className="flex gap-2">
                   <Badge color="blue">{viewingUser.department}</Badge>
                   <Badge color="slate">{viewingUser.role}</Badge>
@@ -353,19 +353,19 @@ export const EmployeeHub = () => {
 
             {/* Promote Action Box (Only for Super Admin) */}
             {isSuperAdmin && viewingUser.role !== 'SUPER_ADMIN' && (
-              <div className="p-6 rounded-[1.5rem] bg-[#f37321]/5 border border-[#f37321]/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="p-6 rounded-[1.5rem] bg-blue-50 border border-blue-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-[#f37321]/10 rounded-xl text-[#f37321]">
+                  <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
                     <TrendingUp size={24} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-black text-[#e6eef8] tracking-tight">Administrative Elevation</h4>
-                    <p className="text-[10px] text-[#9aa8bd] font-medium uppercase tracking-widest">Promotion tier: Employee → Admin</p>
+                    <h4 className="text-sm font-black text-gray-900 tracking-tight">Administrative Elevation</h4>
+                    <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Promotion tier: Employee → Admin</p>
                   </div>
                 </div>
                 <button
                   onClick={() => handlePromoteFromModal(viewingUser.id)}
-                  className="w-full sm:w-auto px-6 py-3 bg-[#f37321] text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#e06410] transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#f37321]/20 active:scale-95"
+                  className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-200 active:scale-95 focus:ring-4 focus:ring-blue-500/50"
                 >
                   Promote Record <ChevronRight size={14} />
                 </button>
@@ -373,41 +373,41 @@ export const EmployeeHub = () => {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4 p-6 rounded-2xl bg-[#0f172a]/50 border border-[#1f2937]">
-                <h4 className="text-[10px] font-black text-[#9aa8bd] uppercase tracking-widest mb-2 flex items-center gap-2">
-                  <Smartphone size={14} className="text-[#f37321]" /> Communication Channels
+              <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
+                <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                  <Smartphone size={14} className="text-blue-600" /> Communication Channels
                 </h4>
                 <div className="space-y-3 text-xs">
                   <div className="flex justify-between items-center">
-                    <span className="text-[#9aa8bd]">Work Email</span>
-                    <span className="text-[#e6eef8] font-semibold">{viewingUser.email}</span>
+                    <span className="text-gray-500">Work Email</span>
+                    <span className="text-gray-900 font-semibold">{viewingUser.email}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-[#9aa8bd]">Mobile</span>
-                    <span className="text-[#e6eef8] font-semibold">{viewingUser.phone || 'N/A'}</span>
+                    <span className="text-gray-500">Mobile</span>
+                    <span className="text-gray-900 font-semibold">{viewingUser.phone || 'N/A'}</span>
                   </div>
-                  <div className="pt-2 border-t border-[#1f2937]">
-                    <span className="text-[#9aa8bd] block mb-1">Operational Location</span>
-                    <span className="text-[#e6eef8] font-medium">{viewingUser.location || 'Global Hub'}</span>
+                  <div className="pt-2 border-t border-gray-200">
+                    <span className="text-gray-500 block mb-1">Operational Location</span>
+                    <span className="text-gray-900 font-medium">{viewingUser.location || 'Global Hub'}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4 p-6 rounded-2xl bg-[#0f172a]/50 border border-[#1f2937]">
-                <h4 className="text-[10px] font-black text-[#9aa8bd] uppercase tracking-widest mb-2 flex items-center gap-2">
-                  <Calendar size={14} className="text-[#f37321]" /> Deployment Context
+              <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
+                <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                  <Calendar size={14} className="text-blue-600" /> Deployment Context
                 </h4>
                 <div className="space-y-3 text-xs">
                   <div className="flex justify-between items-center">
-                    <span className="text-[#9aa8bd]">Registry UID</span>
-                    <span className="text-[#f37321] font-mono font-bold tracking-tighter">{viewingUser.employeeId || viewingUser.id}</span>
+                    <span className="text-gray-500">Registry UID</span>
+                    <span className="text-blue-600 font-mono font-bold tracking-tighter">{viewingUser.employeeId || viewingUser.id}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-[#9aa8bd]">Onboarding Date</span>
-                    <span className="text-[#e6eef8] font-semibold">{viewingUser.dateOfJoining}</span>
+                    <span className="text-gray-500">Onboarding Date</span>
+                    <span className="text-gray-900 font-semibold">{viewingUser.dateOfJoining}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-[#9aa8bd]">Tier Classification</span>
+                    <span className="text-gray-500">Tier Classification</span>
                     <span className="text-emerald-400 font-black tracking-tight">{viewingUser.status.toUpperCase()}</span>
                   </div>
                 </div>
@@ -428,13 +428,13 @@ export const EmployeeHub = () => {
           <div className="space-y-6">
             <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-xl flex gap-3 items-center">
               <ShieldAlert size={18} className="text-amber-500 shrink-0" />
-              <p className="text-xs text-[#9aa8bd] font-medium leading-tight">
+              <p className="text-xs text-gray-500 font-medium leading-tight">
                 This request will be forwarded to the Super Admin for authorization.
               </p>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-[#9aa8bd] uppercase tracking-wider">Target Identity</label>
-              <div className="px-4 py-3 bg-[#0f172a] border border-[#1f2937] rounded-xl text-sm text-[#e6eef8] font-bold">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-wider">Target Identity</label>
+              <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 font-bold">
                 {employees.find(e => e.id === confirmRequestId)?.name}
               </div>
             </div>
@@ -452,16 +452,16 @@ export const EmployeeHub = () => {
       {confirmDeleteId && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-[#020617]/95 backdrop-blur-md" onClick={() => setConfirmDeleteId(null)} />
-          <div className="relative bg-[#0b1220] border border-rose-500/20 p-8 rounded-[2.5rem] max-w-md w-full text-center shadow-2xl animate-in zoom-in-95 duration-300">
+          <div className="relative bg-white border border-blue-300 p-8 rounded-[2.5rem] max-w-md w-full text-center shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="w-20 h-20 bg-rose-500/10 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-rose-500/20">
               <ShieldAlert size={40} />
             </div>
-            <h3 className="text-2xl font-black text-white mb-2 tracking-tight">Direct Access Revocation</h3>
-            <p className="text-[#9aa8bd] text-sm leading-relaxed mb-8">
+            <h3 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">Direct Access Revocation</h3>
+            <p className="text-gray-500 text-sm leading-relaxed mb-8">
               As Super Admin, you are directly terminating this specialist's system access. This action will deactivate the account instantly.
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setConfirmDeleteId(null)} className="flex-1 py-4 bg-[#1f2937] text-[#9aa8bd] rounded-2xl font-bold hover:text-white transition-all active:scale-95">Cancel</button>
+              <button onClick={() => setConfirmDeleteId(null)} className="flex-1 py-4 bg-gray-100 text-gray-900 rounded-2xl font-bold hover:text-white transition-all active:scale-95">Cancel</button>
               <button
                 onClick={() => { removeEmployee(confirmDeleteId); setConfirmDeleteId(null); }}
                 className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-bold hover:bg-rose-600 transition-all shadow-xl shadow-rose-500/20 active:scale-95"
@@ -477,19 +477,19 @@ export const EmployeeHub = () => {
       {confirmPromoteId && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-[#020617]/95 backdrop-blur-md" onClick={() => setConfirmPromoteId(null)} />
-          <div className="relative bg-[#0b1220] border border-[#f37321]/20 p-8 rounded-[2.5rem] max-w-md w-full text-center shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 bg-[#f37321]/10 text-[#f37321] rounded-3xl flex items-center justify-center mx-auto mb-6 border border-[#f37321]/20">
+          <div className="relative bg-white border border-blue-300 p-8 rounded-[2.5rem] max-w-md w-full text-center shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-blue-300">
               <TrendingUp size={40} />
             </div>
-            <h3 className="text-2xl font-black text-white mb-2 tracking-tight">Elevate Tier Status?</h3>
-            <p className="text-[#9aa8bd] text-sm leading-relaxed mb-8">
+            <h3 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">Elevate Tier Status?</h3>
+            <p className="text-gray-500 text-sm leading-relaxed mb-8">
               Promoting this record to Administrative Tier will grant system-wide management privileges. The portal will redirect to the Admin Registry.
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setConfirmPromoteId(null)} className="flex-1 py-4 bg-[#1f2937] text-[#9aa8bd] rounded-2xl font-bold hover:text-white transition-all active:scale-95">Cancel</button>
+              <button onClick={() => setConfirmPromoteId(null)} className="flex-1 py-4 bg-gray-100 text-gray-900 rounded-2xl font-bold hover:text-white transition-all active:scale-95">Cancel</button>
               <button
                 onClick={() => { promoteToAdmin(confirmPromoteId); setConfirmPromoteId(null); }}
-                className="flex-1 py-4 bg-[#f37321] text-white rounded-2xl font-bold hover:bg-[#e06410] transition-all shadow-xl shadow-[#f37321]/20 active:scale-95"
+                className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-95"
               >
                 Promote to Admin
               </button>
@@ -507,13 +507,13 @@ export const EmployeeHub = () => {
           onSave={handleSave}
         >
           <div className="space-y-10 pb-4">
-            <div className="flex flex-col sm:flex-row items-center gap-8 p-8 bg-gradient-to-br from-[#0f172a] to-[#0b1220] rounded-[2rem] border border-[#1f2937] relative shadow-2xl">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-[#f37321]/10 rounded-full -mr-24 -mt-24 blur-[80px]"></div>
+            <div className="flex flex-col sm:flex-row items-center gap-8 p-8 bg-white rounded-[2rem] border border-gray-200 relative shadow-2xl">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-blue-100 rounded-full -mr-24 -mt-24 blur-[80px]"></div>
               <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                <div className="w-28 h-28 rounded-[2rem] border-4 border-[#1f2937] flex items-center justify-center bg-[#0f172a] shadow-2xl overflow-hidden group-hover:border-[#f37321]/50 transition-all">
+                <div className="w-28 h-28 rounded-[2rem] border-4 border-gray-200 flex items-center justify-center bg-white shadow-2xl overflow-hidden group-hover:border-blue-300 transition-all">
                   <img src={formState.avatar} className="w-full h-full object-cover" alt="Profile" />
                 </div>
-                <div className="absolute -bottom-2 -right-2 p-3 bg-[#f37321] text-white rounded-2xl shadow-xl border-4 border-[#0b1220]">
+                <div className="absolute -bottom-2 -right-2 p-3 bg-blue-600 text-white rounded-2xl shadow-xl border-4 border-white">
                   <Camera size={16} />
                 </div>
                 <input
@@ -526,8 +526,8 @@ export const EmployeeHub = () => {
                 />
               </div>
               <div className="flex-1 text-center sm:text-left">
-                <h4 className="text-2xl font-black text-[#e6eef8] tracking-tight truncate max-w-[250px]">{formState.firstName} {formState.lastName}</h4>
-                <p className="text-[#9aa8bd] text-sm font-bold uppercase tracking-widest bg-[#1f2937]/50 px-3 py-1 rounded-lg w-fit mx-auto sm:mx-0 mb-4 mt-2">{formState.designation}</p>
+                <h4 className="text-2xl font-black text-gray-900 tracking-tight truncate max-w-[250px]">{formState.firstName} {formState.lastName}</h4>
+                <p className="text-gray-500 text-sm font-bold uppercase tracking-widest bg-gray-100 px-3 py-1 rounded-lg w-fit mx-auto sm:mx-0 mb-4 mt-2">{formState.designation}</p>
                 <Badge color="blue">{formState.department?.toUpperCase()}</Badge>
               </div>
             </div>
