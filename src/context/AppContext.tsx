@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { AppSection, User, AdminRequest } from '../types';
-import { MOCK_EMPLOYEES, MOCK_ADMINS, MOCK_REQUESTS } from '../constants';
+import { MOCK_EMPLOYEES, MOCK_ADMINS, MOCK_REQUESTS } from '../constants.js';
 
 interface AppContextType {
   isAuthenticated: boolean;

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MOCK_NOTIFICATIONS } from '../../constants';
+import { MOCK_NOTIFICATIONS } from '../../constants.js';
 import { SectionHeader, Badge } from '../../components/super_admin/UI.tsx';
 import { Bell, Send, Clock, ShieldAlert, Info, Megaphone } from 'lucide-react';
 
@@ -14,7 +14,7 @@ export const NotificationsView = () => {
           <button className="flex items-center gap-2 bg-[#f37321] px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-[#f37321]/20 hover:bg-[#e06410] transition-all">
             <Megaphone size={18} />
             Broadcast Alert
-          </button>
+          </button> 
         }
       />
 
@@ -27,7 +27,7 @@ export const NotificationsView = () => {
                   'bg-blue-500/10 border-blue-500/20 text-blue-500'
                 }`}>
                 {notif.priority === 'high' ? <ShieldAlert size={20} /> : <Info size={20} />}
-              </div>
+              </div> 
 
               <div className="flex-1 min-w-0">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">

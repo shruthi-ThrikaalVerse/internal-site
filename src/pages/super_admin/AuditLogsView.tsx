@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MOCK_LOGS } from '../../constants';
+import { MOCK_LOGS } from '../../constants.js';
 import { SectionHeader, Badge } from '../../components/super_admin/UI.tsx';
 import { ShieldAlert, ShieldCheck, Info } from 'lucide-react';
 

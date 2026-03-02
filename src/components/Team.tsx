@@ -1,7 +1,7 @@
 // @ts-nocheck
 /*import React from 'react';
 import { motion } from 'framer-motion';
-import { TEAM } from '../constants';
+import { TEAM } from '../constants.js';
 
 const Team = () => {
   return (

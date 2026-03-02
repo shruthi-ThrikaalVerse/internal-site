@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React from 'react';
 import { motion } from 'framer-motion';
-import { JOBS } from '../constants';
+import { JOBS } from '../constants.js';
 
 const Career = () => {
   return (

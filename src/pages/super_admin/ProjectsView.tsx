@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MOCK_PROJECTS, MOCK_EMPLOYEES } from '../../constants';
+import { MOCK_PROJECTS, MOCK_EMPLOYEES } from '../../constants.js';
 import { SectionHeader, Badge } from '../../components/super_admin/UI';
 /* Added Shield to lucide-react imports to fix error on line 302 */
 import { Calendar, Users, Plus, Layout, Type, Target, Image as ImageIcon, FileText, Check, Pencil, Trash2, Shield } from 'lucide-react';

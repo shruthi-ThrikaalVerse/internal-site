@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MOCK_PAYMENT_UPDATES } from '../../constants';
+import { MOCK_PAYMENT_UPDATES } from '../../constants.js';
 import { SectionHeader, Badge } from '../../components/super_admin/UI.tsx';
 import { Check, X, RefreshCw, DollarSign, Wallet } from 'lucide-react';
 
