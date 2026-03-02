@@ -1,9 +1,9 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Search, Bell, LogOut, Menu, X,
   Users, UserPlus, Zap, Settings, HelpCircle, Shield,
-  LayoutDashboard, FileText, AlertCircle, DollarSign, GitBranch, BarChart3, Star, Calendar, TrendingUp, Wrench
+  LayoutDashboard, FileText, AlertCircle, DollarSign, GitBranch, BarChart3, Star, Calendar, TrendingUp, Wrench, User
 } from 'lucide-react';
 import { AppProvider, useApp } from './context/AppContext.js';
 import { AppSection } from './types.js';
@@ -64,6 +64,8 @@ const sectionToUrlMap: Record<string, string> = {
 const AppContent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
   const {
     isAuthenticated, setIsAuthenticated,
     activeSection, setActiveSection,
@@ -72,6 +74,17 @@ const AppContent: React.FC = () => {
     mobileSidebarOpen, setMobileSidebarOpen,
     employees, admins, currentUser
   } = useApp();
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setShowProfileDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -253,7 +266,7 @@ const AppContent: React.FC = () => {
               <input
                 type="text"
                 placeholder="Search across authorized modules..."
-                className="bg-transparent border-none focus:ring-0 text-sm w-full text-[#e6eef8] outline-none placeholder-[#9aa8bd]/40"
+                className="bg-transparent border-none focus:ring-0 text-sm w-full text-gray-900 outline-none placeholder-gray-400"
                 value={globalSearch}
                 onChange={(e) => setGlobalSearch(e.target.value)}
               />
@@ -265,19 +278,62 @@ const AppContent: React.FC = () => {
               <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Production Node</span>
             </div>
             <button
-              onClick={() => setActiveSection(AppSection.Notifications)}
+              onClick={() => navigate(sectionToUrlMap[AppSection.Notifications])}
               title="View notifications"
               className="relative p-2.5 text-gray-400 hover:bg-gray-100 rounded-xl transition-all"
             >
               <Bell size={20} />
               <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-blue-600 rounded-full ring-4 ring-white animate-bounce"></span>
             </button>
-            <div
-              onClick={() => setActiveSection(AppSection.Profile)}
-              title="View profile"
-              className="w-10 h-10 rounded-xl border-2 border-gray-200 bg-gray-100 overflow-hidden cursor-pointer hover:border-blue-600 transition-all group shrink-0 shadow-lg"
-            >
-              <img src={currentUser?.avatar || "https://picsum.photos/seed/admin/200"} alt="Admin" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+
+            {/* Profile Dropdown */}
+            <div className="relative" ref={profileDropdownRef}>
+              <button
+                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-1.5 shadow-sm hover:border-indigo-100 transition-all"
+              >
+                <div className="flex flex-col items-end hidden sm:flex">
+                  <p className="text-xs font-bold text-gray-900 leading-none">{currentUser?.name || 'Super Admin'}</p>
+                  <div className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-0.5">Active</p>
+                  </div>
+                </div>
+                <img
+                  src={currentUser?.avatar || "https://picsum.photos/seed/admin/200"}
+                  className="w-8 h-8 rounded-full border-2 border-indigo-50 shadow-sm"
+                  alt="Admin"
+                />
+              </button>
+
+              {showProfileDropdown && (
+                <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-200 z-50">
+                  <div className="px-4 py-3 border-b border-slate-50">
+                    <p className="text-xs font-black text-slate-900 truncate">{currentUser?.email || 'vijay@example.com'}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Global Cluster 01</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigate(sectionToUrlMap[AppSection.Profile]);
+                      setShowProfileDropdown(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                  >
+                    <User className="w-4 h-4" /> View Full Profile
+                  </button>
+                  <div className="border-t border-slate-50 mt-2 pt-2">
+                    <button
+                      onClick={() => {
+                        setIsAuthenticated(false);
+                        setShowProfileDropdown(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors font-bold"
+                    >
+                      <LogOut className="w-4 h-4" /> End Session
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>

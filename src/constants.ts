@@ -1,4 +1,4 @@
-import { Project } from './types';
+import { Project } from './types.js';
 
 export const COLORS = {
   primary: '#3b82f6',
@@ -141,7 +141,7 @@ export const JOBS = [
     department: "RESEARCH AND DEVELOPMENT",
     type: "Full-time",
     description: "Join our R&D team to pioneer next-generation technologies in AI and sustainable computing solutions.",
-    location: "Bangalore"
+    location: "Hyderabad"
   },
   {
     id: 3,
@@ -149,7 +149,7 @@ export const JOBS = [
     department: "FULL STACK DEVELOPER",
     type: "Full-time",
     description: "Build and maintain scalable infrastructure. Experience with Kubernetes, Docker, and AWS essential.",
-    location: "Mumbai"
+    location: "Hyderabad"
   },
   {
     id: 4,
@@ -157,11 +157,11 @@ export const JOBS = [
     department: "RESEARCH AND DEVELOPMENT",
     type: "Full-time",
     description: "Develop cutting-edge machine learning models for predictive analytics and automation systems.",
-    location: "Bangalore"
+    location: "Hyderabad"
   }
 ];
 // ============= Super Admin Constants =============
-import { AppSection } from './types';
+import { AppSection } from './types.js';
 
 export const NAVIGATION_ITEMS = [
   { id: AppSection.Dashboard, label: 'Dashboard', iconName: 'LayoutDashboard' },

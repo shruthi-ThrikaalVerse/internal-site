@@ -32,6 +32,7 @@ import EmployeeRequests from './pages/employee/Requests.tsx';
 import EmployeeEvents from './pages/employee/Events.tsx';
 import EmployeeNotifications from './pages/employee/Notifications.tsx';
 import EmployeeProfile from './pages/employee/Profile.tsx';
+import EmployeeResignation from './pages/employee/Resignation.tsx';
 
 // Admin login and dashboard
 import AdminLogin from './pages/admin/Login.tsx';
@@ -285,6 +286,12 @@ const EmployeeProfilePage = () => (
   </EmployeePageWithLogout>
 );
 
+const EmployeeResignationPage = () => (
+  <EmployeePageWithLogout>
+    <EmployeeResignation />
+  </EmployeePageWithLogout>
+);
+
 // Admin page components
 const AdminDashboardWithContext = () => (
   <AdminPageWithLogout>
@@ -473,6 +480,7 @@ root.render(
               <Route path="/employee/notifications" element={<EmployeeNotificationsPage />} />
               <Route path="/employee/notifications/:id" element={<EmployeeNotificationsPage />} />
               <Route path="/employee/profile" element={<EmployeeProfilePage />} />
+              <Route path="/employee/resignation" element={<EmployeeResignationPage />} />
 
               {/* Admin routes */}
               <Route path="/admin/login" element={<AdminLoginGuard />} />
