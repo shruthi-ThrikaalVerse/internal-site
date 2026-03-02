@@ -98,7 +98,7 @@ const Calendar: React.FC = () => {
       else if (width < 1024) setScreenSize('tablet');
       else setScreenSize('desktop');
     };
-    
+
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -291,7 +291,7 @@ const Calendar: React.FC = () => {
     // Attendance (sessions-aware)
     storedAttendance.forEach((rec: any) => {
       if (SYSTEM_HOLIDAYS.some(h => h.date === rec.date)) return;
-      
+
       const derived = deriveFromAttendance(rec);
       const isWorkingSat = isWorkingSaturday(rec.date);
 
@@ -323,7 +323,7 @@ const Calendar: React.FC = () => {
 
     const handleStorage = () => refreshData();
     window.addEventListener('storage', handleStorage);
-    
+
     // Add custom event listener for calendar updates
     const handleCalendarUpdate = () => refreshData();
     window.addEventListener('calendarEventsUpdated', handleCalendarUpdate);
@@ -336,7 +336,7 @@ const Calendar: React.FC = () => {
   }, [currentMonth]);
 
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const dayNames = screenSize === 'mobile' 
+  const dayNames = screenSize === 'mobile'
     ? ["S", "M", "T", "W", "T", "F", "S"]
     : ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   const years = [2024, 2025, 2026, 2027];
@@ -411,16 +411,16 @@ const Calendar: React.FC = () => {
     const lastDate = new Date(year, month + 1, 0).getDate();
     const days: any[] = [];
     const todayStr = formatDateString(new Date());
-    
+
     // Load calendar events for current month
     const calendarEvents = loadCalendarEvents();
 
     for (let i = firstDay - 1; i >= 0; i--) {
-      days.push({ 
-        date: new Date(year, month, -i), 
-        isCurrentMonth: false, 
-        record: null, 
-        events: [] 
+      days.push({
+        date: new Date(year, month, -i),
+        isCurrentMonth: false,
+        record: null,
+        events: []
       });
     }
 
@@ -430,11 +430,11 @@ const Calendar: React.FC = () => {
       const isWeekend = date.getDay() === 0 || date.getDay() === 6;
       const isWorkingSat = isWorkingSaturday(dateStr);
       let record = attendanceRecords.find(r => r.date === dateStr);
-      
+
       // Find events for this date
       const dayEvents = calendarEvents.filter((event: CalendarEvent) => event.date === dateStr);
-      
-      const today = new Date(); 
+
+      const today = new Date();
       today.setHours(0, 0, 0, 0);
 
       // Handle working Saturdays
@@ -473,12 +473,12 @@ const Calendar: React.FC = () => {
           isLate: false
         };
       }
-      
-      days.push({ 
-        date, 
-        isCurrentMonth: true, 
-        isToday: dateStr === todayStr, 
-        isWeekend, 
+
+      days.push({
+        date,
+        isCurrentMonth: true,
+        isToday: dateStr === todayStr,
+        isWeekend,
         isWorkingSaturday: isWorkingSat,
         record,
         events: dayEvents
@@ -486,11 +486,11 @@ const Calendar: React.FC = () => {
     }
 
     while (days.length < 42) {
-      days.push({ 
-        date: new Date(year, month + 1, days.length - lastDate - firstDay + 1), 
-        isCurrentMonth: false, 
+      days.push({
+        date: new Date(year, month + 1, days.length - lastDate - firstDay + 1),
+        isCurrentMonth: false,
         record: null,
-        events: [] 
+        events: []
       });
     }
     return days;
@@ -510,7 +510,7 @@ const Calendar: React.FC = () => {
       const displayHour = hour % 12 || 12;
       return `${displayHour}:${minutes} ${ampm}`;
     };
-    
+
     if (!endTime) return formatSingleTime(startTime);
     return `${formatSingleTime(startTime)} - ${formatSingleTime(endTime)}`;
   };
@@ -589,43 +589,43 @@ const Calendar: React.FC = () => {
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <div className="flex items-center bg-slate-100 p-1 rounded-xl sm:rounded-2xl border border-slate-200 gap-1 w-full sm:w-auto">
-            <button 
-              title="Previous month" 
-              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))} 
+            <button
+              title="Previous month"
+              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
               className="text-black p-1.5 sm:p-2 bg-white rounded-lg sm:rounded-xl hover:bg-slate-50 text-slate-600 transition-all"
             >
               <ChevronLeft size={16} className="sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
             </button>
 
             <div className="flex items-center gap-1 flex-1 justify-center sm:justify-start min-w-0">
-              <select 
-                title="Select month" 
-                value={currentMonth.getMonth()} 
-                onChange={(e) => handleMonthChange(parseInt(e.target.value))} 
+              <select
+                title="Select month"
+                value={currentMonth.getMonth()}
+                onChange={(e) => handleMonthChange(parseInt(e.target.value))}
                 className="text-black bg-white border-none text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 sm:px-2 py-1 rounded-lg outline-none cursor-pointer flex-1 sm:flex-none"
               >
                 {monthNames.map((m, i) => <option key={i} value={i}>{screenSize === 'mobile' ? m.substring(0, 3) : m}</option>)}
               </select>
-              <select 
-                title="Select year" 
-                value={currentMonth.getFullYear()} 
-                onChange={(e) => handleYearChange(parseInt(e.target.value))} 
+              <select
+                title="Select year"
+                value={currentMonth.getFullYear()}
+                onChange={(e) => handleYearChange(parseInt(e.target.value))}
                 className="text-black bg-white border-none text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 sm:px-2 py-1 rounded-lg outline-none cursor-pointer flex-1 sm:flex-none"
               >
                 {years.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
 
-            <button 
-              title="Next month" 
-              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))} 
+            <button
+              title="Next month"
+              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
               className="p-1.5 sm:p-2 bg-white rounded-lg sm:rounded-xl hover:bg-slate-50 text-slate-600 transition-all"
             >
               <ChevronRight size={16} className="sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
             </button>
           </div>
-          <button 
-            onClick={() => setCurrentMonth(new Date())} 
+          <button
+            onClick={() => setCurrentMonth(new Date())}
             className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white text-xs font-black rounded-xl sm:rounded-2xl uppercase tracking-wider hover:bg-blue-700 shadow active:scale-95 transition-all w-full sm:w-auto"
           >
             Today
@@ -698,8 +698,8 @@ const Calendar: React.FC = () => {
         <div className="sticky top-0 z-10 bg-white border-b border-slate-200">
           <div className="grid grid-cols-7 bg-slate-50">
             {dayNames.map(d => (
-              <div 
-                key={d} 
+              <div
+                key={d}
                 className="py-2 sm:py-3 lg:py-4 xl:py-5 text-center text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wider"
               >
                 {d}
@@ -707,7 +707,7 @@ const Calendar: React.FC = () => {
             ))}
           </div>
         </div>
-        
+
         {/* Calendar Days Grid */}
         <div className={`grid grid-cols-7 ${screenSize === 'mobile' ? 'gap-0.5' : 'gap-1'} p-0.5 sm:p-1`}>
           {generateCalendarDays().map((day, idx) => (
@@ -749,7 +749,7 @@ const Calendar: React.FC = () => {
                 </div>
                 {day.record && <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 lg:w-2.5 lg:h-2.5 rounded-full ${getMarkerColorClass(day.record)}`}></div>}
               </div>
-              
+
               <div className="flex-1 mt-0.5 sm:mt-1 lg:mt-2 space-y-0.5 sm:space-y-1 lg:space-y-1.5">
                 {/* Mobile: Only show status, hide events */}
                 {screenSize === 'mobile' ? (
@@ -785,7 +785,7 @@ const Calendar: React.FC = () => {
                   <>
                     {/* Tablet & Desktop: Show events preview */}
                     {day.events.slice(0, screenSize === 'tablet' ? 1 : 2).map((event: CalendarEvent, eventIdx: number) => (
-                      <div 
+                      <div
                         key={event.id || eventIdx}
                         className={`text-[5px] sm:text-[6px] lg:text-[7px] font-bold truncate px-0.5 sm:px-1 lg:px-1.5 py-0.5 rounded
                           ${eventIdx === 0 ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-blue-100 text-blue-800 border border-blue-200'}`}
@@ -799,7 +799,7 @@ const Calendar: React.FC = () => {
                         +{day.events.length - (screenSize === 'tablet' ? 1 : 2)} more
                       </div>
                     )}
-                    
+
                     {/* Attendance status display */}
                     {day.record?.timeIn ? (
                       <div className={`p-1 sm:p-1.5 lg:p-2 rounded-lg sm:rounded-xl border ${day.isWorkingSaturday ? 'bg-orange-50 border-orange-200' : 'bg-emerald-50 border-emerald-200'} shadow-sm`}>
@@ -835,7 +835,7 @@ const Calendar: React.FC = () => {
                       </div>
                     ) : day.record?.status === 'Holiday' ? (
                       <div className="text-[6px] sm:text-[7px] lg:text-[8px] font-black text-purple-600 bg-purple-50 p-1 sm:p-1.5 rounded-lg border border-purple-100 text-center truncate">
-                        {screenSize === 'tablet' 
+                        {screenSize === 'tablet'
                           ? (day.record.locationName?.split(' ')[0]?.substring(0, 8) || 'HOLIDAY')
                           : (day.record.locationName?.split(' ')[0] || 'HOLIDAY')}
                       </div>
@@ -872,14 +872,14 @@ const Calendar: React.FC = () => {
           <div className="bg-white w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg rounded-xl sm:rounded-2xl lg:rounded-[3.5rem] shadow-2xl border border-slate-200 overflow-hidden mx-2 sm:mx-4">
             <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
               <h3 className="font-black text-slate-800 uppercase tracking-wider text-[9px] sm:text-[10px]">Day Details</h3>
-              <button 
-                type="button" 
-                title="Close modal" 
+              <button
+                type="button"
+                title="Close modal"
                 onClick={() => {
                   setIsModalOpen(false);
                   setSelectedEvents([]);
                   setSelectedRecord(null);
-                }} 
+                }}
                 className="p-1.5 sm:p-2 lg:p-3 hover:bg-slate-100 rounded-lg sm:rounded-xl lg:rounded-2xl text-slate-400 transition-all active:scale-90"
               >
                 <X size={16} className="sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
@@ -889,27 +889,26 @@ const Calendar: React.FC = () => {
               {/* Date header */}
               <div className="text-center">
                 <p className="text-base sm:text-lg lg:text-xl xl:text-2xl font-black text-slate-900">
-                  {selectedRecord && new Date(selectedRecord.date).toLocaleDateString('en-US', { 
-                    month: 'long', 
-                    day: 'numeric', 
-                    year: 'numeric' 
+                  {selectedRecord && new Date(selectedRecord.date).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
                   })}
                 </p>
                 {/* Status badge */}
                 {selectedRecord && selectedRecord.status !== 'Events' && (
                   <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-2 sm:mt-3">
-                    <div className={`px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-white ${
-                      selectedRecord.status === 'Working Saturday' ? 'bg-orange-500' :
-                      selectedRecord.timeIn ? 'bg-emerald-500' :
-                      selectedRecord.status === 'Future' ? 'bg-gray-500' :
-                      selectedRecord.status === 'Weekend' ? 'bg-slate-400' :
-                      getBGColorClass(selectedRecord)
-                    }`}>
+                    <div className={`px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-white ${selectedRecord.status === 'Working Saturday' ? 'bg-orange-500' :
+                        selectedRecord.timeIn ? 'bg-emerald-500' :
+                          selectedRecord.status === 'Future' ? 'bg-gray-500' :
+                            selectedRecord.status === 'Weekend' ? 'bg-slate-400' :
+                              getBGColorClass(selectedRecord)
+                      }`}>
                       {selectedRecord.status === 'Future' ? 'FUTURE' :
-                       selectedRecord.status === 'Weekend' ? 'WEEKEND' :
-                       selectedRecord.status === 'Working Saturday' ? 'WORKING SAT' :
-                       selectedRecord.timeIn ? 'PRESENT' :
-                       selectedRecord.status}
+                        selectedRecord.status === 'Weekend' ? 'WEEKEND' :
+                          selectedRecord.status === 'Working Saturday' ? 'WORKING SAT' :
+                            selectedRecord.timeIn ? 'PRESENT' :
+                              selectedRecord.status}
                     </div>
                     {selectedRecord.isLate && (
                       <div className="px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white flex items-center gap-0.5">
@@ -1010,16 +1009,16 @@ const Calendar: React.FC = () => {
 };
 
 const LegendItem = ({ label, dotColor, screenSize }: { label: string; dotColor: string; screenSize: 'mobile' | 'tablet' | 'desktop' }) => {
-  const shortLabel = screenSize === 'mobile' 
-    ? label.split(' ')[0] 
-    : screenSize === 'tablet' 
+  const shortLabel = screenSize === 'mobile'
+    ? label.split(' ')[0]
+    : screenSize === 'tablet'
       ? (label.length > 12 ? label.split(' ').map(word => word[0]).join('') : label)
       : label;
-  
+
   return (
     <div className="flex items-center gap-1 sm:gap-1.5">
-      <div 
-        className="w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 rounded-full shadow-sm" 
+      <div
+        className="w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 rounded-full shadow-sm"
         style={{ backgroundColor: dotColor } as React.CSSProperties}
       ></div>
       <span className="text-[8px] sm:text-[9px] lg:text-[10px] font-black text-slate-500 uppercase tracking-wider truncate max-w-[50px] sm:max-w-[60px] lg:max-w-none">
