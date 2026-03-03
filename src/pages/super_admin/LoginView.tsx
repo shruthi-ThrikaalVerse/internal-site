@@ -20,20 +20,51 @@ export const LoginView = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    setTimeout(() => {
-      if (email === 'admin@pro.com' && password === 'password123') {
+    try {
+      const response = await fetch('http://localhost:8085/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Login Response:', data);
+
+      if (response.ok && data.accessToken) {
+        console.log('Login successful:', data);
+        console.log('Access Token:', data.accessToken);
+        console.log('Refresh Token:', data.refreshToken);
+        console.log('User Email:', data.email);
+        console.log('User Role:', data.role);
+
+        // Store tokens in localStorage
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('userEmail', data.email);
+        localStorage.setItem('userRole', data.role);
+
         setIsAuthenticated(true);
         navigate('/super-admin/dashboard');
       } else {
-        setError('Invalid email or password. Please try again.');
+        console.error('Login failed:', data);
+        setError(data.message || 'Invalid email or password. Please try again.');
         setIsLoading(false);
       }
-    }, 800);
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('An error occurred. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -134,7 +165,7 @@ export const LoginView = () => {
 
           <div className="mt-6 pt-6 border-t border-slate-200 text-center">
             <p className="text-xs text-slate-500 leading-relaxed">
-              Security notice: Dummy credentials are <strong>admin@pro.com</strong> / <strong>password123</strong>
+              Logging in with your authorized credentials to access the admin portal
             </p>
           </div>
         </div>

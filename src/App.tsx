@@ -75,6 +75,40 @@ const AppContent: React.FC = () => {
     employees, admins, currentUser
   } = useApp();
 
+  // Handle logout with API call
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('http://localhost:8085/api/users/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      });
+
+      console.log('Logout Response:', response);
+
+      if (response.ok) {
+        console.log('Logout successful');
+      } else {
+        console.error('Logout failed:', response);
+      }
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      // Clear all authentication data regardless of API response
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userRole');
+      console.log('All tokens and user data cleared from localStorage');
+
+      setIsAuthenticated(false);
+      setShowProfileDropdown(false);
+      navigate('/super-admin/login', { replace: true });
+    }
+  };
+
   // Close profile dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -227,7 +261,7 @@ const AppContent: React.FC = () => {
       </nav>
       <div className="p-4 border-t border-[#1f2937] shrink-0">
         <button
-          onClick={() => setIsAuthenticated(false)}
+          onClick={handleLogout}
           title="Logout"
           className="flex items-center gap-4 w-full px-3 py-3 rounded-xl text-[#9aa8bd] hover:bg-rose-500/10 hover:text-rose-400 transition-all font-bold"
         >
@@ -323,10 +357,7 @@ const AppContent: React.FC = () => {
                   </button>
                   <div className="border-t border-slate-50 mt-2 pt-2">
                     <button
-                      onClick={() => {
-                        setIsAuthenticated(false);
-                        setShowProfileDropdown(false);
-                      }}
+                      onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors font-bold"
                     >
                       <LogOut className="w-4 h-4" /> End Session

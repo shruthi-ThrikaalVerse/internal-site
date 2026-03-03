@@ -14,6 +14,7 @@ import { FormInput, FormSelect } from '../../components/super_admin/FormFields.t
 import { useApp } from '../../context/AppContext.tsx';
 
 const EMPLOYMENT_TYPES = ['FULL_TIME', 'PART_TIME', 'CONTRACT'];
+const DEPARTMENTS = ['IT', 'HR', 'Finance', 'Operations', 'Sales', 'Marketing'];
 
 const EMPTY_ADMIN_STATE = {
     firstName: '',
@@ -21,8 +22,15 @@ const EMPTY_ADMIN_STATE = {
     email: '',
     password: '',
     role: 'ADMIN',
-    employmentType: 'FULL_TIME',
+    employeeId: '',
+    userType: 'FULL_TIME',
+    username: '',
+    designation: '',
+    department: 'IT',
+    phoneNumber: '',
+    address: '',
     dateOfJoining: new Date().toISOString().split('T')[0],
+    dateOfBirth: '',
 };
 
 export const AdminHub = () => {
@@ -37,6 +45,9 @@ export const AdminHub = () => {
     const [isNew, setIsNew] = useState(false);
     const [formState, setFormState] = useState(EMPTY_ADMIN_STATE);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [selectedImage, setSelectedImage] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(false);
 
     // Identity Dossier State
     const [viewingUser, setViewingUser] = useState<User | null>(null);
@@ -74,9 +85,18 @@ export const AdminHub = () => {
             email: admin.email || '',
             password: '',
             role: admin.role || 'ADMIN',
-            employmentType: (admin.employmentType as any) || 'FULL_TIME',
+            employeeId: admin.employeeId || '',
+            userType: (admin.employmentType || 'FULL_TIME') as any,
+            username: (admin.username || admin.firstName?.toUpperCase()) || '',
+            designation: (admin.designation || '') as any,
+            department: (admin.department || 'IT') as any,
+            phoneNumber: (admin.phoneNumber || '') as any,
+            address: (admin.address || '') as any,
             dateOfJoining: admin.dateOfJoining || new Date().toISOString().split('T')[0],
+            dateOfBirth: (admin.dateOfBirth || '') as any,
         });
+        setImagePreview(admin.avatar || '');
+        setSelectedImage(null);
         setIsModalOpen(true);
     };
 
@@ -84,42 +104,121 @@ export const AdminHub = () => {
         setFormState(EMPTY_ADMIN_STATE);
         setIsNew(true);
         setEditingId(null);
+        setSelectedImage(null);
+        setImagePreview('');
         setIsModalOpen(true);
     };
 
-    const handleSave = () => {
-        if (isNew) {
-            const newAdmin: User = {
-                id: `adm-${Date.now()}`,
-                name: `${formState.firstName} ${formState.lastName}`.trim(),
+    const handleSave = async () => {
+        setIsLoading(true);
+        try {
+            const formData = new FormData();
+
+            // Create the data object as per backend requirement
+            const data = {
                 firstName: formState.firstName,
                 lastName: formState.lastName,
                 email: formState.email,
-                role: 'ADMIN',
-                status: 'active',
-                department: 'IT',
-                avatar: `https://picsum.photos/seed/${formState.email || Date.now()}/200`,
-                employmentType: formState.employmentType as any,
+                password: formState.password,
+                role: formState.role,
+                employeeId: formState.employeeId,
+                userType: formState.userType,
+                username: formState.username,
+                designation: formState.designation,
+                department: formState.department,
+                phoneNumber: formState.phoneNumber,
+                address: formState.address,
                 dateOfJoining: formState.dateOfJoining,
-                employeeId: (Math.floor(100000 + Math.random() * 900000)).toString(),
+                dateOfBirth: formState.dateOfBirth,
             };
-            setAdmins(prev => [newAdmin, ...prev]);
-        } else {
-            setAdmins(prev => prev.map(a => a.id === editingId ? {
-                ...a,
-                firstName: formState.firstName,
-                lastName: formState.lastName,
-                name: `${formState.firstName} ${formState.lastName}`.trim(),
-                email: formState.email,
-                employmentType: formState.employmentType as any,
-                dateOfJoining: formState.dateOfJoining,
-            } : a));
+
+            // Append data as JSON string
+            formData.append('data', JSON.stringify(data));
+
+            // Append image if selected
+            if (selectedImage) {
+                formData.append('image', selectedImage);
+            }
+
+            const response = await fetch('http://localhost:8085/api/users/register', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                },
+                body: formData,
+            });
+
+            const result = await response.json();
+            console.log('Admin Registration Response:', result);
+
+            if (response.ok) {
+                console.log('Admin registered successfully:', result);
+
+                // Add or update admin in local state
+                if (isNew) {
+                    setAdmins(prev => [{
+                        id: result.id || `adm-${Date.now()}`,
+                        name: `${formState.firstName} ${formState.lastName}`.trim(),
+                        firstName: formState.firstName,
+                        lastName: formState.lastName,
+                        email: formState.email,
+                        role: formState.role,
+                        status: 'active',
+                        avatar: imagePreview || `https://picsum.photos/seed/${formState.email}/200`,
+                        employmentType: formState.userType as any,
+                        dateOfJoining: formState.dateOfJoining,
+                        employeeId: formState.employeeId,
+                        username: formState.username,
+                        designation: formState.designation,
+                        department: formState.department,
+                        phoneNumber: formState.phoneNumber,
+                        address: formState.address,
+                        dateOfBirth: formState.dateOfBirth,
+                    } as User, ...prev]);
+                }
+
+                setIsModalOpen(false);
+                setSelectedImage(null);
+                setImagePreview('');
+            } else {
+                console.error('Admin registration failed:', result);
+                alert(result.message || 'Failed to register admin');
+            }
+        } catch (err) {
+            console.error('API Error:', err);
+            alert('An error occurred while registering admin');
+        } finally {
+            setIsLoading(false);
         }
-        setIsModalOpen(false);
     };
 
     const updateField = (field: keyof typeof EMPTY_ADMIN_STATE, value: any) => {
         setFormState(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // Check file size (5MB limit)
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (file.size > maxSize) {
+                alert(`File size exceeds 5MB. Please select a smaller image. (Current: ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+                return;
+            }
+
+            // Check file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file.');
+                return;
+            }
+
+            setSelectedImage(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleDemoteFromModal = (id: string) => {
@@ -293,6 +392,7 @@ export const AdminHub = () => {
                     onClose={() => setViewingUser(null)}
                     title="Admin Identity Dossier"
                     onSave={() => setViewingUser(null)}
+                    isLoading={false}
                 >
                     <div className="space-y-8">
                         <div className="relative p-8 rounded-[2rem] bg-gradient-to-br from-gray-100 to-white border border-gray-200 overflow-hidden shadow-2xl">
@@ -447,16 +547,29 @@ export const AdminHub = () => {
                 onClose={() => setIsModalOpen(false)}
                 title={isNew ? "Provision Administrative Access" : `Privilege Control: ${formState.firstName} ${formState.lastName}`}
                 onSave={handleSave}
+                isLoading={isLoading}
             >
                 <div className="space-y-10 pb-4">
                     <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-gradient-to-br from-gray-100 to-white rounded-[2rem] border border-gray-200 relative shadow-2xl">
                         <div className="relative">
                             <div className="w-24 h-24 rounded-2xl border-2 border-gray-200 flex items-center justify-center bg-white shadow-2xl overflow-hidden">
-                                <img src={`https://picsum.photos/seed/${formState.email || 'admin'}/200`} className="w-full h-full object-cover" alt="Admin Avatar" />
+                                <img src={imagePreview || `https://picsum.photos/seed/${formState.email || 'admin'}/200`} className="w-full h-full object-cover" alt="Admin Avatar" />
                             </div>
-                            <div className="absolute -bottom-2 -right-2 p-2 bg-emerald-500 text-white rounded-lg shadow-lg border-2 border-white">
-                                <Fingerprint size={16} />
-                            </div>
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="absolute -bottom-2 -right-2 p-2 bg-blue-600 text-white rounded-lg shadow-lg border-2 border-white hover:bg-blue-700 transition-all"
+                                title="Change profile image"
+                            >
+                                <Camera size={16} />
+                            </button>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageSelect}
+                                className="hidden"
+                            />
                         </div>
                         <div className="flex-1 text-center sm:text-left">
                             <h4 className="text-2xl font-black text-gray-900 tracking-tight mb-1">{formState.firstName || 'New'} {formState.lastName || 'Identity'}</h4>
@@ -465,7 +578,7 @@ export const AdminHub = () => {
                             </p>
                             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-4">
                                 <Badge color="blue">ADMINISTRATIVE PROTOCOL</Badge>
-                                <Badge color="slate">{formState.employmentType}</Badge>
+                                <Badge color="slate">{formState.userType}</Badge>
                             </div>
                         </div>
                     </div>
@@ -477,26 +590,40 @@ export const AdminHub = () => {
                                 Identity Context
                             </h5>
                         </div>
-                        <FormInput label="First Name" value={formState.firstName} onChange={(val) => updateField('firstName', val)} placeholder="e.g. Shruthi" />
-                        <FormInput label="Last Name" value={formState.lastName} onChange={(val) => updateField('lastName', val)} placeholder="e.g. Nandigama" />
+                        <FormInput label="First Name" value={formState.firstName} onChange={(val) => updateField('firstName', val)} placeholder="e.g. Tarak" />
+                        <FormInput label="Last Name" value={formState.lastName} onChange={(val) => updateField('lastName', val)} placeholder="e.g. RATNA" />
+                        <FormInput label="Username" value={formState.username} onChange={(val) => updateField('username', val)} placeholder="e.g. TARAK" />
+                        <FormInput label="Email Address" value={formState.email} onChange={(val) => updateField('email', val)} placeholder="tarakjr@example.com" />
 
                         <div className="md:col-span-2 mt-4">
                             <h5 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
                                 <span className="w-8 h-px bg-emerald-500/30"></span>
-                                Deployment Details
+                                Professional Details
                             </h5>
                         </div>
-                        <FormSelect label="Employment Model" value={formState.employmentType} onChange={(val) => updateField('employmentType', val)} options={EMPLOYMENT_TYPES} />
-                        <FormInput label="Joining Date" type="date" value={formState.dateOfJoining} onChange={(val) => updateField('dateOfJoining', val)} />
+                        <FormInput label="Employee ID" value={formState.employeeId} onChange={(val) => updateField('employeeId', val)} placeholder="202501" />
+                        <FormInput label="Designation" value={formState.designation} onChange={(val) => updateField('designation', val)} placeholder="SOFTWARE ENGINEER" />
+                        <FormSelect label="Department" value={formState.department} onChange={(val) => updateField('department', val)} options={DEPARTMENTS} />
+                        <FormSelect label="Employment Type" value={formState.userType} onChange={(val) => updateField('userType', val)} options={EMPLOYMENT_TYPES} />
 
                         <div className="md:col-span-2 mt-4">
                             <h5 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
                                 <span className="w-8 h-px bg-emerald-500/30"></span>
-                                Authentication Credentials
+                                Contact Information
                             </h5>
                         </div>
-                        <FormInput label="System Email" value={formState.email} onChange={(val) => updateField('email', val)} placeholder="shruthi@example.com" />
-                        <FormInput label="Access Key (Password)" type="password" value={formState.password} onChange={(val) => updateField('password', val)} placeholder="••••••••••••" />
+                        <FormInput label="Phone Number" value={formState.phoneNumber} onChange={(val) => updateField('phoneNumber', val)} placeholder="9876543210" />
+                        <FormInput label="Address" value={formState.address} onChange={(val) => updateField('address', val)} placeholder="guntur" />
+
+                        <div className="md:col-span-2 mt-4">
+                            <h5 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
+                                <span className="w-8 h-px bg-emerald-500/30"></span>
+                                Dates & Credentials
+                            </h5>
+                        </div>
+                        <FormInput label="Date of Birth" type="date" value={formState.dateOfBirth} onChange={(val) => updateField('dateOfBirth', val)} />
+                        <FormInput label="Date of Joining" type="date" value={formState.dateOfJoining} onChange={(val) => updateField('dateOfJoining', val)} />
+                        <FormInput label="Password" type="password" value={formState.password} onChange={(val) => updateField('password', val)} placeholder="••••••••••••" />
                     </div>
 
                     <div className="p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl flex gap-4 items-start">
