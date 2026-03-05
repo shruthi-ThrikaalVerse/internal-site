@@ -385,14 +385,7 @@ const Documents: React.FC = () => {
             </button>
             <h1 className="text-lg font-semibold text-slate-900 truncate">Documents</h1>
           </div>
-          {/* Mobile Upload Button */}
-          <button
-            onClick={handleUploadClick}
-            className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex-shrink-0"
-            aria-label="Upload document"
-          >
-            <Plus size={20} />
-          </button>
+          
         </div>
 
         {/* Sidebar - Hidden on mobile, shown on desktop */}
@@ -411,13 +404,7 @@ const Documents: React.FC = () => {
                 </button>
               )}
 
-              {/* Quick Actions - Desktop */}
-              <button
-                onClick={handleUploadClick}
-                className="hidden lg:flex w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl p-3 items-center justify-center gap-2 mb-4 hover:shadow-lg transition-all">
-                <Plus size={20} />
-                <span className="text-sm font-medium">Upload Document</span>
-              </button>
+              
 
               <nav className="space-y-1">
                 <button
