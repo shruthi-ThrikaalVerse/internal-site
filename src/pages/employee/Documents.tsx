@@ -456,22 +456,7 @@ const Documents: React.FC = () => {
                 ))}
               </nav>
 
-              <div className="mt-6 pt-4 border-t border-slate-200">
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Sparkles size={16} className="text-blue-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">AI Assistant</p>
-                      <p className="text-xs text-slate-600">Smart analysis enabled</p>
-                    </div>
-                  </div>
-                  <div className="h-1.5 bg-blue-200 rounded-full overflow-hidden">
-                    <div className="w-3/4 h-full bg-blue-600 rounded-full"></div>
-                  </div>
-                </div>
-              </div>
+              
             </div>
           </div>
         </aside>
