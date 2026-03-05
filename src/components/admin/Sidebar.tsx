@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { NAV_ITEMS } from '../../constants.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/AppContext.tsx';
 import Icon from './Icon';
 
 const Sidebar: React.FC<{ isOpen: boolean; setOpen: (val: boolean) => void }> = ({ isOpen, setOpen }) => {

@@ -4,7 +4,7 @@ import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 // switch to authentication context for real login
 import { useAuth } from '../../context/AuthContext.tsx';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/AppContext.tsx';
 
 export const LoginView = () => {
   const { login } = useAuth();

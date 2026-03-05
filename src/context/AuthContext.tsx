@@ -29,10 +29,10 @@ const decodeJWT = (token: string): Record<string, any> | null => {
 // Normalize role strings coming from backend to our union type
 const normalizeRole = (role: any): User['role'] => {
   const r = String(role || 'auditor').toLowerCase();
-  if (r.includes('admin')) return 'admin';
-  if (r.includes('manager')) return 'manager';
-  if (r.includes('employee')) return 'employee';
-  if (r.includes('auditor')) return 'auditor';
+  if (r === 'admin') return 'admin';
+  if (r === 'manager') return 'manager';
+  if (r === 'employee') return 'employee';
+  if (r === 'auditor') return 'auditor';
   // fallback: treat unknown roles as 'auditor' to avoid granting admin/manager access
   return 'auditor';
 };

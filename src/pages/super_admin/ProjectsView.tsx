@@ -1,13 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
-import { SectionHeader, Badge } from '../../components/super_admin/UI.js';
+import { SectionHeader, Badge } from '../../components/super_admin/UI.tsx';
 /* Added Shield to lucide-react imports to fix error on line 302 */
 import { Calendar, Users, Plus, Layout, Type, Target, Image as ImageIcon, FileText, Check, Pencil, Trash2, Shield } from 'lucide-react';
-import { Modal } from '../../components/super_admin/Modal.js';
+import { Modal } from '../../components/super_admin/Modal.tsx';
 /* Added FormSelect to FormFields imports to fix error on line 223 */
-import { FormInput, FormTextArea, FormSelect } from '../../components/super_admin/FormFields.js';
-import { Project } from '../../types.js';
-import * as projectsApi from '../../api/projects.js';
+import { FormInput, FormTextArea, FormSelect } from '../../components/super_admin/FormFields.tsx';
+import { Project } from '../../types.tsx';
+import * as projectsApi from '../../api/projects.ts';
 
 const EMPTY_PROJECT: Partial<Project> = {
   name: '',
