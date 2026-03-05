@@ -11,6 +11,7 @@ import { Badge, SectionHeader } from '../../components/super_admin/UI.tsx';
 import { Modal } from '../../components/super_admin/Modal.tsx';
 import { FormInput, FormSelect } from '../../components/super_admin/FormFields.tsx';
 import { useApp } from '../../context/AppContext.tsx';
+import * as usersApi from '../../api/users.js';
 
 const EMPLOYMENT_TYPES = ['FULL_TIME', 'PART_TIME', 'CONTRACT'];
 const DEPARTMENTS = ['IT', 'HR', 'Finance', 'Operations', 'Sales', 'Marketing'];
@@ -51,6 +52,11 @@ export const AdminHub = () => {
 
     // Identity Dossier State
     const [viewingUser, setViewingUser] = useState<User | null>(null);
+
+    // File upload and Loading States
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
 
     // Confirmation Modals State
     const [confirmDemoteId, setConfirmDemoteId] = useState<string | null>(null);
@@ -152,12 +158,58 @@ export const AdminHub = () => {
     const statuses = ['All Statuses', 'active', 'inactive', 'pending'];
     const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
 
+    // Load admin employees on component mount
+    useEffect(() => {
+        const loadAdminEmployees = async () => {
+            try {
+                console.log('Loading admin employees...');
+                const employees = await usersApi.getAdminEmployees();
+                console.log('Admin employees loaded:', employees);
+
+                // Transform API response to User objects and set state
+                if (Array.isArray(employees)) {
+                    const formattedAdmins: User[] = employees
+                        .filter((emp: any) => {
+                            const roleVal = String(emp.role || emp.userType || '').toUpperCase();
+                            return ADMIN_TIERS.includes(roleVal);
+                        })
+                        .map((emp: any) => {
+                            const roleVal = String(emp.role || emp.userType || 'ADMIN').toUpperCase();
+                            const statusValue = String(emp.status || 'active') as 'active' | 'inactive' | 'probation' | 'resigned';
+                            return {
+                                id: String(emp.employeeId || emp.id || `adm-${Date.now()}`),
+                                name: `${String(emp.firstName || '')} ${String(emp.lastName || '')}`.trim(),
+                                firstName: String(emp.firstName || ''),
+                                lastName: String(emp.lastName || ''),
+                                email: String(emp.email || ''),
+                                role: (ADMIN_TIERS.includes(roleVal) ? roleVal : 'ADMIN') as any,
+                                status: statusValue,
+                                department: String(emp.department || 'IT'),
+                                avatar: `https://picsum.photos/seed/${String(emp.email || emp.employeeId || 'admin')}/200`,
+                                employmentType: String(emp.userType || 'FULL_TIME'),
+                                dateOfJoining: String(emp.dateOfJoining || new Date().toISOString().split('T')[0]),
+                                employeeId: String(emp.employeeId || ''),
+                                designation: String(emp.designation || 'Admin'),
+                            };
+                        });
+                    setAdmins(formattedAdmins);
+                }
+            } catch (err) {
+                console.error('Failed to load admin employees:', err);
+            }
+        };
+        loadAdminEmployees();
+    }, [setAdmins]);
+
     const handleResetFilters = () => {
         setSelectedStatus('All Statuses');
     };
 
     const filteredAdmins = useMemo(() => {
         return admins.filter(a => {
+            // Ensure only admin tiers are displayed
+            if (!ADMIN_TIERS.includes(String(a.role).toUpperCase())) return false;
+
             const fullName = `${a.firstName || ''} ${a.lastName || a.name || ''}`.toLowerCase();
             const matchesSearch = !globalSearch ||
                 fullName.includes(globalSearch.toLowerCase()) ||
@@ -994,6 +1046,43 @@ export const AdminHub = () => {
                         <FormInput label="Date of Joining" type="date" value={formState.dateOfJoining} onChange={(val) => updateField('dateOfJoining', val)} />
                         <FormInput label="Password" type="password" value={formState.password} onChange={(val) => updateField('password', val)} placeholder="••••••••••••" />
                     </div>
+
+                    {isNew && (
+                        <div className="md:col-span-2 mt-4">
+                            <h5 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
+                                <span className="w-8 h-px bg-blue-200"></span>
+                                Profile Photo (Optional)
+                            </h5>
+                            <div
+                                className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <Camera size={32} className="mx-auto text-gray-400 mb-2" />
+                                <p className="text-sm text-gray-600 font-medium">
+                                    {selectedFile ? selectedFile.name : 'Click to upload profile photo'}
+                                </p>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                                    className="hidden"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {saveError && (
+                        <div className="md:col-span-2 p-4 bg-red-50 border border-red-200 rounded-xl">
+                            <p className="text-sm text-red-700 font-medium">⚠️ {saveError}</p>
+                        </div>
+                    )}
+
+                    {isSaving && (
+                        <div className="md:col-span-2 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                            <p className="text-sm text-blue-700 font-medium">⏳ Registering admin...</p>
+                        </div>
+                    )}
 
                     <div className="p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl flex gap-4 items-start">
                         <ShieldAlert size={24} className="text-emerald-500 shrink-0 mt-0.5" />

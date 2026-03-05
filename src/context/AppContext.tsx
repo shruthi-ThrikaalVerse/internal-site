@@ -14,6 +14,7 @@ interface AppContextType {
   mobileSidebarOpen: boolean;
   setMobileSidebarOpen: (val: boolean) => void;
   employees: User[];
+  setEmployees: React.Dispatch<React.SetStateAction<User[]>>;
   admins: User[];
   requests: AdminRequest[];
   currentUser: User | null;
@@ -221,6 +222,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       sidebarOpen, setSidebarOpen,
       mobileSidebarOpen, setMobileSidebarOpen,
       employees,
+      setEmployees,
       admins,
       requests,
       currentUser,

@@ -8,18 +8,20 @@ import {
   Trash2, TrendingUp, UserCircle, X, CheckCircle2, ChevronRight,
   FileWarning
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { User } from '../../types.tsx';
 import { Badge, SectionHeader } from '../../components/super_admin/UI.tsx';
 import { Modal } from '../../components/super_admin/Modal.tsx';
 import { FormInput, FormSelect, FormTextArea } from '../../components/super_admin/FormFields.tsx';
 import { useApp } from '../../context/AppContext.tsx';
+import * as usersApi from '../../api/users.ts';
 
 const DEPARTMENTS = ['Engineering', 'Design', 'Marketing', 'People', 'Infrastructure', 'Quality', 'Data'];
 const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Internship'];
 const ADMIN_TIERS = ['ADMIN', 'PROJECT_MANAGER', 'HR', 'OPERATIONAL_MANAGER', 'SECURITY_ADMIN'];
 
 export const EmployeeHub = () => {
-  const { globalSearch, employees, updateEmployee, removeEmployee, promoteToAdmin, currentUser, requestEmployeeTermination } = useApp();
+  const { globalSearch, employees, setEmployees, updateEmployee, removeEmployee, promoteToAdmin, currentUser, requestEmployeeTermination } = useApp();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [localEmployees, setLocalEmployees] = useState<User[]>([]);
 
@@ -146,6 +148,54 @@ export const EmployeeHub = () => {
 
   const statuses = ['All Statuses', 'active', 'inactive', 'pending'];
   const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
+
+  // load employees from backend when component mounts
+  React.useEffect(() => {
+    const load = async () => {
+      try {
+        console.log('Loading employees...');
+        const data = await usersApi.getEmployees();
+        console.log('Employees loaded:', data);
+        if (Array.isArray(data)) {
+          const mapped: User[] = data
+            .map((u: any) => {
+              // extract role name when API uses object
+              let rawRole: any = u.role;
+              if (rawRole && typeof rawRole === 'object') rawRole = rawRole.name;
+              const roleValue = String(rawRole || u.userType || 'Employee');
+              const statusValue = String(u.status || 'active') as 'active' | 'inactive' | 'probation' | 'resigned';
+              return {
+                id: String(u.employeeId || u.id || ''),
+                email: String(u.email || u.username || ''),
+                firstName: String(u.firstName || ''),
+                lastName: String(u.lastName || ''),
+                name: `${String(u.firstName || '')} ${String(u.lastName || '')}`.trim(),
+                department: String(u.department || ''),
+                designation: String(u.designation || ''),
+                role: roleValue as any,
+                status: statusValue,
+                dateOfJoining: String(u.dateOfJoining || ''),
+                phone: String(u.phoneNumber || ''),
+                address: String(u.address || ''),
+                avatar: String(u.profileImage || u.avatar || 'https://picsum.photos/seed/default/200'),
+                employmentType: String(u.employmentType || 'Full-time'),
+                location: String(u.location || ''),
+                joiningDate: String(u.dateOfJoining || '')
+              };
+            })
+            .filter(emp => {
+              const r = emp.role.toString().toUpperCase();
+              return r !== 'ADMIN' && r !== 'SUPER_ADMIN';
+            });
+
+          setEmployees(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to fetch employees:', err);
+      }
+    };
+    load();
+  }, [setEmployees]);
   const isAdminTier = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN' || currentUser?.role === 'SYSTEM_ADMIN' || currentUser?.role === 'SECURITY_ADMIN';
 
   const handleResetFilters = () => {
@@ -615,13 +665,13 @@ export const EmployeeHub = () => {
                   </td>
                   <td className="px-8 py-5">
                     <Badge color={e.status === 'active' ? 'green' : e.status === 'pending' ? 'yellow' : 'red'}>
-                      {e.status.toUpperCase()}
+                      {e.status ? e.status.toUpperCase() : ''}
                     </Badge>
                   </td>
                   <td className="px-8 py-5">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-xs text-gray-900 hover:text-blue-600 transition-colors cursor-default">
-                        <Mail size={14} className="shrink-0 text-blue-600" /> <span className="truncate max-w-[160px] text-gray-900 group-hover:text-blue-600">{e.email}</span>
+                        <Mail size={14} className="shrink-0 text-blue-600" /> <span className="truncate max-w-[160px] text-gray-900 group-hover:text-blue-600">{e.email || 'N/A'}</span>
                       </div>
                       {e.phone && (
                         <div className="flex items-center gap-2 text-[10px] text-gray-900 font-mono bg-gray-50 px-2 py-1 rounded-lg w-fit">

@@ -141,6 +141,7 @@ const EmployeePageWithLogout = ({ children }: { children: React.ReactNode }) => 
     } catch (e) {
       console.error('Logout error:', e);
     }
+    setIsAuthenticated(false);
     localStorage.removeItem('user');
     localStorage.removeItem('authToken');
     navigate('/employee/login', { replace: true });
@@ -197,6 +198,7 @@ const AdminPageWithLogout = ({ children }: { children: React.ReactNode }) => {
     } catch (e) {
       console.error('Logout error:', e);
     }
+    setIsAuthenticated(false);
     localStorage.removeItem('user');
     localStorage.removeItem('authToken');
     navigate('/admin/login', { replace: true });

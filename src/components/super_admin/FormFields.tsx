@@ -59,17 +59,43 @@ interface FormSelectProps {
   value: string;
   onChange: (val: string) => void;
   options: string[];
+  renderOption?: (opt: string) => string;
 }
 
-export const FormSelect = ({ label, value, onChange, options }: FormSelectProps) => (
-  <div className="space-y-2 group w-full">
-    {label && <label className="text-[10px] font-black text-gray-500 uppercase tracking-wider group-focus-within:text-blue-600 transition-colors">{label}</label>}
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:ring-4 focus:ring-blue-500/50 focus:border-blue-300 outline-none transition-all appearance-none font-medium cursor-pointer"
-    >
-      {options.map(opt => <option key={opt} value={opt} className="bg-white">{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>)}
-    </select>
-  </div>
-);
+export const FormSelect = ({ label, value, onChange, options, renderOption }: FormSelectProps) => {
+  // filter out truly empty strings but keep valid options
+  const validOptions = options.filter(opt => opt.trim() !== '');
+  const hasOptions = validOptions.length > 0;
+  
+  return (
+    <div className="space-y-2 group w-full">
+      {label && <label className="text-[10px] font-black text-gray-500 uppercase tracking-wider group-focus-within:text-blue-600 transition-colors">{label}</label>}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:ring-4 focus:ring-blue-500/50 focus:border-blue-300 outline-none transition-all appearance-none font-medium cursor-pointer"
+      >
+        <option value="" className="bg-white">-- Select --</option>
+        {!hasOptions && (
+          <option value="" disabled className="bg-gray-200 text-gray-500">No options available</option>
+        )}
+        {validOptions.map(opt => {
+          // use custom renderOption if provided, otherwise parse "id:Name" format
+          let displayText = '';
+          if (renderOption) {
+            displayText = renderOption(opt);
+          } else {
+            const [idPart, displayPart] = opt.includes(':') ? opt.split(':', 2) : [opt, opt];
+            displayText = displayPart || opt;
+          }
+          
+          return (
+            <option key={opt} value={opt} className="bg-white">
+              {displayText.charAt(0).toUpperCase() + displayText.slice(1)}
+            </option>
+          );
+        })}
+      </select>
+    </div>
+  );
+};

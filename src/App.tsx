@@ -1,4 +1,7 @@
 import React, { useMemo, useEffect, useState, useRef } from 'react';
+import * as projectsApi from './api/projects.js';
+import { Project } from './types.js';
+import { useAuth } from './context/AuthContext.tsx';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Search, Bell, LogOut, Menu, X,
@@ -8,7 +11,7 @@ import {
 import { AppProvider, useApp } from './context/AppContext.js';
 import { AppSection } from './types.js';
 import {
-  NAVIGATION_ITEMS, MOCK_LOGS, MOCK_PROJECTS,
+  NAVIGATION_ITEMS, MOCK_LOGS,
   MOCK_PERFORMANCE_METRICS
 } from './constants.js';
 import { StatCard, SectionHeader } from './components/super_admin/UI.js';
@@ -74,6 +77,7 @@ const AppContent: React.FC = () => {
     mobileSidebarOpen, setMobileSidebarOpen,
     employees, admins, currentUser
   } = useApp();
+  const { logout } = useAuth();
 
   // Handle logout with API call
   const handleLogout = async () => {
@@ -169,11 +173,42 @@ const AppContent: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [setSidebarOpen]);
 
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await projectsApi.getAllProjects();
+        const mapped: Project[] = data.map((p: any) => ({
+          id: p.projectCode,
+          projectCode: p.projectCode,
+          name: p.name,
+          status: p.status.toLowerCase().replace('_', '-'),
+          progress: p.progress || 0,
+          description: p.description,
+          client: p.clientId != null ? String(p.clientId) : '',
+          dueDate: p.endDate ? p.endDate.split('T')[0] : '',
+          clientId: p.clientId,
+          priority: p.priority,
+          startDate: p.startDate ? p.startDate.split('T')[0] : '',
+          endDate: p.endDate ? p.endDate.split('T')[0] : '',
+          budget: p.budget,
+          currency: p.currency,
+          projectManagerId: p.projectManagerId,
+        }));
+        setProjects(mapped);
+      } catch (err) {
+        console.error('failed to load projects in App', err);
+      }
+    };
+    load();
+  }, []);
+
   const q = globalSearch.toLowerCase();
   const filteredEmployees = useMemo(() => employees.filter(e => !q || e.name!.toLowerCase().includes(q) || (e.designation || '').toLowerCase().includes(q)), [q, employees]);
   const filteredAdmins = useMemo(() => admins.filter(a => !q || (a.name || '').toLowerCase().includes(q) || (a.firstName || '').toLowerCase().includes(q)), [q, admins]);
   const filteredLogs = useMemo(() => MOCK_LOGS.filter(l => !q || l.action.toLowerCase().includes(q)), [q]);
-  const filteredProjects = useMemo(() => MOCK_PROJECTS.filter(p => !q || p.name.toLowerCase().includes(q)), [q]);
+  const filteredProjects = useMemo(() => projects.filter(p => !q || p.name.toLowerCase().includes(q)), [q, projects]);
 
   // RBAC Filtering for Sidebar
   const authorizedNavItems = useMemo(() => {
@@ -188,7 +223,7 @@ const AppContent: React.FC = () => {
   const currentView = useMemo(() => {
     switch (activeSection) {
       case AppSection.Dashboard:
-        return <DashboardView filteredEmployees={filteredEmployees} filteredAdmins={filteredAdmins} filteredProjects={filteredProjects} filteredLogs={filteredLogs} totalEmployees={employees.length} activeProjects={MOCK_PROJECTS.filter(p => p.status === 'in-progress').length} />;
+        return <DashboardView filteredEmployees={filteredEmployees} filteredAdmins={filteredAdmins} filteredProjects={filteredProjects} filteredLogs={filteredLogs} totalEmployees={employees.length} activeProjects={projects.filter(p => p.status === 'in-progress').length} />;
       case AppSection.EmployeeHub:
         return <EmployeeHub />;
       case AppSection.AdminHub:

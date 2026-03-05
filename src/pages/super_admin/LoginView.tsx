@@ -2,10 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+// switch to authentication context for real login
+import { useAuth } from '../../context/AuthContext.tsx';
 import { useApp } from '../../context/AppContext';
 
 export const LoginView = () => {
-  const { setIsAuthenticated, isAuthenticated } = useApp();
+  const { login } = useAuth();
+  const { isAuthenticated, setIsAuthenticated } = useApp();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,8 +25,8 @@ export const LoginView = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
+    setIsLoading(true);
 
     try {
       const response = await fetch('http://localhost:8085/api/users/login', {

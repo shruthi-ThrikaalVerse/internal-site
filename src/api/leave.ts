@@ -2,7 +2,7 @@ const API_BASE = 'http://localhost:8085/leave-requests';
 const FETCH_TIMEOUT = 15000; // 15 seconds
 
 const getAuthHeader = () => {
-  const token = localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
+  const token = localStorage.getItem('accessToken') || localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 

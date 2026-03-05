@@ -1,13 +1,13 @@
 
-import React, { useState } from 'react';
-import { MOCK_PROJECTS, MOCK_EMPLOYEES } from '../../constants';
-import { SectionHeader, Badge } from '../../components/super_admin/UI';
+import React, { useEffect, useState } from 'react';
+import { SectionHeader, Badge } from '../../components/super_admin/UI.js';
 /* Added Shield to lucide-react imports to fix error on line 302 */
 import { Calendar, Users, Plus, Layout, Type, Target, Image as ImageIcon, FileText, Check, Pencil, Trash2, Shield } from 'lucide-react';
-import { Modal } from '../../components/super_admin/Modal';
+import { Modal } from '../../components/super_admin/Modal.js';
 /* Added FormSelect to FormFields imports to fix error on line 223 */
-import { FormInput, FormTextArea, FormSelect } from '../../components/super_admin/FormFields';
-import { Project } from '../../types';
+import { FormInput, FormTextArea, FormSelect } from '../../components/super_admin/FormFields.js';
+import { Project } from '../../types.js';
+import * as projectsApi from '../../api/projects.js';
 
 const EMPTY_PROJECT: Partial<Project> = {
   name: '',
@@ -15,22 +15,74 @@ const EMPTY_PROJECT: Partial<Project> = {
   progress: 0,
   status: 'planning',
   team: [],
-  dueDate: new Date().toISOString().split('T')[0]
+  dueDate: new Date().toISOString().split('T')[0],
+  startDate: new Date().toISOString().split('T')[0],
+  priority: 'MEDIUM',
+  budget: 0,
+  currency: 'USD',
+  projectManagerId: undefined,
 };
 
 export const ProjectsView = () => {
-  const [projects, setProjects] = useState<Project[]>([...MOCK_PROJECTS]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [projectManagers, setProjectManagers] = useState<any[]>([]);
+  const [managersLoading, setManagersLoading] = useState(false);
+  const [managersError, setManagersError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Partial<Project>>(EMPTY_PROJECT);
   const [description, setDescription] = useState('');
   const [isNew, setIsNew] = useState(true);
 
-  const toggleTeamMember = (name: string) => {
-    const currentTeam = editingProject.team || [];
-    if (currentTeam.includes(name)) {
-      setEditingProject({ ...editingProject, team: currentTeam.filter(n => n !== name) });
-    } else {
-      setEditingProject({ ...editingProject, team: [...currentTeam, name] });
+  const fetchProjects = async () => {
+    try {
+      const data = await projectsApi.getAllProjects();
+      // map server objects to our simplified Project type
+      const mapped: Project[] = data.map((p: any) => ({
+        id: p.projectCode,
+        projectCode: p.projectCode,
+        name: p.name,
+        status: p.status.toLowerCase().replace('_', '-'),
+        progress: p.progress || 0,
+        description: p.description,
+        client: p.clientId != null ? String(p.clientId) : '',
+        dueDate: p.endDate ? p.endDate.split('T')[0] : '',
+        // keep any other metadata so that edits can send them back
+        clientId: p.clientId,
+        priority: p.priority,
+        startDate: p.startDate ? p.startDate.split('T')[0] : '',
+        endDate: p.endDate ? p.endDate.split('T')[0] : '',
+        budget: p.budget,
+        currency: p.currency,
+        projectManagerId: p.projectManagerId,
+      }));
+      setProjects(mapped);
+    } catch (err) {
+      console.error('Failed to load projects', err);
+    }
+  };
+
+  const fetchManagers = async () => {
+    try {
+      setManagersLoading(true);
+      setManagersError(null);
+      console.log('Fetching project managers...');
+      const mgrs = await projectsApi.getProjectManagers();
+      console.log('Fetched managers:', mgrs);
+      console.log('Manager count:', mgrs?.length || 0);
+      if (!Array.isArray(mgrs)) {
+        console.warn('Expected array of managers but got:', typeof mgrs, mgrs);
+        setProjectManagers([]);
+        setManagersError('Invalid managers data format');
+      } else {
+        setProjectManagers(mgrs);
+        setManagersError(null);
+      }
+    } catch (err: any) {
+      console.error('failed to load managers:', err);
+      setManagersError(err?.message || 'Failed to load project managers');
+      setProjectManagers([]);
+    } finally {
+      setManagersLoading(false);
     }
   };
 
@@ -39,26 +91,70 @@ export const ProjectsView = () => {
     setDescription('');
     setIsNew(true);
     setIsModalOpen(true);
+    // refetch managers when modal opens to ensure fresh data
+    fetchManagers();
   };
 
   const handleEdit = (project: Project) => {
     setEditingProject({ ...project });
-    setDescription(''); // Assuming description isn't in mock data but could be
+    setDescription(project.description || '');
     setIsNew(false);
     setIsModalOpen(true);
+    // refetch managers when modal opens
+    fetchManagers();
   };
 
-  const handleSave = () => {
-    if (isNew) {
-      const newId = `p${projects.length + 1}`;
-      const projectToAdd = {
-        ...editingProject,
-        id: newId,
-        status: editingProject.status || 'planning',
-      } as Project;
-      setProjects([projectToAdd, ...projects]);
-    } else {
-      setProjects(projects.map(p => p.id === editingProject.id ? { ...p, ...editingProject } as Project : p));
+  const handleSave = async () => {
+    // build minimal payload for the backend. most fields are optional in the
+    // UI so we supply reasonable defaults.
+    const payload: any = {
+      projectCode: editingProject?.projectCode || editingProject?.id,
+      name: editingProject?.name,
+      description: description,
+      clientId: Number(editingProject?.client) || editingProject?.clientId || 0,
+      status: (editingProject?.status || 'planning').toUpperCase(),
+      priority: (editingProject?.priority || 'MEDIUM').toUpperCase(),
+      startDate: editingProject?.startDate || editingProject?.dueDate || '',
+      endDate: editingProject?.dueDate || editingProject?.endDate || '',
+      budget: editingProject?.budget || 0,
+      currency: editingProject?.currency || 'USD',
+      createdBy: editingProject?.createdBy || 1,
+      projectManagerId: editingProject?.projectManagerId || 0,
+      documents: [],
+    };
+
+    try {
+      if (isNew) {
+        const created = await projectsApi.createProject(payload);
+        // convert and insert
+        const local = {
+          id: created.projectCode,
+          projectCode: created.projectCode,
+          name: created.name,
+          status: created.status.toLowerCase().replace('_', '-'),
+          progress: created.progress || 0,
+          description: created.description,
+          client: created.clientId != null ? String(created.clientId) : '',
+          dueDate: created.endDate ? created.endDate.split('T')[0] : '',
+          clientId: created.clientId,
+          priority: created.priority,
+          startDate: created.startDate ? created.startDate.split('T')[0] : '',
+          endDate: created.endDate ? created.endDate.split('T')[0] : '',
+          budget: created.budget,
+          currency: created.currency,
+          projectManagerId: created.projectManagerId,
+        } as Project;
+        setProjects([local, ...projects]);
+      } else {
+        // determine code to send in URL – prefer the original projectCode if
+        // present since `id` might have been mutated locally.
+        const codeToPatch = editingProject.projectCode || editingProject.id || '';
+        console.log('patching project code', codeToPatch, 'payload', payload);
+        await projectsApi.patchProject(codeToPatch, payload);
+        await fetchProjects(); // re-sync with server
+      }
+    } catch (err) {
+      console.error('save project failed', err);
     }
 
     setIsModalOpen(false);
@@ -66,11 +162,31 @@ export const ProjectsView = () => {
     setDescription('');
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to archive this project?')) {
-      setProjects(projects.filter(p => p.id !== id));
+      try {
+        await projectsApi.deleteProject(id);
+        setProjects(projects.filter((p) => p.id !== id));
+      } catch (err) {
+        console.error('delete failed', err);
+      }
     }
   };
+
+  const handlePatch = async (id: string, update: any) => {
+    try {
+      await projectsApi.patchProject(id, update);
+      await fetchProjects();
+    } catch (err) {
+      console.error('patch failed', err);
+    }
+  };
+
+  // load data when component mounts
+  useEffect(() => {
+    fetchProjects();
+    fetchManagers();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -111,6 +227,15 @@ export const ProjectsView = () => {
                   >
                     <Pencil size={14} />
                   </button>
+                  {project.status !== 'completed' && (
+                    <button
+                      onClick={() => handlePatch(project.id, { status: 'COMPLETED' })}
+                      className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-green-600 transition-all"
+                      title="Mark Completed"
+                    >
+                      <Check size={14} />
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDelete(project.id)}
                     className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-rose-400 transition-all"
@@ -145,6 +270,18 @@ export const ProjectsView = () => {
                   <Calendar size={14} />
                   <span className="text-[10px] font-bold uppercase tracking-wider">Due {project.dueDate}</span>
                 </div>
+                {project.projectManagerId && (
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Users size={14} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">PM #{project.projectManagerId}</span>
+                  </div>
+                )}
+                {project.priority && (
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Type size={14} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">{project.priority}</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
@@ -209,32 +346,89 @@ export const ProjectsView = () => {
             />
 
             <FormInput
-              label="Stakeholder / Client"
-              value={editingProject.client || ''}
-              onChange={(val) => setEditingProject({ ...editingProject, client: val })}
-              placeholder="e.g. Corporate Infrastructure"
-            />
+                label="Stakeholder / Client (ID)"
+                value={editingProject.client || ''}
+                onChange={(val) => setEditingProject({ ...editingProject, client: val })}
+                placeholder="e.g. 10"
+              />
 
-            <FormInput
-              label="Target Completion Date"
-              type="date"
-              value={editingProject.dueDate || ''}
-              onChange={(val) => setEditingProject({ ...editingProject, dueDate: val })}
-            />
+              <FormInput
+                label="Start Date"
+                type="date"
+                value={editingProject.startDate || ''}
+                onChange={(val) => setEditingProject({ ...editingProject, startDate: val })}
+              />
 
-            <FormSelect
-              label="Current Roadmap Status"
-              value={editingProject.status || 'planning'}
-              onChange={(val) => setEditingProject({ ...editingProject, status: val as any })}
-              options={['planning', 'in-progress', 'completed', 'delayed']}
-            />
+              <FormInput
+                label="Target Completion Date"
+                type="date"
+                value={editingProject.dueDate || ''}
+                onChange={(val) => setEditingProject({ ...editingProject, dueDate: val })}
+              />
 
-            <div className="md:col-span-2 mt-4">
-              <h5 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
-                <span className="w-8 h-px bg-blue-200"></span>
-                Progress & Visualization
-              </h5>
-            </div>
+              <FormSelect
+                label="Current Roadmap Status"
+                value={editingProject.status || 'planning'}
+                onChange={(val) => setEditingProject({ ...editingProject, status: val as any })}
+                options={['planning', 'in-progress', 'completed', 'delayed', 'new']}
+              />
+
+              <FormSelect
+                label="Priority"
+                value={editingProject.priority || 'MEDIUM'}
+                onChange={(val) => setEditingProject({ ...editingProject, priority: val })}
+                options={['LOW', 'MEDIUM', 'HIGH']}
+              />
+
+              <FormInput
+                label="Budget"
+                type="number"
+                value={editingProject.budget || ''}
+                onChange={(val) => setEditingProject({ ...editingProject, budget: parseFloat(val) })}
+                placeholder="e.g. 500000"
+              />
+
+              <FormInput
+                label="Currency"
+                value={editingProject.currency || 'USD'}
+                onChange={(val) => setEditingProject({ ...editingProject, currency: val })}
+                placeholder="USD"
+              />
+
+              {managersError && (
+                <div className="md:col-span-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-xs text-red-700 font-medium">⚠️ {managersError}</p>
+                </div>
+              )}
+
+              {managersLoading && (
+                <div className="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-700 font-medium">Loading project managers...</p>
+                </div>
+              )}
+
+              <FormSelect
+                label="Project Manager"
+                value={editingProject.projectManagerId != null ? String(editingProject.projectManagerId) : ''}
+                onChange={(val) => {
+                  setEditingProject({ ...editingProject, projectManagerId: val ? parseInt(val) : undefined });
+                }}
+                options={(() => {
+                  const opts = [
+                    '',
+                    ...projectManagers.map((m) => `${m.id}`),
+                  ];
+                  console.log('Project Manager dropdown options:', opts);
+                  console.log('projectManagers state:', projectManagers);
+                  console.log('Current selected value:', editingProject.projectManagerId);
+                  return opts;
+                })()}
+                renderOption={(opt) => {
+                  if (!opt) return '-- Select --';
+                  const manager = projectManagers.find(m => m.id === parseInt(opt));
+                  return manager ? `${manager.firstName} ${manager.lastName}` : opt;
+                }}
+              />
 
             <FormInput
               label="Completion Velocity"
@@ -251,40 +445,6 @@ export const ProjectsView = () => {
               value=""
               onChange={() => { }}
             />
-
-            <div className="md:col-span-2 mt-4">
-              <h5 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
-                <span className="w-8 h-px bg-blue-200"></span>
-                Personnel Allocation
-              </h5>
-
-              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 max-h-48 overflow-y-auto custom-scrollbar grid grid-cols-1 sm:grid-cols-2 gap-2 shadow-inner">
-                {MOCK_EMPLOYEES.map((employee) => {
-                  const isSelected = editingProject.team?.includes(employee.name);
-                  return (
-                    <button
-                      key={employee.id}
-                      type="button"
-                      onClick={() => toggleTeamMember(employee.name)}
-                      className={`flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all text-xs font-bold ${isSelected
-                        ? 'bg-blue-100 border-blue-500 text-blue-600 shadow-[0_0_12px_rgba(59,130,246,0.1)]'
-                        : 'bg-white border-gray-200 text-gray-500 hover:border-blue-200'
-                        }`}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <img src={employee.avatar} className="w-6 h-6 rounded-lg border border-gray-200 shadow-sm" alt="" />
-                        <span className="truncate">{employee.name}</span>
-                      </div>
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-200'}`}>
-                        {isSelected && <Check size={10} className="text-white" />}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="mt-2 text-[10px] text-gray-500 italic font-medium px-1">Selected: {editingProject.team?.length || 0} specialists assigned to project.</p>
-            </div>
-
             <div className="md:col-span-2 mt-4">
               <h5 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
                 <span className="w-8 h-px bg-blue-200"></span>

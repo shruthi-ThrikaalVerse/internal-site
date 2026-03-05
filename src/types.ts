@@ -394,10 +394,30 @@ export interface AuditLog {
 
 // ============= Projects =============
 export interface Project {
+  /**
+   * locally we usually use either a generated id or the projectCode returned by
+   * the backend.  When interacting with the API we treat the code as the
+   * primary key.
+   */
   id: string;
+
+  /** original API field name (optional) */
+  projectCode?: string;
+
   name: string;
-  status: 'in-progress' | 'completed' | 'on-hold' | 'planning' | 'delayed';
+
+  /**
+   * status values are fairly loose coming from the server so keep the type as
+   * a string.  existing components map a few hard‑coded values, but they can
+   * also display whatever comes back.
+   */
+  status: string;
+
+  /** a percentage for our simple progress bar (not provided by the API)
+   *  components default to 0 when the field is missing.
+   */
   progress: number;
+
   description?: string;
   team?: string[];
   startDate?: string;
@@ -405,6 +425,14 @@ export interface Project {
   dueDate?: string;
   manager?: string;
   client?: string;
+
+  // additional metadata used by the API
+  clientId?: number;
+  priority?: string;
+  budget?: number;
+  currency?: string;
+  createdBy?: number;
+  projectManagerId?: number;
 }
 
 // ============= Super Admin Navigation =============
