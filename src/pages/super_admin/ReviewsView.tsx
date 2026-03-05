@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { MOCK_REVIEWS } from '../../constants';
-import { SectionHeader, Badge, StarRating } from '../../components/super_admin/UI.tsx';
+import { SectionHeader, Badge, StarRating } from './UI.tsx';
 import { MessageSquare, Calendar, User } from 'lucide-react';
 
 export const ReviewsView = () => {

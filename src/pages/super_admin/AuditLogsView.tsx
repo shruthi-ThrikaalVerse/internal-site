@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { MOCK_LOGS } from '../../constants';
-import { SectionHeader, Badge } from '../../components/super_admin/UI.tsx';
+import { SectionHeader, Badge } from './UI.tsx';
 import { ShieldAlert, ShieldCheck, Info } from 'lucide-react';
 
 export const AuditLogsView = () => {

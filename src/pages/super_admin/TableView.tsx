@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SectionHeader } from '../../components/super_admin/UI.tsx';
+import { SectionHeader } from './UI.tsx';
 
 interface TableViewProps<T> {
   data: T[];

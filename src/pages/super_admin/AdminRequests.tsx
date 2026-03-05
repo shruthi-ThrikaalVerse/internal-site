@@ -6,7 +6,7 @@ import {
   AlertCircle, ShieldAlert, UserPlus, Trash2, Clock
 } from 'lucide-react';
 import { AdminRequest, User as UserType } from '../../types.tsx';
-import { Badge, SectionHeader } from '../../components/super_admin/UI.tsx';
+import { Badge, SectionHeader } from './UI.tsx';
 import { Modal } from '../../components/super_admin/Modal.tsx';
 import { useApp } from '../../context/AppContext.tsx';
 import { FormInput, FormSelect, FormTextArea } from '../../components/super_admin/FormFields.tsx';

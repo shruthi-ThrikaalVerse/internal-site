@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { MOCK_EVENTS } from '../../constants';
-import { SectionHeader, Badge } from '../../components/super_admin/UI.tsx';
+import { SectionHeader, Badge } from './UI.tsx';
 import { Calendar as CalendarIcon, Clock, Users, Video, Coffee, PartyPopper } from 'lucide-react';
 
 export const EventsView = () => {

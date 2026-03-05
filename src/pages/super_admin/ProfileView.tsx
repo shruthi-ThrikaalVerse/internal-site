@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { SectionHeader } from '../../components/super_admin/UI.tsx';
+import { SectionHeader } from './UI.tsx';
 import { FormInput } from '../../components/super_admin/FormFields.tsx';
 import { User, Shield, Key, Bell, Globe, Camera } from 'lucide-react';
 

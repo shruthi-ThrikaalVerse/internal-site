@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { MOCK_NOTIFICATIONS } from '../../constants';
-import { SectionHeader, Badge } from '../../components/super_admin/UI.tsx';
+import { SectionHeader, Badge } from './UI.tsx';
 import { Bell, Send, Clock, ShieldAlert, Info, Megaphone } from 'lucide-react';
 
 export const NotificationsView = () => {
