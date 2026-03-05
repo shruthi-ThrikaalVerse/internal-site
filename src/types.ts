@@ -10,6 +10,7 @@ export interface User {
   username?: string;
   email: string;
   phone?: string;
+  phoneNumber?: string;
   address?: string;
   emergencyContact?: string;
   employeeId?: string;
@@ -17,11 +18,13 @@ export interface User {
   designation?: string;
   dateOfJoining?: string;
   dateOfBirth?: string;
+  joiningDate?: string;
   manager?: string;
   reportingManager?: string;
   role: 'admin' | 'manager' | 'auditor' | 'employee' | 'hr' | 'Employee' | 'Manager' | 'HR' | 'Admin' | 'SUPER_ADMIN' | 'ADMIN';
   userType?: 'Employee' | 'Manager' | 'HR' | 'Admin';
   avatar?: string;
+  profileImage?: string;
   location?: string;
   employmentType?: string;
   tags?: string[];
@@ -31,6 +34,10 @@ export interface User {
   documents?: EmployeeDocument[];
   status?: EmployeeStatus;
   password?: string;
+  createdByEmployeeId?: string;
+  createdByRole?: string;
+  createdByName?: string;
+  hrEmployeeId?: string | null;
 }
 
 // ============= Dashboard & Stats =============
@@ -428,4 +435,5 @@ export interface AdminRequest {
   status: 'Pending' | 'Approved' | 'Rejected';
   details: string;
   metadata?: Record<string, any>;
+  dbId?: number; // Numeric ID from backend database
 }

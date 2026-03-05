@@ -47,6 +47,13 @@ export const LoginView = () => {
         console.log('User Email:', data.email);
         console.log('User Role:', data.role);
 
+        // Validate that user has SUPER_ADMIN role
+        if (data.role !== 'SUPER_ADMIN') {
+          setError('Invalid credentials. Only super administrators can access this portal.');
+          setIsLoading(false);
+          return;
+        }
+
         // Store tokens in localStorage
         localStorage.setItem('accessToken', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);

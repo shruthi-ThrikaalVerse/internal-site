@@ -42,6 +42,77 @@ export const AdminRequests = () => {
 
   const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
 
+  // State for backend termination requests
+  const [terminationRequests, setTerminationRequests] = useState<AdminRequest[]>([]);
+  const [isLoadingTerminationRequests, setIsLoadingTerminationRequests] = useState(false);
+
+  // Fetch termination requests from backend
+  useEffect(() => {
+    const fetchTerminationRequests = async () => {
+      setIsLoadingTerminationRequests(true);
+      try {
+        const response = await fetch('http://localhost:8085/api/admin-hub/termination-requests', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        });
+
+        const data = await response.json();
+        console.log('Termination Requests Response:', data);
+
+        if (response.ok) {
+          // Handle both single object and array responses
+          let fetchedRequests: AdminRequest[] = [];
+          if (Array.isArray(data)) {
+            fetchedRequests = data.map((req: any) => ({
+              id: req.requestId?.toString() || `req-${Date.now()}`,
+              type: 'Termination' as const,
+              requestedBy: req.requestedByName || `Employee ${req.requestedBy}` || 'System',
+              requesterId: req.requestedBy || 'sys',
+              targetId: req.employeeId || req.targetId || '',
+              date: new Date(req.createdAt).toLocaleDateString() || new Date().toISOString().split('T')[0],
+              status: req.status === 'PENDING' ? 'Pending' : req.status === 'APPROVED' ? 'Approved' : 'Rejected',
+              details: req.reason || req.details || '',
+              dbId: req.requestId // Store the numeric requestId from backend
+            }));
+          } else if (data && typeof data === 'object') {
+            fetchedRequests = [{
+              id: data.requestId?.toString() || `req-${Date.now()}`,
+              type: 'Termination' as const,
+              requestedBy: data.requestedByName || `Employee ${data.requestedBy}` || 'System',
+              requesterId: data.requestedBy || 'sys',
+              targetId: data.employeeId || data.targetId || '',
+              date: new Date(data.createdAt).toLocaleDateString() || new Date().toISOString().split('T')[0],
+              status: data.status === 'PENDING' ? 'Pending' : data.status === 'APPROVED' ? 'Approved' : 'Rejected',
+              details: data.reason || data.details || '',
+              dbId: data.requestId // Store the numeric requestId from backend
+            }];
+          }
+
+          setTerminationRequests(fetchedRequests);
+          console.log('Mapped termination requests:', fetchedRequests);
+        } else {
+          console.error('Failed to fetch termination requests:', data);
+          setTerminationRequests([]);
+        }
+      } catch (err) {
+        console.error('Error fetching termination requests:', err);
+        setTerminationRequests([]);
+      } finally {
+        setIsLoadingTerminationRequests(false);
+      }
+    };
+
+    if (isSuperAdmin) {
+      fetchTerminationRequests();
+      // Refresh every 5 seconds to see new requests
+      const interval = setInterval(fetchTerminationRequests, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [isSuperAdmin]);
+
   // Fetch pending employee requests from backend
   useEffect(() => {
     const fetchPendingEmployees = async () => {
@@ -94,16 +165,70 @@ export const AdminRequests = () => {
   }, [isSuperAdmin]);
 
   const filteredRequests = useMemo(() => {
-    return requests.sort((a, b) => {
+    // Merge backend termination requests with local requests
+    const allRequests = [...terminationRequests, ...requests];
+
+    // Remove duplicates by id
+    const uniqueRequests = Array.from(
+      new Map(allRequests.map(req => [req.id, req])).values()
+    );
+
+    return uniqueRequests.sort((a, b) => {
       if (a.status === 'Pending' && b.status !== 'Pending') return -1;
       if (a.status !== 'Pending' && b.status === 'Pending') return 1;
       return 0;
     });
-  }, [requests]);
+  }, [requests, terminationRequests]);
 
-  const handleAction = (id: string, status: 'Approved' | 'Rejected') => {
-    processRequest(id, status);
-    setViewingRequest(null);
+  const handleAction = async (request: AdminRequest, status: 'Approved' | 'Rejected') => {
+    if (request.type === 'Termination') {
+      // Handle termination request via backend endpoints
+      try {
+        // Use numeric dbId from backend, fallback to string id if not available
+        const requestId = request.dbId || request.id;
+
+        const endpoint = status === 'Approved'
+          ? `http://localhost:8085/api/admin-hub/approve/${requestId}`
+          : `http://localhost:8085/api/admin-hub/reject/${requestId}`;
+
+        let url = endpoint;
+
+        // For rejections, optionally prompt for rejection reason
+        if (status === 'Rejected') {
+          const rejectionReason = prompt('Please provide a reason for rejection (optional):');
+          if (rejectionReason) {
+            url = `${endpoint}?rejectionReason=${encodeURIComponent(rejectionReason)}`;
+          }
+        }
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        });
+
+        const result = await response.text();
+        console.log('Termination request response:', result);
+
+        if (response.ok) {
+          // Update local state via context
+          processRequest(request.id, status);
+          setViewingRequest(null);
+          alert(result);
+        } else {
+          alert(`Failed to ${status === 'Approved' ? 'approve' : 'reject'} termination request: ${result}`);
+        }
+      } catch (err) {
+        console.error('Error handling termination request:', err);
+        alert('An error occurred while processing the termination request');
+      }
+    } else {
+      // For other request types, use the standard behavior
+      processRequest(request.id, status);
+      setViewingRequest(null);
+    }
   };
 
   const handleApprovePendingEmployee = async (employee: PendingEmployee) => {
@@ -159,11 +284,41 @@ export const AdminRequests = () => {
     }
   };
 
-  const handleRejectPendingEmployee = (employee: PendingEmployee) => {
-    // Remove rejected employee from pending list
-    setPendingEmployees(prev => prev.filter(e => e.employeeId !== employee.employeeId));
-    setViewingPendingEmployee(null);
-    alert(`${employee.firstName} ${employee.lastName} has been rejected.`);
+  const handleRejectPendingEmployee = async (employee: PendingEmployee) => {
+    setIsApproving(true);
+    try {
+      const reason = prompt('Please provide a reason for rejection (optional):');
+
+      const response = await fetch(
+        `http://localhost:8085/api/users/super_admin/reject/${employee.employeeId}?reason=${encodeURIComponent(reason || '')}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+      console.log('Reject Employee Response:', result);
+
+      if (response.ok) {
+        console.log('Employee rejected successfully:', result);
+        // Remove rejected employee from pending list
+        setPendingEmployees(prev => prev.filter(e => e.employeeId !== employee.employeeId));
+        setViewingPendingEmployee(null);
+        alert(`${employee.firstName} ${employee.lastName} has been rejected successfully.`);
+      } else {
+        console.error('Failed to reject employee:', result);
+        alert(result.message || 'Failed to reject employee');
+      }
+    } catch (err) {
+      console.error('Error rejecting employee:', err);
+      alert('An error occurred while rejecting the employee');
+    } finally {
+      setIsApproving(false);
+    }
   };
 
   const handleRecruitmentProcessing = (request: AdminRequest) => {
@@ -354,14 +509,14 @@ export const AdminRequests = () => {
                         {isSuperAdmin && req.status === 'Pending' && (
                           <>
                             <button
-                              onClick={() => handleAction(req.id, 'Approved')}
+                              onClick={() => handleAction(req, 'Approved')}
                               className="p-2.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl transition-all active:scale-90"
                               title="Approve"
                             >
                               <Check size={18} />
                             </button>
                             <button
-                              onClick={() => handleAction(req.id, 'Rejected')}
+                              onClick={() => handleAction(req, 'Rejected')}
                               className="p-2.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all active:scale-90"
                               title="Reject"
                             >
@@ -569,13 +724,13 @@ export const AdminRequests = () => {
             {isSuperAdmin && viewingRequest.status === 'Pending' && (
               <div className="flex gap-4 pt-4">
                 <button
-                  onClick={() => handleAction(viewingRequest.id, 'Approved')}
+                  onClick={() => handleAction(viewingRequest, 'Approved')}
                   className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 shadow-xl shadow-emerald-500/20 active:scale-95 transition-all"
                 >
                   Authorize Request
                 </button>
                 <button
-                  onClick={() => handleAction(viewingRequest.id, 'Rejected')}
+                  onClick={() => handleAction(viewingRequest, 'Rejected')}
                   className="flex-1 py-4 bg-[#1f2937] text-rose-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 active:scale-95 transition-all"
                 >
                   Decline
