@@ -14,6 +14,7 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const navRef = useRef(null);
+  const isProgrammaticScrollRef = useRef(false);
 
   // update CSS variable for nav offset so scroll-margin-top works reliably
   const updateNavOffset = () => {
@@ -52,7 +53,7 @@ const Navbar = () => {
 
       const observerOptions = {
         root: null,
-        rootMargin: `-${navHeight}px 0px -40% 0px`,
+        rootMargin: `-${navHeight + 20}px 0px -50% 0px`,
         threshold: [0, 0.25, 0.5, 0.75, 1]
       };
 
@@ -63,6 +64,11 @@ const Navbar = () => {
         if (observer) observer.disconnect();
 
         observer = new IntersectionObserver((entries) => {
+          // Skip observer updates during programmatic scrolls
+          if (isProgrammaticScrollRef.current) {
+            return;
+          }
+
           // Filter entries that are actually intersecting
           const intersectingEntries = entries.filter(e => e.isIntersecting);
 
@@ -102,8 +108,19 @@ const Navbar = () => {
   const scrollTo = (id) => {
     const el = document.getElementById(id);
     if (el) {
-      // Use scrollIntoView so it works with any scroll container
+      // Set flag to prevent observer from interfering during scroll
+      isProgrammaticScrollRef.current = true;
+
+      // Use scrollIntoView which respects scroll-margin-top CSS property
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // Set active section immediately
+      setActiveSection(id);
+
+      // Re-enable observer after scroll completes
+      setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 1000);
     }
     setMobileOpen(false);
   };
@@ -217,7 +234,7 @@ const Navbar = () => {
         variants={navVariants}
         initial="hidden"
         animate="visible"
-        className={`fixed top-0 left-0 right-0 z-[9999] transition-all duration-500 px-4 sm:px-6 lg:px-8 ${scrolled ? 'py-2 sm:py-3' : 'py-4 sm:py-6'}`}
+        className={`fixed top-0 left-0 right-0 z-[9999] transition-all duration-500 px-4 sm:px-6 lg:px-8 ${scrolled ? 'py-1 sm:py-2' : 'py-2 sm:py-3'}`}
         style={{
           background: mode === 'dark' ? 'var(--bg-primary)' : 'rgba(255,255,255,0.98)',
           boxShadow: '0 6px 18px rgba(15,23,42,0.08)',

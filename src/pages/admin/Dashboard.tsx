@@ -517,10 +517,12 @@ const Dashboard: React.FC = () => {
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleToggleParticipation(evt.id, 'attending')}
+                        title="Mark as attending"
                         className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${userPart?.status === 'attending' ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-black hover:bg-slate-100'}`}
                       >Attending</button>
                       <button
                         onClick={() => handleToggleParticipation(evt.id, 'interested')}
+                        title="Mark as maybe attending"
                         className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${userPart?.status === 'interested' ? 'bg-amber-500 text-white' : 'bg-slate-50 text-black hover:bg-slate-100'}`}
                       >Maybe</button>
                     </div>

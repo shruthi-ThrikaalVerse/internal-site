@@ -9,15 +9,54 @@ const ACCENT_MAP = {
 
 const ThemeContext = createContext();
 
-export const ThemeProvider = ({ children }) => {
-  const [mode, setMode] = useState('dark');
-  const [accent, setAccentState] = useState('orange');
+// Apply theme synchronously when module loads (before React renders)
+const applyThemeSync = () => {
+  try {
+    const mode = localStorage.getItem('themeMode') || 'dark';
+    const accent = localStorage.getItem('themeAccent') || 'orange';
+    const root = window.document.documentElement;
 
+    root.classList.remove('light', 'dark');
+    root.classList.add(mode);
+    root.style.setProperty('--current-accent', ACCENT_MAP[accent] || ACCENT_MAP.orange);
+  } catch (e) {
+    // ignore storage errors
+  }
+};
+
+// Apply theme immediately on module load
+applyThemeSync();
+
+export const ThemeProvider = ({ children }) => {
+  const [mode, setMode] = useState(() => {
+    try {
+      return localStorage.getItem('themeMode') || 'dark';
+    } catch (e) {
+      return 'dark';
+    }
+  });
+
+  const [accent, setAccentState] = useState(() => {
+    try {
+      return localStorage.getItem('themeAccent') || 'orange';
+    } catch (e) {
+      return 'orange';
+    }
+  });
+
+  // Apply theme whenever mode or accent changes
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(mode);
-    root.style.setProperty('--current-accent', ACCENT_MAP[accent]);
+    root.style.setProperty('--current-accent', ACCENT_MAP[accent] || ACCENT_MAP.orange);
+
+    try {
+      localStorage.setItem('themeMode', mode);
+      localStorage.setItem('themeAccent', accent);
+    } catch (e) {
+      // ignore storage errors (private mode, SSR, etc.)
+    }
   }, [mode, accent]);
 
   const toggleMode = () => setMode((prev) => (prev === 'dark' ? 'light' : 'dark'));

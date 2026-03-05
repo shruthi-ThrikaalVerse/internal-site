@@ -1,14 +1,17 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
+import * as projectsApi from './api/projects.js';
+import { Project } from './types.js';
+import { useAuth } from './context/AuthContext.tsx';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Search, Bell, LogOut, Menu, X,
   Users, UserPlus, Zap, Settings, HelpCircle, Shield,
-  LayoutDashboard, FileText, AlertCircle, DollarSign, GitBranch, BarChart3, Star, Calendar, TrendingUp, Wrench
+  LayoutDashboard, FileText, AlertCircle, DollarSign, GitBranch, BarChart3, Star, Calendar, TrendingUp, Wrench, User
 } from 'lucide-react';
 import { AppProvider, useApp } from './context/AppContext.js';
 import { AppSection } from './types.js';
 import {
-  NAVIGATION_ITEMS, MOCK_LOGS, MOCK_PROJECTS,
+  NAVIGATION_ITEMS, MOCK_LOGS,
   MOCK_PERFORMANCE_METRICS
 } from './constants.js';
 import { StatCard, SectionHeader } from './components/super_admin/UI.js';
@@ -64,6 +67,8 @@ const sectionToUrlMap: Record<string, string> = {
 const AppContent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
   const {
     isAuthenticated, setIsAuthenticated,
     activeSection, setActiveSection,
@@ -72,6 +77,18 @@ const AppContent: React.FC = () => {
     mobileSidebarOpen, setMobileSidebarOpen,
     employees, admins, currentUser
   } = useApp();
+  const { logout } = useAuth();
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setShowProfileDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -122,11 +139,42 @@ const AppContent: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [setSidebarOpen]);
 
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await projectsApi.getAllProjects();
+        const mapped: Project[] = data.map((p: any) => ({
+          id: p.projectCode,
+          projectCode: p.projectCode,
+          name: p.name,
+          status: p.status.toLowerCase().replace('_', '-'),
+          progress: p.progress || 0,
+          description: p.description,
+          client: p.clientId != null ? String(p.clientId) : '',
+          dueDate: p.endDate ? p.endDate.split('T')[0] : '',
+          clientId: p.clientId,
+          priority: p.priority,
+          startDate: p.startDate ? p.startDate.split('T')[0] : '',
+          endDate: p.endDate ? p.endDate.split('T')[0] : '',
+          budget: p.budget,
+          currency: p.currency,
+          projectManagerId: p.projectManagerId,
+        }));
+        setProjects(mapped);
+      } catch (err) {
+        console.error('failed to load projects in App', err);
+      }
+    };
+    load();
+  }, []);
+
   const q = globalSearch.toLowerCase();
   const filteredEmployees = useMemo(() => employees.filter(e => !q || e.name!.toLowerCase().includes(q) || (e.designation || '').toLowerCase().includes(q)), [q, employees]);
   const filteredAdmins = useMemo(() => admins.filter(a => !q || (a.name || '').toLowerCase().includes(q) || (a.firstName || '').toLowerCase().includes(q)), [q, admins]);
   const filteredLogs = useMemo(() => MOCK_LOGS.filter(l => !q || l.action.toLowerCase().includes(q)), [q]);
-  const filteredProjects = useMemo(() => MOCK_PROJECTS.filter(p => !q || p.name.toLowerCase().includes(q)), [q]);
+  const filteredProjects = useMemo(() => projects.filter(p => !q || p.name.toLowerCase().includes(q)), [q, projects]);
 
   // RBAC Filtering for Sidebar
   const authorizedNavItems = useMemo(() => {
@@ -141,7 +189,7 @@ const AppContent: React.FC = () => {
   const currentView = useMemo(() => {
     switch (activeSection) {
       case AppSection.Dashboard:
-        return <DashboardView filteredEmployees={filteredEmployees} filteredAdmins={filteredAdmins} filteredProjects={filteredProjects} filteredLogs={filteredLogs} totalEmployees={employees.length} activeProjects={MOCK_PROJECTS.filter(p => p.status === 'in-progress').length} />;
+        return <DashboardView filteredEmployees={filteredEmployees} filteredAdmins={filteredAdmins} filteredProjects={filteredProjects} filteredLogs={filteredLogs} totalEmployees={employees.length} activeProjects={projects.filter(p => p.status === 'in-progress').length} />;
       case AppSection.EmployeeHub:
         return <EmployeeHub />;
       case AppSection.AdminHub:
@@ -187,11 +235,11 @@ const AppContent: React.FC = () => {
   // Redirect happens in useEffect above if not authenticated
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-[#0b1220] border-r border-[#1f2937]">
+    <div className="flex flex-col h-full bg-white border-r border-gray-200">
       <div className="p-6 border-b border-[#1f2937] shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#f37321] to-[#e06410] rounded-xl flex items-center justify-center text-white font-black shrink-0 shadow-lg shadow-[#f37321]/20">S</div>
-          {(sidebarOpen || mobileSidebarOpen) && <span className="text-[#e6eef8] font-bold text-xl tracking-tight truncate">SuperAdmin</span>}
+          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black shrink-0 shadow-lg shadow-indigo-100">S</div>
+          {(sidebarOpen || mobileSidebarOpen) && <span className="text-gray-900 font-bold text-xl tracking-tight truncate">SuperAdmin</span>}
         </div>
       </div>
       <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
@@ -205,7 +253,7 @@ const AppContent: React.FC = () => {
               }
               setMobileSidebarOpen(false);
             }}
-            className={`w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-all ${activeSection === item.id ? 'bg-[#f37321] text-white shadow-xl shadow-[#f37321]/20 font-bold' : 'text-[#9aa8bd] hover:bg-[#0f172a] hover:text-[#e6eef8]'}`}
+            className={`w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-all ${activeSection === item.id ? 'bg-indigo-600 text-white font-semibold shadow-xl shadow-indigo-200' : 'text-gray-500 hover:bg-gray-50 hover:text-indigo-600'}`}
           >
             <span className="shrink-0">{iconMap[item.iconName] || <HelpCircle size={20} />}</span>
             {(sidebarOpen || mobileSidebarOpen) && <span className="text-sm truncate">{item.label}</span>}
@@ -214,7 +262,14 @@ const AppContent: React.FC = () => {
       </nav>
       <div className="p-4 border-t border-[#1f2937] shrink-0">
         <button
-          onClick={() => setIsAuthenticated(false)}
+          onClick={async () => {
+            try {
+              await logout();
+            } catch (e) {
+              console.error('Logout error:', e);
+            }
+            setIsAuthenticated(false);
+          }}
           title="Logout"
           className="flex items-center gap-4 w-full px-3 py-3 rounded-xl text-[#9aa8bd] hover:bg-rose-500/10 hover:text-rose-400 transition-all font-bold"
         >
@@ -226,10 +281,10 @@ const AppContent: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen flex text-[#e6eef8] bg-[#0f172a] overflow-x-hidden selection:bg-[#f37321]/30">
+    <div className="min-h-screen flex text-gray-900 bg-[#f8fafc] overflow-x-hidden selection:bg-blue-300">
       {/* Mobile Backdrop */}
       {mobileSidebarOpen && (
-        <div className="fixed inset-0 bg-[#020617]/95 backdrop-blur-sm z-[80] lg:hidden animate-in fade-in duration-300" onClick={() => setMobileSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] lg:hidden animate-in fade-in duration-300" onClick={() => setMobileSidebarOpen(false)} />
       )}
 
       {/* Mobile Sidebar */}
@@ -238,46 +293,94 @@ const AppContent: React.FC = () => {
       </aside>
 
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex fixed inset-y-0 left-0 z-50 bg-[#0b1220] transition-all duration-300 flex-col shadow-2xl shadow-black/50 ${sidebarOpen ? 'w-64' : 'w-20'}`}>
+      <aside className={`hidden lg:flex fixed inset-y-0 left-0 z-50 bg-white transition-all duration-300 flex-col shadow-2xl shadow-black/50 ${sidebarOpen ? 'w-64' : 'w-20'}`}>
         <SidebarContent />
       </aside>
 
       {/* Main Container */}
       <main className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
-        <header className="h-20 bg-[#0b1220]/80 backdrop-blur-xl border-b border-[#1f2937] sticky top-0 z-40 flex items-center px-6 sm:px-8 justify-between">
+        <header className="h-20 bg-white border-b border-gray-200 sticky top-0 z-40 flex items-center px-6 sm:px-8 justify-between">
           <div className="flex items-center gap-4 flex-1">
             <button onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle sidebar" className="hidden lg:flex p-2 hover:bg-[#1f2937] rounded-xl text-[#9aa8bd] transition-colors">{sidebarOpen ? <X size={20} /> : <Menu size={20} />}</button>
             <button onClick={() => setMobileSidebarOpen(true)} title="Open sidebar" className="lg:hidden p-2 hover:bg-[#1f2937] rounded-xl text-[#9aa8bd] transition-colors"><Menu size={20} /></button>
-            <div className="flex items-center gap-3 bg-[#0f172a] border border-[#1f2937] px-4 py-2.5 rounded-xl w-full max-w-lg focus-within:border-[#f37321] focus-within:ring-4 focus-within:ring-[#f37321]/5 transition-all">
-              <Search size={18} className="text-[#9aa8bd] shrink-0" />
+            <div className="flex items-center gap-3 bg-white border border-gray-200 px-4 py-2.5 rounded-xl w-full max-w-lg focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-500/50 transition-all">
+              <Search size={18} className="text-gray-400 shrink-0" />
               <input
                 type="text"
                 placeholder="Search across authorized modules..."
-                className="bg-transparent border-none focus:ring-0 text-sm w-full text-[#e6eef8] outline-none placeholder-[#9aa8bd]/40"
+                className="bg-transparent border-none focus:ring-0 text-sm w-full text-gray-900 outline-none placeholder-gray-400"
                 value={globalSearch}
                 onChange={(e) => setGlobalSearch(e.target.value)}
               />
             </div>
           </div>
           <div className="flex items-center gap-4 ml-4">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-[#f37321]/10 text-[#f37321] rounded-lg border border-[#1f2937]/20">
-              <div className="w-2 h-2 bg-[#f37321] rounded-full animate-pulse shadow-[0_0_8px_#f37321]"></div>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg border border-gray-200">
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.7)]"></div>
               <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Production Node</span>
             </div>
             <button
-              onClick={() => setActiveSection(AppSection.Notifications)}
+              onClick={() => navigate(sectionToUrlMap[AppSection.Notifications])}
               title="View notifications"
-              className="relative p-2.5 text-[#9aa8bd] hover:bg-[#1f2937] rounded-xl transition-all"
+              className="relative p-2.5 text-gray-400 hover:bg-gray-100 rounded-xl transition-all"
             >
               <Bell size={20} />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#f37321] rounded-full ring-4 ring-[#0b1220] animate-bounce"></span>
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-blue-600 rounded-full ring-4 ring-white animate-bounce"></span>
             </button>
-            <div
-              onClick={() => setActiveSection(AppSection.Profile)}
-              title="View profile"
-              className="w-10 h-10 rounded-xl border-2 border-[#1f2937] bg-slate-800 overflow-hidden cursor-pointer hover:border-[#f37321] transition-all group shrink-0 shadow-lg"
-            >
-              <img src={currentUser?.avatar || "https://picsum.photos/seed/admin/200"} alt="Admin" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+
+            {/* Profile Dropdown */}
+            <div className="relative" ref={profileDropdownRef}>
+              <button
+                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-1.5 shadow-sm hover:border-indigo-100 transition-all"
+              >
+                <div className="flex flex-col items-end hidden sm:flex">
+                  <p className="text-xs font-bold text-gray-900 leading-none">{currentUser?.name || 'Super Admin'}</p>
+                  <div className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-0.5">Active</p>
+                  </div>
+                </div>
+                <img
+                  src={currentUser?.avatar || "https://picsum.photos/seed/admin/200"}
+                  className="w-8 h-8 rounded-full border-2 border-indigo-50 shadow-sm"
+                  alt="Admin"
+                />
+              </button>
+
+              {showProfileDropdown && (
+                <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-200 z-50">
+                  <div className="px-4 py-3 border-b border-slate-50">
+                    <p className="text-xs font-black text-slate-900 truncate">{currentUser?.email || 'vijay@example.com'}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Global Cluster 01</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigate(sectionToUrlMap[AppSection.Profile]);
+                      setShowProfileDropdown(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                  >
+                    <User className="w-4 h-4" /> View Full Profile
+                  </button>
+                  <div className="border-t border-slate-50 mt-2 pt-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await logout();
+                        } catch (e) {
+                          console.error('Logout error:', e);
+                        }
+                        setIsAuthenticated(false);
+                        setShowProfileDropdown(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors font-bold"
+                    >
+                      <LogOut className="w-4 h-4" /> End Session
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>

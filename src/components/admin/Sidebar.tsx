@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { NAV_ITEMS } from '../../constants.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
+import { useApp } from '../../context/AppContext';
 import Icon from './Icon';
 
 const Sidebar: React.FC<{ isOpen: boolean; setOpen: (val: boolean) => void }> = ({ isOpen, setOpen }) => {
@@ -9,12 +10,15 @@ const Sidebar: React.FC<{ isOpen: boolean; setOpen: (val: boolean) => void }> = 
   const navigate = useNavigate();
   const { logout } = useAuth();
 
+  const { setIsAuthenticated } = useApp();
+
   const handleLogout = async () => {
     try {
       await logout();
     } catch (e) {
       console.error('Logout error:', e);
     }
+    setIsAuthenticated(false);
     navigate('/admin/login');
   };
 

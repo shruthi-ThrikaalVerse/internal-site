@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { clearUserData } from '../utils/storage.ts';
+import { useApp } from './AppContext.tsx';
 
 const API_BASE_URL = 'http://localhost:8085';
 
@@ -49,6 +50,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { setIsAuthenticated } = useApp();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -129,10 +131,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // Extract token from response
       const token = responseData.token || responseData.accessToken || responseData.jwtToken || responseData.data?.token;
+      const refresh = responseData.refreshToken || responseData.refresh_token || responseData.data?.refreshToken;
 
       // If a token is returned, persist it for API calls that use Authorization header
       if (token) {
         localStorage.setItem('authToken', token);
+      }
+      // store refresh token separately if provided
+      if (refresh) {
+        try { localStorage.setItem('refreshToken', refresh); } catch {};
       }
 
       // If response includes user data, use it immediately
@@ -194,13 +201,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const currentUserId = user?.id;
 
     try {
-      await fetch(`${API_BASE_URL}/api/users/logout`, {
+      const resp = await fetch(`${API_BASE_URL}/api/users/logout`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
       });
+      if (!resp.ok) {
+        console.warn('Logout request returned non-OK status', resp.status);
+      }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -210,7 +220,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       setUser(null);
+      setIsAuthenticated(false);
       try { localStorage.removeItem('authToken'); } catch { }
+      try { localStorage.removeItem('refreshToken'); } catch { }
       try { localStorage.removeItem('user'); } catch { }
     }
   };

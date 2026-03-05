@@ -5,7 +5,7 @@ import { JOBS } from '../constants.js';
 
 const Career = () => {
   return (
-    <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl" id="career" >
+    <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
       <div className="flex flex-col items-center text-center mb-20 pt-24">
         <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0 }} className="text-base md:text-lg font-bold uppercase tracking-[0.4em] mb-4" style={{ color: 'var(--current-accent)' }}>Careers</motion.h2>
         <motion.h3 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-4xl md:text-6xl font-black mb-8 max-w-3xl">Build the <span style={{ color: 'var(--current-accent)' }}>Future</span> with Continuity</motion.h3>

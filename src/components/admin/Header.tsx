@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import GlobalSearch from './GlobalSearch';
 import Icon from './Icon';
 import { useAuth } from '../../context/AuthContext.tsx';
+import { useApp } from '../../context/AppContext';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import * as LucideIcons from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -191,6 +192,8 @@ const Header: React.FC<{ setOpen: (val: boolean) => void }> = ({ setOpen }) => {
                 <button
                   onClick={() => {
                     logout();
+                    setIsAuthenticated(false);
+                    navigate('/admin/login');
                     setShowDropdown(false);
                   }}
                   className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors font-bold"

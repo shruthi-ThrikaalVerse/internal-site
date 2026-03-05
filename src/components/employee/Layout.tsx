@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from './Sidebar';
-import Header from './Header';
-import { Menu } from 'lucide-react'; // Added Menu import
+import Sidebar from './Sidebar.js';
+import Header from './Header.js';
 
 interface LayoutProps {
   onLogout: () => void;
@@ -57,21 +56,8 @@ const Layout: React.FC<LayoutProps> = ({ onLogout, children }) => {
     }
   };
 
-  // Mobile toggle button - always visible on mobile
-  const MobileToggleButton = () => (
-    <button
-      onClick={toggleSidebar}
-      className="fixed top-4 left-4 z-30 lg:hidden p-2 bg-slate-900 text-white rounded-lg shadow-lg"
-      title="Open menu"
-    >
-      <Menu size={24} />
-    </button>
-  );
-
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
-      {/* Mobile toggle button - only show when sidebar is closed on mobile */}
-      {isMobile && !isSidebarOpen && <MobileToggleButton />}
 
       {/* Sidebar */}
       <div className={`${isMobile ? 'fixed inset-y-0 left-0 z-40' : 'relative'}`}>

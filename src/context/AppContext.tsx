@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { AppSection, User, AdminRequest } from '../types';
-import { MOCK_EMPLOYEES, MOCK_ADMINS, MOCK_REQUESTS } from '../constants.js';
 
 interface AppContextType {
   isAuthenticated: boolean;
@@ -15,6 +14,7 @@ interface AppContextType {
   mobileSidebarOpen: boolean;
   setMobileSidebarOpen: (val: boolean) => void;
   employees: User[];
+  setEmployees: React.Dispatch<React.SetStateAction<User[]>>;
   admins: User[];
   requests: AdminRequest[];
   currentUser: User | null;
@@ -47,9 +47,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  const [employees, setEmployees] = useState<User[]>(MOCK_EMPLOYEES);
-  const [admins, setAdmins] = useState<User[]>(MOCK_ADMINS);
-  const [requests, setRequests] = useState<AdminRequest[]>(MOCK_REQUESTS);
+  const [employees, setEmployees] = useState<User[]>([]);
+  const [admins, setAdmins] = useState<User[]>([]);
+  const [requests, setRequests] = useState<AdminRequest[]>([]);
   const [currentUser] = useState<User | null>(LOGGED_IN_ADMIN);
 
   const addEmployee = (newEmployee: User) => {
@@ -138,6 +138,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       sidebarOpen, setSidebarOpen,
       mobileSidebarOpen, setMobileSidebarOpen,
       employees,
+      setEmployees,
       admins,
       requests,
       currentUser,

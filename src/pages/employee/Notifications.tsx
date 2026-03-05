@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getMyNotifications } from '../../api/notifications.ts';
-import { 
-  Bell, Check, Clock, User, Shield, Info, CheckCircle2, AlertCircle, 
+import { getUserSpecificKey } from '../../utils/storage.ts';
+import {
+  Bell, Check, Clock, User, Shield, Info, CheckCircle2, AlertCircle,
   Inbox, X, Search, Filter, Archive, Volume2, VolumeX,
   Star, Zap, ExternalLink, Settings, MoreVertical,
   BellOff, CheckCheck, Timer, Download, Upload,
@@ -40,206 +42,11 @@ interface Notification {
     location?: string;
     achievement?: string;
   };
-} 
+}
 
 type NotificationTab = 'all' | 'unread' | 'read' | 'archived';
 
-// ========== RAW EMPLOYEE NOTIFICATION DATA ==========
-const EMPLOYEE_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    title: 'Performance Review Completed',
-    msg: 'Your quarterly performance review has been completed by your manager Sarah Johnson. Overall rating: 4.5/5. Detailed feedback is available in the performance portal.',
-    time: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutes ago
-    icon: 'Target',
-    color: 'text-emerald-600 bg-emerald-50',
-    read: false,
-    type: 'success',
-    priority: 'high',
-    category: 'performance',
-    department: 'Engineering',
-    employeeId: 'EMP-2024-001',
-    metadata: {
-      manager: 'Sarah Johnson',
-      rating: 4.5
-    },
-    action: {
-      label: 'View Feedback',
-      url: '/performance/reviews',
-      type: 'view'
-    }
-  },
-  {
-    id: '2',
-    title: 'Early Login Detected',
-    msg: 'You logged in at 7:15 AM today (2 hours before shift start). Remember to take regular breaks as per company policy.',
-    time: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-    icon: 'LogIn',
-    color: 'text-blue-600 bg-blue-50',
-    read: false,
-    type: 'info',
-    priority: 'medium',
-    category: 'login_activity',
-    employeeId: 'EMP-2024-001',
-    action: {
-      label: 'View Attendance',
-      url: '/attendance',
-      type: 'view'
-    }
-  },
-  {
-    id: '3',
-    title: 'Team Meeting Reminder',
-    msg: 'Weekly team sync meeting in 15 minutes. Agenda: Q3 project updates, sprint planning, and resource allocation.',
-    time: new Date(Date.now() - 1000 * 60 * 120).toISOString(), // 2 hours ago
-    icon: 'Calendar',
-    color: 'text-violet-600 bg-violet-50',
-    read: true,
-    type: 'info',
-    priority: 'medium',
-    category: 'events',
-    department: 'Engineering',
-    metadata: {
-      eventType: 'Team Meeting',
-      location: 'Conference Room A'
-    },
-    action: {
-      label: 'Join Meeting',
-      onClick: () => console.log('Join meeting clicked'),
-      type: 'view'
-    }
-  },
-  {
-    id: '4',
-    title: 'Monthly Performance Score',
-    msg: 'Your performance score for October is 92% - Excellent work! This places you in the top 15% of your department.',
-    time: new Date(Date.now() - 1000 * 60 * 180).toISOString(), // 3 hours ago
-    icon: 'TrendingUp',
-    color: 'text-emerald-600 bg-emerald-50',
-    read: true,
-    type: 'success',
-    priority: 'high',
-    category: 'performance',
-    employeeId: 'EMP-2024-001',
-    metadata: {
-      rating: 92
-    }
-  },
-  {
-    id: '5',
-    title: 'Late Logout Notice',
-    msg: 'You logged out at 8:45 PM yesterday. Please ensure work-life balance and avoid extended working hours regularly.',
-    time: new Date(Date.now() - 1000 * 60 * 240).toISOString(), // 4 hours ago
-    icon: 'LogOut',
-    color: 'text-amber-600 bg-amber-50',
-    read: false,
-    type: 'warning',
-    priority: 'medium',
-    category: 'login_activity',
-    employeeId: 'EMP-2024-001',
-    action: {
-      label: 'Acknowledge',
-      onClick: () => console.log('Acknowledged late logout'),
-      type: 'acknowledge'
-    }
-  },
-  {
-    id: '6',
-    title: 'Training Session Tomorrow',
-    msg: 'Mandatory cybersecurity training session scheduled for tomorrow at 10:00 AM in the Training Hall. Attendance will be tracked.',
-    time: new Date(Date.now() - 1000 * 60 * 360).toISOString(), // 6 hours ago
-    icon: 'CalendarDays',
-    color: 'text-blue-600 bg-blue-50',
-    read: true,
-    type: 'info',
-    priority: 'medium',
-    category: 'events',
-    department: 'All',
-    metadata: {
-      eventType: 'Training',
-      location: 'Training Hall'
-    },
-    action: {
-      label: 'Add to Calendar',
-      onClick: () => console.log('Added to calendar'),
-      type: 'view'
-    }
-  },
-  {
-    id: '7',
-    title: 'Exceeded Quarterly Targets',
-    msg: 'Congratulations! You have exceeded your Q3 performance targets by 18%. Your achievement has been noted by senior management.',
-    time: new Date(Date.now() - 1000 * 60 * 480).toISOString(), // 8 hours ago
-    icon: 'Trophy',
-    color: 'text-emerald-600 bg-emerald-50',
-    read: true,
-    type: 'success',
-    priority: 'high',
-    category: 'performance',
-    employeeId: 'EMP-2024-001',
-    metadata: {
-      achievement: 'Exceeded targets by 18%'
-    },
-    action: {
-      label: 'View Details',
-      url: '/performance/achievements',
-      type: 'view'
-    }
-  },
-  {
-    id: '8',
-    title: 'System Maintenance Scheduled',
-    msg: 'HR System maintenance scheduled for Saturday, 2:00 AM - 4:00 AM. Performance portal will be temporarily unavailable.',
-    time: new Date(Date.now() - 1000 * 60 * 720).toISOString(), // 12 hours ago
-    icon: 'Shield',
-    color: 'text-slate-600 bg-slate-50',
-    read: true,
-    type: 'system',
-    priority: 'medium',
-    category: 'system_updates',
-    department: 'All'
-  },
-  {
-    id: '9',
-    title: 'Attendance Regularization Required',
-    msg: 'You have 2 unregularized attendance entries from last week. Please submit regularization requests by EOD today.',
-    time: new Date(Date.now() - 1000 * 60 * 1440).toISOString(), // 1 day ago
-    icon: 'ClockIcon',
-    color: 'text-amber-600 bg-amber-50',
-    read: true,
-    type: 'warning',
-    priority: 'high',
-    category: 'attendance',
-    employeeId: 'EMP-2024-001',
-    action: {
-      label: 'Regularize Now',
-      url: '/attendance/regularize',
-      type: 'view'
-    }
-  },
-  {
-    id: '10',
-    title: 'Team Lunch Event',
-    msg: 'Monthly team lunch scheduled for Friday at 1:00 PM at "The Blue Restaurant". Please confirm your attendance by Thursday.',
-    time: new Date(Date.now() - 1000 * 60 * 2880).toISOString(), // 2 days ago
-    icon: 'Coffee',
-    color: 'text-violet-600 bg-violet-50',
-    read: true,
-    type: 'info',
-    priority: 'low',
-    category: 'events',
-    department: 'Engineering',
-    metadata: {
-      eventType: 'Team Building',
-      location: 'The Blue Restaurant'
-    },
-    action: {
-      label: 'RSVP',
-      onClick: () => console.log('RSVP clicked'),
-      type: 'acknowledge'
-    }
-  }
-];
+// Static mock notifications removed — notifications should come from localStorage or the API
 
 // ========== CONSTANTS ==========
 const priorityColors = {
@@ -422,7 +229,7 @@ const NotificationItem: React.FC<{
   onArchive: () => void;
   onDelete: () => void;
   onSnooze: (hours: number) => void;
-}> = ({ 
+}> = ({
   notification,
   isSelected,
   isExpanded,
@@ -433,212 +240,238 @@ const NotificationItem: React.FC<{
   onDelete,
   onSnooze
 }) => {
-  const IconComp = iconMap[notification.icon] || Info;
-  const PriorityIcon = priorityIcons[notification.priority];
-  const CategoryIcon = categoryIcons[notification.category];
-  
-  const getCategoryLabel = (category: string) => {
-    const labels: { [key: string]: string } = {
-      performance: 'Performance',
-      attendance: 'Attendance',
-      events: 'Events',
-      login_activity: 'Login Activity',
-      system_updates: 'System Updates'
+    const IconComp = iconMap[notification.icon] || Info;
+    const PriorityIcon = priorityIcons[notification.priority];
+    const CategoryIcon = categoryIcons[notification.category];
+
+    const getCategoryLabel = (category: string) => {
+      const labels: { [key: string]: string } = {
+        performance: 'Performance',
+        attendance: 'Attendance',
+        events: 'Events',
+        login_activity: 'Login Activity',
+        system_updates: 'System Updates'
+      };
+      return labels[category] || category;
     };
-    return labels[category] || category;
-  };
 
-  return (
-    <div className={`notification-card bg-white rounded-xl border ${
-      notification.read ? 'border-slate-200' : 'border-blue-200 unread-glow'
-    } ${isSelected ? 'ring-2 ring-blue-500 ring-inset' : ''} hover:shadow-lg transition-all duration-200`}>
-      <div className="p-4">
-        <div className="flex gap-4">
-          {/* Selection checkbox */}
-          <div className="flex-shrink-0 pt-1">
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={onToggleSelect}
-              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-            />
-          </div>
+    const navigate = useNavigate();
 
-          {/* Icon */}
-          <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${
-            notification.read ? notification.color : `${notification.color} animate-pulse-slow`
-          }`}>
-            <IconComp className="w-6 h-6" />
-          </div>
+    const handleClick = (e: React.MouseEvent) => {
+      // mark as read in parent
+      onMarkAsRead();
+      // close any open header dropdowns
+      window.dispatchEvent(new Event('closeNotificationsDropdown'));
+      // navigate to notification detail
+      if (notification.action && notification.action.url) {
+        const url = notification.action.url;
+        if (/^https?:\/\//i.test(url)) {
+          window.open(url, '_blank');
+        } else {
+          navigate(url);
+        }
+      } else {
+        navigate(`/employee/notifications/${notification.id}`);
+      }
+    };
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
-              <div className="flex-1">
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <h3 className={`font-semibold ${
-                    notification.read ? 'text-slate-700' : 'text-slate-900 font-bold'
-                  }`}>
-                    {notification.title}
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    <span className={`priority-badge px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1 ${priorityColors[notification.priority]}`}>
-                      <PriorityIcon className="w-3 h-3" />
-                      {notification.priority}
-                    </span>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1 ${categoryColors[notification.category]}`}>
-                      <CategoryIcon className="w-3 h-3" />
-                      {getCategoryLabel(notification.category)}
-                    </span>
-                    {notification.department && (
-                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                        {notification.department}
+    return (
+      <div onClick={handleClick} className={`notification-card bg-white rounded-xl border ${notification.read ? 'border-slate-200' : 'border-blue-200 unread-glow'
+        } ${isSelected ? 'ring-2 ring-blue-500 ring-inset' : ''} hover:shadow-lg transition-all duration-200`}>
+        <div className="p-4">
+          <div className="flex gap-4">
+            {/* Selection checkbox */}
+            <div className="flex-shrink-0 pt-1">
+              <input
+                type="checkbox"
+                aria-label={`Select notification: ${notification.title}`}
+                checked={isSelected}
+                onChange={onToggleSelect}
+                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              />
+            </div>
+
+            {/* Icon */}
+            <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${notification.read ? notification.color : `${notification.color} animate-pulse-slow`
+              }`}>
+              <IconComp className="w-6 h-6" />
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h3 className={`font-semibold ${notification.read ? 'text-slate-700' : 'text-slate-900 font-bold'
+                      }`}>
+                      {notification.title}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      <span className={`priority-badge px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1 ${priorityColors[notification.priority]}`}>
+                        <PriorityIcon className="w-3 h-3" />
+                        {notification.priority}
                       </span>
-                    )}
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1 ${categoryColors[notification.category]}`}>
+                        <CategoryIcon className="w-3 h-3" />
+                        {getCategoryLabel(notification.category)}
+                      </span>
+                      {notification.department && (
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                          {notification.department}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                
-                <p className={`text-sm ${notification.read ? 'text-slate-600' : 'text-slate-700'} ${
-                  isExpanded ? '' : 'line-clamp-2'
-                } leading-relaxed`}>
-                  {notification.msg}
-                </p>
-                
-                {/* Metadata display */}
-                {notification.metadata && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {notification.metadata.rating && (
-                      <span className="text-xs px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg">
-                        Rating: {notification.metadata.rating}
-                      </span>
-                    )}
-                    {notification.metadata.manager && (
-                      <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-lg">
-                        Manager: {notification.metadata.manager}
-                      </span>
-                    )}
-                    {notification.metadata.location && (
-                      <span className="text-xs px-2 py-1 bg-violet-50 text-violet-700 rounded-lg">
-                        Location: {notification.metadata.location}
-                      </span>
-                    )}
-                  </div>
-                )}
-                
-                {notification.msg.length > 120 && (
-                  <button
-                    onClick={onToggleExpand}
-                    className="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-                  >
-                    {isExpanded ? (
-                      <>
-                        <ChevronUp className="w-4 h-4" />
-                        Show less
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className="w-4 h-4" />
-                        Read more
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
 
-              {/* Time and Actions */}
-              <div className="flex flex-col items-start sm:items-end gap-3">
-                <span className="text-xs text-slate-500 whitespace-nowrap flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {formatTime(notification.time)}
-                </span>
-                <div className="flex items-center gap-1">
-                  {!notification.read && (
+                  <p className={`text-sm ${notification.read ? 'text-slate-600' : 'text-slate-700'} ${isExpanded ? '' : 'line-clamp-2'
+                    } leading-relaxed`}>
+                    {notification.msg}
+                  </p>
+
+                  {/* Metadata display */}
+                  {notification.metadata && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {notification.metadata.rating && (
+                        <span className="text-xs px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg">
+                          Rating: {notification.metadata.rating}
+                        </span>
+                      )}
+                      {notification.metadata.manager && (
+                        <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-lg">
+                          Manager: {notification.metadata.manager}
+                        </span>
+                      )}
+                      {notification.metadata.location && (
+                        <span className="text-xs px-2 py-1 bg-violet-50 text-violet-700 rounded-lg">
+                          Location: {notification.metadata.location}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {notification.msg.length > 120 && (
                     <button
-                      onClick={onMarkAsRead}
-                      className="p-2 hover:bg-slate-100 rounded-lg transition-colors group"
-                      title="Mark as read"
+                      onClick={onToggleExpand}
+                      className="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
                     >
-                      <Eye className="w-4 h-4 text-slate-500 group-hover:text-blue-600" />
+                      {isExpanded ? (
+                        <>
+                          <ChevronUp className="w-4 h-4" />
+                          Show less
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-4 h-4" />
+                          Read more
+                        </>
+                      )}
                     </button>
                   )}
-                  
-                  <button
-                    onClick={onArchive}
-                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors group"
-                    title="Archive"
-                  >
-                    <Archive className="w-4 h-4 text-slate-500 group-hover:text-violet-600" />
-                  </button>
-                  
-                  <div className="relative">
-                    <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors group">
-                      <MoreVertical className="w-4 h-4 text-slate-500 group-hover:text-slate-700" />
+                </div>
+
+                {/* Time and Actions */}
+                <div className="flex flex-col items-start sm:items-end gap-3">
+                  <span className="text-xs text-slate-500 whitespace-nowrap flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {formatTime(notification.time)}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {!notification.read && (
+                      <button
+                        onClick={onMarkAsRead}
+                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors group"
+                        title="Mark as read"
+                      >
+                        <Eye className="w-4 h-4 text-slate-500 group-hover:text-blue-600" />
+                      </button>
+                    )}
+
+                    <button
+                      onClick={onArchive}
+                      className="p-2 hover:bg-slate-100 rounded-lg transition-colors group"
+                      title="Archive"
+                    >
+                      <Archive className="w-4 h-4 text-slate-500 group-hover:text-violet-600" />
                     </button>
-                    <div className="absolute right-0 top-full mt-1 hidden group-hover:block bg-white border border-slate-200 rounded-lg shadow-lg z-20 min-w-40 slide-in-right">
-                      <div className="py-1">
-                        <div className="px-3 py-2 text-xs font-medium text-slate-500 border-b border-slate-100">
-                          Snooze for
-                        </div>
-                        {[1, 4, 8, 24].map((hours) => (
-                          <button
-                            key={hours}
-                            onClick={() => onSnooze(hours)}
-                            className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                          >
-                            <Timer className="w-4 h-4" />
-                            {hours} hour{hours !== 1 ? 's' : ''}
-                          </button>
-                        ))}
-                        <div className="border-t border-slate-100">
-                          <button
-                            onClick={onDelete}
-                            className="w-full px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50 flex items-center gap-2"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Dismiss
-                          </button>
+
+                    <div className="relative">
+                      <button aria-label="More options" aria-haspopup="true" className="p-2 hover:bg-slate-100 rounded-lg transition-colors group">
+                        <MoreVertical className="w-4 h-4 text-slate-500 group-hover:text-slate-700" />
+                      </button>
+                      <div className="absolute right-0 top-full mt-1 hidden group-hover:block bg-white border border-slate-200 rounded-lg shadow-lg z-20 min-w-40 slide-in-right">
+                        <div className="py-1">
+                          <div className="px-3 py-2 text-xs font-medium text-slate-500 border-b border-slate-100">
+                            Snooze for
+                          </div>
+                          {[1, 4, 8, 24].map((hours) => (
+                            <button
+                              key={hours}
+                              onClick={() => onSnooze(hours)}
+                              className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                            >
+                              <Timer className="w-4 h-4" />
+                              {hours} hour{hours !== 1 ? 's' : ''}
+                            </button>
+                          ))}
+                          <div className="border-t border-slate-100">
+                            <button
+                              onClick={onDelete}
+                              className="w-full px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Dismiss
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Action Button - View/Download/Acknowledge only */}
-            {notification.action && (
-              <div className="mt-4">
-                <button
-                  onClick={() => {
-                    if (notification.action?.url) window.open(notification.action.url, '_blank');
-                    if (notification.action?.onClick) notification.action.onClick();
-                  }}
-                  className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow ${
-                    notification.action.type === 'acknowledge'
+              {/* Action Button - View/Download/Acknowledge only */}
+              {notification.action && (
+                <div className="mt-4">
+                  <button
+                    onClick={() => {
+                      if (notification.action?.url) window.open(notification.action.url, '_blank');
+                      if (notification.action?.onClick) notification.action.onClick();
+                    }}
+                    className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow ${notification.action.type === 'acknowledge'
                       ? 'bg-amber-600 hover:bg-amber-700 text-white'
                       : notification.action.type === 'download'
-                      ? 'bg-slate-600 hover:bg-slate-700 text-white'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}
-                >
-                  {notification.action.type === 'download' && <Download className="w-4 h-4" />}
-                  {notification.action.type === 'view' && <Eye className="w-4 h-4" />}
-                  {notification.action.type === 'acknowledge' && <Check className="w-4 h-4" />}
-                  {notification.action.label}
-                </button>
-              </div>
-            )}
+                        ? 'bg-slate-600 hover:bg-slate-700 text-white'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                  >
+                    {notification.action.type === 'download' && <Download className="w-4 h-4" />}
+                    {notification.action.type === 'view' && <Eye className="w-4 h-4" />}
+                    {notification.action.type === 'acknowledge' && <Check className="w-4 h-4" />}
+                    {notification.action.label}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 // ========== MAIN COMPONENT ==========
 const EmployeeNotifications: React.FC = () => {
   // State
-  const [notifications, setNotifications] = useState<Notification[]>(EMPLOYEE_NOTIFICATIONS);
+  const navigate = useNavigate();
+  const storageKey = getUserSpecificKey('user_notifications_v1');
+
+  const [notifications, setNotifications] = useState<Notification[]>(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'read' | 'archived'>('all');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -700,7 +533,7 @@ const EmployeeNotifications: React.FC = () => {
     if (filters.dateRange !== 'all') {
       const now = new Date();
       let cutoffDate = new Date();
-      
+
       switch (filters.dateRange) {
         case 'today':
           cutoffDate.setDate(now.getDate() - 1);
@@ -712,7 +545,7 @@ const EmployeeNotifications: React.FC = () => {
           cutoffDate.setMonth(now.getMonth() - 1);
           break;
       }
-      
+
       filtered = filtered.filter(n => new Date(n.time) > cutoffDate);
     }
 
@@ -727,7 +560,7 @@ const EmployeeNotifications: React.FC = () => {
 
   // Notification actions
   const markAsRead = (id: string) => {
-    setNotifications(prev => prev.map(n => 
+    setNotifications(prev => prev.map(n =>
       n.id === id ? { ...n, read: true } : n
     ));
   };
@@ -822,6 +655,11 @@ const EmployeeNotifications: React.FC = () => {
 
   const clearAll = () => {
     setNotifications([]);
+    try {
+      localStorage.removeItem(getUserSpecificKey('user_notifications_v1'));
+    } catch (e) {
+      // ignore
+    }
   };
 
   const saveSettings = (newSettings: typeof settings) => {
@@ -836,7 +674,7 @@ const EmployeeNotifications: React.FC = () => {
       "You've successfully mentored 2 junior developers this month.",
       "Your documentation updates have improved team efficiency by 20%."
     ];
-    
+
     const newNotification: Notification = {
       id: `perf_${Date.now()}`,
       title: 'Performance Recognition',
@@ -858,9 +696,18 @@ const EmployeeNotifications: React.FC = () => {
         type: 'view'
       }
     };
-    
+
     setNotifications(prev => [newNotification, ...prev]);
   };
+
+  // Persist notifications to localStorage when changed
+  useEffect(() => {
+    try {
+      localStorage.setItem(getUserSpecificKey('user_notifications_v1'), JSON.stringify(notifications));
+    } catch (e) {
+      // ignore
+    }
+  }, [notifications]);
 
   // Statistics
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -885,7 +732,7 @@ const EmployeeNotifications: React.FC = () => {
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold text-slate-900">Employee Notifications</h1>
-                  
+
                   <div className="flex items-center gap-2 mt-2 text-sm text-slate-600">
                     <User className="w-4 h-4" />
                     <span>Employee ID: EMP-2024-001</span>
@@ -895,7 +742,7 @@ const EmployeeNotifications: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Stats */}
               <div className="flex flex-wrap gap-4 mt-6">
                 <div className="px-4 py-3 bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -981,17 +828,15 @@ const EmployeeNotifications: React.FC = () => {
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl mb-2 transition-all ${
-                        activeTab === tab
-                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
-                          : 'text-slate-700 hover:bg-slate-50 hover:shadow'
-                      }`}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl mb-2 transition-all ${activeTab === tab
+                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
+                        : 'text-slate-700 hover:bg-slate-50 hover:shadow'
+                        }`}
                     >
                       <span className="font-medium capitalize">{tab}</span>
                       {tab === 'unread' && unreadCount > 0 && (
-                        <span className={`px-2 py-1 text-xs font-bold rounded-full ${
-                          activeTab === tab ? 'bg-white/20' : 'bg-blue-100 text-blue-700'
-                        }`}>
+                        <span className={`px-2 py-1 text-xs font-bold rounded-full ${activeTab === tab ? 'bg-white/20' : 'bg-blue-100 text-blue-700'
+                          }`}>
                           {unreadCount}
                         </span>
                       )}
@@ -1116,11 +961,10 @@ const EmployeeNotifications: React.FC = () => {
                               onChange={() => setFilters(prev => ({ ...prev, dateRange: range as any }))}
                               className="sr-only"
                             />
-                            <div className={`p-3 text-center text-sm font-medium rounded-lg cursor-pointer transition-all ${
-                              filters.dateRange === range
-                                ? 'bg-blue-600 text-white shadow-lg'
-                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                            }`}>
+                            <div className={`p-3 text-center text-sm font-medium rounded-lg cursor-pointer transition-all ${filters.dateRange === range
+                              ? 'bg-blue-600 text-white shadow-lg'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                              }`}>
                               {range.charAt(0).toUpperCase() + range.slice(1)}
                             </div>
                           </label>
@@ -1200,7 +1044,7 @@ const EmployeeNotifications: React.FC = () => {
                       {searchQuery ? 'No results found' : 'All caught up!'}
                     </h3>
                     <p className="text-slate-500 max-w-sm mx-auto mb-6">
-                      {searchQuery 
+                      {searchQuery
                         ? 'Try adjusting your search or filters to find what you\'re looking for.'
                         : 'You\'re up to date with all employee notifications.'
                       }
@@ -1234,6 +1078,7 @@ const EmployeeNotifications: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setIsSettingsOpen(false)}
+                    aria-label="Close settings"
                     className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-black"
                   >
                     <X className="w-5 h-5" />
@@ -1287,8 +1132,8 @@ const EmployeeNotifications: React.FC = () => {
                     <div className="space-y-3">
                       <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
                         <div className="flex items-center gap-3">
-                          {settings.soundEnabled ? 
-                            <Volume2 className="w-5 h-5 text-blue-600" /> : 
+                          {settings.soundEnabled ?
+                            <Volume2 className="w-5 h-5 text-blue-600" /> :
                             <VolumeX className="w-5 h-5 text-slate-400" />
                           }
                           <span className="font-medium text-slate-700">Sound Alerts</span>
@@ -1305,11 +1150,11 @@ const EmployeeNotifications: React.FC = () => {
                           </div>
                         </div>
                       </label>
-                      
+
                       <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
                         <div className="flex items-center gap-3">
-                          {settings.desktopNotifications ? 
-                            <Bell className="w-5 h-5 text-blue-600" /> : 
+                          {settings.desktopNotifications ?
+                            <Bell className="w-5 h-5 text-blue-600" /> :
                             <BellOff className="w-5 h-5 text-slate-400" />
                           }
                           <span className="font-medium text-slate-700">Desktop Notifications</span>
