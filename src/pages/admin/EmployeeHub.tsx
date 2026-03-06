@@ -424,6 +424,7 @@ const EmployeeHub: React.FC = () => {
   const [deptFilter, setDeptFilter] = useState('All');
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<EmployeeSummary | null>(null);
+  const [terminationReason, setTerminationReason] = useState('');
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -774,29 +775,58 @@ const EmployeeHub: React.FC = () => {
   };
 
   const confirmDelete = async () => {
-    if (employeeToDelete) {
-      try {
-        // Use employeeId in the URL if available (backend expects employeeId path variable)
-        const targetId = employeeToDelete.employeeId || employeeToDelete.id;
+    console.log('confirmDelete called', { employeeToDelete, terminationReason });
 
-        const res = await fetch(`http://localhost:8085/api/admin-hub/terminate/${encodeURIComponent(targetId)}`, {
-          method: 'PUT', // backend uses @PutMapping for termination
-          credentials: 'include'
+    if (employeeToDelete) {
+      // Validate termination reason
+      if (!terminationReason.trim()) {
+        console.log('No termination reason provided');
+        notify('Please provide a termination reason', 'error');
+        return;
+      }
+
+      try {
+        // Use employeeId in the query parameters
+        const targetId = employeeToDelete.employeeId || employeeToDelete.id;
+        const token = localStorage.getItem('accessToken');
+
+        console.log('Submitting termination request for:', targetId, 'Reason:', terminationReason);
+        console.log('Token present:', !!token);
+
+        const url = `http://localhost:8085/api/admin-hub/termination-request?employeeId=${encodeURIComponent(targetId)}&reason=${encodeURIComponent(terminationReason)}`;
+        console.log('Request URL:', url);
+
+        const res = await fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
 
+        console.log('Response status:', res.status, res.statusText);
+
         if (res.ok) {
-          // Refresh list from backend to ensure UI matches persisted state
-          await fetchEmployees();
+          const responseText = await res.text();
+          console.log('Response:', responseText);
+          notify('Termination request submitted to super admin', 'success');
           setEmployeeToDelete(null);
-          addLog('Delete', 'Employee', `Terminated employee ${employeeToDelete.fullName}`);
+          setTerminationReason('');
+          addLog('Request', 'Employee', `Submitted termination request for ${employeeToDelete.fullName} - Reason: ${terminationReason}`);
+          // Optionally refetch after submission
+          await fetchEmployees();
         } else {
-          const err = await res.json().catch(() => ({}));
-          notify(err.message || 'Failed to terminate employee', 'error');
+          const errText = await res.text().catch(() => '');
+          console.error('Server error response:', errText);
+          notify(`Failed to submit termination request (${res.status})`, 'error');
         }
       } catch (err) {
-        console.error('Terminate error:', err);
-        notify('Network error while terminating employee', 'error');
+        console.error('Termination request error:', err);
+        notify('Network error while submitting termination request', 'error');
       }
+    } else {
+      console.log('No employee selected');
     }
   };
 
@@ -1010,7 +1040,7 @@ const EmployeeHub: React.FC = () => {
                           <button onClick={(e) => { e.stopPropagation(); navigate(`/admin/employee-hub/${emp.id}`); }} aria-label="View details" className="p-2 text-black hover:text-indigo-600 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-indigo-100">
                             <Icon name="Eye" className="w-4 h-4" />
                           </button>
-                          <button onClick={() => setEmployeeToDelete(emp)} aria-label="Delete employee" className="p-2 text-black hover:text-rose-600 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-rose-100">
+                          <button onClick={(e) => { e.stopPropagation(); setEmployeeToDelete(emp); }} aria-label="Delete employee" className="p-2 text-black hover:text-rose-600 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-rose-100">
                             <Icon name="Trash2" className="w-4 h-4" />
                           </button>
                         </div>
@@ -1083,8 +1113,11 @@ const EmployeeHub: React.FC = () => {
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={!!employeeToDelete}
-        onClose={() => setEmployeeToDelete(null)}
-        title="Confirm Termination"
+        onClose={() => {
+          setEmployeeToDelete(null);
+          setTerminationReason('');
+        }}
+        title="Termination Request"
       >
         {employeeToDelete && (
           <div className="space-y-6">
@@ -1092,25 +1125,53 @@ const EmployeeHub: React.FC = () => {
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-rose-600 shadow-sm mb-4 border border-rose-100">
                 <Icon name="AlertTriangle" className="w-8 h-8 text-rose-600" />
               </div>
-              <h3 className="text-xl font-black text-black leading-tight">Proceed with de-enrollment?</h3>
+              <h3 className="text-xl font-black text-black leading-tight">Submit Termination Request?</h3>
               <p className="text-sm text-slate-600 font-medium mt-2">
-                You are about to terminate the profile of <span className="text-black font-black">{employeeToDelete.fullName}</span> ({employeeToDelete.employeeId}). This action is permanent.
+                A termination request for <span className="text-black font-black">{employeeToDelete.fullName}</span> ({employeeToDelete.employeeId}) will be sent to the super admin for review.
               </p>
+            </div>
+
+            {/* Termination Reason Input */}
+            <div className="space-y-2">
+              <label htmlFor="terminationReason" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Reason for Termination *</label>
+              <textarea
+                id="terminationReason"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-black placeholder:text-slate-400 min-h-[100px]"
+                placeholder="e.g., Violation of company policies, Insubordination, etc."
+                value={terminationReason}
+                onChange={(e) => setTerminationReason(e.target.value)}
+              />
+              <p className="text-[10px] text-slate-500 px-1">Provide a detailed reason for the termination request</p>
             </div>
 
             <div className="flex gap-4">
               <button
-                onClick={() => setEmployeeToDelete(null)}
+                type="button"
+                onClick={() => {
+                  console.log('Cancel button clicked');
+                  setEmployeeToDelete(null);
+                  setTerminationReason('');
+                }}
                 className="flex-1 py-4 bg-white border-2 border-slate-100 text-black font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-all"
               >
-                Keep Record
+                Cancel
               </button>
               <button
-                onClick={confirmDelete}
-                className="flex-1 py-4 bg-rose-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-rose-100 hover:bg-rose-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                type="button"
+                onClick={(e) => {
+                  console.log('Terminate Employee button clicked', {
+                    employeeToDelete,
+                    terminationReason,
+                    targetId: employeeToDelete?.employeeId || employeeToDelete?.id
+                  });
+                  e.preventDefault();
+                  confirmDelete();
+                }}
+                disabled={!terminationReason.trim()}
+                className="flex-1 py-4 bg-rose-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-rose-100 hover:bg-rose-700 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:bg-rose-400 disabled:cursor-not-allowed"
               >
-                <Icon name="Trash2" className="w-4 h-4 text-white" />
-                Confirm Termination
+                <Icon name="AlertTriangle" className="w-4 h-4 text-white" />
+                Terminate Employee
               </button>
             </div>
           </div>

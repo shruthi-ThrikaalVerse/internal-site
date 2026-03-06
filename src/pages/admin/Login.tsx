@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogIn, Mail, Lock, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { LogIn, Mail, Lock, AlertCircle, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.tsx';
 
 const Login: React.FC = () => {
@@ -8,6 +8,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,6 +25,14 @@ const Login: React.FC = () => {
   // Watch for authentication state changes and redirect accordingly
   useEffect(() => {
     if (isAuthenticated && user && !authLoading) {
+      // Validate that the user has the correct role for this login page
+      if (user.role !== 'admin') {
+        // Reject non-admin users
+        setError(`Invalid role for this login page. ${user.role === 'super_admin' ? 'Super Admins must use the Super Admin login.' : 'Please use the appropriate login portal for your role.'}`);
+        logout().catch(() => { });
+        return;
+      }
+
       // Redirect based on role
       switch (user.role) {
         case 'admin':
@@ -39,7 +48,7 @@ const Login: React.FC = () => {
           navigate('/dashboard');
       }
     }
-  }, [isAuthenticated, user, authLoading, navigate]);
+  }, [isAuthenticated, user, authLoading, navigate, logout]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,14 +164,26 @@ const Login: React.FC = () => {
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   autoComplete="off"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-6 py-4 bg-white border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-slate-700 shadow-sm"
+                  className="w-full pl-12 pr-12 py-4 bg-white border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-slate-700 shadow-sm"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-indigo-500 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
               </div>
             </div>
 

@@ -50,7 +50,7 @@ export const NAV_ITEMS = [
   { id: 'admin/audit-logs', label: 'Audit Logs', icon: 'Activity' },
   { id: 'admin/resignation', label: 'Resignation', icon: 'LogOut' },
   { id: 'admin/profile', label: 'My Profile', icon: 'UserCircle' },
-  
+
 ];
 
 // Backwards-compat aliases used by some components
@@ -217,10 +217,7 @@ export const MOCK_ADMINS = [
   { id: 'admin-02', name: 'Admin Two', firstName: 'Admin', lastName: 'Two', email: 'admin2@company.com', role: 'ADMIN', avatar: 'https://picsum.photos/seed/admin2/200', status: 'active' },
 ];
 
-export const MOCK_REQUESTS = [
-  { id: 'req-01', type: 'Leave', requestedBy: 'John Doe', requesterId: 'emp-01', targetId: 'emp-01', date: '2024-01-15', status: 'Pending', details: 'Annual Leave Request' },
-  { id: 'req-02', type: 'Termination', requestedBy: 'Admin One', requesterId: 'admin-01', targetId: 'emp-05', date: '2024-01-14', status: 'Pending', details: 'End of Contract' },
-];
+export const MOCK_REQUESTS: any[] = [];
 
 export const MOCK_REVIEWS = [
   { id: 'rev-01', employeeName: 'John Doe', rating: 4.5, feedback: 'Excellent performance and leadership', date: '2024-01-10', reviewerName: 'Sarah Manager', status: 'completed', cycle: 'Q4 2023' },

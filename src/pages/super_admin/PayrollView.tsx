@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MOCK_PAYROLL } from '../../constants';
+import { MOCK_PAYROLL } from '../../constants.js';
 import { SectionHeader, StatCard, Badge } from './UI.tsx';
 import { CreditCard, DollarSign, Wallet } from 'lucide-react';
 

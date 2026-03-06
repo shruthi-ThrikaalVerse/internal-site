@@ -1,4 +1,7 @@
 import React, { useMemo, useEffect, useState, useRef } from 'react';
+import * as projectsApi from './api/projects.js';
+import { Project } from './types.js';
+import { useAuth } from './context/AuthContext.tsx';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Search, Bell, LogOut, Menu, X,
@@ -8,7 +11,7 @@ import {
 import { AppProvider, useApp } from './context/AppContext.js';
 import { AppSection } from './types.js';
 import {
-  NAVIGATION_ITEMS, MOCK_LOGS, MOCK_PROJECTS,
+  NAVIGATION_ITEMS, MOCK_LOGS,
   MOCK_PERFORMANCE_METRICS
 } from './constants.js';
 import { StatCard, SectionHeader } from './pages/super_admin/UI.js';
@@ -74,6 +77,29 @@ const AppContent: React.FC = () => {
     mobileSidebarOpen, setMobileSidebarOpen,
     employees, admins, currentUser
   } = useApp();
+  const { logout, isLoading } = useAuth();
+
+  // Handle logout with API call
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsAuthenticated(false);
+      setShowProfileDropdown(false);
+      navigate('/super-admin/login', { replace: true });
+    } catch (err) {
+      console.error('Logout error:', err);
+      // Still clear localStorage and redirect even if API call fails
+      try {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userRole');
+      } catch { }
+      setIsAuthenticated(false);
+      setShowProfileDropdown(false);
+      navigate('/super-admin/login', { replace: true });
+    }
+  };
 
   // Close profile dropdown on outside click
   useEffect(() => {
@@ -86,12 +112,12 @@ const AppContent: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (but not while session is loading)
   useEffect(() => {
-    if (!isAuthenticated && !location.pathname.includes('/login')) {
+    if (!isLoading && !isAuthenticated && !location.pathname.includes('/login')) {
       navigate('/super-admin/login', { replace: true });
     }
-  }, [isAuthenticated, navigate, location.pathname]);
+  }, [isAuthenticated, isLoading, navigate, location.pathname]);
 
   // Sync active section with URL
   useEffect(() => {
@@ -135,11 +161,42 @@ const AppContent: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [setSidebarOpen]);
 
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await projectsApi.getAllProjects();
+        const mapped: Project[] = data.map((p: any) => ({
+          id: p.projectCode,
+          projectCode: p.projectCode,
+          name: p.name,
+          status: p.status.toLowerCase().replace('_', '-'),
+          progress: p.progress || 0,
+          description: p.description,
+          client: p.clientId != null ? String(p.clientId) : '',
+          dueDate: p.endDate ? p.endDate.split('T')[0] : '',
+          clientId: p.clientId,
+          priority: p.priority,
+          startDate: p.startDate ? p.startDate.split('T')[0] : '',
+          endDate: p.endDate ? p.endDate.split('T')[0] : '',
+          budget: p.budget,
+          currency: p.currency,
+          projectManagerId: p.projectManagerId,
+        }));
+        setProjects(mapped);
+      } catch (err) {
+        console.error('failed to load projects in App', err);
+      }
+    };
+    load();
+  }, []);
+
   const q = globalSearch.toLowerCase();
   const filteredEmployees = useMemo(() => employees.filter(e => !q || e.name!.toLowerCase().includes(q) || (e.designation || '').toLowerCase().includes(q)), [q, employees]);
   const filteredAdmins = useMemo(() => admins.filter(a => !q || (a.name || '').toLowerCase().includes(q) || (a.firstName || '').toLowerCase().includes(q)), [q, admins]);
   const filteredLogs = useMemo(() => MOCK_LOGS.filter(l => !q || l.action.toLowerCase().includes(q)), [q]);
-  const filteredProjects = useMemo(() => MOCK_PROJECTS.filter(p => !q || p.name.toLowerCase().includes(q)), [q]);
+  const filteredProjects = useMemo(() => projects.filter(p => !q || p.name.toLowerCase().includes(q)), [q, projects]);
 
   // RBAC Filtering for Sidebar
   const authorizedNavItems = useMemo(() => {
@@ -154,7 +211,7 @@ const AppContent: React.FC = () => {
   const currentView = useMemo(() => {
     switch (activeSection) {
       case AppSection.Dashboard:
-        return <DashboardView filteredEmployees={filteredEmployees} filteredAdmins={filteredAdmins} filteredProjects={filteredProjects} filteredLogs={filteredLogs} totalEmployees={employees.length} activeProjects={MOCK_PROJECTS.filter(p => p.status === 'in-progress').length} />;
+        return <DashboardView filteredEmployees={filteredEmployees} filteredAdmins={filteredAdmins} filteredProjects={filteredProjects} filteredLogs={filteredLogs} totalEmployees={employees.length} activeProjects={projects.filter(p => p.status === 'in-progress').length} />;
       case AppSection.EmployeeHub:
         return <EmployeeHub />;
       case AppSection.AdminHub:
@@ -227,7 +284,7 @@ const AppContent: React.FC = () => {
       </nav>
       <div className="p-4 border-t border-[#1f2937] shrink-0">
         <button
-          onClick={() => setIsAuthenticated(false)}
+          onClick={handleLogout}
           title="Logout"
           className="flex items-center gap-4 w-full px-3 py-3 rounded-xl text-[#9aa8bd] hover:bg-rose-500/10 hover:text-rose-400 transition-all font-bold"
         >
@@ -257,7 +314,7 @@ const AppContent: React.FC = () => {
 
       {/* Main Container */}
       <main className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
-        <header className="h-20 bg-white border-b border-gray-200 sticky top-0 z-40 flex items-center px-6 sm:px-8 justify-between">
+        <header className="h-20 bg-white border-b border-gray-200 fixed top-0 right-0 z-40 flex items-center px-6 sm:px-8 justify-between" style={{ width: sidebarOpen ? 'calc(100% - 256px)' : 'calc(100% - 80px)' }}>
           <div className="flex items-center gap-4 flex-1">
             <button onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle sidebar" className="hidden lg:flex p-2 hover:bg-[#1f2937] rounded-xl text-[#9aa8bd] transition-colors">{sidebarOpen ? <X size={20} /> : <Menu size={20} />}</button>
             <button onClick={() => setMobileSidebarOpen(true)} title="Open sidebar" className="lg:hidden p-2 hover:bg-[#1f2937] rounded-xl text-[#9aa8bd] transition-colors"><Menu size={20} /></button>
@@ -323,10 +380,7 @@ const AppContent: React.FC = () => {
                   </button>
                   <div className="border-t border-slate-50 mt-2 pt-2">
                     <button
-                      onClick={() => {
-                        setIsAuthenticated(false);
-                        setShowProfileDropdown(false);
-                      }}
+                      onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors font-bold"
                     >
                       <LogOut className="w-4 h-4" /> End Session
@@ -338,7 +392,7 @@ const AppContent: React.FC = () => {
           </div>
         </header>
 
-        <div className="p-6 sm:p-10 max-w-screen-2xl mx-auto w-full min-h-[calc(100vh-80px)] overflow-x-hidden">
+        <div className="mt-24 pt-8 p-6 sm:p-10 max-w-screen-2xl mx-auto w-full overflow-x-hidden">
           <div className="animate-in fade-in slide-in-from-bottom-6 duration-1000">
             {currentView}
           </div>

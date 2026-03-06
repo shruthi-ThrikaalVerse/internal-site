@@ -2,10 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '../../context/AppContext';
+// switch to authentication context for real login
+import { useAuth } from '../../context/AuthContext.tsx';
+import { useApp } from '../../context/AppContext.tsx';
 
 export const LoginView = () => {
-  const { setIsAuthenticated, isAuthenticated } = useApp();
+  const { login, logout } = useAuth();
+  const { isAuthenticated, setIsAuthenticated } = useApp();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,27 +16,36 @@ export const LoginView = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect to dashboard if already authenticated
+  // Clear auth state when visiting this page
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/super-admin/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
+    try { localStorage.removeItem('user'); } catch { }
+    try { localStorage.removeItem('authToken'); } catch { }
+  }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
+    setIsLoading(true);
 
-    setTimeout(() => {
-      if (email === 'admin@pro.com' && password === 'password123') {
-        setIsAuthenticated(true);
-        navigate('/super-admin/dashboard');
-      } else {
-        setError('Invalid email or password. Please try again.');
+    try {
+      const user = await login(email, password);
+
+      // Validate that user has SUPER_ADMIN role
+      if (user.role !== 'super_admin') {
+        // Log out the user if they don't have the correct role
+        try { await logout(); } catch { }
+        setError('Invalid credentials. Only super administrators can access this portal.');
         setIsLoading(false);
+        return;
       }
-    }, 800);
+
+      setIsAuthenticated(true);
+      navigate('/super-admin/dashboard');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.message || 'An error occurred. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -134,7 +146,7 @@ export const LoginView = () => {
 
           <div className="mt-6 pt-6 border-t border-slate-200 text-center">
             <p className="text-xs text-slate-500 leading-relaxed">
-              Security notice: Dummy credentials are <strong>admin@pro.com</strong> / <strong>password123</strong>
+              Logging in with your authorized credentials to access the admin portal
             </p>
           </div>
         </div>

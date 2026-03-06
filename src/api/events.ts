@@ -3,6 +3,7 @@ const FETCH_TIMEOUT = 15000; // 15 seconds timeout
 
 const getAuthHeader = () => {
   const token =
+    localStorage.getItem('accessToken') ||
     localStorage.getItem('ACCESS_TOKEN') ||
     localStorage.getItem('token') ||
     localStorage.getItem('authToken') ||

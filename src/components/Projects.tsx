@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React from "react";
 import { motion } from "framer-motion";
-import { PROJECTS } from "../constants";
+import { PROJECTS } from "../constants.js";
 
 const Projects = () => {
   return (

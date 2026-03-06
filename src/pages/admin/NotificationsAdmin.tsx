@@ -246,7 +246,10 @@ const NotificationsAdmin: React.FC = () => {
                     <td className="px-8 py-6">
                       <div className="max-w-xs">
                         <p className="text-sm font-black text-black truncate">{n.title}</p>
-                        <p className="text-xs text-black line-clamp-1 mt-1">{n.message}</p>
+                        <div
+                          className="text-xs text-black line-clamp-1 mt-1 prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: n.message }}
+                        />
                         <p className="text-[9px] font-bold text-black uppercase mt-1.5">{n.createdAt}</p>
                       </div>
                     </td>

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MOCK_REVIEWS } from '../../constants';
+import { MOCK_REVIEWS } from '../../constants.js';
 import { SectionHeader, Badge, StarRating } from './UI.tsx';
 import { MessageSquare, Calendar, User } from 'lucide-react';
 
