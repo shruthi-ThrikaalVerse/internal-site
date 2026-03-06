@@ -97,9 +97,9 @@ const EmployeePerformanceModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-xl w-full max-w-[95vw] md:max-w-3xl lg:max-w-4xl xl:max-w-6xl max-h-[95vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 mx-4 md:mx-auto">
         {/* Modal Header */}
-        <div className="p-6 border-b flex items-center justify-between bg-white sticky top-0 z-10">
+        <div className="p-4 md:p-6 border-b flex items-center justify-between bg-white sticky top-0 z-10">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
               {employee.name.charAt(0)}
@@ -119,12 +119,12 @@ const EmployeePerformanceModal: React.FC<{
         </div>
 
         {/* Modal Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Performance Score */}
             <div className="md:col-span-2 space-y-6">
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-4 mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Performance Score</h3>
                   <div className="flex items-center gap-2">
                     {getTrendIcon(employee.trend)}
@@ -133,12 +133,12 @@ const EmployeePerformanceModal: React.FC<{
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
                   <div className="text-center">
-                    <div className="relative w-32 h-32 mx-auto">
+                    <div className="relative w-20 h-20 md:w-32 md:h-32 mx-auto">
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center">
-                          <span className="text-4xl font-bold text-gray-900">{employee.performanceScore.toFixed(1)}</span>
+                          <span className="text-2xl md:text-4xl font-bold text-gray-900">{employee.performanceScore.toFixed(1)}</span>
                           <span className="text-gray-500">/5</span>
                           <div className="mt-2">
                             {renderStars(employee.performanceScore)}
@@ -283,7 +283,7 @@ const EmployeePerformanceModal: React.FC<{
                   <div className="relative w-24 h-24 mx-auto mb-4">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
-                        <span className="text-3xl font-bold text-gray-900">{employee.attendance}%</span>
+                        <span className="text-xl font-bold text-gray-900">{employee.attendance}%</span>
                         <p className="text-xs text-gray-600 mt-1">Current Month</p>
                       </div>
                     </div>
@@ -337,7 +337,7 @@ const EmployeePerformanceModal: React.FC<{
         </div>
 
         {/* Modal Footer */}
-        <div className="p-6 border-t bg-gray-50 flex justify-end gap-3">
+        <div className="p-4 md:p-6 border-t bg-gray-50 flex justify-end gap-3">
           <button
             onClick={onClose}
             className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors"

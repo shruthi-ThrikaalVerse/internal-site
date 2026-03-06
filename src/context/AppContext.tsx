@@ -1,6 +1,6 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { AppSection, User, AdminRequest } from '../types';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { AppSection, User, AdminRequest } from '../types.js';
 
 interface AppContextType {
   isAuthenticated: boolean;
@@ -31,17 +31,28 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const LOGGED_IN_ADMIN: User = {
-  id: 'sa-01',
-  name: 'Sarah Connor',
-  email: 'sarah.admin@company.com',
-  role: 'SUPER_ADMIN',
-  avatar: 'https://picsum.photos/seed/admin/200',
-  status: 'active'
+// Helper function to format base64 image data
+const formatBase64Image = (imageData: string | null | undefined): string => {
+  if (!imageData) return '';
+
+  // If it's already a proper data URL, return as is
+  if (imageData.startsWith('data:image')) {
+    return imageData;
+  }
+
+  // If it's raw base64 without the prefix, add the JPEG prefix
+  if (imageData.length > 0) {
+    return `data:image/jpeg;base64,${imageData}`;
+  }
+
+  return '';
 };
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Check if user data exists in localStorage (set by AuthContext)
+    return !!localStorage.getItem('user');
+  });
   const [activeSection, setActiveSection] = useState<AppSection>(AppSection.Dashboard);
   const [globalSearch, setGlobalSearch] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -50,7 +61,92 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [employees, setEmployees] = useState<User[]>([]);
   const [admins, setAdmins] = useState<User[]>([]);
   const [requests, setRequests] = useState<AdminRequest[]>([]);
-  const [currentUser] = useState<User | null>(LOGGED_IN_ADMIN);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  // Listen for changes to localStorage to update isAuthenticated
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setIsAuthenticated(!!localStorage.getItem('user'));
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Fetch current user from API using HttpOnly cookie
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+          setCurrentUser(null);
+          return;
+        }
+
+        const response = await fetch('http://localhost:8085/api/users/me', {
+          method: 'GET',
+          credentials: 'include', // Send HttpOnly cookie
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentUser({
+            id: data.employeeId || data.id,
+            name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
+            email: data.email,
+            role: data.role || 'SUPER_ADMIN',
+            avatar: formatBase64Image(data.profileImage) || '',
+            status: 'active',
+            department: data.department,
+            designation: data.designation,
+          } as User);
+        } else if (response.status === 401 || response.status === 403) {
+          // Token is invalid or expired
+          setCurrentUser(null);
+        } else {
+          setCurrentUser(null);
+        }
+      } catch (err) {
+        console.error('Error fetching current user:', err);
+        setCurrentUser(null);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
+  // Fetch requests from API
+  React.useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        const response = await fetch('http://localhost:8085/api/admin-hub/requests', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const mappedRequests = Array.isArray(data) ? data : data.requests || [];
+          setRequests(mappedRequests);
+        }
+      } catch (err) {
+        console.error('Error fetching requests:', err);
+      }
+    };
+
+    fetchRequests();
+    const interval = setInterval(fetchRequests, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   const addEmployee = (newEmployee: User) => {
     setEmployees(prev => [newEmployee, ...prev]);

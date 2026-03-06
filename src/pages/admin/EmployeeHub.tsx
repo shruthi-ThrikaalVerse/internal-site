@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import * as LucideIcons from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { EmployeeSummary } from '../../types.ts';
 import { DEPARTMENTS, LOCATIONS } from '../../constants.ts';
@@ -416,15 +417,14 @@ const DatePicker = ({
 };
 
 const EmployeeHub: React.FC = () => {
+  const navigate = useNavigate();
   const { employees, addEmployee, deleteEmployee, updateEmployee, syncEmployees, notify, addLog } = useHRMS();
   const [view, setView] = useState<'table' | 'grid'>('table');
   const [searchTerm, setSearchTerm] = useState('');
   const [deptFilter, setDeptFilter] = useState('All');
   const [isAddModalOpen, setAddModalOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeSummary | null>(null);
   const [employeeToDelete, setEmployeeToDelete] = useState<EmployeeSummary | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [terminationReason, setTerminationReason] = useState('');
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -775,42 +775,62 @@ const EmployeeHub: React.FC = () => {
   };
 
   const confirmDelete = async () => {
-    if (employeeToDelete) {
-      try {
-        // Use employeeId in the URL if available (backend expects employeeId path variable)
-        const targetId = employeeToDelete.employeeId || employeeToDelete.id;
+    console.log('confirmDelete called', { employeeToDelete, terminationReason });
 
-        const res = await fetch(`http://localhost:8085/api/admin-hub/terminate/${encodeURIComponent(targetId)}`, {
-          method: 'PUT', // backend uses @PutMapping for termination
-          credentials: 'include'
+    if (employeeToDelete) {
+      // Validate termination reason
+      if (!terminationReason.trim()) {
+        console.log('No termination reason provided');
+        notify('Please provide a termination reason', 'error');
+        return;
+      }
+
+      try {
+        // Use employeeId in the query parameters
+        const targetId = employeeToDelete.employeeId || employeeToDelete.id;
+        const token = localStorage.getItem('accessToken');
+
+        console.log('Submitting termination request for:', targetId, 'Reason:', terminationReason);
+        console.log('Token present:', !!token);
+
+        const url = `http://localhost:8085/api/admin-hub/termination-request?employeeId=${encodeURIComponent(targetId)}&reason=${encodeURIComponent(terminationReason)}`;
+        console.log('Request URL:', url);
+
+        const res = await fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
 
+        console.log('Response status:', res.status, res.statusText);
+
         if (res.ok) {
-          // Refresh list from backend to ensure UI matches persisted state
-          await fetchEmployees();
+          const responseText = await res.text();
+          console.log('Response:', responseText);
+          notify('Termination request submitted to super admin', 'success');
           setEmployeeToDelete(null);
-          addLog('Delete', 'Employee', `Terminated employee ${employeeToDelete.fullName}`);
+          setTerminationReason('');
+          addLog('Request', 'Employee', `Submitted termination request for ${employeeToDelete.fullName} - Reason: ${terminationReason}`);
+          // Optionally refetch after submission
+          await fetchEmployees();
         } else {
-          const err = await res.json().catch(() => ({}));
-          notify(err.message || 'Failed to terminate employee', 'error');
+          const errText = await res.text().catch(() => '');
+          console.error('Server error response:', errText);
+          notify(`Failed to submit termination request (${res.status})`, 'error');
         }
       } catch (err) {
-        console.error('Terminate error:', err);
-        notify('Network error while terminating employee', 'error');
+        console.error('Termination request error:', err);
+        notify('Network error while submitting termination request', 'error');
       }
+    } else {
+      console.log('No employee selected');
     }
   };
 
-  const handleCopy = async (text: string, field: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(field);
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy: ', err);
-      notify('Failed to copy to clipboard', 'error');
-    }
-  };
+
 
   // Get the password for the selected employee
   const getEmployeePassword = (emp: EmployeeSummary | null) => {
@@ -981,7 +1001,7 @@ const EmployeeHub: React.FC = () => {
               <table className="w-full">
                 <tbody className="divide-y divide-slate-50">
                   {filteredEmployees.map((emp) => (
-                    <tr key={emp.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => { setSelectedEmployee(emp); setShowPassword(false); }}>
+                    <tr key={emp.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => navigate(`/admin/employee-hub/${emp.id}`)}>
                       <td className="py-6 px-8">
                         <div className="flex items-center gap-4">
                           <img src={emp.avatar} className="w-12 h-12 rounded-2xl border-4 border-white shadow-sm transition-transform group-hover:scale-110" alt="" />
@@ -1017,10 +1037,10 @@ const EmployeeHub: React.FC = () => {
                       <td className="py-6 px-8 text-xs font-bold text-black uppercase tracking-widest">{emp.dateOfJoining}</td>
                       <td className="py-6 px-8 text-right">
                         <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
-                          <button onClick={() => { setSelectedEmployee(emp); setShowPassword(false); }} aria-label="View details" className="p-2 text-black hover:text-indigo-600 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-indigo-100">
+                          <button onClick={(e) => { e.stopPropagation(); navigate(`/admin/employee-hub/${emp.id}`); }} aria-label="View details" className="p-2 text-black hover:text-indigo-600 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-indigo-100">
                             <Icon name="Eye" className="w-4 h-4" />
                           </button>
-                          <button onClick={() => setEmployeeToDelete(emp)} aria-label="Delete employee" className="p-2 text-black hover:text-rose-600 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-rose-100">
+                          <button onClick={(e) => { e.stopPropagation(); setEmployeeToDelete(emp); }} aria-label="Delete employee" className="p-2 text-black hover:text-rose-600 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-rose-100">
                             <Icon name="Trash2" className="w-4 h-4" />
                           </button>
                         </div>
@@ -1035,7 +1055,7 @@ const EmployeeHub: React.FC = () => {
               {filteredEmployees.map((emp, idx) => (
                 <div
                   key={emp.id}
-                  onClick={() => { setSelectedEmployee(emp); setShowPassword(false); }}
+                  onClick={() => navigate(`/admin/employee-hub/${emp.id}`)}
                   className="bg-white border border-slate-100 rounded-[32px] p-6 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all group relative cursor-pointer flex flex-col h-full"
                 >
                   <div className="flex items-start justify-between mb-6">
@@ -1090,118 +1110,14 @@ const EmployeeHub: React.FC = () => {
         </div>
       </div>
 
-      {/* Employee Detail Modal */}
-      <Modal isOpen={!!selectedEmployee} onClose={() => setSelectedEmployee(null)} title="Personal Profile">
-        {selectedEmployee && (
-          <div className="space-y-6 sm:space-y-8">
-            {/* Header Section */}
-            <div className="flex flex-col items-center text-center">
-              <img src={selectedEmployee.avatar} className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl sm:rounded-3xl border-4 sm:border-8 border-slate-50 shadow-lg sm:shadow-xl mb-3 sm:mb-4" alt="" />
-              <h3 className="text-lg sm:text-xl md:text-2xl font-black text-black line-clamp-2">{selectedEmployee.fullName}</h3>
-              <p className="text-[9px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest mt-2 line-clamp-2">{selectedEmployee.employeeId} • {selectedEmployee.designation}</p>
-
-              {/* Badges - Responsive and Wrappable */}
-              <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-indigo-100 whitespace-nowrap">{selectedEmployee.department}</span>
-                <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-emerald-100 whitespace-nowrap">{selectedEmployee.status}</span>
-                <span className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest border whitespace-nowrap ${selectedEmployee.employmentType === 'Full-time' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                  selectedEmployee.employmentType === 'Part-time' ? 'bg-purple-50 text-purple-600 border-purple-100' :
-                    'bg-amber-50 text-amber-600 border-amber-100'
-                  }`}>
-                  {selectedEmployee.employmentType}
-                </span>
-                {/* Display role badge if available */}
-                {(selectedEmployee as any).role && (
-                  <span className="px-3 sm:px-4 py-1 sm:py-1.5 bg-indigo-600 text-white rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-indigo-600 whitespace-nowrap">
-                    {(selectedEmployee as any).role}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Contact Info Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="bg-slate-50 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-100">
-                <p className="text-[9px] sm:text-[10px] font-black text-black uppercase tracking-widest mb-2">Email</p>
-                <p className="text-xs sm:text-sm font-bold text-black break-all">{selectedEmployee.email}</p>
-              </div>
-              <div className="bg-slate-50 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-100">
-                <p className="text-[9px] sm:text-[10px] font-black text-black uppercase tracking-widest mb-2">Phone</p>
-                <p className="text-xs sm:text-sm font-bold text-black">{selectedEmployee.phone || 'No direct line'}</p>
-              </div>
-            </div>
-
-            {/* Credentials Section - Responsive */}
-            <div className="bg-indigo-600 p-4 sm:p-6 rounded-2xl sm:rounded-[32px] text-white shadow-xl shadow-indigo-100 relative overflow-hidden group">
-              <div className="absolute right-0 bottom-0 opacity-10 group-hover:scale-110 transition-transform">
-                <Icon name="ShieldCheck" className="w-20 h-20 sm:w-32 sm:h-32" />
-              </div>
-              <h4 className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-4 opacity-70 pr-8">Employee Access Credentials</h4>
-              <div className="space-y-3 sm:space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 border-b border-white/10 pb-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[8px] sm:text-[9px] font-bold uppercase opacity-50 mb-1">Username / Email</p>
-                    <p className="text-xs sm:text-sm font-black tracking-tight break-all text-white">{selectedEmployee.email}</p>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCopy(selectedEmployee.email, 'email');
-                    }}
-                    aria-label="Copy username"
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors relative flex-shrink-0"
-                  >
-                    <Icon name={copiedField === 'email' ? "Check" : "Copy"} className="w-4 h-4 text-white" />
-                    {copiedField === 'email' && (
-                      <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-white text-indigo-600 text-[9px] font-black px-2 py-1 rounded-lg whitespace-nowrap">
-                        Copied!
-                      </span>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Info Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="bg-slate-50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100">
-                <p className="text-[9px] sm:text-[10px] font-black text-black uppercase tracking-widest mb-2">Leave Balance</p>
-                <p className="text-xl sm:text-2xl font-black text-black">{selectedEmployee.leaveBalance} <span className="text-xs sm:text-xs font-bold text-black">days</span></p>
-              </div>
-              <div className="bg-slate-50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-100">
-                <p className="text-[9px] sm:text-[10px] font-black text-black uppercase tracking-widest mb-2">Onboard Date</p>
-                <p className="text-sm sm:text-base font-bold text-black">{selectedEmployee.dateOfJoining || 'Not available'}</p>
-              </div>
-            </div>
-
-            {/* Action Buttons - Stack on mobile */}
-            <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 border-t border-slate-100">
-              <button
-                onClick={() => {
-                  const nextStatus = selectedEmployee.status === 'active' ? 'inactive' : 'active';
-                  updateEmployee(selectedEmployee.id, { status: nextStatus as any });
-                  setSelectedEmployee(prev => prev ? { ...prev, status: nextStatus as any } : null);
-                }}
-                className="py-3 sm:py-4 px-4 bg-white border-2 border-slate-100 text-black font-black text-[10px] sm:text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-all"
-              >
-                Change Status
-              </button>
-              <button
-                onClick={() => { setEmployeeToDelete(selectedEmployee); setSelectedEmployee(null); }}
-                className="py-3 sm:py-4 px-4 bg-rose-50 text-rose-600 font-black text-[10px] sm:text-xs uppercase tracking-widest rounded-2xl hover:bg-rose-100 transition-all"
-              >
-                Terminate
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
-
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={!!employeeToDelete}
-        onClose={() => setEmployeeToDelete(null)}
-        title="Confirm Termination"
+        onClose={() => {
+          setEmployeeToDelete(null);
+          setTerminationReason('');
+        }}
+        title="Termination Request"
       >
         {employeeToDelete && (
           <div className="space-y-6">
@@ -1209,25 +1125,53 @@ const EmployeeHub: React.FC = () => {
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-rose-600 shadow-sm mb-4 border border-rose-100">
                 <Icon name="AlertTriangle" className="w-8 h-8 text-rose-600" />
               </div>
-              <h3 className="text-xl font-black text-black leading-tight">Proceed with de-enrollment?</h3>
+              <h3 className="text-xl font-black text-black leading-tight">Submit Termination Request?</h3>
               <p className="text-sm text-slate-600 font-medium mt-2">
-                You are about to terminate the profile of <span className="text-black font-black">{employeeToDelete.fullName}</span> ({employeeToDelete.employeeId}). This action is permanent.
+                A termination request for <span className="text-black font-black">{employeeToDelete.fullName}</span> ({employeeToDelete.employeeId}) will be sent to the super admin for review.
               </p>
+            </div>
+
+            {/* Termination Reason Input */}
+            <div className="space-y-2">
+              <label htmlFor="terminationReason" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Reason for Termination *</label>
+              <textarea
+                id="terminationReason"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-black placeholder:text-slate-400 min-h-[100px]"
+                placeholder="e.g., Violation of company policies, Insubordination, etc."
+                value={terminationReason}
+                onChange={(e) => setTerminationReason(e.target.value)}
+              />
+              <p className="text-[10px] text-slate-500 px-1">Provide a detailed reason for the termination request</p>
             </div>
 
             <div className="flex gap-4">
               <button
-                onClick={() => setEmployeeToDelete(null)}
+                type="button"
+                onClick={() => {
+                  console.log('Cancel button clicked');
+                  setEmployeeToDelete(null);
+                  setTerminationReason('');
+                }}
                 className="flex-1 py-4 bg-white border-2 border-slate-100 text-black font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-all"
               >
-                Keep Record
+                Cancel
               </button>
               <button
-                onClick={confirmDelete}
-                className="flex-1 py-4 bg-rose-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-rose-100 hover:bg-rose-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                type="button"
+                onClick={(e) => {
+                  console.log('Terminate Employee button clicked', {
+                    employeeToDelete,
+                    terminationReason,
+                    targetId: employeeToDelete?.employeeId || employeeToDelete?.id
+                  });
+                  e.preventDefault();
+                  confirmDelete();
+                }}
+                disabled={!terminationReason.trim()}
+                className="flex-1 py-4 bg-rose-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-rose-100 hover:bg-rose-700 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:bg-rose-400 disabled:cursor-not-allowed"
               >
-                <Icon name="Trash2" className="w-4 h-4 text-white" />
-                Confirm Termination
+                <Icon name="AlertTriangle" className="w-4 h-4 text-white" />
+                Terminate Employee
               </button>
             </div>
           </div>

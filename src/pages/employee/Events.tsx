@@ -11,154 +11,6 @@ import {
 import { Event, EventType } from '../../types.ts';
 import { getAllEvents } from '../../api/events.ts';
 
-// Sample events data
-const SAMPLE_EVENTS: Event[] = [
-    {
-        id: '1',
-        title: 'Annual Tech Conference 2026',
-        description: 'Annual technology innovation conference with keynote speakers and workshops on emerging technologies like AI, Blockchain, and Cloud Computing.',
-        date: '2026-03-15',
-        startTime: '09:00',
-        endTime: '17:00',
-        location: 'Main Auditorium, 3rd Floor',
-        type: 'conference',
-        organizer: 'IT Department',
-        participants: ['All Employees'],
-        isMandatory: true,
-        status: 'upcoming',
-        createdAt: '2026-01-10',
-        updatedAt: '2026-01-10'
-    },
-    {
-        id: '2',
-        title: 'Team Building Workshop',
-        description: 'Enhance team collaboration and communication skills through interactive activities and group exercises.',
-        date: '2026-02-20',
-        startTime: '10:00',
-        endTime: '16:00',
-        location: 'Training Room A',
-        type: 'workshop',
-        organizer: 'HR Department',
-        participants: ['Department Heads', 'Team Leads'],
-        isMandatory: false,
-        status: 'upcoming',
-        createdAt: '2026-01-15',
-        updatedAt: '2026-01-15'
-    },
-    {
-        id: '3',
-        title: 'Company Anniversary Celebration',
-        description: 'Celebrating 10 years of success and innovation with dinner, awards, and entertainment.',
-        date: '2026-04-10',
-        startTime: '18:00',
-        endTime: '22:00',
-        location: 'Grand Ballroom, Downtown Hotel',
-        type: 'anniversary',
-        organizer: 'Management',
-        participants: ['All Employees', 'Partners'],
-        isMandatory: false,
-        status: 'upcoming',
-        createdAt: '2026-01-05',
-        updatedAt: '2026-01-05'
-    },
-    {
-        id: '4',
-        title: 'Quarterly Review Meeting',
-        description: 'Review Q1 performance metrics and set strategic goals for Q2. Department heads will present their achievements.',
-        date: '2026-01-25',
-        startTime: '14:00',
-        endTime: '16:00',
-        location: 'Conference Room 1',
-        type: 'meeting',
-        organizer: 'CEO Office',
-        participants: ['Department Managers'],
-        isMandatory: true,
-        status: 'upcoming',
-        createdAt: '2026-01-08',
-        updatedAt: '2026-01-08'
-    },
-    {
-        id: '5',
-        title: 'Health & Wellness Checkup',
-        description: 'Free annual health screening including BP, sugar, cholesterol tests and doctor consultation.',
-        date: '2026-02-05',
-        startTime: '09:00',
-        endTime: '17:00',
-        location: 'Health Center, Ground Floor',
-        type: 'health_checkup',
-        organizer: 'Admin Department',
-        participants: ['All Employees'],
-        isMandatory: false,
-        status: 'upcoming',
-        createdAt: '2026-01-12',
-        updatedAt: '2026-01-12'
-    },
-    {
-        id: '6',
-        title: 'New Year Party',
-        description: 'Celebrate the new year with colleagues, food, music, and fun activities.',
-        date: '2026-01-01',
-        startTime: '19:00',
-        endTime: '23:59',
-        location: 'Rooftop Terrace',
-        type: 'party',
-        organizer: 'Social Committee',
-        participants: ['All Employees'],
-        isMandatory: false,
-        status: 'completed',
-        createdAt: '2025-12-15',
-        updatedAt: '2026-01-02'
-    },
-    {
-        id: '7',
-        title: 'Leadership Training Program',
-        description: 'Advanced leadership skills development program for senior managers and directors.',
-        date: '2026-02-15',
-        startTime: '09:00',
-        endTime: '13:00',
-        location: 'Training Center',
-        type: 'training',
-        organizer: 'Learning & Development',
-        participants: ['Senior Managers', 'Directors'],
-        isMandatory: true,
-        status: 'upcoming',
-        createdAt: '2026-01-10',
-        updatedAt: '2026-01-10'
-    },
-    {
-        id: '8',
-        title: 'Annual Awards Ceremony',
-        description: 'Recognizing outstanding employee contributions with awards in various categories.',
-        date: '2026-12-15',
-        startTime: '18:30',
-        endTime: '21:30',
-        location: 'Convention Center',
-        type: 'awards',
-        organizer: 'HR Department',
-        participants: ['All Employees', 'Award Nominees'],
-        isMandatory: false,
-        status: 'upcoming',
-        createdAt: '2026-01-05',
-        updatedAt: '2026-01-05'
-    },
-    {
-        id: '9',
-        title: 'Annual Tech Conference 2026',
-        description: 'Annual technology innovation conference with keynote speakers and workshops on emerging technologies like AI, Blockchain, and Cloud Computing.',
-        date: '2026-01-30',
-        startTime: '09:00',
-        endTime: '17:00',
-        location: 'Main Auditorium, 3rd Floor',
-        type: 'conference',
-        organizer: 'IT Department',
-        participants: ['All Employees'],
-        isMandatory: true,
-        status: 'upcoming',
-        createdAt: '2026-01-10',
-        updatedAt: '2026-01-10'
-    },
-];
-
 const EVENTS_PER_PAGE = 6;
 
 interface CalendarEvent {
@@ -175,8 +27,8 @@ interface CalendarEvent {
 
 const Events: React.FC = () => {
     const navigate = useNavigate();
-    const [events, setEvents] = useState<Event[]>(SAMPLE_EVENTS);
-    const [filteredEvents, setFilteredEvents] = useState<Event[]>(SAMPLE_EVENTS);
+    const [events, setEvents] = useState<Event[]>([]);
+    const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedType, setSelectedType] = useState<EventType | 'all'>('all');
     const [currentPage, setCurrentPage] = useState(1);
@@ -203,7 +55,7 @@ const Events: React.FC = () => {
             }
         }
 
-        // Fetch all events created by admin from API and fallback to SAMPLE_EVENTS
+        // Fetch all events created by admin from API
         (async () => {
             try {
                 const data = await getAllEvents();
@@ -214,11 +66,11 @@ const Events: React.FC = () => {
                         id: event.id || event.eventId || String(Math.random()),
                         title: event.title || event.name || 'Untitled Event',
                         description: event.description || event.details || '',
-                        type: event.type || event.eventType || 'meeting',
+                        type: event.type || event.eventType || event.category || 'meeting',
                         date: event.date || event.startDate || new Date().toISOString().split('T')[0],
                         startTime: event.startTime || '09:00',
                         endTime: event.endTime || '17:00',
-                        location: event.location || event.venue || 'TBD',
+                        location: event.location || event.venue || event.meetingLink || 'TBD',
                         status: event.status || 'upcoming',
                         organizer: event.organizer || event.createdBy || 'Admin',
                         participants: event.participants || event.targetEmployees || ['All Employees'],
@@ -226,15 +78,17 @@ const Events: React.FC = () => {
                     })) as Event[];
                     setEvents(mappedEvents);
                     setFilteredEvents(mappedEvents);
-                    return;
+                } else {
+                    // No events from API - keep empty
+                    setEvents([]);
+                    setFilteredEvents([]);
                 }
             } catch (err) {
-                console.warn('Failed to load events from API, using sample events.', err);
+                console.error('Failed to load events from API:', err);
+                // On error, keep empty - no fallback to sample data
+                setEvents([]);
+                setFilteredEvents([]);
             }
-            
-            // Fallback to sample events if API fails
-            setEvents(SAMPLE_EVENTS);
-            setFilteredEvents(SAMPLE_EVENTS);
         })();
     }, []);
 

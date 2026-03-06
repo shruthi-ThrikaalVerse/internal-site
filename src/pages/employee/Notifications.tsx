@@ -324,9 +324,9 @@ const NotificationItem: React.FC<{
                   </div>
 
                   <p className={`text-sm ${notification.read ? 'text-slate-600' : 'text-slate-700'} ${isExpanded ? '' : 'line-clamp-2'
-                    } leading-relaxed`}>
-                    {notification.msg}
-                  </p>
+                    } leading-relaxed prose prose-sm max-w-none`}
+                    dangerouslySetInnerHTML={{ __html: notification.msg }}
+                  />
 
                   {/* Metadata display */}
                   {notification.metadata && (

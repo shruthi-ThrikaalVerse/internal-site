@@ -1,7 +1,7 @@
 export const API_BASE = 'http://localhost:8085/api/users';
 
 const getAuthHeader = () => {
-  const token = localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
+  const token = localStorage.getItem('accessToken') || localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -158,28 +158,28 @@ export const registerAdmin = async (adminData: any, imageFile?: File) => {
   try {
     const url = 'http://localhost:8081/register';
     console.log('Registering admin:', adminData);
-    
+
     const form = new FormData();
     form.append('data', JSON.stringify(adminData));
     if (imageFile) {
       form.append('image', imageFile);
     }
-    
+
     const resp = await fetch(url, {
       method: 'POST',
       headers: { ...getAuthHeader() },
       credentials: 'include',
       body: form,
     });
-    
+
     const text = await resp.text();
     console.log('registerAdmin response status:', resp.status, 'body:', text);
-    
+
     if (!resp.ok) {
       const err = new Error(`HTTP ${resp.status}: ${text}`);
       throw err;
     }
-    
+
     try {
       return JSON.parse(text);
     } catch {

@@ -2,6 +2,7 @@ export const API_BASE = 'http://localhost:8085/api/projects';
 
 const getAuthHeader = () => {
   const token =
+    localStorage.getItem('accessToken') ||
     localStorage.getItem('ACCESS_TOKEN') ||
     localStorage.getItem('token') ||
     localStorage.getItem('authToken') ||
@@ -37,7 +38,9 @@ export const getProjectManagers = async () => {
   await throwIfError(resp);
   const result = await handleResp(resp);
   console.log('getProjectManagers result:', result);
-  return result;
+  // Ensure result is always an array - wrap single object if needed
+  const managers = Array.isArray(result) ? result : [result];
+  return managers;
 };
 
 export const getAllProjects = async () => {

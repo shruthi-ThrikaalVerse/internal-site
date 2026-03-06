@@ -130,7 +130,7 @@ export const NotificationsView = () => {
 
   const handleDelete = async (notificationId: number | string) => {
     if (!window.confirm('Are you sure you want to delete this notification?')) return;
-    
+
     try {
       setLoading(true);
       const result = await notificationsApi.deleteNotification(Number(notificationId));
@@ -156,7 +156,7 @@ export const NotificationsView = () => {
           >
             <Plus size={18} />
             New Notification
-          </button> 
+          </button>
         }
       />
 
@@ -181,7 +181,7 @@ export const NotificationsView = () => {
                     'bg-blue-500/10 border-blue-500/20 text-blue-500'
                   }`}>
                   {notif.priority === 'high' ? <ShieldAlert size={20} /> : <Info size={20} />}
-                </div> 
+                </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
@@ -193,7 +193,10 @@ export const NotificationsView = () => {
                       <span className="text-[10px] font-bold text-gray-500 uppercase">{notif.date}</span>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 mb-3 leading-relaxed line-clamp-2">{notif.message}</p>
+                  <div
+                    className="text-sm text-gray-500 mb-3 leading-relaxed line-clamp-2 prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: notif.message }}
+                  />
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                       <span className="flex items-center gap-1.5"><Send size={12} /> To: {notif.recipient}</span>

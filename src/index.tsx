@@ -32,6 +32,7 @@ import EmployeeRequests from './pages/employee/Requests.tsx';
 import EmployeeEvents from './pages/employee/Events.tsx';
 import EmployeeNotifications from './pages/employee/Notifications.tsx';
 import EmployeeProfile from './pages/employee/Profile.tsx';
+import EmployeeResignation from './pages/employee/Resignation.tsx';
 
 // Admin login and dashboard
 import AdminLogin from './pages/admin/Login.tsx';
@@ -41,6 +42,7 @@ import AdminAttendanceMonitor from './pages/admin/AttendanceMonitor.tsx';
 import AdminAuditLogs from './pages/admin/AuditLogs.tsx';
 import AdminDocumentManagement from './pages/admin/DocumentManagement.tsx';
 import AdminEmployeeHub from './pages/admin/EmployeeHub.tsx';
+import AdminEmployeeDetails from './pages/admin/EmployeeDetails.tsx';
 import AdminEventsAdmin from './pages/admin/EventsAdmin.tsx';
 import AdminLeaveCenter from './pages/admin/LeaveCenter.tsx';
 import AdminNotificationsAdmin from './pages/admin/NotificationsAdmin.tsx';
@@ -50,6 +52,7 @@ import AdminPerformanceManagement from './pages/admin/PerformanceManagement.tsx'
 import AdminProfile from './pages/admin/Profile.tsx';
 import AdminRequests from './pages/admin/Requests.tsx';
 import AdminTasks from './pages/admin/Tasks.tsx';
+import AdminResignation from './pages/admin/Resignation.tsx';
 
 // Super Admin
 import { LoginView as SuperAdminLogin } from './pages/super_admin/LoginView.tsx';
@@ -286,6 +289,12 @@ const EmployeeProfilePage = () => (
   </EmployeePageWithLogout>
 );
 
+const EmployeeResignationPage = () => (
+  <EmployeePageWithLogout>
+    <EmployeeResignation />
+  </EmployeePageWithLogout>
+);
+
 // Admin page components
 const AdminDashboardWithContext = () => (
   <AdminPageWithLogout>
@@ -315,6 +324,12 @@ const AdminDocumentManagementPage = () => (
 const AdminEmployeeHubPage = () => (
   <AdminPageWithLogout>
     <AdminEmployeeHub />
+  </AdminPageWithLogout>
+);
+
+const AdminEmployeeDetailsPage = () => (
+  <AdminPageWithLogout>
+    <AdminEmployeeDetails />
   </AdminPageWithLogout>
 );
 
@@ -372,16 +387,22 @@ const AdminTasksPage = () => (
   </AdminPageWithLogout>
 );
 
+const AdminResignationPage = () => (
+  <AdminPageWithLogout>
+    <AdminResignation />
+  </AdminPageWithLogout>
+);
+
 // Login Route Guards - prevent access if already authenticated
 const EmployeeLoginGuard = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Clear any existing auth state when visiting the employee login page
   React.useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate('/employee/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, isLoading, navigate]);
+    try { localStorage.removeItem('user'); } catch { }
+    try { localStorage.removeItem('authToken'); } catch { }
+  }, []);
 
   if (isLoading) {
     return (
@@ -398,14 +419,14 @@ const EmployeeLoginGuard = () => {
 };
 
 const AdminLoginGuard = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Clear any existing auth state when visiting the admin login page
   React.useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate('/admin/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, isLoading, navigate]);
+    try { localStorage.removeItem('user'); } catch { }
+    try { localStorage.removeItem('authToken'); } catch { }
+  }, []);
 
   if (isLoading) {
     return (
@@ -422,14 +443,24 @@ const AdminLoginGuard = () => {
 };
 
 const LoginSelectionGuard = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const { isLoading } = useAuth();
 
+  // Clear any existing auth state when visiting the login selection page
   React.useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate('/employee/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, isLoading, navigate]);
+    try { localStorage.removeItem('user'); } catch { }
+    try { localStorage.removeItem('authToken'); } catch { }
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+          <p className="text-sm text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return <LoginSelection />;
 };
@@ -444,8 +475,8 @@ root.render(
   <React.StrictMode>
     <Router>
       <ThemeProvider>
-        <AppProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <AppProvider>
             <Routes>
               {/* Default landing page */}
               <Route path="/" element={<LandingPage />} />
@@ -467,7 +498,9 @@ root.render(
               <Route path="/employee/events" element={<EmployeeEventsPage />} />
               <Route path="/employee/notifications" element={<EmployeeNotificationsPage />} />
               <Route path="/employee/notifications/:id" element={<EmployeeNotificationsPage />} />
+              <Route path="/employee/resignation" element={<EmployeeResignationPage />} />
               <Route path="/employee/profile" element={<EmployeeProfilePage />} />
+
 
               {/* Admin routes */}
               <Route path="/admin/login" element={<AdminLoginGuard />} />
@@ -476,6 +509,7 @@ root.render(
               <Route path="/admin/audit-logs" element={<AdminAuditLogsPage />} />
               <Route path="/admin/document-management" element={<AdminDocumentManagementPage />} />
               <Route path="/admin/employee-hub" element={<AdminEmployeeHubPage />} />
+              <Route path="/admin/employee-hub/:id" element={<AdminEmployeeDetailsPage />} />
               <Route path="/admin/events" element={<AdminEventPage />} />
               <Route path="/admin/leave-center" element={<AdminLeaveCenterPage />} />
               <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
@@ -485,6 +519,7 @@ root.render(
               <Route path="/admin/profile" element={<AdminProfilePage />} />
               <Route path="/admin/requests" element={<AdminRequestsPage />} />
               <Route path="/admin/tasks" element={<AdminTasksPage />} />
+              <Route path="/admin/resignation" element={<AdminResignationPage />} />
 
               {/* Super Admin */}
               <Route path="/super-admin/login" element={<SuperAdminLogin />} />
@@ -493,8 +528,8 @@ root.render(
               {/* Catch all - redirect to home */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </AuthProvider>
-        </AppProvider>
+          </AppProvider>
+        </AuthProvider>
       </ThemeProvider>
     </Router>
   </React.StrictMode>

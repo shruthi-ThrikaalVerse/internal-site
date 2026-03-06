@@ -39,6 +39,7 @@ const Sidebar: React.FC<{ isOpen: boolean; setOpen: (val: boolean) => void }> = 
       'admin/performance': '/admin/performance-management',
       'admin/audit-logs': '/admin/audit-logs',
       'admin/profile': '/admin/profile',
+      'admin/resignation': '/admin/resignation',
     };
     return pathMap[itemId] || `/${itemId}`;
   };

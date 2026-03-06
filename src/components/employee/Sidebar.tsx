@@ -27,13 +27,13 @@ interface SidebarProps {
   onRouteChange?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ 
-  isOpen, 
-  toggleSidebar, 
+const Sidebar: React.FC<SidebarProps> = ({
+  isOpen,
+  toggleSidebar,
   onLogout,
   isCollapsed = false,
   isMobile = false,
-  onRouteChange = () => {}
+  onRouteChange = () => { }
 }) => {
   const location = useLocation();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -50,6 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { name: 'Support', icon: HelpCircle, path: '/employee/requests' },
     { name: 'Events', icon: Calendar, path: '/employee/events' },
     { name: 'Notifications', icon: Bell, path: '/employee/notifications' },
+    { name: 'Resignation', icon: LogOut, path: '/employee/resignation' },
     { name: 'Profile', icon: User, path: '/employee/profile' },
   ];
 
@@ -140,14 +141,14 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar Overlay for mobile */}
       {isMobile && isOpen && (
-        <div 
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden" 
+        <div
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
           onClick={toggleSidebar}
         />
       )}
 
       {/* Sidebar */}
-      <div 
+      <div
         className={`
           fixed lg:relative 
           top-0 left-0 
@@ -194,11 +195,10 @@ const Sidebar: React.FC<SidebarProps> = ({
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center px-4 py-3 rounded-lg transition-colors group ${
-                  isActive
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                }`}
+                className={`flex items-center px-4 py-3 rounded-lg transition-colors group ${isActive
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  }`}
                 onClick={handleLinkClick}
               >
                 <Icon size={18} className="flex-shrink-0" />

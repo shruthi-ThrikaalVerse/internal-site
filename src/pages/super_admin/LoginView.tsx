@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext.tsx';
 import { useApp } from '../../context/AppContext.tsx';
 
 export const LoginView = () => {
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const { isAuthenticated, setIsAuthenticated } = useApp();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -16,12 +16,11 @@ export const LoginView = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect to dashboard if already authenticated
+  // Clear auth state when visiting this page
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/super-admin/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
+    try { localStorage.removeItem('user'); } catch { }
+    try { localStorage.removeItem('authToken'); } catch { }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,13 +28,22 @@ export const LoginView = () => {
     setIsLoading(true);
 
     try {
-      // call unified login from AuthContext which posts to /api/users/login
-      await login(email, password);
-      // also update AppContext so UI knows we're authenticated
+      const user = await login(email, password);
+
+      // Validate that user has SUPER_ADMIN role
+      if (user.role !== 'super_admin') {
+        // Log out the user if they don't have the correct role
+        try { await logout(); } catch { }
+        setError('Invalid credentials. Only super administrators can access this portal.');
+        setIsLoading(false);
+        return;
+      }
+
       setIsAuthenticated(true);
       navigate('/super-admin/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      console.error('Login error:', err);
+      setError(err.message || 'An error occurred. Please try again.');
       setIsLoading(false);
     }
   };
@@ -138,8 +146,7 @@ export const LoginView = () => {
 
           <div className="mt-6 pt-6 border-t border-slate-200 text-center">
             <p className="text-xs text-slate-500 leading-relaxed">
-              Security notice: the form now uses the real authentication endpoint (`POST /api/users/login`).
-              Use a valid super‑admin account (for example the sample above: <code>gaya@example.com</code> / <code>Anand@123!</code>).  
+              Logging in with your authorized credentials to access the admin portal
             </p>
           </div>
         </div>

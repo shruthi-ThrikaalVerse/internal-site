@@ -1,4 +1,4 @@
-import { Project } from './types';
+import { Project } from './types.js';
 
 export const COLORS = {
   primary: '#3b82f6',
@@ -48,7 +48,9 @@ export const NAV_ITEMS = [
   { id: 'admin/payslips', label: 'Payslips Module', icon: 'ReceiptText' },
   { id: 'admin/performance', label: 'Reviews Rating', icon: 'Star' },
   { id: 'admin/audit-logs', label: 'Audit Logs', icon: 'Activity' },
+  { id: 'admin/resignation', label: 'Resignation', icon: 'LogOut' },
   { id: 'admin/profile', label: 'My Profile', icon: 'UserCircle' },
+
 ];
 
 // Backwards-compat aliases used by some components
@@ -141,7 +143,7 @@ export const JOBS = [
     department: "RESEARCH AND DEVELOPMENT",
     type: "Full-time",
     description: "Join our R&D team to pioneer next-generation technologies in AI and sustainable computing solutions.",
-    location: "Bangalore"
+    location: "Hyderabad"
   },
   {
     id: 3,
@@ -149,7 +151,7 @@ export const JOBS = [
     department: "FULL STACK DEVELOPER",
     type: "Full-time",
     description: "Build and maintain scalable infrastructure. Experience with Kubernetes, Docker, and AWS essential.",
-    location: "Mumbai"
+    location: "Hyderabad"
   },
   {
     id: 4,
@@ -157,11 +159,11 @@ export const JOBS = [
     department: "RESEARCH AND DEVELOPMENT",
     type: "Full-time",
     description: "Develop cutting-edge machine learning models for predictive analytics and automation systems.",
-    location: "Bangalore"
+    location: "Hyderabad"
   }
 ];
 // ============= Super Admin Constants =============
-import { AppSection } from './types';
+import { AppSection } from './types.js';
 
 export const NAVIGATION_ITEMS = [
   { id: AppSection.Dashboard, label: 'Dashboard', iconName: 'LayoutDashboard' },
@@ -181,11 +183,11 @@ export const NAVIGATION_ITEMS = [
 ];
 
 export const MOCK_LOGS = [
-  { id: '1', action: 'User Login', timestamp: '2024-01-15 09:30 AM', user: 'admin@company.com', status: 'Success', category: 'Authentication', severity: 'low' },
-  { id: '2', action: 'Employee Added', timestamp: '2024-01-15 10:15 AM', user: 'admin@company.com', status: 'Success', category: 'User Management', severity: 'medium' },
-  { id: '3', action: 'Leave Approved', timestamp: '2024-01-15 11:00 AM', user: 'manager@company.com', status: 'Success', category: 'Leave Management', severity: 'low' },
-  { id: '4', action: 'Payroll Generated', timestamp: '2024-01-15 02:30 PM', user: 'payroll@company.com', status: 'Success', category: 'Payroll', severity: 'high' },
-  { id: '5', action: 'Report Exported', timestamp: '2024-01-15 03:45 PM', user: 'admin@company.com', status: 'Success', category: 'Reports', severity: 'medium' },
+  { id: '1', action: 'LOGIN_SUCCESS', timestamp: '2024-01-15 09:30 AM', user: 'admin@company.com', level: 'LOGIN', message: 'User login successful', module: 'AUTH', entity: 'User' },
+  { id: '2', action: 'CREATE_EMPLOYEE', timestamp: '2024-01-15 10:15 AM', user: 'admin@company.com', level: 'CREATE', message: 'New employee record created', module: 'EMPLOYEE_HUB', entity: 'Employee' },
+  { id: '3', action: 'UPDATE_LEAVE', timestamp: '2024-01-15 11:00 AM', user: 'manager@company.com', level: 'UPDATE', message: 'Leave request status updated to approved', module: 'LEAVE', entity: 'LeaveRequest' },
+  { id: '4', action: 'GENERATE_PAYROLL', timestamp: '2024-01-15 02:30 PM', user: 'payroll@company.com', level: 'CREATE', message: 'Payroll processing completed', module: 'PAYROLL', entity: 'PayrollRun' },
+  { id: '5', action: 'EXPORT_REPORT', timestamp: '2024-01-15 03:45 PM', user: 'admin@company.com', level: 'INFO', message: 'System report exported to CSV format', module: 'REPORTS', entity: 'Report' },
 ];
 
 export const MOCK_PROJECTS: Project[] = [
@@ -215,10 +217,7 @@ export const MOCK_ADMINS = [
   { id: 'admin-02', name: 'Admin Two', firstName: 'Admin', lastName: 'Two', email: 'admin2@company.com', role: 'ADMIN', avatar: 'https://picsum.photos/seed/admin2/200', status: 'active' },
 ];
 
-export const MOCK_REQUESTS = [
-  { id: 'req-01', type: 'Leave', requestedBy: 'John Doe', requesterId: 'emp-01', targetId: 'emp-01', date: '2024-01-15', status: 'Pending', details: 'Annual Leave Request' },
-  { id: 'req-02', type: 'Termination', requestedBy: 'Admin One', requesterId: 'admin-01', targetId: 'emp-05', date: '2024-01-14', status: 'Pending', details: 'End of Contract' },
-];
+export const MOCK_REQUESTS: any[] = [];
 
 export const MOCK_REVIEWS = [
   { id: 'rev-01', employeeName: 'John Doe', rating: 4.5, feedback: 'Excellent performance and leadership', date: '2024-01-10', reviewerName: 'Sarah Manager', status: 'completed', cycle: 'Q4 2023' },
