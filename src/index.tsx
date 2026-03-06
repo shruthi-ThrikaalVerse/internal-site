@@ -395,14 +395,14 @@ const AdminResignationPage = () => (
 
 // Login Route Guards - prevent access if already authenticated
 const EmployeeLoginGuard = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Clear any existing auth state when visiting the employee login page
   React.useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate('/employee/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, isLoading, navigate]);
+    try { localStorage.removeItem('user'); } catch { }
+    try { localStorage.removeItem('authToken'); } catch { }
+  }, []);
 
   if (isLoading) {
     return (
@@ -419,14 +419,14 @@ const EmployeeLoginGuard = () => {
 };
 
 const AdminLoginGuard = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Clear any existing auth state when visiting the admin login page
   React.useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate('/admin/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, isLoading, navigate]);
+    try { localStorage.removeItem('user'); } catch { }
+    try { localStorage.removeItem('authToken'); } catch { }
+  }, []);
 
   if (isLoading) {
     return (
@@ -443,14 +443,24 @@ const AdminLoginGuard = () => {
 };
 
 const LoginSelectionGuard = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const { isLoading } = useAuth();
 
+  // Clear any existing auth state when visiting the login selection page
   React.useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate('/employee/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, isLoading, navigate]);
+    try { localStorage.removeItem('user'); } catch { }
+    try { localStorage.removeItem('authToken'); } catch { }
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+          <p className="text-sm text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return <LoginSelection />;
 };
@@ -465,8 +475,8 @@ root.render(
   <React.StrictMode>
     <Router>
       <ThemeProvider>
-        <AppProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <AppProvider>
             <Routes>
               {/* Default landing page */}
               <Route path="/" element={<LandingPage />} />
@@ -490,7 +500,7 @@ root.render(
               <Route path="/employee/notifications/:id" element={<EmployeeNotificationsPage />} />
               <Route path="/employee/resignation" element={<EmployeeResignationPage />} />
               <Route path="/employee/profile" element={<EmployeeProfilePage />} />
-              
+
 
               {/* Admin routes */}
               <Route path="/admin/login" element={<AdminLoginGuard />} />
@@ -518,8 +528,8 @@ root.render(
               {/* Catch all - redirect to home */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </AuthProvider>
-        </AppProvider>
+          </AppProvider>
+        </AuthProvider>
       </ThemeProvider>
     </Router>
   </React.StrictMode>

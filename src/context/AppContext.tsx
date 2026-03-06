@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { AppSection, User, AdminRequest } from '../types.js';
 
 interface AppContextType {
@@ -50,8 +50,8 @@ const formatBase64Image = (imageData: string | null | undefined): string => {
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // Check if token exists in localStorage on initialization
-    return !!localStorage.getItem('accessToken');
+    // Check if user data exists in localStorage (set by AuthContext)
+    return !!localStorage.getItem('user');
   });
   const [activeSection, setActiveSection] = useState<AppSection>(AppSection.Dashboard);
   const [globalSearch, setGlobalSearch] = useState('');
@@ -63,21 +63,31 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [requests, setRequests] = useState<AdminRequest[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Fetch current user from API
-  React.useEffect(() => {
+  // Listen for changes to localStorage to update isAuthenticated
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setIsAuthenticated(!!localStorage.getItem('user'));
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Fetch current user from API using HttpOnly cookie
+  useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-          setIsAuthenticated(false);
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+          setCurrentUser(null);
           return;
         }
 
         const response = await fetch('http://localhost:8085/api/users/me', {
           method: 'GET',
+          credentials: 'include', // Send HttpOnly cookie
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
           },
         });
 
@@ -93,13 +103,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             department: data.department,
             designation: data.designation,
           } as User);
-          setIsAuthenticated(true);
+        } else if (response.status === 401 || response.status === 403) {
+          // Token is invalid or expired
+          setCurrentUser(null);
         } else {
-          setIsAuthenticated(false);
+          setCurrentUser(null);
         }
       } catch (err) {
         console.error('Error fetching current user:', err);
-        setIsAuthenticated(false);
+        setCurrentUser(null);
       }
     };
 

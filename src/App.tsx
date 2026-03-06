@@ -77,36 +77,24 @@ const AppContent: React.FC = () => {
     mobileSidebarOpen, setMobileSidebarOpen,
     employees, admins, currentUser
   } = useApp();
-  const { logout } = useAuth();
+  const { logout, isLoading } = useAuth();
 
   // Handle logout with API call
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:8085/api/users/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      });
-
-      console.log('Logout Response:', response);
-
-      if (response.ok) {
-        console.log('Logout successful');
-      } else {
-        console.error('Logout failed:', response);
-      }
+      await logout();
+      setIsAuthenticated(false);
+      setShowProfileDropdown(false);
+      navigate('/super-admin/login', { replace: true });
     } catch (err) {
       console.error('Logout error:', err);
-    } finally {
-      // Clear all authentication data regardless of API response
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userRole');
-      console.log('All tokens and user data cleared from localStorage');
-
+      // Still clear localStorage and redirect even if API call fails
+      try {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userRole');
+      } catch { }
       setIsAuthenticated(false);
       setShowProfileDropdown(false);
       navigate('/super-admin/login', { replace: true });
@@ -124,12 +112,12 @@ const AppContent: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (but not while session is loading)
   useEffect(() => {
-    if (!isAuthenticated && !location.pathname.includes('/login')) {
+    if (!isLoading && !isAuthenticated && !location.pathname.includes('/login')) {
       navigate('/super-admin/login', { replace: true });
     }
-  }, [isAuthenticated, navigate, location.pathname]);
+  }, [isAuthenticated, isLoading, navigate, location.pathname]);
 
   // Sync active section with URL
   useEffect(() => {

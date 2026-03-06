@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { clearUserData } from '../utils/storage.ts';
-import { useApp } from './AppContext.tsx';
 
 const API_BASE_URL = 'http://localhost:8085';
 
@@ -8,27 +7,15 @@ export interface User {
   id: string;
   fullName: string;
   email: string;
-  role: 'admin' | 'manager' | 'auditor' | 'employee';
+  role: 'admin' | 'manager' | 'auditor' | 'employee' | 'super_admin';
   avatar: string;
 }
-
-// Decode JWT token to extract payload
-const decodeJWT = (token: string): Record<string, any> | null => {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    const payload = parts[1];
-    const decoded = JSON.parse(atob(payload));
-    return decoded;
-  } catch (e) {
-    console.error('Failed to decode JWT:', e);
-    return null;
-  }
-};
 
 // Normalize role strings coming from backend to our union type
 const normalizeRole = (role: any): User['role'] => {
   const r = String(role || 'auditor').toLowerCase();
+  // Check for super_admin before admin (since super_admin contains 'admin')
+  if (r.includes('super') && r.includes('admin')) return 'super_admin';
   if (r.includes('admin')) return 'admin';
   if (r.includes('manager')) return 'manager';
   if (r.includes('employee')) return 'employee';
@@ -50,40 +37,24 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { setIsAuthenticated } = useApp();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const verifySession = async (): Promise<User | null> => {
+  const verifySession = useCallback(async (): Promise<User | null> => {
     try {
-      const token = localStorage.getItem('authToken');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-
-      // Add token to Authorization header if available
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
       const response = await fetch(`${API_BASE_URL}/api/users/me`, {
         method: 'GET',
-        credentials: 'include',
-        headers,
+        credentials: 'include', // Automatically sends HttpOnly cookies
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (response.ok) {
         const userData = await response.json().catch(() => ({}));
 
-        // Extract employeeId from JWT token
-        let userId = userData.id || userData._id || userData.employeeId || '';
-        if (!userId && token) {
-          const decoded = decodeJWT(token);
-          userId = decoded?.employeeId || decoded?.id || decoded?.sub || '';
-        }
-
         const user: User = {
-          id: userId,
+          id: userData.id || userData._id || userData.employeeId || '',
           fullName: userData.fullName || userData.name || '',
           email: userData.email || '',
           role: normalizeRole(userData.role),
@@ -92,30 +63,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(user);
         try { localStorage.setItem('user', JSON.stringify(user)); } catch { }
         return user;
+      } else if (response.status === 401 || response.status === 403) {
+        // Token is invalid or expired - clear session
+        setUser(null);
+        try { localStorage.removeItem('user'); } catch { }
+        return null;
       } else {
         setUser(null);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
+        try { localStorage.removeItem('user'); } catch { }
         return null;
       }
     } catch (error) {
       console.error('Session verification failed:', error);
       setUser(null);
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
+      try { localStorage.removeItem('user'); } catch { }
       return null;
     }
-  };
+  }, []);
 
   useEffect(() => {
     verifySession().finally(() => setIsLoading(false));
-  }, []);
+  }, [verifySession]);
 
   const login = async (email: string, password: string): Promise<User> => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/users/login`, {
         method: 'POST',
-        credentials: 'include',
+        credentials: 'include', // Automatically sends and receives HttpOnly cookies
         headers: {
           'Content-Type': 'application/json',
         },
@@ -127,47 +101,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error(errorData.message || 'Invalid credentials');
       }
 
-      const responseData = await response.json().catch(() => ({}));
-
-      // Extract token from response
-      const token = responseData.token || responseData.accessToken || responseData.jwtToken || responseData.data?.token;
-      const refresh = responseData.refreshToken || responseData.refresh_token || responseData.data?.refreshToken;
-
-      // If a token is returned, persist it for API calls that use Authorization header
-      if (token) {
-        localStorage.setItem('authToken', token);
-      }
-      // store refresh token separately if provided
-      if (refresh) {
-        try { localStorage.setItem('refreshToken', refresh); } catch {};
-      }
-
-      // If response includes user data, use it immediately
-      const userData = responseData.data || responseData.user || responseData;
-      if (userData && (userData.email || userData.id || userData._id || userData.employeeId)) {
-        // Extract employeeId from JWT token if not in response
-        let userId = userData.id || userData._id || userData.employeeId || '';
-        if (!userId && token) {
-          const decoded = decodeJWT(token);
-          userId = decoded?.employeeId || decoded?.id || decoded?.sub || '';
-        }
-
-        const parsedUser: User = {
-          id: userId,
-          fullName: userData.fullName || userData.name || '',
-          email: userData.email || '',
-          role: normalizeRole(userData.role),
-          avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.email}`,
-        };
-        setUser(parsedUser);
-        try { localStorage.setItem('user', JSON.stringify(parsedUser)); } catch { }
-        return parsedUser;
-      }
-
-      // If no user data in response, verify session
+      // Backend will set HttpOnly cookie automatically
+      // Verify session to get user data
       const verified = await verifySession();
       if (!verified) {
-        throw new Error('Login succeeded but no session information returned');
+        throw new Error('Login succeeded but could not retrieve user information');
       }
       return verified;
 
@@ -203,7 +141,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const resp = await fetch(`${API_BASE_URL}/api/users/logout`, {
         method: 'POST',
-        credentials: 'include',
+        credentials: 'include', // Send cookie to backend for cleanup
         headers: {
           'Content-Type': 'application/json',
         },
@@ -214,16 +152,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear all user-specific localStorage data with current user's ID
+      // Clear all user-specific localStorage data
       if (user?.id) {
         clearUserData(user.id);
       }
 
       setUser(null);
-      setIsAuthenticated(false);
-      try { localStorage.removeItem('authToken'); } catch { }
-      try { localStorage.removeItem('refreshToken'); } catch { }
       try { localStorage.removeItem('user'); } catch { }
+      // Note: HttpOnly cookies are cleared by the backend on logout
     }
   };
 

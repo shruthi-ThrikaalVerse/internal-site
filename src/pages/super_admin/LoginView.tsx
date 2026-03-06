@@ -4,10 +4,10 @@ import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 // switch to authentication context for real login
 import { useAuth } from '../../context/AuthContext.tsx';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/AppContext.tsx';
 
 export const LoginView = () => {
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const { isAuthenticated, setIsAuthenticated } = useApp();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -16,12 +16,11 @@ export const LoginView = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect to dashboard if already authenticated
+  // Clear auth state when visiting this page
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/super-admin/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
+    try { localStorage.removeItem('user'); } catch { }
+    try { localStorage.removeItem('authToken'); } catch { }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,50 +28,22 @@ export const LoginView = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8085/api/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
+      const user = await login(email, password);
 
-      const data = await response.json();
-      console.log('Login Response:', data);
-
-      if (response.ok && data.accessToken) {
-        console.log('Login successful:', data);
-        console.log('Access Token:', data.accessToken);
-        console.log('Refresh Token:', data.refreshToken);
-        console.log('User Email:', data.email);
-        console.log('User Role:', data.role);
-
-        // Validate that user has SUPER_ADMIN role
-        if (data.role !== 'SUPER_ADMIN') {
-          setError('Invalid credentials. Only super administrators can access this portal.');
-          setIsLoading(false);
-          return;
-        }
-
-        // Store tokens in localStorage
-        localStorage.setItem('accessToken', data.accessToken);
-        localStorage.setItem('refreshToken', data.refreshToken);
-        localStorage.setItem('userEmail', data.email);
-        localStorage.setItem('userRole', data.role);
-
-        setIsAuthenticated(true);
-        navigate('/super-admin/dashboard');
-      } else {
-        console.error('Login failed:', data);
-        setError(data.message || 'Invalid email or password. Please try again.');
+      // Validate that user has SUPER_ADMIN role
+      if (user.role !== 'super_admin') {
+        // Log out the user if they don't have the correct role
+        try { await logout(); } catch { }
+        setError('Invalid credentials. Only super administrators can access this portal.');
         setIsLoading(false);
+        return;
       }
-    } catch (err) {
+
+      setIsAuthenticated(true);
+      navigate('/super-admin/dashboard');
+    } catch (err: any) {
       console.error('Login error:', err);
-      setError('An error occurred. Please try again.');
+      setError(err.message || 'An error occurred. Please try again.');
       setIsLoading(false);
     }
   };

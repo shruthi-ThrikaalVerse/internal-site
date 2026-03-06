@@ -92,7 +92,9 @@ export const ProfileView = () => {
       formData.append('image', file);
 
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:8085/api/users/super-admin/profile-image', {
+      console.log('Uploading profile image...', { fileName: file.name, fileSize: file.size });
+
+      const response = await fetch('http://localhost:8085/api/users/admin/profile-image', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -100,17 +102,20 @@ export const ProfileView = () => {
         body: formData,
       });
 
+      const responseData = await response.json().catch(() => null);
+      console.log('Upload response:', { status: response.status, data: responseData });
+
       if (response.ok) {
-        const data = await response.json();
-        setProfile(prev => prev ? { ...prev, profileImage: data.profileImage } : null);
+        setProfile(prev => prev ? { ...prev, profileImage: responseData?.profileImage } : null);
         alert('Profile image updated successfully!');
       } else {
-        alert('Failed to upload image');
-        console.error('Failed to upload image');
+        const errorMessage = responseData?.message || `Failed to upload image (Status: ${response.status})`;
+        console.error('Upload failed:', errorMessage);
+        alert(`Error: ${errorMessage}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error uploading image:', err);
-      alert('Error uploading image');
+      alert(`Error uploading image: ${err?.message || 'Unknown error'}`);
     } finally {
       setUploadingImage(false);
       if (fileInputRef.current) {
@@ -125,23 +130,29 @@ export const ProfileView = () => {
     setDeletingImage(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:8085/api/users/super-admin/profile-image', {
+      console.log('Deleting profile image...');
+
+      const response = await fetch('http://localhost:8085/api/users/admin/profile-image', {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
+      const responseData = await response.json().catch(() => null);
+      console.log('Delete response:', { status: response.status, data: responseData });
+
       if (response.ok) {
         setProfile(prev => prev ? { ...prev, profileImage: null } : null);
         alert('Profile image removed successfully!');
       } else {
-        alert('Failed to delete image');
-        console.error('Failed to delete image');
+        const errorMessage = responseData?.message || `Failed to delete image (Status: ${response.status})`;
+        console.error('Delete failed:', errorMessage);
+        alert(`Error: ${errorMessage}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting image:', err);
-      alert('Error deleting image');
+      alert(`Error deleting image: ${err?.message || 'Unknown error'}`);
     } finally {
       setDeletingImage(false);
     }
