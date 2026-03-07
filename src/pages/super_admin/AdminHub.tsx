@@ -71,9 +71,30 @@ export const AdminHub = () => {
             return imageData;
         }
 
-        // If it's raw base64 without the prefix, add the JPEG prefix
-        if (imageData.length > 0) {
-            return `data:image/jpeg;base64,${imageData}`;
+        // If it's a regular HTTP/HTTPS URL, return as is
+        if (imageData.startsWith('http://') || imageData.startsWith('https://')) {
+            return imageData;
+        }
+
+        // Try to decode base64 to check if it's a file path or actual image data
+        if (imageData.match(/^[A-Za-z0-9+/=]+$/)) {
+            try {
+                const decoded = atob(imageData); // Decode base64
+                console.log(`Decoded base64: "${decoded}"`);
+
+                // Check if decoded string looks like a file path
+                if (decoded.includes('/') || decoded.includes('\\') || decoded.includes('.')) {
+                    // It's likely a file path - this means backend returned encoded path, not encoded image
+                    console.log('Detected file path in base64, would need backend endpoint to serve it');
+                    return ''; // Return empty to show fallback
+                }
+
+                // If it looks like raw binary/image data, treat as base64 image
+                return `data:image/jpeg;base64,${imageData}`;
+            } catch (e) {
+                console.warn('Failed to decode base64:', e);
+                return '';
+            }
         }
 
         return '';
@@ -111,49 +132,7 @@ export const AdminHub = () => {
         };
     };
 
-    // Fetch admin employees from API
-    useEffect(() => {
-        const fetchAdmins = async () => {
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch('http://localhost:8085/api/users/admin/employees', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    // Transform API response to match User type
-                    const rawAdminsData = Array.isArray(data) ? data : data.data || [];
-
-                    // Filter by admin tiers only and remove duplicates
-                    const seenEmails = new Set<string>();
-                    const filteredAdmins = rawAdminsData
-                        .filter((admin: any) => ADMIN_TIERS.includes(admin.role))
-                        .filter((admin: any) => {
-                            if (seenEmails.has(admin.email)) {
-                                return false; // Skip duplicate
-                            }
-                            seenEmails.add(admin.email);
-                            return true;
-                        })
-                        .map(transformAdminData);
-
-                    setAdmins(filteredAdmins);
-                    console.log('Admins fetched successfully (filtered):', filteredAdmins);
-                } else {
-                    console.error('Failed to fetch admins:', response.statusText);
-                }
-            } catch (error) {
-                console.error('Error fetching admins:', error);
-            }
-        };
-
-        fetchAdmins();
-    }, [setAdmins]);
+    // Fetch admin employees from API - removed, handled by second useEffect below
 
     const statuses = ['All Statuses', 'active', 'inactive', 'pending'];
     const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
@@ -185,7 +164,7 @@ export const AdminHub = () => {
                                 role: (ADMIN_TIERS.includes(roleVal) ? roleVal : 'ADMIN') as any,
                                 status: statusValue,
                                 department: String(emp.department || 'IT'),
-                                avatar: `https://picsum.photos/seed/${String(emp.email || emp.employeeId || 'admin')}/200`,
+                                avatar: formatBase64Image(String(emp.profileImage || emp.avatar || '')),
                                 employmentType: String(emp.userType || 'FULL_TIME'),
                                 dateOfJoining: String(emp.dateOfJoining || new Date().toISOString().split('T')[0]),
                                 employeeId: String(emp.employeeId || ''),
@@ -294,6 +273,7 @@ export const AdminHub = () => {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
+                    credentials: 'include',
                     body: formData,
                 });
 
@@ -318,6 +298,7 @@ export const AdminHub = () => {
                                 'Authorization': `Bearer ${token}`,
                                 'Content-Type': 'application/json',
                             },
+                            credentials: 'include',
                         });
 
                         if (refetchResponse.ok) {
@@ -404,6 +385,7 @@ export const AdminHub = () => {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
+                    credentials: 'include',
                     body: formData,
                 });
 
@@ -489,6 +471,7 @@ export const AdminHub = () => {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
             });
 
             console.log('Terminate response status:', response.status);
@@ -1065,7 +1048,19 @@ export const AdminHub = () => {
                                     ref={fileInputRef}
                                     type="file"
                                     accept="image/*"
-                                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            setSelectedImage(file);
+                                            setSelectedFile(file);
+                                            // Create preview
+                                            const reader = new FileReader();
+                                            reader.onloadend = () => {
+                                                setImagePreview(reader.result as string);
+                                            };
+                                            reader.readAsDataURL(file);
+                                        }
+                                    }}
                                     className="hidden"
                                 />
                             </div>

@@ -18,6 +18,8 @@ interface AppContextType {
   admins: User[];
   requests: AdminRequest[];
   currentUser: User | null;
+  setCurrentUser: React.Dispatch<React.SetStateAction<User | null>>;
+  refreshCurrentUser: () => Promise<void>;
   addEmployee: (employee: User) => void;
   updateEmployee: (employee: User) => void;
   removeEmployee: (id: string) => void;
@@ -115,8 +117,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    fetchCurrentUser();
-  }, []);
+    // Fetch when component mounts or when isAuthenticated changes
+    if (isAuthenticated) {
+      fetchCurrentUser();
+    } else {
+      setCurrentUser(null);
+    }
+  }, [isAuthenticated]);
 
   // Fetch requests from API
   React.useEffect(() => {
@@ -226,6 +233,34 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
+  const refreshCurrentUser = async () => {
+    try {
+      const response = await fetch('http://localhost:8085/api/users/me', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentUser({
+          id: data.employeeId || data.id,
+          name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
+          email: data.email,
+          role: data.role || 'SUPER_ADMIN',
+          avatar: formatBase64Image(data.profileImage) || '',
+          status: 'active',
+          department: data.department,
+          designation: data.designation,
+        } as User);
+      }
+    } catch (err) {
+      console.error('Error refreshing current user:', err);
+    }
+  };
+
   return (
     <AppContext.Provider value={{
       isAuthenticated, setIsAuthenticated,
@@ -238,6 +273,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       admins,
       requests,
       currentUser,
+      setCurrentUser,
+      refreshCurrentUser,
       addEmployee,
       updateEmployee,
       removeEmployee,

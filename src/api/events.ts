@@ -1,16 +1,6 @@
 export const API_BASE = 'http://localhost:8085/api/events';
 const FETCH_TIMEOUT = 15000; // 15 seconds timeout
 
-const getAuthHeader = () => {
-  const token =
-    localStorage.getItem('accessToken') ||
-    localStorage.getItem('ACCESS_TOKEN') ||
-    localStorage.getItem('token') ||
-    localStorage.getItem('authToken') ||
-    '';
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
 // Helper to add timeout to fetch requests
 const fetchWithTimeout = (url: string, options: RequestInit = {}, timeout = FETCH_TIMEOUT) => {
   return Promise.race([
@@ -45,7 +35,6 @@ export const getEvents = async () => {
       method: 'GET',
       headers: {
         Accept: 'application/json',
-        ...getAuthHeader(),
       },
       credentials: 'include',
     })) as Response;
@@ -66,7 +55,6 @@ export const getEvent = async (id: string | number) => {
       method: 'GET',
       headers: {
         Accept: 'application/json',
-        ...getAuthHeader(),
       },
       credentials: 'include',
     })) as Response;
@@ -89,7 +77,6 @@ export const createEvent = async (payload: any) => {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
-        ...getAuthHeader(),
       },
       credentials: 'include',
       body: JSON.stringify(payload),
@@ -123,7 +110,6 @@ export const updateEvent = async (id: string | number, payload: any) => {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
-        ...getAuthHeader(),
       },
       credentials: 'include',
       body: JSON.stringify(payload),
@@ -148,7 +134,6 @@ export const deleteEvent = async (id: string | number) => {
       method: 'DELETE',
       headers: {
         Accept: 'application/json',
-        ...getAuthHeader(),
       },
       credentials: 'include',
     })) as Response;
@@ -178,7 +163,7 @@ export const getAllEvents = async () => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/getAllEvents`, {
       method: 'GET',
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
 
@@ -197,7 +182,7 @@ export const getMyEvents = async () => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/getAllEvents`, {
       method: 'GET',
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
 

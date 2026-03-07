@@ -55,8 +55,8 @@ export const AdminRequests = () => {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
+          credentials: 'include',
         });
 
         const data = await response.json();
@@ -122,8 +122,8 @@ export const AdminRequests = () => {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
+          credentials: 'include',
         });
 
         const data = await response.json();
@@ -205,8 +205,8 @@ export const AdminRequests = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
+          credentials: 'include',
         });
 
         const result = await response.text();
@@ -218,11 +218,12 @@ export const AdminRequests = () => {
           setViewingRequest(null);
           alert(result);
         } else {
-          alert(`Failed to ${status === 'Approved' ? 'approve' : 'reject'} termination request: ${result}`);
+          const message = typeof result === 'string' ? result : result?.message || 'Unknown error';
+          alert(`Failed to ${status === 'Approved' ? 'approve' : 'reject'} termination request: ${message}`);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error handling termination request:', err);
-        alert('An error occurred while processing the termination request');
+        alert(`Error: ${err.message || 'An error occurred while processing the termination request'}`);
       }
     } else {
       // For other request types, use the standard behavior
@@ -258,8 +259,8 @@ export const AdminRequests = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
+        credentials: 'include',
         body: JSON.stringify(approveData),
       });
 
@@ -295,8 +296,8 @@ export const AdminRequests = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
+          credentials: 'include',
         }
       );
 

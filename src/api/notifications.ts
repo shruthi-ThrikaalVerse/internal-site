@@ -1,10 +1,5 @@
 export const API_BASE = 'http://localhost:8085/api/notifications';
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('accessToken') || localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
 const handleResp = async (resp: Response) => {
   const text = await resp.text();
   try {
@@ -28,7 +23,7 @@ export const getNotifications = async () => {
     const url = `${API_BASE}/getAll`;
     console.log('Fetching notifications from:', url);
     const resp = await fetch(url, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     });
     await throwIfError(resp);
@@ -45,7 +40,7 @@ export const getNotification = async (id: number) => {
     const url = `${API_BASE}/get/${id}`;
     console.log('Fetching notification from:', url);
     const resp = await fetch(url, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     });
     await throwIfError(resp);
@@ -66,7 +61,6 @@ export const createNotification = async (payload: any) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        ...getAuthHeader(),
       },
       credentials: 'include',
       body: JSON.stringify(payload),
@@ -92,7 +86,6 @@ export const updateNotification = async (id: number, payload: any) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        ...getAuthHeader(),
       },
       credentials: 'include',
       body: JSON.stringify(payload),
@@ -114,7 +107,6 @@ export const deleteNotification = async (id: number) => {
     console.log('Deleting notification at:', url);
     const resp = await fetch(url, {
       method: 'DELETE',
-      headers: { ...getAuthHeader() },
       credentials: 'include',
     });
     const text = await resp.text();
@@ -133,7 +125,7 @@ export const getNotificationUsers = async (id: number) => {
     const url = `${API_BASE}/users/${id}`;
     console.log('Fetching notification users from:', url);
     const resp = await fetch(url, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     });
     await throwIfError(resp);
@@ -151,7 +143,7 @@ export const getMyNotifications = async () => {
     const url = `${API_BASE}/getMyNotifications`;
     console.log('Fetching my notifications from:', url);
     const resp = await fetch(url, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     });
     await throwIfError(resp);

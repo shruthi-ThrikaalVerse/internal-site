@@ -1,10 +1,5 @@
 export const API_BASE = 'http://localhost:8085/api/users';
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('accessToken') || localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
 const handleResp = async (resp: Response) => {
   const text = await resp.text();
   try {
@@ -46,7 +41,7 @@ export const getAllEmployees = async () => {
     const url = `${API_BASE}/employees`;
     console.log('Fetching employees from:', url);
     const resp = await fetch(url, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     });
     const text = await resp.text();
@@ -90,7 +85,7 @@ export const getAdminEmployees = async () => {
     const url = `${API_BASE}/admin/employees`;
     console.log('Fetching admin employees from:', url);
     const resp = await fetch(url, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     });
     const text = await resp.text();
@@ -114,7 +109,7 @@ export const terminateEmployee = async (id: string) => {
   const url = `${API_BASE}/admin/terminate/${id}`;
   const resp = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...getAuthHeader() },
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     credentials: 'include',
   });
   const text = await resp.text();
@@ -134,7 +129,7 @@ export const getDepartments = async () => {
     const url = `${API_BASE}/departments`;
     console.log('Fetching departments from:', url);
     const resp = await fetch(url, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     });
     const text = await resp.text();
@@ -167,7 +162,6 @@ export const registerAdmin = async (adminData: any, imageFile?: File) => {
 
     const resp = await fetch(url, {
       method: 'POST',
-      headers: { ...getAuthHeader() },
       credentials: 'include',
       body: form,
     });
@@ -196,7 +190,7 @@ export const getEmployees = async () => {
     const url = `${API_BASE}/employees`;
     console.log('Fetching employees from:', url);
     const resp = await fetch(url, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     });
     const text = await resp.text();
