@@ -90,7 +90,11 @@ const ResignationAdmin: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.resignationDate) newErrors.resignationDate = 'Resignation date is required';
+    else if (!isValidDate(formData.resignationDate)) newErrors.resignationDate = 'Invalid date format. Use mm/dd/yyyy';
+
     if (!formData.lastWorkingDate) newErrors.lastWorkingDate = 'Last working date is required';
+    else if (!isValidDate(formData.lastWorkingDate)) newErrors.lastWorkingDate = 'Invalid date format. Use mm/dd/yyyy';
+
     if (!formData.noticePeriod) newErrors.noticePeriod = 'Please select a notice period';
     if (!formData.reason) newErrors.reason = 'Please select a reason';
     if (!formData.detailedReason.trim()) newErrors.detailedReason = 'Please provide detailed reason';
@@ -103,8 +107,13 @@ const ResignationAdmin: React.FC = () => {
       newErrors.personalEmail = 'Please enter a valid email';
     }
 
-    if (formData.resignationDate && formData.lastWorkingDate) {
-      if (new Date(formData.lastWorkingDate) < new Date(formData.resignationDate)) {
+    if (formData.resignationDate && formData.lastWorkingDate && isValidDate(formData.resignationDate) && isValidDate(formData.lastWorkingDate)) {
+      const [resMonth, resDay, resYear] = formData.resignationDate.split('/').map(Number);
+      const [lastMonth, lastDay, lastYear] = formData.lastWorkingDate.split('/').map(Number);
+      const resignDate = new Date(resYear, resMonth - 1, resDay);
+      const lastDate = new Date(lastYear, lastMonth - 1, lastDay);
+
+      if (lastDate < resignDate) {
         newErrors.lastWorkingDate = 'Last working date must be after resignation date';
       }
     }
@@ -117,9 +126,40 @@ const ResignationAdmin: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const formatDateInput = (value: string): string => {
+    // Remove all non-numeric characters
+    const numbers = value.replace(/\D/g, '');
+
+    // Format as mm/dd/yyyy
+    if (numbers.length <= 2) {
+      return numbers;
+    } else if (numbers.length <= 4) {
+      return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+    } else {
+      return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+    }
+  };
+
+  const isValidDate = (dateString: string): boolean => {
+    const regex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/;
+    if (!regex.test(dateString)) return false;
+
+    const [month, day, year] = dateString.split('/').map(Number);
+    const date = new Date(year, month - 1, day);
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Format date fields
+    if ((name === 'resignationDate' || name === 'lastWorkingDate') && value) {
+      const formattedValue = formatDateInput(value);
+      setFormData(prev => ({ ...prev, [name]: formattedValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -256,19 +296,19 @@ const ResignationAdmin: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">Resignation Date <span className="text-red-500">*</span></label>
-                  <input type="date" name="resignationDate" value={formData.resignationDate} onChange={handleInputChange} min={new Date().toISOString().split('T')[0]} className={`w-full px-4 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.resignationDate ? 'border-red-500' : 'border-gray-300'}`} />
+                  <input type="text" name="resignationDate" value={formData.resignationDate} onChange={handleInputChange} placeholder="mm/dd/yyyy" className={`w-full px-4 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.resignationDate ? 'border-red-500' : 'border-gray-300'}`} />
                   {errors.resignationDate && <p className="text-red-500 text-xs mt-1">{errors.resignationDate}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">Last Working Date <span className="text-red-500">*</span></label>
-                  <input type="date" name="lastWorkingDate" value={formData.lastWorkingDate} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.lastWorkingDate ? 'border-red-500' : 'border-gray-300'}`} />
+                  <input type="text" name="lastWorkingDate" value={formData.lastWorkingDate} onChange={handleInputChange} placeholder="mm/dd/yyyy" className={`w-full px-4 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.lastWorkingDate ? 'border-red-500' : 'border-gray-300'}`} />
                   {errors.lastWorkingDate && <p className="text-red-500 text-xs mt-1">{errors.lastWorkingDate}</p>}
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-black mb-2">Notice Period</label>
-                <select name="noticePeriod" value={formData.noticePeriod} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg ${errors.noticePeriod ? 'border-red-500' : 'border-gray-300'}`}>
+                <select name="noticePeriod" value={formData.noticePeriod} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.noticePeriod ? 'border-red-500' : 'border-gray-300'}`}>
                   <option value="">Select notice period</option>
                   {noticePeriodOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
@@ -277,7 +317,7 @@ const ResignationAdmin: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-black mb-2">Reason</label>
-                <select name="reason" value={formData.reason} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg ${errors.reason ? 'border-red-500' : 'border-gray-300'}`}>
+                <select name="reason" value={formData.reason} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.reason ? 'border-red-500' : 'border-gray-300'}`}>
                   <option value="">Select reason</option>
                   {resignationReasons.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
@@ -286,26 +326,26 @@ const ResignationAdmin: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-black mb-2">Detailed Reason</label>
-                <textarea name="detailedReason" value={formData.detailedReason} onChange={handleInputChange} rows={3} className={`w-full px-4 py-2 border rounded-lg ${errors.detailedReason ? 'border-red-500' : 'border-gray-300'}`} />
+                <textarea name="detailedReason" value={formData.detailedReason} onChange={handleInputChange} rows={3} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.detailedReason ? 'border-red-500' : 'border-gray-300'}`} />
                 {errors.detailedReason && <p className="text-red-500 text-xs mt-1">{errors.detailedReason}</p>}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">Personal Email</label>
-                  <input type="email" name="personalEmail" value={formData.personalEmail} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg ${errors.personalEmail ? 'border-red-500' : 'border-gray-300'}`} />
+                  <input type="email" name="personalEmail" value={formData.personalEmail} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.personalEmail ? 'border-red-500' : 'border-gray-300'}`} />
                   {errors.personalEmail && <p className="text-red-500 text-xs mt-1">{errors.personalEmail}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">Contact Number</label>
-                  <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'}`} />
+                  <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'}`} />
                   {errors.contactNumber && <p className="text-red-500 text-xs mt-1">{errors.contactNumber}</p>}
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-black mb-2">Attach Document (optional)</label>
-                <input type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileChange} />
+                <input type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileChange} className="text-black" />
               </div>
 
               <div className="flex items-start gap-3">
@@ -317,7 +357,7 @@ const ResignationAdmin: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                <button type="button" onClick={handleCancel} className="px-4 py-2 bg-white border rounded-lg">Cancel</button>
+                <button type="button" onClick={handleCancel} className="px-4 py-2 bg-white border rounded-lg text-black">Cancel</button>
                 <button type="submit" className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg">Submit Resignation</button>
               </div>
             </div>

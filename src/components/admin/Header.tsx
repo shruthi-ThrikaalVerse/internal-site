@@ -159,7 +159,7 @@ const Header: React.FC<{ setOpen: (val: boolean) => void }> = ({ setOpen }) => {
             className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-1.5 shadow-sm hover:border-indigo-100 transition-all"
           >
             <div className="flex flex-col items-end hidden sm:flex">
-              <p className="text-xs font-bold text-gray-900 leading-none">{user?.fullName || 'Super Admin'}</p>
+              <p className="text-xs font-bold text-gray-900 leading-none">{user?.fullName || user?.username || 'Admin'}</p>
               <div className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
                 <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-0.5">{user?.role || 'System'}</p>
@@ -192,7 +192,6 @@ const Header: React.FC<{ setOpen: (val: boolean) => void }> = ({ setOpen }) => {
                 <button
                   onClick={() => {
                     logout();
-                    setIsAuthenticated(false);
                     navigate('/admin/login');
                     setShowDropdown(false);
                   }}

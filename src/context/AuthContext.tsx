@@ -53,9 +53,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (response.ok) {
         const userData = await response.json().catch(() => ({}));
 
+        // Construct fullName from firstName/lastName if they're separate, otherwise use fullName or name
+        let fullName = userData.fullName || userData.name || '';
+        if (!fullName && (userData.firstName || userData.lastName)) {
+          fullName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
+        }
+
         const user: User = {
           id: userData.id || userData._id || userData.employeeId || '',
-          fullName: userData.fullName || userData.name || '',
+          fullName: fullName,
           email: userData.email || '',
           role: normalizeRole(userData.role),
           avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.email}`,
