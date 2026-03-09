@@ -34,9 +34,10 @@ import EmployeeNotifications from './pages/employee/Notifications.tsx';
 import EmployeeProfile from './pages/employee/Profile.tsx';
 import EmployeeResignation from './pages/employee/Resignation.tsx';
 
-// Admin login and dashboard
 import AdminLogin from './pages/admin/Login.tsx';
 import AdminDashboard from './pages/admin/Dashboard.tsx';
+import AdminAttendanceComponent from './pages/admin/AdminAttendance.tsx';
+import AdminCalendar from './pages/admin/AdminCalendar.tsx';
 import AdminLayoutWrapper from './components/admin/LayoutWrapper.tsx';
 import AdminAttendanceMonitor from './pages/admin/AttendanceMonitor.tsx';
 import AdminAuditLogs from './pages/admin/AuditLogs.tsx';
@@ -45,6 +46,8 @@ import AdminEmployeeHub from './pages/admin/EmployeeHub.tsx';
 import AdminEmployeeDetails from './pages/admin/EmployeeDetails.tsx';
 import AdminEventsAdmin from './pages/admin/EventsAdmin.tsx';
 import AdminLeaveCenter from './pages/admin/LeaveCenter.tsx';
+import AdminLeave from './pages/admin/AdminLeave.tsx';
+import AdminProjects from './pages/admin/Projects.tsx';
 import AdminNotificationsAdmin from './pages/admin/NotificationsAdmin.tsx';
 import AdminPayrollProcessing from './pages/admin/PayrollProcessing.tsx';
 import AdminPayslipsAdmin from './pages/admin/PayslipsAdmin.tsx';
@@ -62,6 +65,7 @@ import { AppProvider } from './context/AppContext.tsx';
 import { AuthProvider, useAuth } from './context/AuthContext.tsx';
 import { LeaveProvider } from './context/LeaveContext.tsx';
 import { HRMSProvider } from './context/HRMSContext.tsx';
+
 
 // Landing Page Component
 const LandingPageContent = () => (
@@ -141,7 +145,6 @@ const EmployeePageWithLogout = ({ children }: { children: React.ReactNode }) => 
     } catch (e) {
       console.error('Logout error:', e);
     }
-    setIsAuthenticated(false);
     localStorage.removeItem('user');
     localStorage.removeItem('authToken');
     navigate('/employee/login', { replace: true });
@@ -198,7 +201,6 @@ const AdminPageWithLogout = ({ children }: { children: React.ReactNode }) => {
     } catch (e) {
       console.error('Logout error:', e);
     }
-    setIsAuthenticated(false);
     localStorage.removeItem('user');
     localStorage.removeItem('authToken');
     navigate('/admin/login', { replace: true });
@@ -299,6 +301,18 @@ const EmployeeResignationPage = () => (
 const AdminDashboardWithContext = () => (
   <AdminPageWithLogout>
     <AdminDashboard />
+  </AdminPageWithLogout>
+);
+
+const AdminAttendance = () => (
+  <AdminPageWithLogout>
+    <AdminAttendanceComponent />
+  </AdminPageWithLogout>
+);
+
+const AdminCalendarPage = () => (
+  <AdminPageWithLogout>
+    <AdminCalendar />
   </AdminPageWithLogout>
 );
 
@@ -502,9 +516,12 @@ root.render(
               <Route path="/employee/profile" element={<EmployeeProfilePage />} />
 
 
+
               {/* Admin routes */}
               <Route path="/admin/login" element={<AdminLoginGuard />} />
               <Route path="/admin/dashboard" element={<AdminDashboardWithContext />} />
+              <Route path="/attendance" element={<AdminAttendance />} />
+              <Route path="/admin/calendar" element={<AdminCalendarPage />} />
               <Route path="/admin/attendance-monitor" element={<AdminAttendanceMonitorPage />} />
               <Route path="/admin/audit-logs" element={<AdminAuditLogsPage />} />
               <Route path="/admin/document-management" element={<AdminDocumentManagementPage />} />
@@ -512,6 +529,8 @@ root.render(
               <Route path="/admin/employee-hub/:id" element={<AdminEmployeeDetailsPage />} />
               <Route path="/admin/events" element={<AdminEventPage />} />
               <Route path="/admin/leave-center" element={<AdminLeaveCenterPage />} />
+              <Route path="/admin/leave" element={<AdminPageWithLogout><LeaveProvider><AdminLeave /></LeaveProvider></AdminPageWithLogout>} />
+              <Route path="/admin/projects" element={<AdminPageWithLogout><AdminProjects /></AdminPageWithLogout>} />
               <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
               <Route path="/admin/payroll-processing" element={<AdminPayrollProcessingPage />} />
               <Route path="/admin/payslips" element={<AdminPayslipsPage />} />

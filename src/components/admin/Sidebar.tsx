@@ -2,8 +2,8 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { NAV_ITEMS } from '../../constants.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
-import { useApp } from '../../context/AppContext';
-import Icon from './Icon';
+import { useApp } from '../../context/AppContext.tsx';
+import Icon from './Icon.tsx';
 
 const Sidebar: React.FC<{ isOpen: boolean; setOpen: (val: boolean) => void }> = ({ isOpen, setOpen }) => {
   const location = useLocation();
@@ -26,10 +26,13 @@ const Sidebar: React.FC<{ isOpen: boolean; setOpen: (val: boolean) => void }> = 
   const getRoutePath = (itemId: string) => {
     const pathMap: Record<string, string> = {
       'admin/dashboard': '/admin/dashboard',
+      'admin/adminattendance': '/attendance',
+      'admin/calendar': '/admin/calendar',
       'admin/employees': '/admin/employee-hub',
       'admin/documents': '/admin/document-management',
       'admin/attendance': '/admin/attendance-monitor',
-      'admin/leave': '/admin/leave-center',
+      'admin/leave': '/admin/leave',
+      'admin/leave-requests': '/admin/leave-center',
       'admin/requests': '/admin/requests',
       'admin/tasks': '/admin/tasks',
       'admin/events': '/admin/events',
@@ -40,6 +43,7 @@ const Sidebar: React.FC<{ isOpen: boolean; setOpen: (val: boolean) => void }> = 
       'admin/audit-logs': '/admin/audit-logs',
       'admin/profile': '/admin/profile',
       'admin/resignation': '/admin/resignation',
+      'admin/projects': '/admin/projects',
     };
     return pathMap[itemId] || `/${itemId}`;
   };
