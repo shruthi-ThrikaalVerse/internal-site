@@ -138,9 +138,9 @@ export const getNotificationUsers = async (id: number) => {
 
 // GET notifications for currently authenticated user (if backend supports /my)
 // GET notifications for currently authenticated user
-export const getMyNotifications = async () => {
+export const getMyNotifications = async (status?: string) => {
   try {
-    const url = `${API_BASE}/getMyNotifications`;
+    const url = status ? `${API_BASE}/getMyNotifications?status=${status}` : `${API_BASE}/getMyNotifications`;
     console.log('Fetching my notifications from:', url);
     const resp = await fetch(url, {
       headers: { Accept: 'application/json' },
@@ -150,6 +150,54 @@ export const getMyNotifications = async () => {
     return await handleResp(resp);
   } catch (err: any) {
     console.error('getMyNotifications failed:', err);
+    throw err;
+  }
+};
+
+// PUT mark all notifications as read
+export const markAllNotificationsRead = async () => {
+  try {
+    const url = `${API_BASE}/markAllRead`;
+    console.log('Marking all notifications as read at:', url);
+    const resp = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...getAuthHeader(),
+      },
+      credentials: 'include',
+    });
+    const text = await resp.text();
+    console.log('markAllNotificationsRead response status:', resp.status, 'body:', text);
+    await throwIfError(resp);
+    try { return JSON.parse(text); } catch { return text; }
+  } catch (err: any) {
+    console.error('markAllNotificationsRead failed:', err);
+    throw err;
+  }
+};
+
+// PUT mark a single notification as read
+export const markNotificationAsRead = async (id: string | number) => {
+  try {
+    const url = `${API_BASE}/markRead/${id}`;
+    console.log('Marking notification as read at:', url);
+    const resp = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...getAuthHeader(),
+      },
+      credentials: 'include',
+    });
+    const text = await resp.text();
+    console.log('markNotificationAsRead response status:', resp.status, 'body:', text);
+    await throwIfError(resp);
+    try { return JSON.parse(text); } catch { return text; }
+  } catch (err: any) {
+    console.error('markNotificationAsRead failed:', err);
     throw err;
   }
 };

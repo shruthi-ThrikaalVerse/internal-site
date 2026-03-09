@@ -338,7 +338,7 @@ const Dashboard: React.FC = () => {
         return {
           text: 'Check In Again',
           color: 'bg-blue-600 hover:bg-blue-700',
-          icon: <CheckCircle className="w-4 h-4" />
+          icon: <CheckCircle className="ml-2 w-4 h-4" />
         };
       default:
         return {

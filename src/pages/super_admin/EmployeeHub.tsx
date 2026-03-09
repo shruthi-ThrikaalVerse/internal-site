@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { User } from '../../types.tsx';
-import { Badge, SectionHeader } from '../../components/super_admin/UI.tsx';
+import { Badge, SectionHeader } from './UI.tsx';
 import { Modal } from '../../components/super_admin/Modal.tsx';
 import { FormInput, FormSelect, FormTextArea } from '../../components/super_admin/FormFields.tsx';
 import { useApp } from '../../context/AppContext.tsx';

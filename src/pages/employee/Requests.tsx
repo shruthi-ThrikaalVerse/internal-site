@@ -516,244 +516,6 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
     return categories.find(c => c.id === categoryId)?.types || [];
   };
 
-  const NewRequestModal = () => {
-    if (!showNewRequestModal) return null;
-
-    const isExpenseClaim = selectedCategory === 'finance' && selectedType === 'expense';
-
-    return (
-      <div className="fixed inset-0 z-[100] overflow-y-auto">
-        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm" onClick={() => setShowNewRequestModal(false)} />
-        <div className="relative min-h-screen flex items-center justify-center p-4">
-          <div className="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-300" onClick={e => e.stopPropagation()}>
-            <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <div>
-                <h2 className="text-2xl font-black text-gray-900 tracking-tight">Create New Request</h2>
-                <p className="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em] mt-1">Fill in the details below</p>
-              </div>
-              <button
-                type="button"
-                title="Close modal"
-                onClick={() => setShowNewRequestModal(false)}
-                className="p-3 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-xl transition-all active:scale-90"
-              >
-                <X className="w-6 h-6" aria-hidden="true" />
-                <span className="sr-only">Close modal</span>
-              </button>
-            </div>
-
-            <div className="p-8">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Field 1: Category Dropdown */}
-                <div className="space-y-2">
-                  <label htmlFor="request-category" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
-                    Category *
-                  </label>
-                  <select
-                    id="request-category"
-                    value={selectedCategory}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                      setSelectedCategory(e.target.value);
-                      setSelectedType(''); // Reset type when category changes
-                    }}
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700 cursor-pointer"
-                    aria-label="Request category"
-                    title="Request category"
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map(category => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Field 2: Type Dropdown */}
-                <div className="space-y-2">
-                  <label htmlFor="request-type" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
-                    Type *
-                  </label>
-                  <select
-                    id="request-type"
-                    value={selectedType}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedType(e.target.value)}
-                    required
-                    disabled={!selectedCategory}
-                    className={`w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700 cursor-pointer ${!selectedCategory ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    aria-label="Request type"
-                    title="Request type"
-                  >
-                    <option value="">Select a type</option>
-                    {getTypesForCategory(selectedCategory).map(type => (
-                      <option key={type.id} value={type.id}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Field 3: Subject */}
-                <div className="space-y-2">
-                  <label htmlFor="request-subject" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
-                    Subject *
-                  </label>
-                  <input
-                    id="request-subject"
-                    type="text"
-                    value={subject}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubject(e.target.value)}
-                    required
-                    placeholder="Brief summary of your request"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700"
-                    aria-label="Request subject"
-                    title="Request subject"
-                  />
-                </div>
-
-                {/* Field 3.5: Priority */}
-                <div className="space-y-2">
-                  <label htmlFor="request-priority" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
-                    Priority
-                  </label>
-                  <select
-                    id="request-priority"
-                    value={priority}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPriority(e.target.value as 'low' | 'medium' | 'high' | 'urgent')}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700 cursor-pointer"
-                    aria-label="Request priority"
-                    title="Request priority"
-                  >
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
-                </div>
-
-                {/* Field 4: Description */}
-                <div className="space-y-2">
-                  <label htmlFor="request-description" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
-                    Description *
-                  </label>
-                  <textarea
-                    id="request-description"
-                    value={description}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
-                    required
-                    rows={4}
-                    placeholder="Detailed description of your issue or request..."
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700 resize-none"
-                    aria-label="Request description"
-                    title="Request description"
-                  />
-                </div>
-
-                {/* Field 5: Upload Files */}
-                <div className="space-y-2">
-                  <label htmlFor="request-files" className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1 flex items-center gap-1">
-                    Attachments
-                    {isExpenseClaim && (
-                      <span className="text-rose-500">*</span>
-                    )}
-                    <span className="text-gray-400 font-normal">
-                      {isExpenseClaim
-                        ? ' (Required for expense claims)'
-                        : ' (Optional)'}
-                    </span>
-                  </label>
-                  <input
-                    id="request-files"
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    multiple
-                    className="hidden"
-                  />
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
-                    onClick={() => fileInputRef.current?.click()}
-                    aria-label="Upload attachments"
-                    title="Upload attachments"
-                    className={`border-2 border-dashed rounded-xl p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group ${isExpenseClaim && attachments.length === 0 ? 'border-rose-200 bg-rose-50' : 'border-gray-200'}`}
-                  >
-                    <FileUp className="w-8 h-8 text-gray-300 mx-auto mb-2 group-hover:text-blue-500 transition-colors" />
-                    <span className="text-sm font-medium text-gray-600 block">
-                      {attachments.length === 0
-                        ? 'Click to upload files (images, documents, etc.)'
-                        : `${attachments.length} file(s) selected`}
-                    </span>
-                    {isExpenseClaim && attachments.length === 0 && (
-                      <p className="text-xs text-rose-500 mt-2 font-medium">
-                        ⚠️ Supporting documents are required for expense claims
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Display selected files */}
-                  {attachments.length > 0 && (
-                    <div className="mt-3 space-y-2">
-                      {attachments.map((file: File, idx: number) => (
-                        <div key={idx} className="flex items-center justify-between bg-blue-50 border border-blue-100 px-3 py-2 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <FileText size={14} className="text-blue-600" />
-                            <span className="text-xs font-medium text-blue-900 truncate max-w-[200px]">
-                              {file.name}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeAttachment(idx)}
-                            className="p-1 hover:bg-rose-100 text-rose-500 rounded transition-colors"
-                            aria-label={`Remove attachment ${file.name}`}
-                            title={`Remove attachment ${file.name}`}
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Submit Buttons */}
-                <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowNewRequestModal(false)}
-                    className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-gray-200 transition-all active:scale-95"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-blue-100 active:scale-95 transition-all"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        Submit Request
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6 animate-in fade-in duration-500">
       {/* Page Header */}
@@ -1134,7 +896,241 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
       )}
 
       {/* New Request Modal */}
-      <NewRequestModal />
+      {showNewRequestModal && (() => {
+        const isExpenseClaim = selectedCategory === 'finance' && selectedType === 'expense';
+
+        return (
+          <div className="fixed inset-0 z-[100] overflow-y-auto">
+            <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm" onClick={() => setShowNewRequestModal(false)} />
+            <div className="relative min-h-screen flex items-center justify-center p-4">
+              <div className="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-300" onClick={e => e.stopPropagation()}>
+                <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                  <div>
+                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">Create New Request</h2>
+                    <p className="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em] mt-1">Fill in the details below</p>
+                  </div>
+                  <button
+                    type="button"
+                    title="Close modal"
+                    onClick={() => setShowNewRequestModal(false)}
+                    className="p-3 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded-xl transition-all active:scale-90"
+                  >
+                    <X className="w-6 h-6" aria-hidden="true" />
+                    <span className="sr-only">Close modal</span>
+                  </button>
+                </div>
+
+                <div className="p-8">
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Field 1: Category Dropdown */}
+                    <div className="space-y-2">
+                      <label htmlFor="request-category" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
+                        Category *
+                      </label>
+                      <select
+                        id="request-category"
+                        value={selectedCategory}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                          setSelectedCategory(e.target.value);
+                          setSelectedType(''); // Reset type when category changes
+                        }}
+                        required
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700 cursor-pointer"
+                        aria-label="Request category"
+                        title="Request category"
+                      >
+                        <option value="">Select a category</option>
+                        {categories.map(category => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Field 2: Type Dropdown */}
+                    <div className="space-y-2">
+                      <label htmlFor="request-type" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
+                        Type *
+                      </label>
+                      <select
+                        id="request-type"
+                        value={selectedType}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedType(e.target.value)}
+                        required
+                        disabled={!selectedCategory}
+                        className={`w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700 cursor-pointer ${!selectedCategory ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        aria-label="Request type"
+                        title="Request type"
+                      >
+                        <option value="">Select a type</option>
+                        {getTypesForCategory(selectedCategory).map(type => (
+                          <option key={type.id} value={type.id}>
+                            {type.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Field 3: Subject */}
+                    <div className="space-y-2">
+                      <label htmlFor="request-subject" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
+                        Subject *
+                      </label>
+                      <input
+                        id="request-subject"
+                        type="text"
+                        value={subject}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubject(e.target.value)}
+                        required
+                        placeholder="Brief summary of your request"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700"
+                        aria-label="Request subject"
+                        title="Request subject"
+                      />
+                    </div>
+
+                    {/* Field 3.5: Priority */}
+                    <div className="space-y-2">
+                      <label htmlFor="request-priority" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
+                        Priority
+                      </label>
+                      <select
+                        id="request-priority"
+                        value={priority}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPriority(e.target.value as 'low' | 'medium' | 'high' | 'urgent')}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700 cursor-pointer"
+                        aria-label="Request priority"
+                        title="Request priority"
+                      >
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                        <option value="urgent">Urgent</option>
+                      </select>
+                    </div>
+
+                    {/* Field 4: Description */}
+                    <div className="space-y-2">
+                      <label htmlFor="request-description" className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
+                        Description *
+                      </label>
+                      <textarea
+                        id="request-description"
+                        value={description}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
+                        required
+                        rows={4}
+                        placeholder="Detailed description of your issue or request..."
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-gray-700 resize-none"
+                        aria-label="Request description"
+                        title="Request description"
+                      />
+                    </div>
+
+                    {/* Field 5: Upload Files */}
+                    <div className="space-y-2">
+                      <label htmlFor="request-files" className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1 flex items-center gap-1">
+                        Attachments
+                        {isExpenseClaim && (
+                          <span className="text-rose-500">*</span>
+                        )}
+                        <span className="text-gray-400 font-normal">
+                          {isExpenseClaim
+                            ? ' (Required for expense claims)'
+                            : ' (Optional)'}
+                        </span>
+                      </label>
+                      <input
+                        id="request-files"
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        multiple
+                        className="hidden"
+                      />
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
+                        onClick={() => fileInputRef.current?.click()}
+                        aria-label="Upload attachments"
+                        title="Upload attachments"
+                        className={`border-2 border-dashed rounded-xl p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group ${isExpenseClaim && attachments.length === 0 ? 'border-rose-200 bg-rose-50' : 'border-gray-200'}`}
+                      >
+                        <FileUp className="w-8 h-8 text-gray-300 mx-auto mb-2 group-hover:text-blue-500 transition-colors" />
+                        <span className="text-sm font-medium text-gray-600 block">
+                          {attachments.length === 0
+                            ? 'Click to upload files (images, documents, etc.)'
+                            : `${attachments.length} file(s) selected`}
+                        </span>
+                        {isExpenseClaim && attachments.length === 0 && (
+                          <p className="text-xs text-rose-500 mt-2 font-medium">
+                            ⚠️ Supporting documents are required for expense claims
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Display selected files */}
+                      {attachments.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {attachments.map((file: File, idx: number) => (
+                            <div key={idx} className="flex items-center justify-between bg-blue-50 border border-blue-100 px-3 py-2 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <FileText size={14} className="text-blue-600" />
+                                <span className="text-xs font-medium text-blue-900 truncate max-w-[200px]">
+                                  {file.name}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeAttachment(idx)}
+                                className="p-1 hover:bg-rose-100 text-rose-500 rounded transition-colors"
+                                aria-label={`Remove attachment ${file.name}`}
+                                title={`Remove attachment ${file.name}`}
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Submit Buttons */}
+                    <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+                      <button
+                        type="button"
+                        onClick={() => setShowNewRequestModal(false)}
+                        className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-gray-200 transition-all active:scale-95"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-blue-100 active:scale-95 transition-all"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Submitting...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4" />
+                            Submit Request
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Details Modal - Responsive */}
       {detailRequest && (

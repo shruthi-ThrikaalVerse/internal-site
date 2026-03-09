@@ -98,15 +98,15 @@ const STORAGE_KEY = 'HRMS_PRO_DATA_V2';
 export const HRMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const loadData = () => {
     const defaults = {
-      employees: initialEmployees || [],
+      employees: [],
       leaves: [],
-      activities: initialActivities || [],
-      attendance: initialAttendance || [],
+      activities: [],
+      attendance: [],
       stats: initialStats,
-      payroll: initialPayroll || [],
-      goals: initialGoals || [],
-      performanceCycles: initialPerformanceCycles || [],
-      logs: initialLogs || [],
+      payroll: [],
+      goals: [],
+      performanceCycles: [],
+      logs: [],
       payslips: [
         {
           id: 'ps-1',

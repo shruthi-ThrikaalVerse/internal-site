@@ -7,7 +7,7 @@ import {
     Smartphone, MapPin, Camera, Upload, Trash2
 } from 'lucide-react';
 import { User } from '../../types.tsx';
-import { Badge, SectionHeader } from '../../components/super_admin/UI.tsx';
+import { Badge, SectionHeader } from './UI.tsx';
 import { Modal } from '../../components/super_admin/Modal.tsx';
 import { FormInput, FormSelect } from '../../components/super_admin/FormFields.tsx';
 import { useApp } from '../../context/AppContext.tsx';

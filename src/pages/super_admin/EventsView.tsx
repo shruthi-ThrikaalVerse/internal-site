@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { SectionHeader, Badge } from '../../components/super_admin/UI.tsx';
+import { SectionHeader, Badge } from './UI.tsx';
 import { Calendar as CalendarIcon, Clock, Users, Video, Coffee, PartyPopper, Plus, Trash2, Edit2, X, ChevronLeft, ChevronRight, Check, Search } from 'lucide-react';
 import * as eventsApi from '../../api/events.ts';
 import { getAllEmployees, getDepartments } from '../../api/users.ts';

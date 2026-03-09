@@ -14,7 +14,7 @@ import {
   NAVIGATION_ITEMS, MOCK_LOGS,
   MOCK_PERFORMANCE_METRICS
 } from './constants.js';
-import { StatCard, SectionHeader } from './components/super_admin/UI.js';
+import { StatCard, SectionHeader } from './pages/super_admin/UI.js';
 import { DashboardView } from './pages/super_admin/DashboardView.js';
 import { EmployeeHub } from './pages/super_admin/EmployeeHub.js';
 import { AdminHub } from './pages/super_admin/AdminHub.js';

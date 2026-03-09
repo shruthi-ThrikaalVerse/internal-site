@@ -9,7 +9,7 @@ import {
   AreaChart, Area
 } from 'recharts';
 import { User, AuditLog, Project } from '../../types.tsx';
-import { StatCard, SectionHeader, Badge } from '../../components/super_admin/UI.tsx';
+import { StatCard, SectionHeader, Badge } from './UI.tsx';
 import { useApp } from '../../context/AppContext.tsx';
 
 interface DashboardViewProps {
