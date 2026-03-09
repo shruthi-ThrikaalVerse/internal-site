@@ -1,61 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import * as LucideIcons from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts';
+import { PerformanceAnalyticsResponse } from '../../types.ts';
+import { getPerformancePercentage } from '../../api/performance.ts';
 
 const Icon = ({ name, className, onClick }: { name: string; className?: string; onClick?: () => void }) => {
   const LucideIcon = (LucideIcons as any)[name];
   return LucideIcon ? <LucideIcon className={className} onClick={onClick} /> : null;
 };
 
-// Performance data generator
-const generatePerformanceData = (employeeId: string) => {
-  return {
-    monthly: [
-      { month: 'Jan 2024', workingDays: 22, leavesTaken: 2, presentDays: 18, absentDays: 2, tasksAssigned: 20, tasksCompleted: 15, tasksPending: 5 },
-      { month: 'Feb 2024', workingDays: 20, leavesTaken: 1, presentDays: 17, absentDays: 2, tasksAssigned: 22, tasksCompleted: 18, tasksPending: 4 },
-      { month: 'Mar 2024', workingDays: 22, leavesTaken: 0, presentDays: 20, absentDays: 2, tasksAssigned: 25, tasksCompleted: 22, tasksPending: 3 }
-    ],
-    quarterly: [
-      { quarter: 'Q4 2023', workingDays: 63, leavesTaken: 3, presentDays: 56, absentDays: 4, tasksAssigned: 65, tasksCompleted: 55, tasksPending: 10 },
-      { quarter: 'Q1 2024', workingDays: 64, leavesTaken: 3, presentDays: 55, absentDays: 6, tasksAssigned: 67, tasksCompleted: 60, tasksPending: 7 }
-    ],
-    yearly: [
-      { year: '2023', workingDays: 252, leavesTaken: 12, presentDays: 225, absentDays: 15, tasksAssigned: 250, tasksCompleted: 210, tasksPending: 40 },
-      { year: '2024 (YTD)', workingDays: 64, leavesTaken: 3, presentDays: 55, absentDays: 6, tasksAssigned: 67, tasksCompleted: 60, tasksPending: 7 }
-    ]
-  };
-};
-
-const getPieChartData = (selectedPeriod: string, dataType: 'monthly' | 'quarterly' | 'yearly', allData: any) => {
-  let dataPoint = null;
-
-  if (dataType === 'monthly') {
-    dataPoint = allData.monthly.find((d: any) => d.month === selectedPeriod);
-  } else if (dataType === 'quarterly') {
-    dataPoint = allData.quarterly.find((d: any) => d.quarter === selectedPeriod);
-  } else {
-    dataPoint = allData.yearly.find((d: any) => d.year === selectedPeriod);
-  }
-
-  if (!dataPoint) return { leaves: [], attendance: [], tasks: [] };
-
-  return {
-    leaves: [
-      { name: 'Leaves Taken', value: dataPoint.leavesTaken, fill: '#ef4444' },
-      { name: 'Working Days', value: dataPoint.workingDays - dataPoint.leavesTaken, fill: '#10b981' }
-    ],
-    attendance: [
-      { name: 'Present', value: dataPoint.presentDays, fill: '#3b82f6' },
-      { name: 'Absent', value: dataPoint.absentDays, fill: '#fbbf24' }
-    ],
-    tasks: [
-      { name: 'Completed', value: dataPoint.tasksCompleted, fill: '#10b981' },
-      { name: 'Pending', value: dataPoint.tasksPending, fill: '#ef4444' }
-    ]
-  };
-};
 
 const EmployeeDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -63,9 +18,13 @@ const EmployeeDetails: React.FC = () => {
   const { employees, updateEmployee } = useHRMS();
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [performanceViewPeriod, setPerformanceViewPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
-  const [performanceViewFilter, setPerformanceViewFilter] = useState('Mar 2024');
+  const [performanceViewFilter, setPerformanceViewFilter] = useState('');
+  const [performanceViewYear, setPerformanceViewYear] = useState<number>(new Date().getFullYear());
+
+  const [analytics, setAnalytics] = useState<PerformanceAnalyticsResponse | null>(null);
+
   const [performanceFormPeriod, setPerformanceFormPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
-  const [performanceFormFilter, setPerformanceFormFilter] = useState('Mar 2024');
+  const [performanceFormFilter, setPerformanceFormFilter] = useState('');
   const [performanceFormData, setPerformanceFormData] = useState({
     rating: '',
     feedback: '',
@@ -77,26 +36,126 @@ const EmployeeDetails: React.FC = () => {
   // Find the employee
   const selectedEmployee = employees.find(emp => emp.id === id);
 
-  // Get performance data
-  const performanceData = useMemo(() => {
-    return selectedEmployee ? generatePerformanceData(selectedEmployee.id) : { monthly: [], quarterly: [], yearly: [] };
-  }, [selectedEmployee]);
+  // whenever the period or filter or year changes, fire off an API call
+  useEffect(() => {
+    if (!selectedEmployee) {
+      setAnalytics(null);
+      return;
+    }
 
-  const pieChartData = useMemo(() => {
-    return getPieChartData(performanceViewFilter, performanceViewPeriod, performanceData);
-  }, [performanceViewFilter, performanceViewPeriod, performanceData]);
+    const fetch = async () => {
+      try {
+        const year = performanceViewYear;
+        const month = performanceViewPeriod === 'monthly' ? parseInt(performanceViewFilter, 10) : undefined;
+        const quarter = performanceViewPeriod === 'quarterly' ? parseInt(performanceViewFilter, 10) : undefined;
+
+        const resp = await getPerformancePercentage({
+          employeeId: selectedEmployee.employeeId,
+          periodType: performanceViewPeriod,
+          year,
+          month,
+          quarter
+        });
+        setAnalytics(resp);
+      } catch (e) {
+        console.error('Failed to load performance analytics', e);
+        setAnalytics(null);
+      }
+    };
+
+    if (performanceViewFilter) {
+      fetch();
+    }
+  }, [selectedEmployee, performanceViewPeriod, performanceViewFilter, performanceViewYear]);
+
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
   const availablePeriods = useMemo(() => {
-    if (performanceViewPeriod === 'monthly') return performanceData.monthly.map(d => d.month);
-    if (performanceViewPeriod === 'quarterly') return performanceData.quarterly.map(d => d.quarter);
-    return performanceData.yearly.map(d => d.year);
-  }, [performanceViewPeriod, performanceData]);
+    if (performanceViewPeriod === 'monthly') {
+      return monthNames.map((m, i) => ({ label: m, value: (i + 1).toString() }));
+    }
+    if (performanceViewPeriod === 'quarterly') {
+      return [
+        { label: 'Q1', value: '1' },
+        { label: 'Q2', value: '2' },
+        { label: 'Q3', value: '3' },
+        { label: 'Q4', value: '4' }
+      ];
+    }
+    return [performanceViewYear - 1, performanceViewYear].map(y => ({ label: y.toString(), value: y.toString() }));
+  }, [performanceViewPeriod, performanceViewYear]);
+
+  const pieChartData = useMemo(() => {
+    if (!analytics) {
+      return { leaves: [], attendance: [], tasks: [] };
+    }
+    const pendingTasks =
+      analytics.taskAnalyticsResponse.assigned -
+      analytics.taskAnalyticsResponse.completed -
+      analytics.taskAnalyticsResponse.inProgress;
+    return {
+      leaves: [
+        { name: 'Leaves Taken', value: analytics.leaveAnalyticsResponse.leavesTaken, fill: '#ef4444' },
+        {
+          name: 'Working Days',
+          value: analytics.leaveAnalyticsResponse.workingDays - analytics.leaveAnalyticsResponse.leavesTaken,
+          fill: '#10b981'
+        }
+      ],
+      attendance: [
+        { name: 'Present', value: analytics.attendanceAnayticsResponse.presentDays, fill: '#3b82f6' },
+        { name: 'Absent', value: analytics.attendanceAnayticsResponse.absentDays, fill: '#fbbf24' }
+      ],
+      tasks: [
+        { name: 'Completed', value: analytics.taskAnalyticsResponse.completed, fill: '#10b981' },
+        { name: 'Pending', value: pendingTasks, fill: '#ef4444' }
+      ]
+    };
+  }, [analytics]);
+
 
   const availableFormPeriods = useMemo(() => {
-    if (performanceFormPeriod === 'monthly') return performanceData.monthly.map(d => d.month);
-    if (performanceFormPeriod === 'quarterly') return performanceData.quarterly.map(d => d.quarter);
-    return performanceData.yearly.map(d => d.year);
-  }, [performanceFormPeriod, performanceData]);
+    if (performanceFormPeriod === 'monthly') {
+      return monthNames.map((m, i) => ({ label: m, value: (i + 1).toString() }));
+    }
+    if (performanceFormPeriod === 'quarterly') {
+      return [
+        { label: 'Q1', value: '1' },
+        { label: 'Q2', value: '2' },
+        { label: 'Q3', value: '3' },
+        { label: 'Q4', value: '4' }
+      ];
+    }
+    return [performanceViewYear - 1, performanceViewYear].map(y => ({ label: y.toString(), value: y.toString() }));
+  }, [performanceFormPeriod, performanceViewYear]);
+
+  // reset filters when the available periods change; choose the current
+  // month/quarter/year instead of simply taking the first list element.
+  useEffect(() => {
+    if (availablePeriods.length === 0) return;
+    const now = new Date();
+    if (performanceViewPeriod === 'monthly') {
+      setPerformanceViewFilter((now.getMonth() + 1).toString());
+    } else if (performanceViewPeriod === 'quarterly') {
+      const q = Math.floor(now.getMonth() / 3) + 1;
+      setPerformanceViewFilter(q.toString());
+    } else {
+      setPerformanceViewFilter(performanceViewYear.toString());
+    }
+  }, [availablePeriods, performanceViewPeriod, performanceViewYear]);
+
+  useEffect(() => {
+    if (availableFormPeriods.length === 0) return;
+    const now = new Date();
+    if (performanceFormPeriod === 'monthly') {
+      setPerformanceFormFilter((now.getMonth() + 1).toString());
+    } else if (performanceFormPeriod === 'quarterly') {
+      const q = Math.floor(now.getMonth() / 3) + 1;
+      setPerformanceFormFilter(q.toString());
+    } else {
+      setPerformanceFormFilter(performanceViewYear.toString());
+    }
+  }, [availableFormPeriods, performanceFormPeriod, performanceViewYear]);
 
   const handleCopy = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -303,12 +362,7 @@ const EmployeeDetails: React.FC = () => {
                       {(['monthly', 'quarterly', 'yearly'] as const).map((period) => (
                         <button
                           key={period}
-                          onClick={() => {
-                            setPerformanceViewPeriod(period);
-                            if (period === 'monthly') setPerformanceViewFilter(performanceData.monthly[0]?.month || '');
-                            if (period === 'quarterly') setPerformanceViewFilter(performanceData.quarterly[0]?.quarter || '');
-                            if (period === 'yearly') setPerformanceViewFilter(performanceData.yearly[0]?.year || '');
-                          }}
+                          onClick={() => setPerformanceViewPeriod(period)}
                           className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
                             performanceViewPeriod === period
                               ? 'bg-indigo-600 text-white shadow-lg'
@@ -321,6 +375,16 @@ const EmployeeDetails: React.FC = () => {
                     </div>
                   </div>
 
+                  <div>
+                    <label className="text-xs font-black text-black uppercase tracking-widest mb-1 block">Year</label>
+                    <input
+                      type="number"
+                      value={performanceViewYear}
+                      onChange={(e) => setPerformanceViewYear(parseInt(e.target.value, 10))}
+                      className="w-24 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-sm text-black focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                    />
+                  </div>
+
                   <div className="flex-1 max-w-xs">
                     <label className="text-xs font-black text-black uppercase tracking-widest mb-1 block">Select Period</label>
                     <select
@@ -328,9 +392,9 @@ const EmployeeDetails: React.FC = () => {
                       onChange={(e) => setPerformanceViewFilter(e.target.value)}
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-sm text-black focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                     >
-                      {availablePeriods.map((period) => (
-                        <option key={period} value={period}>
-                          {period}
+                      {availablePeriods.map((p) => (
+                        <option key={p.value} value={p.value}>
+                          {p.label}
                         </option>
                       ))}
                     </select>
@@ -354,14 +418,10 @@ const EmployeeDetails: React.FC = () => {
                       </div>
                       <div className="p-6 space-y-6">
                         {(() => {
-                          let leaveData = null;
-                          if (performanceViewPeriod === 'monthly') {
-                            leaveData = performanceData.monthly.find(d => d.month === performanceViewFilter);
-                          } else if (performanceViewPeriod === 'quarterly') {
-                            leaveData = performanceData.quarterly.find(d => d.quarter === performanceViewFilter);
-                          } else {
-                            leaveData = performanceData.yearly.find(d => d.year === performanceViewFilter);
-                          }
+                          const leaveData = analytics ? {
+                            workingDays: analytics.leaveAnalyticsResponse.workingDays,
+                            leavesTaken: analytics.leaveAnalyticsResponse.leavesTaken
+                          } : null;
                           return leaveData ? (
                           <div className="grid grid-cols-2 gap-3">
                             <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-4 border border-red-200">
@@ -379,7 +439,10 @@ const EmployeeDetails: React.FC = () => {
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
                             <Pie
-                              data={pieChartData.leaves}
+                              data={analytics ? [
+                                { name: 'Leaves Taken', value: analytics.leaveAnalyticsResponse.leavesTaken, fill: '#ef4444' },
+                                { name: 'Working Days', value: analytics.leaveAnalyticsResponse.workingDays - analytics.leaveAnalyticsResponse.leavesTaken, fill: '#10b981' }
+                              ] : []}
                               cx="50%"
                               cy="50%"
                               labelLine={false}
@@ -388,9 +451,11 @@ const EmployeeDetails: React.FC = () => {
                               fill="#8884d8"
                               dataKey="value"
                             >
-                              {pieChartData.leaves.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.fill} />
-                              ))}
+                              {analytics && analytics.leaveAnalyticsResponse && analytics.leaveAnalyticsResponse.leavesTaken !== undefined
+                                ? [analytics.leaveAnalyticsResponse.leavesTaken, analytics.leaveAnalyticsResponse.workingDays - analytics.leaveAnalyticsResponse.leavesTaken].map((_, index) => (
+                                    <Cell key={`cell-${index}`} fill={[ '#ef4444', '#10b981' ][index]} />
+                                  ))
+                                : null}
                             </Pie>
                             <Tooltip formatter={(value) => `${value} days`} />
                             <Legend />
@@ -412,15 +477,13 @@ const EmployeeDetails: React.FC = () => {
                       </div>
                       <div className="p-6 space-y-6">
                         {(() => {
-                          let attendanceData = null;
-                          if (performanceViewPeriod === 'monthly') {
-                            attendanceData = performanceData.monthly.find(d => d.month === performanceViewFilter);
-                          } else if (performanceViewPeriod === 'quarterly') {
-                            attendanceData = performanceData.quarterly.find(d => d.quarter === performanceViewFilter);
-                          } else {
-                            attendanceData = performanceData.yearly.find(d => d.year === performanceViewFilter);
-                          }
-                          const attendanceRate = attendanceData ? Math.round((attendanceData.presentDays / (attendanceData.presentDays + attendanceData.absentDays)) * 100) : 0;
+                          const attendanceData = analytics ? {
+                            presentDays: analytics.attendanceAnayticsResponse.presentDays,
+                            absentDays: analytics.attendanceAnayticsResponse.absentDays
+                          } : null;
+                          const attendanceRate = attendanceData
+                            ? Math.round((attendanceData.presentDays / (attendanceData.presentDays + attendanceData.absentDays)) * 100)
+                            : 0;
                           return attendanceData ? (
                           <div className="grid grid-cols-3 gap-3">
                             <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4 border border-blue-200 text-center">
@@ -475,15 +538,14 @@ const EmployeeDetails: React.FC = () => {
                       </div>
                       <div className="p-6 space-y-6">
                         {(() => {
-                          let tasksData = null;
-                          if (performanceViewPeriod === 'monthly') {
-                            tasksData = performanceData.monthly.find(d => d.month === performanceViewFilter);
-                          } else if (performanceViewPeriod === 'quarterly') {
-                            tasksData = performanceData.quarterly.find(d => d.quarter === performanceViewFilter);
-                          } else {
-                            tasksData = performanceData.yearly.find(d => d.year === performanceViewFilter);
-                          }
-                          const completionRate = tasksData ? Math.round((tasksData.tasksCompleted / tasksData.tasksAssigned) * 100) : 0;
+                          const tasksData = analytics ? {
+                            tasksAssigned: analytics.taskAnalyticsResponse.assigned,
+                            tasksCompleted: analytics.taskAnalyticsResponse.completed,
+                            inProgress: analytics.taskAnalyticsResponse.inProgress
+                          } : null;
+                          const completionRate = tasksData
+                            ? Math.round((tasksData.tasksCompleted / (tasksData.tasksAssigned || 1)) * 100)
+                            : 0;
                           return tasksData ? (
                           <div className="grid grid-cols-3 gap-3">
                             <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-4 border border-purple-200 text-center">
@@ -544,12 +606,7 @@ const EmployeeDetails: React.FC = () => {
                             <button
                               key={period}
                               type="button"
-                              onClick={() => {
-                                setPerformanceFormPeriod(period);
-                                if (period === 'monthly') setPerformanceFormFilter(performanceData.monthly[0]?.month || '');
-                                if (period === 'quarterly') setPerformanceFormFilter(performanceData.quarterly[0]?.quarter || '');
-                                if (period === 'yearly') setPerformanceFormFilter(performanceData.yearly[0]?.year || '');
-                              }}
+                              onClick={() => setPerformanceFormPeriod(period)}
                               className={`flex-1 px-3 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
                                 performanceFormPeriod === period
                                   ? 'bg-indigo-600 text-white shadow-lg'
@@ -569,9 +626,9 @@ const EmployeeDetails: React.FC = () => {
                           onChange={(e) => setPerformanceFormFilter(e.target.value)}
                           className="w-full px-4 py-3 bg-white border-2 border-slate-300 rounded-xl font-semibold text-sm text-black focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                         >
-                          {availableFormPeriods.map((period) => (
-                            <option key={period} value={period}>
-                              {period}
+                          {availableFormPeriods.map((p) => (
+                            <option key={p.value} value={p.value}>
+                              {p.label}
                             </option>
                           ))}
                         </select>
