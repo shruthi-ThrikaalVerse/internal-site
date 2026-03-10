@@ -1,15 +1,5 @@
 export const API_BASE = 'http://localhost:8085/api/projects';
 
-const getAuthHeader = () => {
-  const token =
-    localStorage.getItem('accessToken') ||
-    localStorage.getItem('ACCESS_TOKEN') ||
-    localStorage.getItem('token') ||
-    localStorage.getItem('authToken') ||
-    '';
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
 const handleResp = async (resp: Response) => {
   const text = await resp.text();
   try {
@@ -31,7 +21,7 @@ export const getProjectManagers = async () => {
   const url = `${API_BASE}/project-managers`;
   console.log('Calling getProjectManagers:', url);
   const resp = await fetch(url, {
-    headers: { Accept: 'application/json', ...getAuthHeader() },
+    headers: { Accept: 'application/json' },
     credentials: 'include',
   });
   console.log('getProjectManagers response status:', resp.status);
@@ -46,7 +36,7 @@ export const getProjectManagers = async () => {
 export const getAllProjects = async () => {
   const url = `${API_BASE}/getall-projects`;
   const resp = await fetch(url, {
-    headers: { Accept: 'application/json', ...getAuthHeader() },
+    headers: { Accept: 'application/json' },
     credentials: 'include',
   });
   await throwIfError(resp);
@@ -62,7 +52,6 @@ export const createProject = async (project: any, files?: File[]) => {
   }
   const resp = await fetch(url, {
     method: 'POST',
-    headers: { ...getAuthHeader() },
     credentials: 'include',
     body: form,
   });
@@ -74,7 +63,7 @@ export const deleteProject = async (code: string) => {
   const url = `${API_BASE}/delete/${code}`;
   const resp = await fetch(url, {
     method: 'DELETE',
-    headers: { Accept: 'application/json', ...getAuthHeader() },
+    headers: { Accept: 'application/json' },
     credentials: 'include',
   });
   await throwIfError(resp);
@@ -85,7 +74,7 @@ export const updateProject = async (code: string, project: any) => {
   const url = `${API_BASE}/update/${code}`;
   const resp = await fetch(url, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+    headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify(project),
   });
@@ -98,7 +87,7 @@ export const patchProject = async (code: string, update: any) => {
     const url = `${API_BASE}/update/${c}`;
     const resp = await fetch(url, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify(update),
     });

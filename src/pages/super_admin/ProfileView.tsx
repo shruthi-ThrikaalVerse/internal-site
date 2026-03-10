@@ -3,6 +3,7 @@ import { SectionHeader } from './UI.tsx';
 import { FormInput } from '../../components/super_admin/FormFields.tsx';
 import { User, Shield, Key, Bell, Globe, Camera, Loader, X } from 'lucide-react';
 import { apiClient } from '../../utils/apiClient.js';
+import { useApp } from '../../context/AppContext.tsx';
 
 interface UserProfile {
   employeeId: string;
@@ -25,6 +26,7 @@ interface UserProfile {
 }
 
 export const ProfileView = () => {
+  const { refreshCurrentUser } = useApp();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,14 +58,8 @@ export const ProfileView = () => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-
         const data = await apiClient.get<UserProfile>('/api/users/me');
-
-        if (data) {
-          setProfile(data);
-        } else {
-          setError('Failed to load profile');
-        }
+        setProfile(data);
       } catch (err) {
         console.error('Error fetching profile:', err);
         setError('Error loading profile');
@@ -88,8 +84,8 @@ export const ProfileView = () => {
 
       const response = await fetch('http://localhost:8085/api/users/admin/profile-image', {
         method: 'PUT',
-        credentials: 'include', // Send HttpOnly cookie
-        body: formData,
+        credentials: 'include', // Include HttpOnly cookies
+        body: formData, // FormData - don't set Content-Type header
       });
 
       const responseData = await response.json().catch(() => null);
@@ -97,6 +93,7 @@ export const ProfileView = () => {
 
       if (response.ok) {
         setProfile(prev => prev ? { ...prev, profileImage: responseData?.profileImage } : null);
+        await refreshCurrentUser();
         alert('Profile image updated successfully!');
       } else {
         const errorMessage = responseData?.message || `Failed to upload image (Status: ${response.status})`;
@@ -123,10 +120,7 @@ export const ProfileView = () => {
 
       const response = await fetch('http://localhost:8085/api/users/admin/profile-image', {
         method: 'DELETE',
-        credentials: 'include', // Send HttpOnly cookie
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        credentials: 'include', // Include HttpOnly cookies
       });
 
       const responseData = await response.json().catch(() => null);
@@ -134,6 +128,7 @@ export const ProfileView = () => {
 
       if (response.ok) {
         setProfile(prev => prev ? { ...prev, profileImage: null } : null);
+        await refreshCurrentUser();
         alert('Profile image removed successfully!');
       } else {
         const errorMessage = responseData?.message || `Failed to delete image (Status: ${response.status})`;
@@ -169,28 +164,16 @@ export const ProfileView = () => {
 
     setIsSaving(true);
     try {
-      const response = await fetch('http://localhost:8085/api/users/super-admin/update-profile', {
-        method: 'PUT',
-        credentials: 'include', // Send HttpOnly cookie
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: editForm.firstName,
-          lastName: editForm.lastName,
-          phoneNumber: editForm.phoneNumber,
-          address: editForm.address,
-        }),
+      const updatedProfile = await apiClient.put<UserProfile>('/api/users/super-admin/update-profile', {
+        firstName: editForm.firstName,
+        lastName: editForm.lastName,
+        phoneNumber: editForm.phoneNumber,
+        address: editForm.address,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setProfile(prev => prev ? { ...prev, ...data } : null);
-        setIsEditing(false);
-        alert('Profile updated successfully!');
-      } else {
-        alert('Failed to update profile');
-      }
+      setProfile(prev => prev ? { ...prev, ...updatedProfile } : null);
+      await refreshCurrentUser();
+      setIsEditing(false);
+      alert('Profile updated successfully!');
     } catch (err) {
       console.error('Error updating profile:', err);
       alert('Error updating profile');

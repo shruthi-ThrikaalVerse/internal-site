@@ -387,77 +387,71 @@ const ResignationAdmin: React.FC = () => {
                 <p className="text-sm text-black mt-1">Please provide resignation information</p>
               </div>
 
-              <div className="p-6 space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-2">Resignation Date <span className="text-red-500">*</span></label>
-                    <input type="text" name="resignationDate" value={formData.resignationDate} onChange={handleInputChange} placeholder="mm/dd/yyyy" className={`w-full px-4 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.resignationDate ? 'border-red-500' : 'border-gray-300'}`} />
-                    {errors.resignationDate && <p className="text-red-500 text-xs mt-1">{errors.resignationDate}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-2">Last Working Date <span className="text-red-500">*</span></label>
-                    <input type="text" name="lastWorkingDate" value={formData.lastWorkingDate} onChange={handleInputChange} placeholder="mm/dd/yyyy" className={`w-full px-4 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.lastWorkingDate ? 'border-red-500' : 'border-gray-300'}`} />
-                    {errors.lastWorkingDate && <p className="text-red-500 text-xs mt-1">{errors.lastWorkingDate}</p>}
-                  </div>
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Resignation Date <span className="text-red-500">*</span></label>
+                  <input type="text" name="resignationDate" value={formData.resignationDate} onChange={handleInputChange} placeholder="mm/dd/yyyy" className={`w-full px-4 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.resignationDate ? 'border-red-500' : 'border-gray-300'}`} />
+                  {errors.resignationDate && <p className="text-red-500 text-xs mt-1">{errors.resignationDate}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-black mb-2">Notice Period</label>
-                  <select name="noticePeriod" value={formData.noticePeriod} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.noticePeriod ? 'border-red-500' : 'border-gray-300'}`}>
-                    <option value="">Select notice period</option>
-                    {noticePeriodOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                  {errors.noticePeriod && <p className="text-red-500 text-xs mt-1">{errors.noticePeriod}</p>}
+                  <label className="block text-sm font-medium text-black mb-2">Last Working Date <span className="text-red-500">*</span></label>
+                  <input type="text" name="lastWorkingDate" value={formData.lastWorkingDate} onChange={handleInputChange} placeholder="mm/dd/yyyy" className={`w-full px-4 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.lastWorkingDate ? 'border-red-500' : 'border-gray-300'}`} />
+                  {errors.lastWorkingDate && <p className="text-red-500 text-xs mt-1">{errors.lastWorkingDate}</p>}
+                </div>
+
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">Notice Period</label>
+                <select name="noticePeriod" value={formData.noticePeriod} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.noticePeriod ? 'border-red-500' : 'border-gray-300'}`}>
+                  <option value="">Select notice period</option>
+                  {noticePeriodOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+                {errors.noticePeriod && <p className="text-red-500 text-xs mt-1">{errors.noticePeriod}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">Reason</label>
+                <select name="reason" value={formData.reason} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.reason ? 'border-red-500' : 'border-gray-300'}`}>
+                  <option value="">Select reason</option>
+                  {resignationReasons.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+                {errors.reason && <p className="text-red-500 text-xs mt-1">{errors.reason}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">Detailed Reason</label>
+                <textarea name="detailedReason" value={formData.detailedReason} onChange={handleInputChange} rows={3} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.detailedReason ? 'border-red-500' : 'border-gray-300'}`} />
+                {errors.detailedReason && <p className="text-red-500 text-xs mt-1">{errors.detailedReason}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Personal Email</label>
+                  <input type="email" name="personalEmail" value={formData.personalEmail} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.personalEmail ? 'border-red-500' : 'border-gray-300'}`} />
+                  {errors.personalEmail && <p className="text-red-500 text-xs mt-1">{errors.personalEmail}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-black mb-2">Reason</label>
-                  <select name="reason" value={formData.reason} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.reason ? 'border-red-500' : 'border-gray-300'}`}>
-                    <option value="">Select reason</option>
-                    {resignationReasons.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                  {errors.reason && <p className="text-red-500 text-xs mt-1">{errors.reason}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">Detailed Reason</label>
-                  <textarea name="detailedReason" value={formData.detailedReason} onChange={handleInputChange} rows={3} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.detailedReason ? 'border-red-500' : 'border-gray-300'}`} />
-                  {errors.detailedReason && <p className="text-red-500 text-xs mt-1">{errors.detailedReason}</p>}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-2">Personal Email</label>
-                    <input type="email" name="personalEmail" value={formData.personalEmail} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.personalEmail ? 'border-red-500' : 'border-gray-300'}`} />
-                    {errors.personalEmail && <p className="text-red-500 text-xs mt-1">{errors.personalEmail}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-2">Contact Number</label>
-                    <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'}`} />
-                    {errors.contactNumber && <p className="text-red-500 text-xs mt-1">{errors.contactNumber}</p>}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">Attach Document (optional)</label>
-                  <input type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileChange} className="text-black" />
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <input type="checkbox" checked={formData.declarationAccepted} onChange={handleDeclarationChange} />
-                  <div>
-                    <p className="text-sm text-black">I hereby declare that the information provided is true and accurate.</p>
-                    {errors.declaration && <p className="text-red-500 text-xs mt-1">{errors.declaration}</p>}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button type="button" onClick={handleCancel} className="px-4 py-2 bg-white border rounded-lg text-black">Cancel</button>
-                  <button type="submit" className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg">Submit Resignation</button>
+                  <label className="block text-sm font-medium text-black mb-2">Contact Number</label>
+                  <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'}`} />
+                  {errors.contactNumber && <p className="text-red-500 text-xs mt-1">{errors.contactNumber}</p>}
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">Attach Document (optional)</label>
+                <input type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileChange} className="text-black" />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={handleCancel} className="px-4 py-2 bg-white border rounded-lg text-black">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg">Submit Resignation</button>
+              </div>
             </div>
-          </form>
+          </div>
+        </div>
+      </form>
         )}
 
         {/* Confirm Modal */}

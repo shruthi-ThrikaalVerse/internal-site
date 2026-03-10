@@ -1,11 +1,6 @@
 export const API_BASE = 'http://localhost:8085/api/tasks';
 const FETCH_TIMEOUT = 15000; // 15 seconds
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('accessToken') || localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
 const parseText = async (resp: Response) => {
   const text = await resp.text();
   try { return JSON.parse(text); } catch { return text; }
@@ -31,7 +26,7 @@ export const createTask = async (payload: any) => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/create`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...getAuthHeader() },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       credentials: 'include',
       body: JSON.stringify(payload),
     })) as Response;
@@ -49,7 +44,7 @@ export const createSelfTask = async (payload: any) => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/self`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...getAuthHeader() },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       credentials: 'include',
       body: JSON.stringify(payload),
     })) as Response;
@@ -66,7 +61,7 @@ export const createSelfTask = async (payload: any) => {
 export const getTasks = async () => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/getAll`, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
     await throwIfError(resp);
@@ -82,7 +77,7 @@ export const getTasks = async () => {
 export const getTask = async (taskId: string) => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/get/${taskId}`, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
     await throwIfError(resp);
@@ -99,7 +94,7 @@ export const updateTask = async (taskId: string, payload: any) => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/update/${taskId}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...getAuthHeader() },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       credentials: 'include',
       body: JSON.stringify(payload),
     })) as Response;
@@ -117,7 +112,7 @@ export const deleteTask = async (taskId: string) => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/delete/${taskId}`, {
       method: 'DELETE',
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
     await throwIfError(resp);
@@ -138,7 +133,7 @@ export const deleteSelfTask = async (taskId: string) => {
     console.log('Deleting self-task:', { taskId, url });
     const resp = (await fetchWithTimeout(url, {
       method: 'DELETE',
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
     await throwIfError(resp);
@@ -155,7 +150,7 @@ export const deleteSelfTask = async (taskId: string) => {
 export const getTasksByEmployeeId = async (employeeId: string) => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/task/${employeeId}`, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
     await throwIfError(resp);
@@ -172,7 +167,7 @@ export const getTasksByEmployeeId = async (employeeId: string) => {
 export const getMyTasks = async () => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/mytasks`, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
     await throwIfError(resp);
@@ -189,7 +184,7 @@ export const getMyTasks = async () => {
 export const getSelfTasks = async () => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/selftasks`, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
     await throwIfError(resp);
@@ -207,7 +202,7 @@ export const addTaskReview = async (taskId: string, payload: any) => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/review/${taskId}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...getAuthHeader() },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       credentials: 'include',
       body: JSON.stringify(payload),
     })) as Response;
@@ -225,7 +220,7 @@ export const addTaskReview = async (taskId: string, payload: any) => {
 export const getMyReviews = async () => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/reviews`, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
     await throwIfError(resp);
@@ -242,7 +237,7 @@ export const getMyReviews = async () => {
 export const getAllReviews = async () => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/allReviews`, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
     await throwIfError(resp);

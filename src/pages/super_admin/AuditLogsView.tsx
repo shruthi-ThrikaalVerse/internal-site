@@ -100,9 +100,18 @@ export const AuditLogsView: React.FC = () => {
       queryParams.append('sort', sort);
       queryParams.append('order', order);
 
-      const data = await apiClient.get<any>(
-        `/api/audit-log/admin?${queryParams.toString()}`
+      const response = await fetch(
+        `http://localhost:8085/api/audit-log/admin?${queryParams.toString()}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        }
       );
+
+      const data = await response.json();
 
       if (data) {
         const auditLogs = (data.logs || data.content || []).map((l: any) => ({
@@ -156,10 +165,7 @@ export const AuditLogsView: React.FC = () => {
         `http://localhost:8085/api/audit-log/admin/export?${queryParams.toString()}`,
         {
           method: 'GET',
-          credentials: 'include', // Send HttpOnly cookie
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          credentials: 'include',
         }
       );
 

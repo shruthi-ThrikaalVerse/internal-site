@@ -87,15 +87,28 @@ const LandingPageContent = () => (
 
 // Public Route Guard - redirects authenticated users to appropriate dashboard
 const PublicRouteGuard = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      // Redirect to employee dashboard by default
-      navigate('/employee/dashboard', { replace: true });
+    if (!isLoading && isAuthenticated && user) {
+      // Redirect based on user role
+      switch (user.role) {
+        case 'super_admin':
+          navigate('/super-admin/dashboard', { replace: true });
+          break;
+        case 'admin':
+        case 'manager':
+        case 'auditor':
+          navigate('/admin/dashboard', { replace: true });
+          break;
+        case 'employee':
+        default:
+          navigate('/employee/dashboard', { replace: true });
+          break;
+      }
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading, user, navigate]);
 
   return <>{children}</>;
 };

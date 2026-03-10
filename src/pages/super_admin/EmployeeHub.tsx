@@ -24,6 +24,9 @@ const ADMIN_TIERS = ['ADMIN', 'PROJECT_MANAGER', 'HR', 'OPERATIONAL_MANAGER', 'S
 export const EmployeeHub = () => {
   const { globalSearch, employees, setEmployees, updateEmployee, removeEmployee, promoteToAdmin, currentUser, requestEmployeeTermination } = useApp();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Get token from localStorage
+  const token = localStorage.getItem('token');
   const [localEmployees, setLocalEmployees] = useState<User[]>([]);
 
   // Filter States
@@ -58,9 +61,36 @@ export const EmployeeHub = () => {
       return imageData;
     }
 
-    // If it's raw base64 without the prefix, add the JPEG prefix
-    if (imageData.length > 0) {
-      return `data:image/jpeg;base64,${imageData}`;
+    // If it's a URL (http/https), return as is
+    if (imageData.startsWith('http://') || imageData.startsWith('https://')) {
+      return imageData;
+    }
+
+    // If it's a file path starting with /, return it (could be relative path)
+    if (imageData.startsWith('/')) {
+      return imageData;
+    }
+
+    // Try to decode base64 to check if it's a file path or actual image data
+    if (imageData.match(/^[A-Za-z0-9+/=]+$/)) {
+      try {
+        const decoded = atob(imageData); // Decode base64
+        console.log(`Decoded base64: "${decoded}"`);
+
+        // Check if decoded string looks like a file path
+        if (decoded.includes('/') || decoded.includes('\\') || decoded.includes('.')) {
+          // It's likely a file path - this means backend returned encoded path, not encoded image
+          // Try to fetch image from backend using this path
+          console.log('Detected file path in base64, would need backend endpoint to serve it');
+          return ''; // Return empty to show fallback
+        }
+
+        // If it looks like raw binary/image data, treat as base64 image
+        return `data:image/jpeg;base64,${imageData}`;
+      } catch (e) {
+        console.warn('Failed to decode base64:', e);
+        return '';
+      }
     }
 
     return '';
@@ -103,60 +133,28 @@ export const EmployeeHub = () => {
     } as any;
   };
 
-  // Fetch employees from API (excluding admin tiers)
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const data = await apiClient.get<any>('/api/users/admin/employees');
-
-        if (data) {
-          // Transform API response to match User type
-          const rawEmployeesData = Array.isArray(data) ? data : data.data || [];
-
-          // Filter to exclude admin tiers (only employees)
-          const seenEmails = new Set<string>();
-          const filteredEmployees = rawEmployeesData
-            .filter((emp: any) => !ADMIN_TIERS.includes(emp.role))
-            .filter((emp: any) => {
-              if (seenEmails.has(emp.email)) {
-                return false; // Skip duplicate
-              }
-              seenEmails.add(emp.email);
-              return true;
-            })
-            .map(transformEmployeeData);
-
-          setLocalEmployees(filteredEmployees);
-          console.log('Employees fetched successfully (filtered):', filteredEmployees);
-        } else {
-          console.error('Failed to fetch employees');
-        }
-      } catch (error) {
-        console.error('Error fetching employees:', error);
-      }
-    };
-
-    fetchEmployees();
-  }, []);
+  // Fetch employees from API (excluding admin tiers) - removed, handled by second useEffect below
 
   const statuses = ['All Statuses', 'active', 'inactive', 'pending'];
   const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
 
-  // load employees from backend when component mounts
+  // Load employees from backend
   React.useEffect(() => {
     const load = async () => {
       try {
-        console.log('Loading employees...');
+        console.log('Loading employees from API...');
         const data = await usersApi.getEmployees();
-        console.log('Employees loaded:', data);
+        console.log('Raw employees API response:', data);
+
         if (Array.isArray(data)) {
           const mapped: User[] = data
             .map((u: any) => {
-              // extract role name when API uses object
               let rawRole: any = u.role;
               if (rawRole && typeof rawRole === 'object') rawRole = rawRole.name;
               const roleValue = String(rawRole || u.userType || 'Employee');
               const statusValue = String(u.status || 'active') as 'active' | 'inactive' | 'probation' | 'resigned';
+              const avatarData = String(u.profileImage || u.avatar || '');
+              console.log(`Employee: ${u.firstName} ${u.lastName} - Avatar data present: ${!!avatarData}, Length: ${avatarData.length}`);
               return {
                 id: String(u.employeeId || u.id || ''),
                 email: String(u.email || u.username || ''),
@@ -170,21 +168,26 @@ export const EmployeeHub = () => {
                 dateOfJoining: String(u.dateOfJoining || ''),
                 phone: String(u.phoneNumber || ''),
                 address: String(u.address || ''),
-                avatar: String(u.profileImage || u.avatar || 'https://picsum.photos/seed/default/200'),
+                avatar: formatBase64Image(avatarData),
                 employmentType: String(u.employmentType || 'Full-time'),
                 location: String(u.location || ''),
-                joiningDate: String(u.dateOfJoining || '')
+                joiningDate: String(u.dateOfJoining || ''),
+                employeeId: String(u.employeeId || u.id || ''),
+                profileImage: String(u.profileImage || ''),
               };
             })
             .filter(emp => {
               const r = emp.role.toString().toUpperCase();
-              return r !== 'ADMIN' && r !== 'SUPER_ADMIN';
+              return r === 'EMPLOYEE';
             });
 
+          setLocalEmployees(mapped);
           setEmployees(mapped);
+          console.log('Employees loaded and filtered successfully:', mapped);
         }
       } catch (err) {
         console.error('Failed to fetch employees:', err);
+        // Show error to user - you can add a toast notification here
       }
     };
     load();
@@ -306,7 +309,10 @@ export const EmployeeHub = () => {
 
       const updateResponse = await fetch(`http://localhost:8085/api/users/super_admin/update/${employeeId}`, {
         method: 'PUT',
-        credentials: 'include', // Send HttpOnly cookie
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
         body: formData,
       });
 
@@ -615,19 +621,38 @@ export const EmployeeHub = () => {
                   <td className="px-8 py-5 cursor-pointer" onClick={() => setViewingUser(e)}>
                     <div className="flex items-center gap-4">
                       <div className="relative shrink-0">
-                        {e.avatar && (
+                        {e.avatar ? (
                           <>
                             <img
                               src={formatBase64Image(e.avatar)}
                               alt={e.name}
                               className="w-14 h-14 rounded-2xl border border-gray-200 shadow-xl group-hover:scale-105 transition-transform object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
+                              onError={(evt) => {
+                                console.error('Image failed to load:', formatBase64Image(e.avatar));
+                                const target = evt.target as HTMLImageElement;
                                 target.style.display = 'none';
+                                // Show fallback circle
+                                const parent = target.parentElement;
+                                if (parent && !parent.querySelector('.fallback-avatar')) {
+                                  const fallback = document.createElement('div');
+                                  fallback.className = 'fallback-avatar w-14 h-14 rounded-2xl border border-gray-200 shadow-xl bg-gradient-to-br from-blue-300 to-blue-500 flex items-center justify-center';
+                                  fallback.style.position = 'absolute';
+                                  fallback.style.top = '0';
+                                  fallback.style.left = '0';
+                                  fallback.innerHTML = `<span class="text-white font-bold text-xs">${e.name.charAt(0).toUpperCase()}</span>`;
+                                  parent.appendChild(fallback);
+                                }
+                              }}
+                              onLoadStart={() => {
+                                console.log('Loading image for:', e.name, 'src:', formatBase64Image(e.avatar));
                               }}
                             />
                             <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-[3px] border-white ${e.status === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'}`}></span>
                           </>
+                        ) : (
+                          <div className="w-14 h-14 rounded-2xl border border-gray-200 shadow-xl bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                            <span className="text-white font-bold text-xs">{e.name.charAt(0).toUpperCase()}</span>
+                          </div>
                         )}
                       </div>
                       <div className="min-w-0">

@@ -2,7 +2,8 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   GitPullRequest, Check, X, Eye,
   Calendar, User, FileText, Info,
-  AlertCircle, ShieldAlert, UserPlus, Trash2, Clock, Loader2
+  AlertCircle, ShieldAlert, UserPlus, Trash2, Clock, Loader2,
+  Briefcase, AlertTriangle
 } from 'lucide-react';
 import { AdminRequest, User as UserType } from '../../types.tsx';
 import { Badge, SectionHeader } from './UI.tsx';
@@ -24,6 +25,33 @@ interface PendingEmployee {
   createdAt: string;
 }
 
+interface LeaveRequest {
+  id: string;
+  employeeName: string;
+  employeeId: string;
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  duration: number;
+  reason: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  approvedBy?: string;
+  department: string;
+}
+
+interface SupportReport {
+  id: string;
+  reporterName: string;
+  reporterId: string;
+  issue: string;
+  category: string;
+  severity: 'Low' | 'Medium' | 'High' | 'Critical';
+  status: 'Open' | 'In Progress' | 'Resolved';
+  assignedTo?: string;
+  reportDate: string;
+  department: string;
+}
+
 export const AdminRequests = () => {
   const { requests, processRequest, currentUser, addEmployee, employees } = useApp();
   const [viewingRequest, setViewingRequest] = useState<AdminRequest | null>(null);
@@ -41,6 +69,89 @@ export const AdminRequests = () => {
   });
 
   const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
+
+  // Static data for leave requests
+  const [leaveRequests] = useState<LeaveRequest[]>([
+    {
+      id: 'leave-001',
+      employeeName: 'John Anderson',
+      employeeId: 'EMP001',
+      leaveType: 'Annual Leave',
+      startDate: '2026-03-15',
+      endDate: '2026-03-22',
+      duration: 8,
+      reason: 'Personal vacation planning',
+      status: 'Pending',
+      department: 'Engineering',
+    },
+    {
+      id: 'leave-002',
+      employeeName: 'Sarah Mitchell',
+      employeeId: 'EMP002',
+      leaveType: 'Sick Leave',
+      startDate: '2026-03-10',
+      endDate: '2026-03-11',
+      duration: 2,
+      reason: 'Medical checkup',
+      status: 'Approved',
+      approvedBy: 'Admin User',
+      department: 'Marketing',
+    },
+    {
+      id: 'leave-003',
+      employeeName: 'Michael Chen',
+      employeeId: 'EMP003',
+      leaveType: 'Maternity Leave',
+      startDate: '2026-04-01',
+      endDate: '2026-06-30',
+      duration: 90,
+      reason: 'Newborn care',
+      status: 'Pending',
+      department: 'Design',
+    }
+  ]);
+
+  // Static data for support reports
+  const [supportReports] = useState<SupportReport[]>([
+    {
+      id: 'support-001',
+      reporterName: 'Emma Wilson',
+      reporterId: 'EMP005',
+      issue: 'Login system not working on Firefox browser',
+      category: 'Technical',
+      severity: 'High',
+      status: 'In Progress',
+      assignedTo: 'Tech Support Team',
+      reportDate: '2026-03-08',
+      department: 'Engineering',
+    },
+    {
+      id: 'support-002',
+      reporterName: 'David Kumar',
+      reporterId: 'EMP006',
+      issue: 'Payroll processing delay for February',
+      category: 'Administrative',
+      severity: 'Critical',
+      status: 'In Progress',
+      assignedTo: 'Finance Department',
+      reportDate: '2026-03-09',
+      department: 'Finance',
+    },
+    {
+      id: 'support-003',
+      reporterName: 'Lisa Roberts',
+      reporterId: 'EMP007',
+      issue: 'Missing performance evaluation records',
+      category: 'Data Issue',
+      severity: 'Medium',
+      status: 'Open',
+      reportDate: '2026-03-07',
+      department: 'Human Resources',
+    }
+  ]);
+
+  const [viewingLeaveRequest, setViewingLeaveRequest] = useState<LeaveRequest | null>(null);
+  const [viewingSupportReport, setViewingSupportReport] = useState<SupportReport | null>(null);
 
   // State for backend termination requests
   const [terminationRequests, setTerminationRequests] = useState<AdminRequest[]>([]);
@@ -864,6 +975,369 @@ export const AdminRequests = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Admin Leave Requests Section */}
+      {isSuperAdmin && leaveRequests.length > 0 && (
+        <div className="space-y-4 pt-6 border-t border-gray-200">
+          <div className="flex items-center gap-3 mb-4">
+            <Calendar size={20} className="text-blue-500" />
+            <h3 className="text-lg font-bold text-gray-900 tracking-tight">Admin Leave Requests</h3>
+            <Badge color="blue">{leaveRequests.length} Requests</Badge>
+          </div>
+
+          <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-2xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[1200px]">
+                <thead className="bg-blue-50 backdrop-blur-md border-b border-blue-200">
+                  <tr>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Employee Name</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Leave Type</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Duration</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Dates</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Department</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Status</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {leaveRequests.map((leave) => (
+                    <tr key={leave.id} className="hover:bg-blue-50 transition-all group border-l-2 border-transparent hover:border-blue-300">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">
+                            {leave.employeeName.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div>
+                            <div className="font-bold text-gray-900">{leave.employeeName}</div>
+                            <div className="text-[10px] text-gray-500">{leave.employeeId}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="text-sm font-medium text-gray-900">{leave.leaveType}</span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="text-sm font-bold text-gray-900">{leave.duration} Days</span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="text-sm text-gray-900">
+                          {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <Badge color="blue">{leave.department}</Badge>
+                      </td>
+                      <td className="px-8 py-5">
+                        <Badge color={leave.status === 'Approved' ? 'green' : leave.status === 'Rejected' ? 'red' : 'yellow'}>
+                          {leave.status.toUpperCase()}
+                        </Badge>
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setViewingLeaveRequest(leave)}
+                            className="p-2.5 bg-gray-100 text-gray-500 hover:text-gray-900 rounded-xl transition-all"
+                            title="View Details"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          {leave.status === 'Pending' && (
+                            <>
+                              <button
+                                onClick={() => setViewingLeaveRequest(leave)}
+                                className="p-2.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl transition-all active:scale-90"
+                                title="Approve"
+                              >
+                                <Check size={18} />
+                              </button>
+                              <button
+                                onClick={() => setViewingLeaveRequest(leave)}
+                                className="p-2.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all active:scale-90"
+                                title="Reject"
+                              >
+                                <X size={18} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Support Reports Section */}
+      {isSuperAdmin && supportReports.length > 0 && (
+        <div className="space-y-4 pt-6 border-t border-gray-200">
+          <div className="flex items-center gap-3 mb-4">
+            <AlertTriangle size={20} className="text-orange-500" />
+            <h3 className="text-lg font-bold text-gray-900 tracking-tight">Support Reports</h3>
+            <Badge color="yellow">{supportReports.length} Reports</Badge>
+          </div>
+
+          <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-2xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[1200px]">
+                <thead className="bg-orange-50 backdrop-blur-md border-b border-orange-200">
+                  <tr>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Reporter</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Issue</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Category</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Severity</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Assigned To</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Status</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {supportReports.map((report) => (
+                    <tr key={report.id} className="hover:bg-orange-50 transition-all group border-l-2 border-transparent hover:border-orange-300">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm">
+                            {report.reporterName.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div>
+                            <div className="font-bold text-gray-900">{report.reporterName}</div>
+                            <div className="text-[10px] text-gray-500">{report.reporterId}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="text-sm text-gray-900 line-clamp-2">{report.issue}</span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <Badge color="blue">{report.category}</Badge>
+                      </td>
+                      <td className="px-8 py-5">
+                        <Badge color={report.severity === 'Critical' ? 'red' : report.severity === 'High' ? 'orange' : report.severity === 'Medium' ? 'yellow' : 'green'}>
+                          {report.severity}
+                        </Badge>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="text-sm text-gray-900">{report.assignedTo || 'Unassigned'}</span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <Badge color={report.status === 'Resolved' ? 'green' : report.status === 'In Progress' ? 'blue' : 'yellow'}>
+                          {report.status.toUpperCase()}
+                        </Badge>
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <button
+                          onClick={() => setViewingSupportReport(report)}
+                          className="p-2.5 bg-gray-100 text-gray-500 hover:text-gray-900 rounded-xl transition-all"
+                          title="View Details"
+                        >
+                          <Eye size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Leave Request Details Modal */}
+      {viewingLeaveRequest && (
+        <Modal
+          isOpen={!!viewingLeaveRequest}
+          onClose={() => setViewingLeaveRequest(null)}
+          title={`Leave Request: ${viewingLeaveRequest.employeeName}`}
+          onSave={() => setViewingLeaveRequest(null)}
+        >
+          <div className="space-y-8 pb-4">
+            <div className="p-6 rounded-[2rem] bg-blue-50 border border-blue-200 overflow-hidden relative shadow-2xl">
+              <div className="flex items-start gap-6">
+                <div className="p-5 rounded-2xl bg-blue-500/10 text-blue-600">
+                  <Calendar size={32} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">{viewingLeaveRequest.employeeName}</h3>
+                  <p className="text-[10px] text-gray-900 font-black uppercase tracking-widest mt-1">{viewingLeaveRequest.leaveType}</p>
+                  <div className="flex gap-2 mt-4">
+                    <Badge color={viewingLeaveRequest.status === 'Approved' ? 'green' : viewingLeaveRequest.status === 'Rejected' ? 'red' : 'yellow'}>
+                      {viewingLeaveRequest.status.toUpperCase()}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
+                <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                  <User size={14} className="text-blue-600" /> Employee Information
+                </h4>
+                <div className="space-y-3 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Employee ID</span>
+                    <span className="text-gray-900 font-bold">{viewingLeaveRequest.employeeId}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Department</span>
+                    <span className="text-gray-900 font-bold">{viewingLeaveRequest.department}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
+                <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                  <Calendar size={14} className="text-blue-600" /> Leave Details
+                </h4>
+                <div className="space-y-3 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Leave Type</span>
+                    <span className="text-gray-900 font-bold">{viewingLeaveRequest.leaveType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Duration</span>
+                    <span className="text-gray-900 font-bold">{viewingLeaveRequest.duration} Days</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white border border-gray-200">
+              <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                <Calendar size={14} className="text-blue-600" /> Date Range
+              </h4>
+              <div className="space-y-2 text-sm">
+                <p className="text-gray-900"><strong>Start Date:</strong> {new Date(viewingLeaveRequest.startDate).toLocaleDateString()}</p>
+                <p className="text-gray-900"><strong>End Date:</strong> {new Date(viewingLeaveRequest.endDate).toLocaleDateString()}</p>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white border border-gray-200">
+              <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                <FileText size={14} className="text-blue-600" /> Reason
+              </h4>
+              <p className="text-sm text-gray-700 leading-relaxed italic">
+                "{viewingLeaveRequest.reason}"
+              </p>
+            </div>
+
+            {viewingLeaveRequest.status === 'Pending' && (
+              <div className="flex gap-4 pt-4">
+                <button className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 shadow-xl shadow-emerald-500/20 active:scale-95 transition-all">
+                  Approve Leave
+                </button>
+                <button className="flex-1 py-4 bg-[#1f2937] text-rose-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 active:scale-95 transition-all">
+                  Reject Request
+                </button>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* Support Report Details Modal */}
+      {viewingSupportReport && (
+        <Modal
+          isOpen={!!viewingSupportReport}
+          onClose={() => setViewingSupportReport(null)}
+          title={`Support Report: ${viewingSupportReport.reporterName}`}
+          onSave={() => setViewingSupportReport(null)}
+        >
+          <div className="space-y-8 pb-4">
+            <div className="p-6 rounded-[2rem] bg-orange-50 border border-orange-200 overflow-hidden relative shadow-2xl">
+              <div className="flex items-start gap-6">
+                <div className="p-5 rounded-2xl bg-orange-500/10 text-orange-600">
+                  <AlertTriangle size={32} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">{viewingSupportReport.issue}</h3>
+                  <p className="text-[10px] text-gray-900 font-black uppercase tracking-widest mt-1">{viewingSupportReport.category}</p>
+                  <div className="flex gap-2 mt-4">
+                    <Badge color={viewingSupportReport.severity === 'Critical' ? 'red' : viewingSupportReport.severity === 'High' ? 'orange' : viewingSupportReport.severity === 'Medium' ? 'yellow' : 'green'}>
+                      {viewingSupportReport.severity}
+                    </Badge>
+                    <Badge color={viewingSupportReport.status === 'Resolved' ? 'green' : viewingSupportReport.status === 'In Progress' ? 'blue' : 'yellow'}>
+                      {viewingSupportReport.status.toUpperCase()}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
+                <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                  <User size={14} className="text-blue-600" /> Reporter Details
+                </h4>
+                <div className="space-y-3 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Name</span>
+                    <span className="text-gray-900 font-bold">{viewingSupportReport.reporterName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Employee ID</span>
+                    <span className="text-gray-900 font-mono font-bold">{viewingSupportReport.reporterId}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Department</span>
+                    <span className="text-gray-900 font-bold">{viewingSupportReport.department}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
+                <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                  <AlertTriangle size={14} className="text-orange-600" /> Report Details
+                </h4>
+                <div className="space-y-3 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Category</span>
+                    <span className="text-gray-900 font-bold">{viewingSupportReport.category}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Severity</span>
+                    <span className="text-gray-900 font-bold">{viewingSupportReport.severity}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Assigned To</span>
+                    <span className="text-gray-900 font-bold">{viewingSupportReport.assignedTo || 'Not Assigned'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white border border-gray-200">
+              <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                <FileText size={14} className="text-blue-600" /> Issue Description
+              </h4>
+              <p className="text-sm text-gray-700 leading-relaxed italic">
+                "{viewingSupportReport.issue}"
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white border border-gray-200">
+              <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                <Clock size={14} className="text-blue-600" /> Timeline
+              </h4>
+              <p className="text-sm text-gray-900"><strong>Report Date:</strong> {new Date(viewingSupportReport.reportDate).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-900"><strong>Current Status:</strong> {viewingSupportReport.status}</p>
+            </div>
+
+            {viewingSupportReport.status !== 'Resolved' && (
+              <div className="flex gap-4 pt-4">
+                <button className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 shadow-xl shadow-blue-600/20 active:scale-95 transition-all">
+                  Update Status
+                </button>
+                <button className="flex-1 py-4 bg-gray-100 text-gray-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 active:scale-95 transition-all">
+                  Assign Support
+                </button>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
