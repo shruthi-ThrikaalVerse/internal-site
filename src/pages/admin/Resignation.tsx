@@ -23,6 +23,7 @@ const ResignationAdmin: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
   const [formData, setFormData] = useState<ResignationData>({
     resignationDate: '',
@@ -48,6 +49,10 @@ const ResignationAdmin: React.FC = () => {
   ];
 
   const noticePeriodOptions = ['30 Days', '60 Days', '90 Days'];
+
+  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
+  const [pendingLoading, setPendingLoading] = useState(true);
+  const [pendingError, setPendingError] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -76,6 +81,22 @@ const ResignationAdmin: React.FC = () => {
     fetchUser();
   }, []);
 
+  useEffect(() => {
+    const fetchPending = async () => {
+      setPendingLoading(true);
+      setPendingError("");
+      try {
+        const response = await axios.get("http://localhost:8085/api/resignations/admin/pending", { withCredentials: true });
+        setPendingRequests(response.data || []);
+      } catch (err: any) {
+        setPendingError(err.response?.data?.message || "Failed to load pending requests");
+      } finally {
+        setPendingLoading(false);
+      }
+    };
+    fetchPending();
+  }, []);
+
   const calculateNoticePeriod = () => {
     if (formData.lastWorkingDate && formData.resignationDate) {
       const last = new Date(formData.lastWorkingDate);
@@ -90,7 +111,11 @@ const ResignationAdmin: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.resignationDate) newErrors.resignationDate = 'Resignation date is required';
+    else if (!isValidDate(formData.resignationDate)) newErrors.resignationDate = 'Invalid date format. Use mm/dd/yyyy';
+
     if (!formData.lastWorkingDate) newErrors.lastWorkingDate = 'Last working date is required';
+    else if (!isValidDate(formData.lastWorkingDate)) newErrors.lastWorkingDate = 'Invalid date format. Use mm/dd/yyyy';
+
     if (!formData.noticePeriod) newErrors.noticePeriod = 'Please select a notice period';
     if (!formData.reason) newErrors.reason = 'Please select a reason';
     if (!formData.detailedReason.trim()) newErrors.detailedReason = 'Please provide detailed reason';
@@ -103,8 +128,13 @@ const ResignationAdmin: React.FC = () => {
       newErrors.personalEmail = 'Please enter a valid email';
     }
 
-    if (formData.resignationDate && formData.lastWorkingDate) {
-      if (new Date(formData.lastWorkingDate) < new Date(formData.resignationDate)) {
+    if (formData.resignationDate && formData.lastWorkingDate && isValidDate(formData.resignationDate) && isValidDate(formData.lastWorkingDate)) {
+      const [resMonth, resDay, resYear] = formData.resignationDate.split('/').map(Number);
+      const [lastMonth, lastDay, lastYear] = formData.lastWorkingDate.split('/').map(Number);
+      const resignDate = new Date(resYear, resMonth - 1, resDay);
+      const lastDate = new Date(lastYear, lastMonth - 1, lastDay);
+
+      if (lastDate < resignDate) {
         newErrors.lastWorkingDate = 'Last working date must be after resignation date';
       }
     }
@@ -117,9 +147,40 @@ const ResignationAdmin: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const formatDateInput = (value: string): string => {
+    // Remove all non-numeric characters
+    const numbers = value.replace(/\D/g, '');
+
+    // Format as mm/dd/yyyy
+    if (numbers.length <= 2) {
+      return numbers;
+    } else if (numbers.length <= 4) {
+      return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+    } else {
+      return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+    }
+  };
+
+  const isValidDate = (dateString: string): boolean => {
+    const regex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/;
+    if (!regex.test(dateString)) return false;
+
+    const [month, day, year] = dateString.split('/').map(Number);
+    const date = new Date(year, month - 1, day);
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Format date fields
+    if ((name === 'resignationDate' || name === 'lastWorkingDate') && value) {
+      const formattedValue = formatDateInput(value);
+      setFormData(prev => ({ ...prev, [name]: formattedValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -167,8 +228,8 @@ const ResignationAdmin: React.FC = () => {
       formDataToSend.append('contactNumber', formData.contactNumber);
       if (formData.document) formDataToSend.append('document', formData.document);
 
-      // Admin resignation endpoint (can be adjusted to backend expectations)
-      const response = await axios.post('http://localhost:8085/api/admin/resignation', formDataToSend, {
+      // Admin resignation endpoint - uses same /resign apply endpoint, role determined by auth
+      const response = await axios.post('http://localhost:8085/api/resignations/apply', formDataToSend, {
         withCredentials: true,
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -190,6 +251,26 @@ const ResignationAdmin: React.FC = () => {
     }
   };
 
+  const handleApprove = async (id: number) => {
+    try {
+      await axios.put(`http://localhost:8085/api/resignations/admin/${id}/approve`, {}, { withCredentials: true });
+      toast.success('Resignation approved');
+      setPendingRequests(prev => prev.filter(req => req.id !== id));
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to approve resignation');
+    }
+  };
+
+  const handleReject = async (id: number) => {
+    try {
+      await axios.put(`http://localhost:8085/api/resignations/admin/${id}/reject`, {}, { withCredentials: true });
+      toast.success('Resignation rejected');
+      setPendingRequests(prev => prev.filter(req => req.id !== id));
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to reject resignation');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -204,125 +285,180 @@ const ResignationAdmin: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
+        <div className="flex justify-end items-center mb-4">
+          {!showForm && (
+            <button
+              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-lg font-semibold shadow hover:bg-indigo-700 transition"
+              onClick={() => setShowForm(true)}
+            >
+              Show Resignation Form
+            </button>
+          )}
+        </div>
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-black">Admin Resignation</h1>
           <p className="text-black mt-2">Submit your resignation as an admin user</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
-              <h2 className="text-lg font-semibold text-black">Admin Information</h2>
-              <p className="text-sm text-black mt-1">Read-only admin details</p>
+        {/* Pending Employee Requests Section */}
+        <div className="mb-10">
+          <h2 className="text-xl font-semibold text-black mb-4">Pending Employee Resignation Requests</h2>
+          {pendingLoading ? (
+            <div className="text-black">Loading pending requests...</div>
+          ) : pendingError ? (
+            <div className="text-red-500">{pendingError}</div>
+          ) : pendingRequests.length === 0 ? (
+            <div className="text-black">No pending requests found.</div>
+          ) : (
+            <div className="space-y-4">
+              {pendingRequests.map((req: any) => (
+                <div key={req.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                      <div className="font-bold text-black">{req.employeeId} - {req.approvedByName || req.employeeName || req.name || ""}</div>
+                      <div className="text-sm text-black">Resignation Date: {req.resignationDate}</div>
+                      <div className="text-sm text-black">Last Working Date: {req.lastWorkingDate}</div>
+                      <div className="text-sm text-black">Reason: {req.reason}</div>
+                      <div className="text-sm text-black">Status: {req.status}</div>
+                    </div>
+                    <div className="flex gap-2 mt-2 sm:mt-0">
+                      <button
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                        onClick={() => handleApprove(req.id)}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                        onClick={() => handleReject(req.id)}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Show form if showForm is true */}
+        {showForm && (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+                <h2 className="text-lg font-semibold text-black">Admin Information</h2>
+                <p className="text-sm text-black mt-1">Read-only admin details</p>
+              </div>
+
+              <div className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">Admin ID</label>
+                    <input type="text" value={user?.employeeId || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">Name</label>
+                    <input type="text" value={user?.name || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">Department</label>
+                    <input type="text" value={user?.department || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">Designation</label>
+                    <input type="text" value={user?.designation || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">Official Email</label>
+                    <input type="email" value={user?.email || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">Date of Joining</label>
+                    <input type="text" value={user?.dateOfJoining || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">Admin ID</label>
-                  <input type="text" value={user?.employeeId || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+                <h2 className="text-lg font-semibold text-black">Resignation Details</h2>
+                <p className="text-sm text-black mt-1">Please provide resignation information</p>
+              </div>
+
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">Resignation Date <span className="text-red-500">*</span></label>
+                    <input type="text" name="resignationDate" value={formData.resignationDate} onChange={handleInputChange} placeholder="mm/dd/yyyy" className={`w-full px-4 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.resignationDate ? 'border-red-500' : 'border-gray-300'}`} />
+                    {errors.resignationDate && <p className="text-red-500 text-xs mt-1">{errors.resignationDate}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">Last Working Date <span className="text-red-500">*</span></label>
+                    <input type="text" name="lastWorkingDate" value={formData.lastWorkingDate} onChange={handleInputChange} placeholder="mm/dd/yyyy" className={`w-full px-4 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.lastWorkingDate ? 'border-red-500' : 'border-gray-300'}`} />
+                    {errors.lastWorkingDate && <p className="text-red-500 text-xs mt-1">{errors.lastWorkingDate}</p>}
+                  </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-black mb-2">Name</label>
-                  <input type="text" value={user?.name || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                  <label className="block text-sm font-medium text-black mb-2">Notice Period</label>
+                  <select name="noticePeriod" value={formData.noticePeriod} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.noticePeriod ? 'border-red-500' : 'border-gray-300'}`}>
+                    <option value="">Select notice period</option>
+                    {noticePeriodOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                  {errors.noticePeriod && <p className="text-red-500 text-xs mt-1">{errors.noticePeriod}</p>}
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-black mb-2">Department</label>
-                  <input type="text" value={user?.department || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                  <label className="block text-sm font-medium text-black mb-2">Reason</label>
+                  <select name="reason" value={formData.reason} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.reason ? 'border-red-500' : 'border-gray-300'}`}>
+                    <option value="">Select reason</option>
+                    {resignationReasons.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                  {errors.reason && <p className="text-red-500 text-xs mt-1">{errors.reason}</p>}
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-black mb-2">Designation</label>
-                  <input type="text" value={user?.designation || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                  <label className="block text-sm font-medium text-black mb-2">Detailed Reason</label>
+                  <textarea name="detailedReason" value={formData.detailedReason} onChange={handleInputChange} rows={3} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.detailedReason ? 'border-red-500' : 'border-gray-300'}`} />
+                  {errors.detailedReason && <p className="text-red-500 text-xs mt-1">{errors.detailedReason}</p>}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">Official Email</label>
-                  <input type="email" value={user?.email || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">Personal Email</label>
+                    <input type="email" name="personalEmail" value={formData.personalEmail} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.personalEmail ? 'border-red-500' : 'border-gray-300'}`} />
+                    {errors.personalEmail && <p className="text-red-500 text-xs mt-1">{errors.personalEmail}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-2">Contact Number</label>
+                    <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'}`} />
+                    {errors.contactNumber && <p className="text-red-500 text-xs mt-1">{errors.contactNumber}</p>}
+                  </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-black mb-2">Date of Joining</label>
-                  <input type="text" value={user?.dateOfJoining || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                  <label className="block text-sm font-medium text-black mb-2">Attach Document (optional)</label>
+                  <input type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileChange} className="text-black" />
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <input type="checkbox" checked={formData.declarationAccepted} onChange={handleDeclarationChange} />
+                  <div>
+                    <p className="text-sm text-black">I hereby declare that the information provided is true and accurate.</p>
+                    {errors.declaration && <p className="text-red-500 text-xs mt-1">{errors.declaration}</p>}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button type="button" onClick={handleCancel} className="px-4 py-2 bg-white border rounded-lg text-black">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg">Submit Resignation</button>
                 </div>
               </div>
             </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
-              <h2 className="text-lg font-semibold text-black">Resignation Details</h2>
-              <p className="text-sm text-black mt-1">Please provide resignation information</p>
-            </div>
-
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">Resignation Date <span className="text-red-500">*</span></label>
-                  <input type="date" name="resignationDate" value={formData.resignationDate} onChange={handleInputChange} min={new Date().toISOString().split('T')[0]} className={`w-full px-4 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.resignationDate ? 'border-red-500' : 'border-gray-300'}`} />
-                  {errors.resignationDate && <p className="text-red-500 text-xs mt-1">{errors.resignationDate}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">Last Working Date <span className="text-red-500">*</span></label>
-                  <input type="date" name="lastWorkingDate" value={formData.lastWorkingDate} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.lastWorkingDate ? 'border-red-500' : 'border-gray-300'}`} />
-                  {errors.lastWorkingDate && <p className="text-red-500 text-xs mt-1">{errors.lastWorkingDate}</p>}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-black mb-2">Notice Period</label>
-                <select name="noticePeriod" value={formData.noticePeriod} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg ${errors.noticePeriod ? 'border-red-500' : 'border-gray-300'}`}>
-                  <option value="">Select notice period</option>
-                  {noticePeriodOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-                {errors.noticePeriod && <p className="text-red-500 text-xs mt-1">{errors.noticePeriod}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-black mb-2">Reason</label>
-                <select name="reason" value={formData.reason} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg ${errors.reason ? 'border-red-500' : 'border-gray-300'}`}>
-                  <option value="">Select reason</option>
-                  {resignationReasons.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-                {errors.reason && <p className="text-red-500 text-xs mt-1">{errors.reason}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-black mb-2">Detailed Reason</label>
-                <textarea name="detailedReason" value={formData.detailedReason} onChange={handleInputChange} rows={3} className={`w-full px-4 py-2 border rounded-lg ${errors.detailedReason ? 'border-red-500' : 'border-gray-300'}`} />
-                {errors.detailedReason && <p className="text-red-500 text-xs mt-1">{errors.detailedReason}</p>}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">Personal Email</label>
-                  <input type="email" name="personalEmail" value={formData.personalEmail} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg ${errors.personalEmail ? 'border-red-500' : 'border-gray-300'}`} />
-                  {errors.personalEmail && <p className="text-red-500 text-xs mt-1">{errors.personalEmail}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">Contact Number</label>
-                  <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'}`} />
-                  {errors.contactNumber && <p className="text-red-500 text-xs mt-1">{errors.contactNumber}</p>}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-black mb-2">Attach Document (optional)</label>
-                <input type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileChange} />
-              </div>
-
-              <div className="flex items-start gap-3">
-                <input type="checkbox" checked={formData.declarationAccepted} onChange={handleDeclarationChange} />
-                <div>
-                  <p className="text-sm text-black">I hereby declare that the information provided is true and accurate.</p>
-                  {errors.declaration && <p className="text-red-500 text-xs mt-1">{errors.declaration}</p>}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button type="button" onClick={handleCancel} className="px-4 py-2 bg-white border rounded-lg">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg">Submit Resignation</button>
-              </div>
-            </div>
-          </div>
-        </form>
+          </form>
+        )}
 
         {/* Confirm Modal */}
         {showConfirmModal && (

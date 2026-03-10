@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   GitPullRequest, Check, X, Eye,
@@ -10,6 +9,7 @@ import { Badge, SectionHeader } from '../../components/super_admin/UI.tsx';
 import { Modal } from '../../components/super_admin/Modal.tsx';
 import { useApp } from '../../context/AppContext.tsx';
 import { FormInput, FormSelect, FormTextArea } from '../../components/super_admin/FormFields.tsx';
+import { getPendingSuperAdminResignations, approveSuperAdminResignation, rejectSuperAdminResignation } from '../../api/resignations.js';
 
 interface PendingEmployee {
   employeeId: string;
@@ -55,8 +55,8 @@ export const AdminRequests = () => {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
+          credentials: 'include',
         });
 
         const data = await response.json();
@@ -91,7 +91,11 @@ export const AdminRequests = () => {
             }];
           }
 
-          setTerminationRequests(fetchedRequests);
+          setTerminationRequests(prevRequests => {
+            // Keep non-termination requests (like resignations) and add new termination requests
+            const nonTerminationRequests = prevRequests.filter(req => req.type !== 'Termination');
+            return [...nonTerminationRequests, ...fetchedRequests];
+          });
           console.log('Mapped termination requests:', fetchedRequests);
         } else {
           console.error('Failed to fetch termination requests:', data);
@@ -122,8 +126,8 @@ export const AdminRequests = () => {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
+          credentials: 'include',
         });
 
         const data = await response.json();
@@ -161,6 +165,38 @@ export const AdminRequests = () => {
       // Refresh every 10 seconds
       const interval = setInterval(fetchPendingEmployees, 10000);
       return () => clearInterval(interval);
+    }
+  }, [isSuperAdmin]);
+
+  // Fetch resignation requests for Super Admin
+  useEffect(() => {
+    const fetchSuperAdminResignations = async () => {
+      setIsLoadingTerminationRequests(true);
+      try {
+        const response = await getPendingSuperAdminResignations();
+        console.log('Super Admin Resignation Requests:', response);
+
+        const mappedRequests = response.map((req: any) => ({
+          id: req.id,
+          type: 'Resignation',
+          requestedBy: req.employeeId,
+          requesterId: req.employeeId,
+          targetId: req.employeeId,
+          date: new Date(req.createdAt).toLocaleDateString(),
+          status: req.status,
+          details: req.reason,
+          dbId: req.id,
+        }));
+        setTerminationRequests(prevRequests => [...prevRequests, ...mappedRequests]);
+      } catch (err) {
+        console.error('Error fetching super admin resignation requests:', err);
+      } finally {
+        setIsLoadingTerminationRequests(false);
+      }
+    };
+
+    if (isSuperAdmin) {
+      fetchSuperAdminResignations();
     }
   }, [isSuperAdmin]);
 
@@ -205,8 +241,8 @@ export const AdminRequests = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
+          credentials: 'include',
         });
 
         const result = await response.text();
@@ -218,11 +254,12 @@ export const AdminRequests = () => {
           setViewingRequest(null);
           alert(result);
         } else {
-          alert(`Failed to ${status === 'Approved' ? 'approve' : 'reject'} termination request: ${result}`);
+          const message = typeof result === 'string' ? result : (result as any)?.message || 'Unknown error';
+          alert(`Failed to ${status === 'Approved' ? 'approve' : 'reject'} termination request: ${message}`);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error handling termination request:', err);
-        alert('An error occurred while processing the termination request');
+        alert(`Error: ${err.message || 'An error occurred while processing the termination request'}`);
       }
     } else {
       // For other request types, use the standard behavior
@@ -258,8 +295,8 @@ export const AdminRequests = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
+        credentials: 'include',
         body: JSON.stringify(approveData),
       });
 
@@ -295,8 +332,8 @@ export const AdminRequests = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
+          credentials: 'include',
         }
       );
 
@@ -348,6 +385,66 @@ export const AdminRequests = () => {
     addEmployee(newUser);
     setIsAddModalOpen(false);
     // Mark recruitment request as fulfilled? Could add a custom status but Approved is fine for now
+  };
+
+  const handleApproveResignation = async (request: AdminRequest) => {
+    setIsApproving(true);
+    try {
+      const response = await fetch(
+        `http://localhost:8085/api/resignations/admin/${request.dbId}/approve`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        }
+      );
+
+      if (response.ok) {
+        alert('Resignation request approved and forwarded to super admin.');
+        setTerminationRequests((prev) =>
+          prev.filter((req) => req.dbId !== request.dbId)
+        );
+      } else {
+        const error = await response.json();
+        console.error('Failed to approve resignation:', error);
+        alert('Failed to approve resignation request.');
+      }
+    } catch (err) {
+      console.error('Error approving resignation:', err);
+      alert('An error occurred while approving the resignation request.');
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  const handleApproveSuperAdmin = async (request: AdminRequest) => {
+    setIsApproving(true);
+    try {
+      await approveSuperAdminResignation(request.dbId);
+      alert('Resignation request approved successfully.');
+      setTerminationRequests((prev) => prev.filter((req) => req.dbId !== request.dbId));
+    } catch (err) {
+      console.error('Error approving resignation request:', err);
+      alert('Failed to approve resignation request.');
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  const handleRejectSuperAdmin = async (request: AdminRequest) => {
+    setIsApproving(true);
+    try {
+      await rejectSuperAdminResignation(request.dbId);
+      alert('Resignation request rejected successfully.');
+      setTerminationRequests((prev) => prev.filter((req) => req.dbId !== request.dbId));
+    } catch (err) {
+      console.error('Error rejecting resignation request:', err);
+      alert('Failed to reject resignation request.');
+    } finally {
+      setIsApproving(false);
+    }
   };
 
   return (
@@ -472,7 +569,7 @@ export const AdminRequests = () => {
                         </div>
                         <div>
                           <div className="font-bold text-gray-900 tracking-tight">{req.type}</div>
-                          <div className="text-[10px] font-mono text-gray-500">{req.id.toUpperCase()}</div>
+                          <div className="text-[10px] font-mono text-gray-500">{String(req.id).toUpperCase()}</div>
                         </div>
                       </div>
                     </td>
@@ -506,26 +603,28 @@ export const AdminRequests = () => {
                           <Eye size={18} />
                         </button>
 
-                        {isSuperAdmin && req.status === 'Pending' && (
+                        {req.status === 'Pending' && (
                           <>
                             <button
-                              onClick={() => handleAction(req, 'Approved')}
+                              onClick={() => req.type === 'Resignation' ? handleApproveSuperAdmin(req) : handleAction(req, 'Approved')}
                               className="p-2.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl transition-all active:scale-90"
                               title="Approve"
+                              disabled={isApproving}
                             >
                               <Check size={18} />
                             </button>
                             <button
-                              onClick={() => handleAction(req, 'Rejected')}
+                              onClick={() => req.type === 'Resignation' ? handleRejectSuperAdmin(req) : handleAction(req, 'Rejected')}
                               className="p-2.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all active:scale-90"
                               title="Reject"
+                              disabled={isApproving}
                             >
                               <X size={18} />
                             </button>
                           </>
                         )}
 
-                        {isSuperAdmin && req.status === 'Approved' && req.type === 'Recruitment' && (
+                        {isSuperAdmin && req.status === 'Approved' && req.type === 'Termination' && (
                           <button
                             onClick={() => handleRecruitmentProcessing(req)}
                             className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all flex items-center gap-2"

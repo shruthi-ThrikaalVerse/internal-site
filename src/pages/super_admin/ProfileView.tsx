@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { SectionHeader } from '../../components/super_admin/UI.tsx';
 import { FormInput } from '../../components/super_admin/FormFields.tsx';
 import { User, Shield, Key, Bell, Globe, Camera, Loader, X } from 'lucide-react';
+import { apiClient } from '../../utils/apiClient.js';
 
 interface UserProfile {
   employeeId: string;
@@ -55,18 +56,10 @@ export const ProfileView = () => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('accessToken');
 
-        const response = await fetch('http://localhost:8085/api/users/me', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+        const data = await apiClient.get<UserProfile>('/api/users/me');
 
-        if (response.ok) {
-          const data = await response.json();
+        if (data) {
           setProfile(data);
         } else {
           setError('Failed to load profile');
@@ -91,14 +84,11 @@ export const ProfileView = () => {
       const formData = new FormData();
       formData.append('image', file);
 
-      const token = localStorage.getItem('accessToken');
       console.log('Uploading profile image...', { fileName: file.name, fileSize: file.size });
 
       const response = await fetch('http://localhost:8085/api/users/admin/profile-image', {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include', // Send HttpOnly cookie
         body: formData,
       });
 
@@ -129,13 +119,13 @@ export const ProfileView = () => {
 
     setDeletingImage(true);
     try {
-      const token = localStorage.getItem('accessToken');
       console.log('Deleting profile image...');
 
       const response = await fetch('http://localhost:8085/api/users/admin/profile-image', {
         method: 'DELETE',
+        credentials: 'include', // Send HttpOnly cookie
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
       });
 
@@ -179,11 +169,10 @@ export const ProfileView = () => {
 
     setIsSaving(true);
     try {
-      const token = localStorage.getItem('accessToken');
       const response = await fetch('http://localhost:8085/api/users/super-admin/update-profile', {
         method: 'PUT',
+        credentials: 'include', // Send HttpOnly cookie
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

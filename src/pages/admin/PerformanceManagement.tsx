@@ -373,6 +373,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
   const [employeePerfApi, setEmployeePerfApi] = useState<any[]>([]);
   const [topPerformersApi, setTopPerformersApi] = useState<any[]>([]);
   const [lowPerformersApi, setLowPerformersApi] = useState<any[]>([]);
+  const [dashboardApiData, setDashboardApiData] = useState<any>(null);
+  const [departmentsApiData, setDepartmentsApiData] = useState<string[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentDate] = useState<string>(new Date().toLocaleDateString('en-US', {
@@ -431,8 +433,95 @@ const EmployeePerformanceDashboard: React.FC = () => {
     'Low'
   ], []);
 
-  // Convert real employees to performance data
+  // Calculate department stats from API data or real data
   const loadPerformanceData = () => {
+    if (dashboardApiData) {
+      // Use dashboard API data
+      const deptStats = (dashboardApiData.departmentWisePerformance || []).map((dept: any) => ({
+        name: dept.name || dept.department,
+        employees: dept.employees || dept.employeeCount || 0,
+        avgKPIScore: dept.avgKPIScore || dept.averageKPI || 75,
+        tasksCompleted: dept.tasksCompleted || dept.completedTasks || 0,
+        totalTasks: dept.totalTasks || 0,
+        attendance: dept.attendance || dept.averageAttendance || 85,
+        overallRating: dept.overallRating || dept.rating || 75
+      }));
+
+      const employeeList = (dashboardApiData.employeePerformanceList || []).map((emp: any) => ({
+        id: emp.id || emp.employeeId,
+        name: emp.name || emp.fullName || emp.employeeName,
+        role: emp.role || emp.designation || emp.position,
+        department: emp.department,
+        performanceScore: emp.performanceScore || emp.score || 3.5,
+        kpiScore: emp.kpiScore || emp.kpi || 75,
+        taskCompletion: emp.taskCompletion || emp.tasksCompleted || 80,
+        qualityScore: emp.qualityScore || emp.quality || 75,
+        attendance: emp.attendance || 85,
+        lastReview: emp.lastReview || emp.lastReviewDate || new Date().toISOString().split('T')[0],
+        status: emp.status || 'meeting',
+        trend: emp.trend || 'stable',
+        email: emp.email || '',
+        joinDate: emp.joinDate || emp.dateOfJoining || '',
+        manager: emp.manager || emp.reportingManager || '',
+        projects: emp.projects || 0,
+        achievements: emp.achievements || [],
+        feedback: emp.feedback || [],
+        goals: emp.goals || []
+      }));
+
+      const topPerformers = (dashboardApiData.topPerformers || []).map((emp: any) => ({
+        id: emp.id || emp.employeeId,
+        name: emp.name || emp.fullName,
+        role: emp.role || emp.designation,
+        department: emp.department,
+        performanceScore: emp.performanceScore || emp.score,
+        kpiScore: emp.kpiScore || emp.kpi,
+        taskCompletion: emp.taskCompletion,
+        qualityScore: emp.qualityScore,
+        attendance: emp.attendance,
+        lastReview: emp.lastReview,
+        status: emp.status || 'exceeding',
+        trend: emp.trend || 'up',
+        email: emp.email,
+        joinDate: emp.joinDate,
+        manager: emp.manager,
+        projects: emp.projects || 0,
+        achievements: emp.achievements || [],
+        feedback: emp.feedback || [],
+        goals: emp.goals || []
+      }));
+
+      const lowPerformers = (dashboardApiData.lowPerformers || []).map((emp: any) => ({
+        id: emp.id || emp.employeeId,
+        name: emp.name || emp.fullName,
+        role: emp.role || emp.designation,
+        department: emp.department,
+        performanceScore: emp.performanceScore || emp.score,
+        kpiScore: emp.kpiScore || emp.kpi,
+        taskCompletion: emp.taskCompletion,
+        qualityScore: emp.qualityScore,
+        attendance: emp.attendance,
+        lastReview: emp.lastReview,
+        status: emp.status || 'needs-improvement',
+        trend: emp.trend || 'down',
+        email: emp.email,
+        joinDate: emp.joinDate,
+        manager: emp.manager,
+        projects: emp.projects || 0,
+        achievements: emp.achievements || [],
+        feedback: emp.feedback || [],
+        goals: emp.goals || []
+      }));
+
+      setDepartmentStats(deptStats);
+      setPerformanceData(employeeList);
+      setTopPerformersApi(topPerformers);
+      setLowPerformersApi(lowPerformers);
+      setLastUpdate(new Date());
+      return;
+    }
+
+    // Fallback to existing logic if no dashboard data
     if (employees.length === 0) return;
 
     // Map real employees to performance data
@@ -566,7 +655,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
     return () => clearInterval(interval);
     // Fetch performance-related API data once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [employees]);
+  }, [employees, dashboardApiData]);
 
   // Fetch remote performance APIs once on mount
   useEffect(() => {
@@ -622,10 +711,38 @@ const EmployeePerformanceDashboard: React.FC = () => {
       }
     };
 
+    const fetchDashboard = async () => {
+      try {
+        const res = await fetch('http://localhost:8085/api/performance/dashboard', { method: 'GET', credentials: 'include', headers });
+        if (res.ok) {
+          const data = await res.json().catch(() => null);
+          setDashboardApiData(data);
+          console.log('Dashboard API data:', data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch dashboard data', err);
+      }
+    };
+
+    const fetchDepartments = async () => {
+      try {
+        const res = await fetch('http://localhost:8085/api/users/departments', { method: 'GET', credentials: 'include', headers });
+        if (res.ok) {
+          const data = await res.json().catch(() => []);
+          setDepartmentsApiData(Array.isArray(data) ? data : []);
+          console.log('Departments API data:', data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch departments', err);
+      }
+    };
+
     fetchDept();
     fetchEmployeesPerf();
     fetchTop();
     fetchLow();
+    fetchDashboard();
+    fetchDepartments();
   }, []);
 
   // Fetch tasks from API
@@ -746,16 +863,26 @@ const EmployeePerformanceDashboard: React.FC = () => {
   const lowPerformers = performanceDataState.filter(emp => emp.performanceScore < 3).length;
 
   // Get top performers
-  const topPerformers = [...performanceDataState]
-    .filter(emp => emp.performanceScore >= 4.5)
-    .sort((a, b) => b.performanceScore - a.performanceScore)
-    .slice(0, 3);
+  const topPerformers = useMemo(() => {
+    if (topPerformersApi.length > 0) {
+      return topPerformersApi;
+    }
+    return [...performanceDataState]
+      .filter(emp => emp.performanceScore >= 4.5)
+      .sort((a, b) => b.performanceScore - a.performanceScore)
+      .slice(0, 3);
+  }, [performanceDataState, topPerformersApi]);
 
   // Get low performers
-  const lowPerformersList = [...performanceDataState]
-    .filter(emp => emp.performanceScore < 3)
-    .sort((a, b) => a.performanceScore - b.performanceScore)
-    .slice(0, 3);
+  const lowPerformersList = useMemo(() => {
+    if (lowPerformersApi.length > 0) {
+      return lowPerformersApi;
+    }
+    return [...performanceDataState]
+      .filter(emp => emp.performanceScore < 3)
+      .sort((a, b) => a.performanceScore - b.performanceScore)
+      .slice(0, 3);
+  }, [performanceDataState, lowPerformersApi]);
 
   // Filter employees by search term
   const filteredPerformanceData = useMemo(() => {
@@ -773,6 +900,45 @@ const EmployeePerformanceDashboard: React.FC = () => {
     if (selectedDepartment === 'All') return filteredPerformanceData;
     return filteredPerformanceData.filter(emp => emp.department === selectedDepartment);
   }, [filteredPerformanceData, selectedDepartment]);
+
+  // Get department stats for dropdown
+  const departmentStatsForDropdown = useMemo(() => {
+    if (deptApiData.length > 0) {
+      // Use performance data from deptApiData, but ensure all departments from departmentsApiData are included
+      const performanceMap = new Map(deptApiData.map((dept: any) => [
+        dept.name || dept.department,
+        {
+          name: dept.name || dept.department,
+          employees: dept.employees || dept.employeeCount || 0,
+          avgKPIScore: dept.avgKPIScore || dept.averageKPI || 75,
+          tasksCompleted: dept.tasksCompleted || dept.completedTasks || 0,
+          totalTasks: dept.totalTasks || 0,
+          attendance: dept.attendance || dept.averageAttendance || 85,
+          overallRating: dept.overallRating || dept.rating || 75
+        }
+      ]));
+
+      // If we have departments from the departments API, use those as base and merge with performance data
+      if (departmentsApiData.length > 0) {
+        return departmentsApiData.map(deptName => {
+          const existingStats = performanceMap.get(deptName);
+          return existingStats || {
+            name: deptName,
+            employees: 0,
+            avgKPIScore: 75,
+            tasksCompleted: 0,
+            totalTasks: 0,
+            attendance: 85,
+            overallRating: 75
+          };
+        });
+      }
+
+      // Otherwise use the performance data as is
+      return Array.from(performanceMap.values());
+    }
+    return departmentStats;
+  }, [departmentStats, deptApiData, departmentsApiData]);
 
   // Star rendering function
   const renderStars = (rating: number, maxStars = 5) => {
@@ -923,10 +1089,12 @@ const EmployeePerformanceDashboard: React.FC = () => {
     }
   };
 
-  const departmentsList = useMemo(() =>
-    Array.from(new Set((employees || []).map(e => e.department || 'Unassigned'))).sort(),
-    [employees]
-  );
+  const departmentsList = useMemo(() => {
+    if (departmentsApiData.length > 0) {
+      return departmentsApiData.sort();
+    }
+    return Array.from(new Set((employees || []).map(e => e.department || 'Unassigned'))).sort();
+  }, [employees, departmentsApiData]);
 
   const openReviewModal = (task: Task) => {
     console.debug('Opening review modal for task:', task);
@@ -995,6 +1163,39 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
   const handleRefreshData = () => {
     loadPerformanceData();
+
+    // Refresh dashboard API data
+    const token = localStorage.getItem('token');
+    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+
+    const fetchDashboard = async () => {
+      try {
+        const res = await fetch('http://localhost:8085/api/performance/dashboard', { method: 'GET', credentials: 'include', headers });
+        if (res.ok) {
+          const data = await res.json().catch(() => null);
+          setDashboardApiData(data);
+          console.log('Dashboard API data refreshed:', data);
+        }
+      } catch (err) {
+        console.error('Failed to refresh dashboard data', err);
+      }
+    };
+
+    const fetchDepartments = async () => {
+      try {
+        const res = await fetch('http://localhost:8085/api/users/departments', { method: 'GET', credentials: 'include', headers });
+        if (res.ok) {
+          const data = await res.json().catch(() => []);
+          setDepartmentsApiData(Array.isArray(data) ? data : []);
+          console.log('Departments API data refreshed:', data);
+        }
+      } catch (err) {
+        console.error('Failed to refresh departments data', err);
+      }
+    };
+
+    fetchDashboard();
+    fetchDepartments();
   };
 
   const handleRefreshTasks = async () => {
@@ -1472,8 +1673,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   title="Select department"
                 >
                   <option value="All">All Departments</option>
-                  {departmentStats.map(dept => (
-                    <option key={dept.name} value={dept.name}>{dept.name}</option>
+                  {departmentsApiData.map(dept => (
+                    <option key={dept} value={dept}>{dept}</option>
                   ))}
                 </select>
                 <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -1493,7 +1694,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {departmentStats.map((dept) => (
+                  {departmentStatsForDropdown.map((dept) => (
                     <tr key={dept.name} className="hover:bg-gray-50 transition-colors">
                       <td className="p-4">
                         <div className="flex items-center gap-3">

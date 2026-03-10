@@ -194,21 +194,25 @@ const Resignation: React.FC = () => {
 
         try {
             const formDataToSend = new FormData();
-            formDataToSend.append('resignationDate', formData.resignationDate);
-            formDataToSend.append('lastWorkingDate', formData.lastWorkingDate);
+            formDataToSend.append('resignationDate', new Date(formData.resignationDate).toISOString().split('T')[0]);
+            formDataToSend.append('lastWorkingDate', new Date(formData.lastWorkingDate).toISOString().split('T')[0]);
+            formDataToSend.append('noticePeriod', formData.noticePeriod);
             formDataToSend.append('reason', formData.reason);
             formDataToSend.append('detailedReason', formData.detailedReason);
-            formDataToSend.append('personalEmail', formData.personalEmail);
-            formDataToSend.append('contactNumber', formData.contactNumber);
+            formDataToSend.append('contactEmail', formData.personalEmail); // Updated field name
+            formDataToSend.append('contactPhone', formData.contactNumber); // Updated field name
             if (formData.document) {
-                formDataToSend.append('document', formData.document);
+                formDataToSend.append('file', formData.document); // Ensure file is sent as 'file'
             }
 
-            const response = await axios.post('http://localhost:8085/api/resignation', formDataToSend, {
+            // Log the payload for debugging
+            for (const [key, value] of formDataToSend.entries()) {
+                console.log(`${key}:`, value);
+            }
+
+            const response = await axios.post('http://localhost:8085/api/resignations/apply', formDataToSend, {
                 withCredentials: true,
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
+                // Remove explicit Content-Type to let the browser set it automatically
             });
 
             if (response.status === 200 || response.status === 201) {

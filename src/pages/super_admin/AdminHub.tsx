@@ -11,6 +11,7 @@ import { Badge, SectionHeader } from '../../components/super_admin/UI.tsx';
 import { Modal } from '../../components/super_admin/Modal.tsx';
 import { FormInput, FormSelect } from '../../components/super_admin/FormFields.tsx';
 import { useApp } from '../../context/AppContext.tsx';
+import { apiClient } from '../../utils/apiClient.js';
 import * as usersApi from '../../api/users.js';
 
 const EMPLOYMENT_TYPES = ['FULL_TIME', 'PART_TIME', 'CONTRACT'];
@@ -115,17 +116,9 @@ export const AdminHub = () => {
     useEffect(() => {
         const fetchAdmins = async () => {
             try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch('http://localhost:8085/api/users/admin/employees', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
+                const data = await apiClient.get<any>('/api/users/admin/employees');
 
-                if (response.ok) {
-                    const data = await response.json();
+                if (data) {
                     // Transform API response to match User type
                     const rawAdminsData = Array.isArray(data) ? data : data.data || [];
 
@@ -145,7 +138,7 @@ export const AdminHub = () => {
                     setAdmins(filteredAdmins);
                     console.log('Admins fetched successfully (filtered):', filteredAdmins);
                 } else {
-                    console.error('Failed to fetch admins:', response.statusText);
+                    console.error('Failed to fetch admins');
                 }
             } catch (error) {
                 console.error('Error fetching admins:', error);
@@ -260,8 +253,6 @@ export const AdminHub = () => {
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            const token = localStorage.getItem('accessToken');
-
             if (isNew) {
                 // CREATE NEW ADMIN - POST to register endpoint
                 const formData = new FormData();
@@ -291,9 +282,7 @@ export const AdminHub = () => {
 
                 const response = await fetch('http://localhost:8085/api/users/register', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
+                    credentials: 'include', // Send HttpOnly cookie
                     body: formData,
                 });
 
@@ -312,16 +301,9 @@ export const AdminHub = () => {
 
                     // Refetch admins to get the real ID and all backend-generated data
                     try {
-                        const refetchResponse = await fetch('http://localhost:8085/api/users/admin/employees', {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': `Bearer ${token}`,
-                                'Content-Type': 'application/json',
-                            },
-                        });
+                        const refetchData = await apiClient.get<any>('/api/users/admin/employees');
 
-                        if (refetchResponse.ok) {
-                            const refetchData = await refetchResponse.json();
+                        if (refetchData) {
                             const rawAdminsData = Array.isArray(refetchData) ? refetchData : refetchData.data || [];
 
                             console.log('Raw admins from refetch:', rawAdminsData);
@@ -347,7 +329,7 @@ export const AdminHub = () => {
                                 console.log('Newly created admin ID:', newAdmin.id);
                             }
                         } else {
-                            console.warn('Refetch response status:', refetchResponse.status);
+                            console.warn('Refetch failed');
                         }
                     } catch (refetchErr) {
                         console.warn('Failed to refetch admins:', refetchErr);
@@ -401,9 +383,7 @@ export const AdminHub = () => {
 
                 const updateResponse = await fetch(`http://localhost:8085/api/users/super_admin/update/${adminId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
+                    credentials: 'include', // Send HttpOnly cookie
                     body: formData,
                 });
 
@@ -474,7 +454,6 @@ export const AdminHub = () => {
 
     const handleDirectTerminateAdmin = async (adminId: string) => {
         try {
-            const token = localStorage.getItem('accessToken');
             const adminData = admins.find(a => a.id === adminId);
             const empId = adminData?.employeeId || adminId;
 
@@ -485,8 +464,8 @@ export const AdminHub = () => {
 
             const response = await fetch(`http://localhost:8085/api/users/admin/terminate/${empId}`, {
                 method: 'PUT',
+                credentials: 'include', // Send HttpOnly cookie
                 headers: {
-                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
             });
@@ -672,7 +651,7 @@ export const AdminHub = () => {
                                         <Badge color={a.role.includes('SUPER') ? 'red' : 'green'}>{a.role.toUpperCase()}</Badge>
                                     </td>
                                     <td className="px-8 py-5">
-                                        <Badge color={a.status === 'active' ? 'green' : a.status === 'pending' ? 'yellow' : 'red'}>{a.status.toUpperCase()}</Badge>
+                                        <Badge color={a.status === 'active' ? 'green' : 'red'}>{a.status.toUpperCase()}</Badge>
                                     </td>
                                     <td className="px-8 py-5">
                                         <div className="flex items-center gap-2 text-[11px] text-gray-900 font-mono bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 w-fit group-hover:text-blue-600 group-hover:border-blue-300 transition-all">

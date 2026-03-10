@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import * as LucideIcons from 'lucide-react';
+import { apiClient } from '../../utils/apiClient.js';
 
 const LEVELS = ['ALL', 'INFO', 'WARN', 'ERROR', 'CRITICAL', 'LOGIN', 'SECURITY', 'CREATE', 'UPDATE', 'DELETE'];
 
@@ -88,7 +89,6 @@ export const AuditLogsView: React.FC = () => {
   const load = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
       const queryParams = new URLSearchParams();
 
       queryParams.append('page', (page - 1).toString());
@@ -100,19 +100,11 @@ export const AuditLogsView: React.FC = () => {
       queryParams.append('sort', sort);
       queryParams.append('order', order);
 
-      const response = await fetch(
-        `http://localhost:8085/api/audit-log/admin?${queryParams.toString()}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
+      const data = await apiClient.get<any>(
+        `/api/audit-log/admin?${queryParams.toString()}`
       );
 
-      if (response.ok) {
-        const data = await response.json();
+      if (data) {
         const auditLogs = (data.logs || data.content || []).map((l: any) => ({
           ...l,
           details: maskSensitive(typeof l.details === 'string' ? tryParse(l.details) : l.details)
@@ -120,7 +112,7 @@ export const AuditLogsView: React.FC = () => {
         setLogs(auditLogs);
         setTotal(data.total || auditLogs.length);
       } else {
-        console.error('Failed to fetch audit logs:', response.statusText);
+        console.error('Failed to fetch audit logs');
       }
     } catch (e: any) {
       console.error(e);
@@ -152,7 +144,6 @@ export const AuditLogsView: React.FC = () => {
 
   const exportCsv = async (fmt: 'csv' | 'json') => {
     try {
-      const token = localStorage.getItem('accessToken');
       const queryParams = new URLSearchParams();
 
       if (startDate) queryParams.append('startDate', startDate);
@@ -165,8 +156,9 @@ export const AuditLogsView: React.FC = () => {
         `http://localhost:8085/api/audit-log/admin/export?${queryParams.toString()}`,
         {
           method: 'GET',
+          credentials: 'include', // Send HttpOnly cookie
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
         }
       );

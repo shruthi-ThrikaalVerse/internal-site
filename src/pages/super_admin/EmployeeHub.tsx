@@ -14,6 +14,7 @@ import { Badge, SectionHeader } from '../../components/super_admin/UI.tsx';
 import { Modal } from '../../components/super_admin/Modal.tsx';
 import { FormInput, FormSelect, FormTextArea } from '../../components/super_admin/FormFields.tsx';
 import { useApp } from '../../context/AppContext.tsx';
+import { apiClient } from '../../utils/apiClient.js';
 import * as usersApi from '../../api/users.ts';
 
 const DEPARTMENTS = ['Engineering', 'Design', 'Marketing', 'People', 'Infrastructure', 'Quality', 'Data'];
@@ -106,17 +107,9 @@ export const EmployeeHub = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch('http://localhost:8085/api/users/admin/employees', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+        const data = await apiClient.get<any>('/api/users/admin/employees');
 
-        if (response.ok) {
-          const data = await response.json();
+        if (data) {
           // Transform API response to match User type
           const rawEmployeesData = Array.isArray(data) ? data : data.data || [];
 
@@ -136,7 +129,7 @@ export const EmployeeHub = () => {
           setLocalEmployees(filteredEmployees);
           console.log('Employees fetched successfully (filtered):', filteredEmployees);
         } else {
-          console.error('Failed to fetch employees:', response.statusText);
+          console.error('Failed to fetch employees');
         }
       } catch (error) {
         console.error('Error fetching employees:', error);
@@ -196,7 +189,7 @@ export const EmployeeHub = () => {
     };
     load();
   }, [setEmployees]);
-  const isAdminTier = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN' || currentUser?.role === 'SYSTEM_ADMIN' || currentUser?.role === 'SECURITY_ADMIN';
+  const isAdminTier = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN';
 
   const handleResetFilters = () => {
     setSelectedDept('All Departments');
@@ -252,7 +245,6 @@ export const EmployeeHub = () => {
 
     setIsLoadingSave(true);
     try {
-      const token = localStorage.getItem('accessToken');
       const employeeData = localEmployees.find(e => e.id === editingId);
       const employeeId = employeeData?.employeeId || editingId;
 
@@ -314,10 +306,7 @@ export const EmployeeHub = () => {
 
       const updateResponse = await fetch(`http://localhost:8085/api/users/super_admin/update/${employeeId}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          // Let browser set Content-Type with multipart boundary
-        },
+        credentials: 'include', // Send HttpOnly cookie
         body: formData,
       });
 
@@ -411,13 +400,11 @@ export const EmployeeHub = () => {
         fullData: employeeData,
       });
 
-      const token = localStorage.getItem('accessToken');
-
       // Try with query parameter first
       let response = await fetch(`http://localhost:8085/api/users/super_admin/promote/${employeeId}?roleName=${selectedAdminRole}`, {
         method: 'POST',
+        credentials: 'include', // Send HttpOnly cookie
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -482,7 +469,6 @@ export const EmployeeHub = () => {
 
   const handleDirectTermination = async (employeeId: string) => {
     try {
-      const token = localStorage.getItem('accessToken');
       const employeeData = localEmployees.find(e => e.id === employeeId);
       const empId = employeeData?.employeeId || employeeId;
 
@@ -493,8 +479,8 @@ export const EmployeeHub = () => {
 
       const response = await fetch(`http://localhost:8085/api/users/admin/terminate/${empId}`, {
         method: 'PUT',
+        credentials: 'include', // Send HttpOnly cookie
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -640,7 +626,7 @@ export const EmployeeHub = () => {
                                 target.style.display = 'none';
                               }}
                             />
-                            <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-[3px] border-white ${e.status === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : e.status === 'pending' ? 'bg-amber-500 shadow-[0_0_8px_#f59e0b]' : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'}`}></span>
+                            <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-[3px] border-white ${e.status === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'}`}></span>
                           </>
                         )}
                       </div>
@@ -664,7 +650,7 @@ export const EmployeeHub = () => {
                     </div>
                   </td>
                   <td className="px-8 py-5">
-                    <Badge color={e.status === 'active' ? 'green' : e.status === 'pending' ? 'yellow' : 'red'}>
+                    <Badge color={e.status === 'active' ? 'green' : 'red'}>
                       {e.status ? e.status.toUpperCase() : ''}
                     </Badge>
                   </td>
@@ -966,7 +952,7 @@ export const EmployeeHub = () => {
 
             <div className="space-y-2">
               <p className="text-[10px] text-gray-500 font-semibold">
-                <strong>Selected:</strong> {selectedAdminRole}
+                <strong>Selected:</strong>{selectedAdminRole}
               </p>
             </div>
 
