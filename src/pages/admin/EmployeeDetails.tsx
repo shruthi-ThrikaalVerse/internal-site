@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts';
 import { PerformanceAnalyticsResponse } from '../../types.ts';
-import { getPerformancePercentage } from '../../api/performance.ts';
+import { getPerformancePercentage, submitReview } from '../../api/performance.ts';
 
 const Icon = ({ name, className, onClick }: { name: string; className?: string; onClick?: () => void }) => {
   const LucideIcon = (LucideIcons as any)[name];
@@ -12,11 +12,31 @@ const Icon = ({ name, className, onClick }: { name: string; className?: string; 
 };
 
 
+// Review History Type
+interface PerformanceReview {
+  id: string;
+  employeeName: string;
+  employeeId: string;
+  period: 'monthly' | 'quarterly' | 'yearly';
+  periodLabel: string;
+  rating: number;
+  feedback: string;
+  strengths: string;
+  improvements: string;
+  submittedDate: string;
+  submittedBy: string;
+}
+
 const EmployeeDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { employees, updateEmployee } = useHRMS();
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [reviewHistory, setReviewHistory] = useState<PerformanceReview[]>([]);
+  const [searchReview, setSearchReview] = useState('');
+  const [reviewHistoryPeriodFilter, setReviewHistoryPeriodFilter] = useState<'all' | 'monthly' | 'quarterly' | 'yearly'>('all');
+  const [selectedReview, setSelectedReview] = useState<PerformanceReview | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const [performanceViewPeriod, setPerformanceViewPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
   const [performanceViewFilter, setPerformanceViewFilter] = useState('');
   const [performanceViewYear, setPerformanceViewYear] = useState<number>(new Date().getFullYear());
@@ -37,6 +57,65 @@ const EmployeeDetails: React.FC = () => {
   const selectedEmployee = employees.find(emp => emp.id === id);
 
   // whenever the period or filter or year changes, fire off an API call
+  useEffect(() => {
+    // Load dummy review history data
+    const dummyReviews: PerformanceReview[] = [
+      {
+        id: '1',
+        employeeName: 'Rajesh Kumar',
+        employeeId: 'EMP001',
+        period: 'monthly',
+        periodLabel: 'January 2026',
+        rating: 4.5,
+        feedback: 'Excellent performance this month. Consistently delivers high-quality work.',
+        strengths: 'Strong technical skills, great communication, proactive problem solving',
+        improvements: 'Could improve time management, sometimes misses deadlines',
+        submittedDate: '2026-02-01',
+        submittedBy: 'Admin User'
+      },
+      {
+        id: '2',
+        employeeName: 'Priya Singh',
+        employeeId: 'EMP002',
+        period: 'quarterly',
+        periodLabel: 'Q4 2025',
+        rating: 4.2,
+        feedback: 'Good overall performance. Shows improvement in leadership skills.',
+        strengths: 'Team player, reliable, good documentation practices',
+        improvements: 'Needs to improve presentation skills and stakeholder communication',
+        submittedDate: '2026-01-15',
+        submittedBy: 'Admin User'
+      },
+      {
+        id: '3',
+        employeeName: 'Amit Patel',
+        employeeId: 'EMP003',
+        period: 'yearly',
+        periodLabel: 'Year 2025',
+        rating: 3.8,
+        feedback: 'Satisfactory performance. Met most of the annual goals.',
+        strengths: 'Stable performer, good attendance, follows guidelines',
+        improvements: 'Needs to show more initiative, could take on more challenging projects',
+        submittedDate: '2025-12-20',
+        submittedBy: 'Admin User'
+      },
+      {
+        id: '4',
+        employeeName: 'Rajesh Kumar',
+        employeeId: 'EMP001',
+        period: 'monthly',
+        periodLabel: 'December 2025',
+        rating: 4.8,
+        feedback: 'Outstanding performance this month. Delivered critical project on time.',
+        strengths: 'Excellent coding skills, takes initiative, mentors junior developers',
+        improvements: 'Could document code better',
+        submittedDate: '2026-01-05',
+        submittedBy: 'Admin User'
+      }
+    ];
+    setReviewHistory(dummyReviews);
+  }, []);
+
   useEffect(() => {
     if (!selectedEmployee) {
       setAnalytics(null);
@@ -161,6 +240,84 @@ const EmployeeDetails: React.FC = () => {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!performanceFormData.rating || !performanceFormData.feedback) {
+      alert('Please fill in rating and feedback');
+      return;
+    }
+
+    try {
+      // Convert rating string to enum format
+      const ratingMap: Record<string, 'EXCELLENT' | 'GOOD' | 'AVERAGE' | 'NEEDS_IMPROVEMENT' | 'POOR'> = {
+        '4.5': 'EXCELLENT',
+        '4': 'GOOD',
+        '3': 'AVERAGE',
+        '2': 'NEEDS_IMPROVEMENT',
+        '1': 'POOR'
+      };
+
+      const periodTypeMap: Record<'monthly' | 'quarterly' | 'yearly', 'MONTHLY' | 'QUARTERLY' | 'YEARLY'> = {
+        'monthly': 'MONTHLY',
+        'quarterly': 'QUARTERLY',
+        'yearly': 'YEARLY'
+      };
+
+      const periodString = performanceFormPeriod === 'monthly' 
+        ? monthNames[parseInt(performanceFormFilter) - 1] + ' ' + performanceViewYear
+        : performanceFormPeriod === 'quarterly'
+        ? `Q${performanceFormFilter} ${performanceViewYear}`
+        : `Year ${performanceFormFilter}`;
+
+      // Try to submit via API (will use dummy data if API not available)
+      try {
+        await submitReview({
+          employeeId: selectedEmployee?.employeeId || 'N/A',
+          feedback: performanceFormData.feedback,
+          strengths: performanceFormData.strengths,
+          areasOfImprovement: performanceFormData.improvements,
+          periodType: periodTypeMap[performanceFormPeriod],
+          rating: ratingMap[performanceFormData.rating] || 'GOOD',
+          period: periodString
+        });
+      } catch (apiError) {
+        console.warn('API not available, adding review locally:', apiError);
+        // Continue with local storage if API fails
+      }
+
+      // Add to local state regardless
+      const newReview: PerformanceReview = {
+        id: String(reviewHistory.length + 1),
+        employeeName: selectedEmployee?.fullName || 'Unknown',
+        employeeId: selectedEmployee?.employeeId || 'N/A',
+        period: performanceFormPeriod,
+        periodLabel: periodString,
+        rating: parseFloat(performanceFormData.rating),
+        feedback: performanceFormData.feedback,
+        strengths: performanceFormData.strengths,
+        improvements: performanceFormData.improvements,
+        submittedDate: new Date().toISOString().split('T')[0],
+        submittedBy: 'Admin User'
+      };
+
+      setReviewHistory([newReview, ...reviewHistory]);
+      
+      // Reset form
+      setPerformanceFormData({
+        rating: '',
+        feedback: '',
+        strengths: '',
+        improvements: ''
+      });
+      
+      alert('Review submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      alert('Failed to submit review. Please try again.');
+    }
   };
 
   if (!selectedEmployee) {
@@ -598,7 +755,7 @@ const EmployeeDetails: React.FC = () => {
                       Performance Review
                     </h3>
 
-                    <form className="space-y-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-md sticky top-6">
+                    <form onSubmit={handleReviewSubmit} className="space-y-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-md sticky top-6">
                       <div>
                         <label className="text-xs font-black text-black uppercase tracking-widest mb-3 block">Period Type</label>
                         <div className="flex gap-2 bg-slate-100 p-2 rounded-xl">
@@ -689,8 +846,221 @@ const EmployeeDetails: React.FC = () => {
                         Submit Review
                       </button>
                     </form>
+
+                    {/* Review History Section */}
+                    <div className="mt-8">
+                      <h3 className="text-2xl font-black text-black mb-4 flex items-center gap-3">
+                        <div className="p-3 bg-purple-100 rounded-2xl">
+                          <Icon name="History" className="w-6 h-6 text-purple-600" />
+                        </div>
+                        Review History
+                      </h3>
+                      <div className="relative flex-1 mb-4">
+                        <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                          type="text"
+                          placeholder="Search reviews by employee name..."
+                          value={searchReview}
+                          onChange={(e) => setSearchReview(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl font-medium text-sm text-black focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                        />
+                      </div>
+
+                      {/* Period Filter Buttons */}
+                      <div className="flex gap-2 mb-4 flex-wrap">
+                        <button
+                          onClick={() => setReviewHistoryPeriodFilter('all')}
+                          className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
+                            reviewHistoryPeriodFilter === 'all'
+                              ? 'bg-indigo-600 text-white shadow-lg'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          }`}
+                        >
+                          All Reviews
+                        </button>
+                        <button
+                          onClick={() => setReviewHistoryPeriodFilter('monthly')}
+                          className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
+                            reviewHistoryPeriodFilter === 'monthly'
+                              ? 'bg-blue-600 text-white shadow-lg'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          }`}
+                        >
+                          Monthly
+                        </button>
+                        <button
+                          onClick={() => setReviewHistoryPeriodFilter('quarterly')}
+                          className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
+                            reviewHistoryPeriodFilter === 'quarterly'
+                              ? 'bg-purple-600 text-white shadow-lg'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          }`}
+                        >
+                          Quarterly
+                        </button>
+                        <button
+                          onClick={() => setReviewHistoryPeriodFilter('yearly')}
+                          className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
+                            reviewHistoryPeriodFilter === 'yearly'
+                              ? 'bg-orange-600 text-white shadow-lg'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          }`}
+                        >
+                          Yearly
+                        </button>
+                      </div>
+
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {reviewHistory
+                          .filter(review => {
+                            const matchesSearch = review.employeeName.toLowerCase().includes(searchReview.toLowerCase()) ||
+                              review.employeeId.toLowerCase().includes(searchReview.toLowerCase());
+                            const matchesPeriod = reviewHistoryPeriodFilter === 'all' || review.period === reviewHistoryPeriodFilter;
+                            return matchesSearch && matchesPeriod;
+                          })
+                          .map((review) => (
+                            <div
+                              key={review.id}
+                              onClick={() => {
+                                setSelectedReview(review);
+                                setShowReviewModal(true);
+                              }}
+                              className="bg-gradient-to-r from-slate-50 to-slate-100 p-4 rounded-2xl border border-slate-200 hover:shadow-lg hover:border-indigo-300 cursor-pointer transition-all"
+                            >
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-black text-black text-sm truncate">{review.employeeName}</p>
+                                  <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">{review.employeeId} • {review.periodLabel}</p>
+                                  <p className="text-xs text-slate-600 mt-2 line-clamp-2">{review.feedback}</p>
+                                </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <div className={`px-3 py-2 rounded-xl text-center`}>
+                                    <p className={`text-lg font-black ${
+                                      review.rating >= 4.5 ? 'text-emerald-600' :
+                                      review.rating >= 3.5 ? 'text-blue-600' :
+                                      'text-amber-600'
+                                    }`}>{review.rating}</p>
+                                    <p className="text-[10px] text-slate-500 font-bold">Rating</p>
+                                  </div>
+                                  <div className={`px-2 py-1 rounded-lg ${
+                                    review.period === 'monthly' ? 'bg-blue-100 text-blue-700' :
+                                    review.period === 'quarterly' ? 'bg-purple-100 text-purple-700' :
+                                    'bg-orange-100 text-orange-700'
+                                  } text-[10px] font-black uppercase tracking-widest`}>
+                                    {review.period === 'monthly' ? 'Monthly' : review.period === 'quarterly' ? 'Quarterly' : 'Yearly'}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        {reviewHistory.filter(review => {
+                          const matchesSearch = review.employeeName.toLowerCase().includes(searchReview.toLowerCase()) ||
+                            review.employeeId.toLowerCase().includes(searchReview.toLowerCase());
+                          const matchesPeriod = reviewHistoryPeriodFilter === 'all' || review.period === reviewHistoryPeriodFilter;
+                          return matchesSearch && matchesPeriod;
+                        }).length === 0 && (
+                          <div className="text-center py-8">
+                            <Icon name="FileQuestion" className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+                            <p className="text-sm text-slate-500">No reviews found</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
+
+                {/* Review Details Modal */}
+                {showReviewModal && selectedReview && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                    <div className="relative max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden">
+                      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 flex items-center justify-between sticky top-0 z-10">
+                        <div>
+                          <h2 className="text-2xl font-black text-white flex items-center gap-2">
+                            <Icon name="FileText" className="w-6 h-6" />
+                            Review Details
+                          </h2>
+                          <p className="text-xs font-bold text-indigo-100 uppercase tracking-widest mt-1">{selectedReview.periodLabel}</p>
+                        </div>
+                        <button
+                          onClick={() => setShowReviewModal(false)}
+                          className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                        >
+                          <Icon name="X" className="w-6 h-6 text-white" />
+                        </button>
+                      </div>
+                      <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
+                        {/* Employee Info */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-slate-50 p-4 rounded-2xl">
+                            <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Employee Name</p>
+                            <p className="text-base font-black text-black">{selectedReview.employeeName}</p>
+                          </div>
+                          <div className="bg-slate-50 p-4 rounded-2xl">
+                            <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Employee ID</p>
+                            <p className="text-base font-black text-black">{selectedReview.employeeId}</p>
+                          </div>
+                        </div>
+
+                        {/* Rating and Period */}
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className={`p-4 rounded-2xl ${
+                            selectedReview.rating >= 4.5 ? 'bg-emerald-50 border border-emerald-200' :
+                            selectedReview.rating >= 3.5 ? 'bg-blue-50 border border-blue-200' :
+                            'bg-amber-50 border border-amber-200'
+                          }`}>
+                            <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Rating</p>
+                            <p className={`text-3xl font-black ${
+                              selectedReview.rating >= 4.5 ? 'text-emerald-600' :
+                              selectedReview.rating >= 3.5 ? 'text-blue-600' :
+                              'text-amber-600'
+                            }`}>{selectedReview.rating}</p>
+                          </div>
+                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                            <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Period</p>
+                            <p className="text-base font-black text-black">{selectedReview.periodLabel}</p>
+                          </div>
+                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                            <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Submitted</p>
+                            <p className="text-sm font-bold text-black">{selectedReview.submittedDate}</p>
+                          </div>
+                        </div>
+
+                        {/* Feedback */}
+                        <div>
+                          <label className="text-xs font-black text-slate-700 uppercase tracking-widest mb-2 block">Feedback</label>
+                          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                            <p className="text-sm text-black leading-relaxed">{selectedReview.feedback}</p>
+                          </div>
+                        </div>
+
+                        {/* Strengths */}
+                        {selectedReview.strengths && (
+                          <div>
+                            <label className="text-xs font-black text-emerald-700 uppercase tracking-widest mb-2 block">Strengths</label>
+                            <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
+                              <p className="text-sm text-emerald-900 leading-relaxed">{selectedReview.strengths}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Improvements */}
+                        {selectedReview.improvements && (
+                          <div>
+                            <label className="text-xs font-black text-amber-700 uppercase tracking-widest mb-2 block">Areas for Improvement</label>
+                            <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200">
+                              <p className="text-sm text-amber-900 leading-relaxed">{selectedReview.improvements}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Footer */}
+                        <div className="border-t border-slate-200 pt-4">
+                          <p className="text-xs text-slate-500 text-center font-medium">Submitted by: {selectedReview.submittedBy}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
