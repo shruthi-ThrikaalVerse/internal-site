@@ -29,7 +29,7 @@ const Sidebar: React.FC<{ isOpen: boolean; setOpen: (val: boolean) => void }> = 
       'admin/adminattendance': '/attendance',
       'admin/calendar': '/admin/calendar',
       'admin/employees': '/admin/employee-hub',
-      'admin/documents': '/admin/document-management',
+      'admin/documents': '/admin/documents',
       'admin/attendance': '/admin/attendance-monitor',
       'admin/leave': '/admin/leave',
       'admin/leave-requests': '/admin/leave-center',

@@ -42,6 +42,7 @@ import AdminLayoutWrapper from './components/admin/LayoutWrapper.tsx';
 import AdminAttendanceMonitor from './pages/admin/AttendanceMonitor.tsx';
 import AdminAuditLogs from './pages/admin/AuditLogs.tsx';
 import AdminDocumentManagement from './pages/admin/DocumentManagement.tsx';
+import AdminDocuments from './pages/admin/Documents.tsx';
 import AdminEmployeeHub from './pages/admin/EmployeeHub.tsx';
 import AdminEmployeeDetails from './pages/admin/EmployeeDetails.tsx';
 import AdminEventsAdmin from './pages/admin/EventsAdmin.tsx';
@@ -525,6 +526,9 @@ root.render(
               <Route path="/admin/attendance-monitor" element={<AdminAttendanceMonitorPage />} />
               <Route path="/admin/audit-logs" element={<AdminAuditLogsPage />} />
               <Route path="/admin/document-management" element={<AdminDocumentManagementPage />} />
+
+              {/* Admin Documents page with My Documents button/modal */}
+              <Route path="/admin/documents" element={<AdminPageWithLogout><HRMSProvider><AdminDocuments /></HRMSProvider></AdminPageWithLogout>} />
               <Route path="/admin/employee-hub" element={<AdminEmployeeHubPage />} />
               <Route path="/admin/employee-hub/:id" element={<AdminEmployeeDetailsPage />} />
               <Route path="/admin/events" element={<AdminEventPage />} />

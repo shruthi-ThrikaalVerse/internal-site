@@ -1,7 +1,7 @@
 import { apiClient } from '../utils/apiClient';
 import {
   PerformanceAnalyticsResponse
-} from '../types';
+} from '../types.tsx';
 
 interface GetPerformanceParams {
   employeeId: string;
