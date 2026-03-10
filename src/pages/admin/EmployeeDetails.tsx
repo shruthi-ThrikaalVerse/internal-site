@@ -792,17 +792,19 @@ const EmployeeDetails: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="text-xs font-black text-black uppercase tracking-widest mb-3 block">Rating (1-5)</label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="5"
-                          step="0.5"
+                        <label className="text-xs font-black text-black uppercase tracking-widest mb-3 block">Rating</label>
+                        <select
                           value={performanceFormData.rating}
                           onChange={(e) => setPerformanceFormData({ ...performanceFormData, rating: e.target.value })}
                           className="w-full px-4 py-3 bg-white border-2 border-slate-300 rounded-xl font-medium text-sm text-black focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                          placeholder="e.g., 4.5"
-                        />
+                        >
+                          <option value="">Select a rating</option>
+                          <option value="one">One</option>
+                          <option value="two">Two</option>
+                          <option value="three">Three</option>
+                          <option value="four">Four</option>
+                          <option value="five">Five</option>
+                        </select>
                       </div>
 
                       <div>
