@@ -351,6 +351,35 @@ export interface PerformanceCycle {
   completed: number;
 }
 
+// --- analytics response types returned by the performance percentage endpoint ---
+export interface LeaveAnalyticsResponse {
+  workingDays: number;
+  leavesTaken: number;
+  leavePercentage: number;
+  workingPercentage: number;
+}
+
+export interface AttendanceAnalyticsResponse {
+  presentDays: number;
+  absentDays: number;
+  attendancePercentage: number;
+}
+
+export interface TaskAnalyticsResponse {
+  completed: number;
+  inProgress: number;
+  assigned: number;
+  completedPercentage: number;
+  inProgressPercentage: number;
+  assignedPercentage: number;
+}
+
+export interface PerformanceAnalyticsResponse {
+  leaveAnalyticsResponse: LeaveAnalyticsResponse;
+  attendanceAnayticsResponse: AttendanceAnalyticsResponse;
+  taskAnalyticsResponse: TaskAnalyticsResponse;
+}
+
 export interface GoalTracking {
   employeeId: string;
   name: string;

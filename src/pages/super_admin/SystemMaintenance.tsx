@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SectionHeader, Badge } from '../../components/super_admin/UI.tsx';
+import { SectionHeader, Badge } from './UI.tsx';
 import { Server, Database, Globe, Cpu, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export const SystemMaintenance = () => {

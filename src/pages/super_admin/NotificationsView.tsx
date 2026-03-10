@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { SectionHeader, Badge } from '../../components/super_admin/UI.tsx';
+import { SectionHeader, Badge } from './UI.tsx';
 import { Bell, Send, Clock, ShieldAlert, Info, Megaphone, Plus, Trash2, Edit2 } from 'lucide-react';
 import * as notificationsApi from '../../api/notifications.ts';
 

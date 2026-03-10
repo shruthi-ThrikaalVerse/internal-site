@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { MOCK_PAYMENT_UPDATES } from '../../constants.js';
-import { SectionHeader, Badge } from '../../components/super_admin/UI.tsx';
+import { SectionHeader, Badge } from './UI.tsx';
 import { Check, X, RefreshCw, DollarSign, Wallet } from 'lucide-react';
 
 export const PaymentUpdatesView = () => {

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMyNotifications } from '../../api/notifications.ts';
+import { getMyNotifications, markAllNotificationsRead, markNotificationAsRead } from '../../api/notifications.ts';
 import { getUserSpecificKey } from '../../utils/storage.ts';
 import {
   Bell, Check, Clock, User, Shield, Info, CheckCircle2, AlertCircle,
-  Inbox, X, Search, Filter, Archive, Volume2, VolumeX,
-  Star, Zap, ExternalLink, Settings, MoreVertical,
+  Inbox, X, Search, Filter, Volume2, VolumeX,
+  Star, Zap, ExternalLink, MoreVertical,
   BellOff, CheckCheck, Timer, Download, Upload,
   ChevronDown, ChevronUp, Trash2, Eye, EyeOff, Mail,
   Target, Calendar, LogIn, LogOut, TrendingUp,
@@ -44,7 +44,7 @@ interface Notification {
   };
 }
 
-type NotificationTab = 'all' | 'unread' | 'read' | 'archived';
+type NotificationTab = 'all' | 'unread' | 'read';
 
 // Static mock notifications removed — notifications should come from localStorage or the API
 
@@ -102,6 +102,10 @@ const styles = `
   .notification-card {
     transition: all 0.2s ease;
     backdrop-filter: blur(10px);
+  }
+
+  .notification-card.unread {
+    border-left: 4px solid rgba(59,130,246,0.95);
   }
 
   .notification-card:hover {
@@ -197,6 +201,12 @@ const styles = `
     background: #94a3b8;
   }
 
+  .notifications-list-container {
+    max-height: 87vh;
+    overflow: auto;
+    padding-right: 6px;
+  }
+
   /* Glass effect for modal */
   .glass-effect {
     background: rgba(255, 255, 255, 0.95);
@@ -219,30 +229,50 @@ const formatTime = (iso: string) => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
+// Convert html-containing notification.msg into readable plain text
+const getFriendlyMessage = (msg: string) => {
+  if (!msg) return '';
+  const trimmed = msg.trim();
+  // if html present, parse and extract innerText
+  if (trimmed.startsWith('<')) {
+    try {
+      const div = document.createElement('div');
+      div.innerHTML = msg;
+      // Use innerText to preserve line breaks
+      return div.innerText || div.textContent || '';
+    } catch {
+      return msg;
+    }
+  }
+  return msg;
+};
+
 const NotificationItem: React.FC<{
   notification: Notification;
   isSelected: boolean;
   isExpanded: boolean;
+  highlight?: boolean;
   onToggleSelect: () => void;
   onToggleExpand: () => void;
   onMarkAsRead: () => void;
-  onArchive: () => void;
   onDelete: () => void;
   onSnooze: (hours: number) => void;
 }> = ({
   notification,
   isSelected,
   isExpanded,
+  highlight = false,
   onToggleSelect,
   onToggleExpand,
   onMarkAsRead,
-  onArchive,
   onDelete,
   onSnooze
 }) => {
     const IconComp = iconMap[notification.icon] || Info;
-    const PriorityIcon = priorityIcons[notification.priority];
-    const CategoryIcon = categoryIcons[notification.category];
+    const PriorityIcon = priorityIcons[notification.priority] || Info;
+    const CategoryIcon = categoryIcons[notification.category] || Info;
+
+    const friendlyMsg = getFriendlyMessage(notification.msg);
 
     const getCategoryLabel = (category: string) => {
       const labels: { [key: string]: string } = {
@@ -277,7 +307,7 @@ const NotificationItem: React.FC<{
 
     return (
       <div onClick={handleClick} className={`notification-card bg-white rounded-xl border ${notification.read ? 'border-slate-200' : 'border-blue-200 unread-glow'
-        } ${isSelected ? 'ring-2 ring-blue-500 ring-inset' : ''} hover:shadow-lg transition-all duration-200`}>
+        } ${isSelected ? 'ring-2 ring-blue-500 ring-inset' : ''} ${!notification.read ? 'unread' : ''} ${highlight && !notification.read ? 'bg-yellow-50' : ''} hover:shadow-lg transition-all duration-200`}>
         <div className="p-4">
           <div className="flex gap-4">
             {/* Selection checkbox */}
@@ -324,9 +354,9 @@ const NotificationItem: React.FC<{
                   </div>
 
                   <p className={`text-sm ${notification.read ? 'text-slate-600' : 'text-slate-700'} ${isExpanded ? '' : 'line-clamp-2'
-                    } leading-relaxed prose prose-sm max-w-none`}
-                    dangerouslySetInnerHTML={{ __html: notification.msg }}
-                  />
+                    } leading-relaxed`}>
+                    {friendlyMsg}
+                  </p>
 
                   {/* Metadata display */}
                   {notification.metadata && (
@@ -349,9 +379,9 @@ const NotificationItem: React.FC<{
                     </div>
                   )}
 
-                  {notification.msg.length > 120 && (
+                  {friendlyMsg.length > 120 && (
                     <button
-                      onClick={onToggleExpand}
+                      onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
                       className="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
                     >
                       {isExpanded ? (
@@ -378,7 +408,15 @@ const NotificationItem: React.FC<{
                   <div className="flex items-center gap-1">
                     {!notification.read && (
                       <button
-                        onClick={onMarkAsRead}
+                        onClick={async (e) => { 
+                          e.stopPropagation();
+                          try {
+                            await markNotificationAsRead(notification.id);
+                            onMarkAsRead();
+                          } catch (err) {
+                            console.error('Failed to mark notification as read:', err);
+                          }
+                        }}
                         className="p-2 hover:bg-slate-100 rounded-lg transition-colors group"
                         title="Mark as read"
                       >
@@ -386,13 +424,6 @@ const NotificationItem: React.FC<{
                       </button>
                     )}
 
-                    <button
-                      onClick={onArchive}
-                      className="p-2 hover:bg-slate-100 rounded-lg transition-colors group"
-                      title="Archive"
-                    >
-                      <Archive className="w-4 h-4 text-slate-500 group-hover:text-violet-600" />
-                    </button>
 
                     <div className="relative">
                       <button aria-label="More options" aria-haspopup="true" className="p-2 hover:bg-slate-100 rounded-lg transition-colors group">
@@ -472,10 +503,9 @@ const EmployeeNotifications: React.FC = () => {
       return [];
     }
   });
-  const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'read' | 'archived'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'read'>('all');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     categories: [] as string[],
@@ -483,43 +513,42 @@ const EmployeeNotifications: React.FC = () => {
     dateRange: 'all' as 'today' | 'week' | 'month' | 'all'
   });
   const [expandedNotifications, setExpandedNotifications] = useState<string[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Fetch unread count
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getMyNotifications('UNREAD');
+        if (Array.isArray(data)) {
+          setUnreadCount(data.length);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch unread count:', err);
+      }
+    })();
+  }, []); // Run on mount
 
-  // Settings for employee notifications
-  const [settings, setSettings] = useState({
-    soundEnabled: true,
-    desktopNotifications: false,
-    emailNotifications: true,
-    notificationTypes: {
-      performance: true,
-      attendance: true,
-      events: true,
-      login_activity: true,
-      system_updates: true
-    },
-    priorityFilter: {
-      low: true,
-      medium: true,
-      high: true,
-      critical: true
-    }
-  });
+  
 
   // Filter notifications
   const getFilteredNotifications = useCallback(() => {
     let filtered = notifications.filter(notification => {
       if (activeTab === 'unread') return !notification.read;
       if (activeTab === 'read') return notification.read;
-      if (activeTab === 'archived') return notification.archived;
       return true; // 'all'
     });
 
     if (searchQuery) {
-      filtered = filtered.filter(n =>
-        n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        n.msg.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        n.category.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(n => {
+        const msgText = getFriendlyMessage(n.msg).toLowerCase();
+        return (
+          n.title.toLowerCase().includes(q) ||
+          msgText.includes(q) ||
+          n.category.toLowerCase().includes(q)
+        );
+      });
     }
 
     if (filters.categories.length > 0) {
@@ -549,24 +578,32 @@ const EmployeeNotifications: React.FC = () => {
       filtered = filtered.filter(n => new Date(n.time) > cutoffDate);
     }
 
-    filtered = filtered.filter(n => settings.notificationTypes[n.category]);
-    filtered = filtered.filter(n => settings.priorityFilter[n.priority]);
-
     return filtered.sort((a, b) => {
       if (a.read !== b.read) return a.read ? 1 : -1;
       return new Date(b.time).getTime() - new Date(a.time).getTime();
     });
-  }, [notifications, activeTab, searchQuery, filters, settings]);
+  }, [notifications, activeTab, searchQuery, filters]);
 
   // Notification actions
   const markAsRead = (id: string) => {
     setNotifications(prev => prev.map(n =>
       n.id === id ? { ...n, read: true } : n
     ));
+    setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
-  const markAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markAllRead = async () => {
+    try {
+      await markAllNotificationsRead();
+      // Update local state
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
+      // Fallback to local update
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
+    }
   };
 
   const toggleSelect = (id: string) => {
@@ -575,37 +612,77 @@ const EmployeeNotifications: React.FC = () => {
     );
   };
 
-  // Fetch notifications from API (try /my first, fallback to existing mock)
+  // Fetch notifications from API based on activeTab
   useEffect(() => {
     (async () => {
       try {
-        const data = await getMyNotifications();
+        let data: any[] = [];
+        if (activeTab === 'all') {
+          // show both read and unread
+          const [readData, unreadData] = await Promise.all([
+            getMyNotifications('READ'),
+            getMyNotifications('UNREAD')
+          ]);
+          data = [...(Array.isArray(readData) ? readData : []), ...(Array.isArray(unreadData) ? unreadData : [])];
+        } else if (activeTab === 'read') {
+          data = await getMyNotifications('READ');
+        } else if (activeTab === 'unread') {
+          data = await getMyNotifications('UNREAD');
+        } else {
+          // no other tabs exist
+          return;
+        }
+
         if (Array.isArray(data) && data.length > 0) {
           // Map API response to Notification interface
           const mapped: Notification[] = data.map((item: any) => ({
-            id: item.id || item.notificationId || String(Math.random()),
-            title: item.title || item.subject || 'Notification',
-            msg: item.message || item.content || item.description || '',
-            time: item.createdAt || item.timestamp || item.time || new Date().toISOString(),
-            icon: item.icon || 'Bell',
-            color: item.color || 'text-blue-600 bg-blue-50',
-            read: item.read || item.isRead || false,
-            type: item.type || 'info',
-            priority: item.priority || 'medium',
-            category: item.category || item.type || 'system_updates',
-            department: item.department,
-            employeeId: item.employeeId,
-            action: item.action,
-            archived: item.archived || false,
-            metadata: item.metadata,
+            id: String(item.id),
+            title: item.title || 'Notification',
+            msg: item.message || '',
+            time: item.createdAt || new Date().toISOString(),
+            icon: 'Bell',
+            color: 'text-blue-600 bg-blue-50',
+            read: item.status === 'READ',
+            type: item.priority === 'HIGH' ? 'warning' : 'info',
+            priority: item.priority === 'HIGH' ? 'high' : 'medium',
+            category: 'system_updates',
+            department: undefined,
+            employeeId: undefined,
+            action: undefined,
+            archived: false,
+            metadata: undefined,
           }));
-          setNotifications(mapped);
+
+          // merge with any saved state to preserve archived/snoozed flags
+          try {
+            const saved = localStorage.getItem(storageKey);
+            if (saved) {
+              const savedArr: Notification[] = JSON.parse(saved);
+              const savedMap = savedArr.reduce<Record<string, Notification>>((acc, n) => {
+                acc[n.id] = n;
+                return acc;
+              }, {} as any);
+              const merged = mapped.map(n => {
+                const savedN = savedMap[n.id];
+                return savedN ? { ...n, archived: savedN.archived, snoozedUntil: savedN.snoozedUntil } : n;
+              });
+              setNotifications(merged);
+            } else {
+              setNotifications(mapped);
+            }
+          } catch (e) {
+            // parsing failed; just use mapped
+            setNotifications(mapped);
+          }
+        } else {
+          // No data, set empty
+          setNotifications([]);
         }
       } catch (err: any) {
-        console.warn('getMyNotifications failed, keeping local mock notifications.', err);
+        console.warn(`getMyNotifications for ${activeTab} failed, keeping local notifications.`, err);
       }
     })();
-  }, []);
+  }, [activeTab, storageKey]);
 
   const selectAllOnPage = () => {
     const pageIds = getFilteredNotifications().map(n => n.id);
@@ -623,12 +700,6 @@ const EmployeeNotifications: React.FC = () => {
     setSelectedIds([]);
   };
 
-  const bulkArchive = () => {
-    setNotifications(prev => prev.map(n =>
-      selectedIds.includes(n.id) ? { ...n, archived: true, read: true } : n
-    ));
-    setSelectedIds([]);
-  };
 
   const toggleNotificationExpand = (id: string) => {
     setExpandedNotifications(prev =>
@@ -636,11 +707,6 @@ const EmployeeNotifications: React.FC = () => {
     );
   };
 
-  const archiveNotification = (id: string) => {
-    setNotifications(prev => prev.map(n =>
-      n.id === id ? { ...n, archived: true, read: true } : n
-    ));
-  };
 
   const deleteNotification = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
@@ -662,9 +728,6 @@ const EmployeeNotifications: React.FC = () => {
     }
   };
 
-  const saveSettings = (newSettings: typeof settings) => {
-    setSettings(newSettings);
-  };
 
   const createPerformanceNotification = () => {
     const performancePhrases = [
@@ -710,8 +773,7 @@ const EmployeeNotifications: React.FC = () => {
   }, [notifications]);
 
   // Statistics
-  const unreadCount = notifications.filter(n => !n.read).length;
-  const archivedCount = notifications.filter(n => n.archived).length;
+  // const archivedCount = notifications.filter(n => n.archived).length; // archive removed
   const performanceCount = notifications.filter(n => n.category === 'performance').length;
   const attendanceCount = notifications.filter(n => n.category === 'attendance').length;
   const eventsCount = notifications.filter(n => n.category === 'events').length;
@@ -744,22 +806,16 @@ const EmployeeNotifications: React.FC = () => {
               </div>
 
               {/* Stats */}
-              <div className="flex flex-wrap gap-4 mt-6">
-                <div className="px-4 py-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-                  <div className="text-sm text-slate-500 font-medium">Total</div>
-                  <div className="text-2xl font-bold text-slate-900">{notifications.length}</div>
-                </div>
-                <div className="px-4 py-3 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 shadow-sm">
-                  <div className="text-sm text-emerald-600 font-medium">Performance</div>
-                  <div className="text-2xl font-bold text-emerald-700">{performanceCount}</div>
-                </div>
-                <div className="px-4 py-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 shadow-sm">
-                  <div className="text-sm text-blue-600 font-medium">Attendance</div>
-                  <div className="text-2xl font-bold text-blue-700">{attendanceCount}</div>
-                </div>
-                <div className="px-4 py-3 bg-gradient-to-br from-violet-50 to-violet-100 rounded-xl border border-violet-200 shadow-sm">
-                  <div className="text-sm text-violet-600 font-medium">Events</div>
-                  <div className="text-2xl font-bold text-violet-700">{eventsCount}</div>
+              <div className="flex flex-wrap gap-4 mt-6 items-center">
+                <div className="px-4 py-3 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                  <div>
+                    <div className="text-sm text-slate-500 font-medium">Total</div>
+                    <div className="text-2xl font-bold text-slate-900">{notifications.length}</div>
+                  </div>
+                  <div className="ml-2">
+                    <div className="text-sm text-slate-500 font-medium">Unread</div>
+                    <div className="text-xl font-semibold text-blue-600">{unreadCount}</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -788,7 +844,7 @@ const EmployeeNotifications: React.FC = () => {
               </div>
 
               {/* Quick Actions */}
-              <div className={`${isMobileMenuOpen ? 'flex' : 'hidden'} lg:flex flex-wrap gap-2`}>
+              <div className={`${isMobileMenuOpen ? 'flex' : 'hidden'} lg:flex flex-wrap gap-2 items-center`}>
                 <button
                   onClick={markAllRead}
                   className="flex-1 lg:flex-none px-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-medium hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-sm flex items-center justify-center gap-2"
@@ -803,13 +859,7 @@ const EmployeeNotifications: React.FC = () => {
                   <Filter className="w-5 h-5" />
                   Filters
                 </button>
-                <button
-                  onClick={() => setIsSettingsOpen(true)}
-                  className="flex-1 lg:flex-none px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-all shadow-sm flex items-center justify-center gap-2"
-                >
-                  <Settings className="w-5 h-5" />
-                  Settings
-                </button>
+                
               </div>
             </div>
           </div>
@@ -824,7 +874,7 @@ const EmployeeNotifications: React.FC = () => {
                   <h3 className="font-bold text-slate-900">Filter by Status</h3>
                 </div>
                 <div className="p-3">
-                  {(['all', 'unread', 'read', 'archived'] as const).map((tab) => (
+                  {(['all', 'unread', 'read'] as const).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -852,17 +902,17 @@ const EmployeeNotifications: React.FC = () => {
                 </div>
                 <div className="p-3 space-y-2">
                   {Object.entries(categoryIcons).map(([category, IconComp]) => (
-                    <div key={category} className="flex items-center justify-between px-3 py-2 hover:bg-slate-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <IconComp className="w-4 h-4 text-slate-500" />
-                        <span className="text-sm text-slate-700 capitalize">
-                          {category === 'login_activity' ? 'Login Activity' : category}
-                        </span>
-                      </div>
-                      <span className="text-sm font-medium text-slate-900">
-                        {notifications.filter(n => n.category === category).length}
-                      </span>
-                    </div>
+                        <div key={category} className="flex items-center justify-between px-3 py-2 hover:bg-slate-50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <IconComp className="w-5 h-5 text-slate-500" />
+                            <span className="text-sm text-slate-700 capitalize">
+                              {category === 'login_activity' ? 'Login Activity' : category}
+                            </span>
+                          </div>
+                          <span className="text-base font-semibold text-slate-900">
+                            {notifications.filter(n => n.category === category).length}
+                          </span>
+                        </div>
                   ))}
                 </div>
               </div>
@@ -996,12 +1046,6 @@ const EmployeeNotifications: React.FC = () => {
                         Mark as read
                       </button>
                       <button
-                        onClick={bulkArchive}
-                        className="px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-all shadow-sm"
-                      >
-                        Archive selected
-                      </button>
-                      <button
                         onClick={selectAllOnPage}
                         className="px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-all shadow-sm"
                       >
@@ -1019,7 +1063,7 @@ const EmployeeNotifications: React.FC = () => {
               )}
 
               {/* Notifications List */}
-              <div className="space-y-4">
+              <div className="notifications-list-container custom-scrollbar space-y-4">
                 {filteredNotifications.length > 0 ? (
                   filteredNotifications.map((n) => (
                     <NotificationItem
@@ -1027,10 +1071,10 @@ const EmployeeNotifications: React.FC = () => {
                       notification={n}
                       isSelected={selectedIds.includes(n.id)}
                       isExpanded={expandedNotifications.includes(n.id)}
+                      highlight={activeTab === 'all' && !n.read}
                       onToggleSelect={() => toggleSelect(n.id)}
                       onToggleExpand={() => toggleNotificationExpand(n.id)}
                       onMarkAsRead={() => markAsRead(n.id)}
-                      onArchive={() => archiveNotification(n.id)}
                       onDelete={() => deleteNotification(n.id)}
                       onSnooze={(hours) => snoozeNotification(n.id, hours)}
                     />
@@ -1064,148 +1108,7 @@ const EmployeeNotifications: React.FC = () => {
           </div>
         </div>
 
-        {/* Settings Modal */}
-        {isSettingsOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 fade-in">
-            <div className="glass-effect rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Settings className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <h2 className="text-xl font-bold text-slate-900">Notification Preferences</h2>
-                  </div>
-                  <button
-                    onClick={() => setIsSettingsOpen(false)}
-                    aria-label="Close settings"
-                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-black"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="space-y-8">
-                  {/* Notification Types */}
-                  <div>
-                    <h3 className="font-bold text-slate-900 mb-4">Notification Categories</h3>
-                    <div className="space-y-3">
-                      {Object.entries(settings.notificationTypes).map(([category, enabled]) => {
-                        const CategoryIcon = categoryIcons[category as keyof typeof categoryIcons];
-                        return (
-                          <label key={category} className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-3 h-3 rounded-full ${categoryColors[category as keyof typeof categoryColors].split(' ')[0]}`} />
-                              <CategoryIcon className="w-4 h-4 text-slate-500" />
-                              <span className="font-medium text-slate-700 capitalize">
-                                {category === 'login_activity' ? 'Login Activity' : category}
-                              </span>
-                            </div>
-                            <div className="relative">
-                              <input
-                                type="checkbox"
-                                checked={enabled}
-                                onChange={(e) => {
-                                  saveSettings({
-                                    ...settings,
-                                    notificationTypes: {
-                                      ...settings.notificationTypes,
-                                      [category]: e.target.checked
-                                    }
-                                  });
-                                }}
-                                className="sr-only"
-                              />
-                              <div className={`w-12 h-6 rounded-full transition-colors ${enabled ? 'bg-blue-600' : 'bg-slate-300'}`}>
-                                <div className={`w-5 h-5 rounded-full bg-white transform transition-transform ${enabled ? 'translate-x-7' : 'translate-x-1'} translate-y-0.5`} />
-                              </div>
-                            </div>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Preferences */}
-                  <div>
-                    <h3 className="font-bold text-slate-900 mb-4">Alert Preferences</h3>
-                    <div className="space-y-3">
-                      <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                        <div className="flex items-center gap-3">
-                          {settings.soundEnabled ?
-                            <Volume2 className="w-5 h-5 text-blue-600" /> :
-                            <VolumeX className="w-5 h-5 text-slate-400" />
-                          }
-                          <span className="font-medium text-slate-700">Sound Alerts</span>
-                        </div>
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            checked={settings.soundEnabled}
-                            onChange={(e) => saveSettings({ ...settings, soundEnabled: e.target.checked })}
-                            className="sr-only"
-                          />
-                          <div className={`w-12 h-6 rounded-full transition-colors ${settings.soundEnabled ? 'bg-blue-600' : 'bg-slate-300'}`}>
-                            <div className={`w-5 h-5 rounded-full bg-white transform transition-transform ${settings.soundEnabled ? 'translate-x-7' : 'translate-x-1'} translate-y-0.5`} />
-                          </div>
-                        </div>
-                      </label>
-
-                      <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                        <div className="flex items-center gap-3">
-                          {settings.desktopNotifications ?
-                            <Bell className="w-5 h-5 text-blue-600" /> :
-                            <BellOff className="w-5 h-5 text-slate-400" />
-                          }
-                          <span className="font-medium text-slate-700">Desktop Notifications</span>
-                        </div>
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            checked={settings.desktopNotifications}
-                            onChange={(e) => saveSettings({ ...settings, desktopNotifications: e.target.checked })}
-                            className="sr-only"
-                          />
-                          <div className={`w-12 h-6 rounded-full transition-colors ${settings.desktopNotifications ? 'bg-blue-600' : 'bg-slate-300'}`}>
-                            <div className={`w-5 h-5 rounded-full bg-white transform transition-transform ${settings.desktopNotifications ? 'translate-x-7' : 'translate-x-1'} translate-y-0.5`} />
-                          </div>
-                        </div>
-                      </label>
-
-                      <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                        <div className="flex items-center gap-3">
-                          <Mail className="w-5 h-5 text-blue-600" />
-                          <span className="font-medium text-slate-700">Email Notifications</span>
-                        </div>
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            checked={settings.emailNotifications}
-                            onChange={(e) => saveSettings({ ...settings, emailNotifications: e.target.checked })}
-                            className="sr-only"
-                          />
-                          <div className={`w-12 h-6 rounded-full transition-colors ${settings.emailNotifications ? 'bg-blue-600' : 'bg-slate-300'}`}>
-                            <div className={`w-5 h-5 rounded-full bg-white transform transition-transform ${settings.emailNotifications ? 'translate-x-7' : 'translate-x-1'} translate-y-0.5`} />
-                          </div>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Test Button */}
-                  <div className="pt-6 border-t border-slate-200">
-                    <button
-                      onClick={createPerformanceNotification}
-                      className="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-                    >
-                      Simulate Performance Notification
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        
       </div>
     </>
   );
