@@ -38,6 +38,11 @@ export interface User {
   createdByRole?: string;
   createdByName?: string;
   hrEmployeeId?: string | null;
+  performance?: {
+    projectsCompleted: number;
+    averageRating: number;
+    attendance: string;
+  };
 }
 
 // ============= Dashboard & Stats =============

@@ -29,6 +29,7 @@ import { PaymentUpdatesView } from './pages/super_admin/PaymentUpdatesView.js';
 import { NotificationsView } from './pages/super_admin/NotificationsView.js';
 import { ProfileView } from './pages/super_admin/ProfileView.js';
 import DocumentsView from './pages/super_admin/DocumentsView.js';
+import AdminDetails from './pages/super_admin/AdminDetails.js';
 
 // Icon name to component mapper
 const iconMap: Record<string, React.ReactNode> = {
@@ -64,6 +65,7 @@ const sectionToUrlMap: Record<string, string> = {
   [AppSection.SystemMaintenance]: '/super-admin/system',
   [AppSection.Documents]: '/super-admin/documents',
   [AppSection.Profile]: '/super-admin/profile',
+  [AppSection.AdminDetails]: '/super-admin/admin-details',
 };
 
 const AppContent: React.FC = () => {
@@ -139,6 +141,7 @@ const AppContent: React.FC = () => {
       '/super-admin/system': AppSection.SystemMaintenance,
       '/super-admin/documents': AppSection.Documents,
       '/super-admin/profile': AppSection.Profile,
+      '/super-admin/admin-details': AppSection.AdminDetails,
     };
 
     const path = location.pathname.replace('/internal-site', '');
@@ -252,6 +255,8 @@ const AppContent: React.FC = () => {
         return <DocumentsView />;
       case AppSection.Profile:
         return <ProfileView />;
+      case AppSection.AdminDetails:
+        return <AdminDetails />;
       default: return <div className="p-20 text-center text-[#9aa8bd] italic bg-[#0b1220] rounded-2xl border border-[#1f2937] flex flex-col items-center gap-4">
         <HelpCircle size={48} className="text-[#1f2937]" />
         <div>Module "{(activeSection as string).toUpperCase()}" content coming in the next release.</div>

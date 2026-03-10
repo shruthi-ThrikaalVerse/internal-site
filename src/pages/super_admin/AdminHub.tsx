@@ -34,6 +34,21 @@ const EMPTY_ADMIN_STATE = {
     dateOfBirth: '',
 };
 
+// Add a new component to display performance metrics
+const PerformanceMetrics = ({ user }: { user: User }) => {
+    if (!user) return null;
+
+    return (
+        <div className="performance-metrics">
+            <h2>Performance Metrics for {user.firstName} {user.lastName}</h2>
+            {/* Replace the following with actual performance metrics */}
+            <p>Projects Completed: {user.performance?.projectsCompleted || 'N/A'}</p>
+            <p>Average Rating: {user.performance?.averageRating || 'N/A'}</p>
+            <p>Attendance: {user.performance?.attendance || 'N/A'}</p>
+        </div>
+    );
+};
+
 export const AdminHub = () => {
     const { globalSearch, admins, setAdmins, currentUser, demoteToEmployee, terminateAdmin } = useApp();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -655,7 +670,7 @@ export const AdminHub = () => {
                                         <Badge color={a.role.includes('SUPER') ? 'red' : 'green'}>{a.role.toUpperCase()}</Badge>
                                     </td>
                                     <td className="px-8 py-5">
-                                        <Badge color={a.status === 'active' ? 'green' : a.status === 'pending' ? 'yellow' : 'red'}>{a.status.toUpperCase()}</Badge>
+                                        <Badge color={a.status === 'active' ? 'green' : a.status === 'inactive' ? 'yellow' : 'red'}>{a.status.toUpperCase()}</Badge>
                                     </td>
                                     <td className="px-8 py-5">
                                         <div className="flex items-center gap-2 text-[11px] text-gray-900 font-mono bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 w-fit group-hover:text-blue-600 group-hover:border-blue-300 transition-all">
