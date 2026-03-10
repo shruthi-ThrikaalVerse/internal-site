@@ -1,35 +1,61 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { User as UserIcon, Star, Calendar, Loader, TrendingUp, BarChart3, Filter, ChevronDown, ChevronUp, Sparkles, Zap, ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, ComposedChart } from 'recharts';
+import { getEmployeeReviews } from '../../api/performance.ts';
 
 // Types
 interface Review {
-    id: string;
+    id: number;
     employeeId: string;
-    reviewer: string;
-    reviewerRole: string;
-    rating: number;
-    comment: string;
-    date: string;
-    quarter: string;
-    month: string;
-    year: number;
-    monthNum: number;
+    feedback: string;
+    strengths: string;
+    areasOfImprovement: string;
+    periodType: 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+    rating: 'EXCELLENT' | 'GOOD' | 'AVERAGE' | 'NEEDS_IMPROVEMENT' | 'POOR';
+    period: string;
+    createdAt: string;
 }
 
 
 
 // Helper functions
-const getMonthName = (dateString: string) => new Date(dateString).toLocaleDateString('en-US', { month: 'long' });
-const getMonthNum = (dateString: string) => new Date(dateString).getMonth() + 1; // 1-12
+const getRatingNumber = (rating: string): number => {
+    const ratingMap: Record<string, number> = {
+        'EXCELLENT': 4.5,
+        'GOOD': 4.0,
+        'AVERAGE': 3.0,
+        'NEEDS_IMPROVEMENT': 2.0,
+        'POOR': 1.0
+    };
+    return ratingMap[rating] || 3.0;
+};
 
-const getQuarter = (dateString: string) => {
-    const month = new Date(dateString).getMonth() + 1; // 1-12
-    const year = new Date(dateString).getFullYear();
-    if (month <= 3) return `Q1 ${year}`;
-    if (month <= 6) return `Q2 ${year}`;
-    if (month <= 9) return `Q3 ${year}`;
-    return `Q4 ${year}`;
+const getRatingColor = (rating: string): string => {
+    const colorMap: Record<string, string> = {
+        'EXCELLENT': '#10B981',
+        'GOOD': '#3B82F6',
+        'AVERAGE': '#F59E0B',
+        'NEEDS_IMPROVEMENT': '#EF4444',
+        'POOR': '#6B7280'
+    };
+    return colorMap[rating] || '#3B82F6';
+};
+
+const getPeriodTypeLabel = (type: string): string => {
+    const typeMap: Record<string, string> = {
+        'MONTHLY': 'Monthly',
+        'QUARTERLY': 'Quarterly',
+        'YEARLY': 'Yearly'
+    };
+    return typeMap[type] || type;
+};
+
+const getMonthName = (dateString: string) => {
+    try {
+        return new Date(dateString).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    } catch {
+        return dateString;
+    }
 };
 
 // Get current date info
@@ -140,11 +166,141 @@ const EmployeePerformanceDashboard: React.FC = () => {
     // TODO: Replace with actual API call to fetch reviews
     useEffect(() => {
         setIsLoading(true);
-        // Fetch reviews from API
-        // const reviews = await api.performance.getReviews();
-        const sortedReviews: Review[] = [];
-        setAllReviews(sortedReviews);
-        setTimeout(() => setIsLoading(false), 300);
+        
+        const fetchReviews = async () => {
+            try {
+                // Try to fetch from API first
+                // const reviews = await getEmployeeReviews();
+                // setAllReviews(reviews);
+                
+                // Fallback to dummy data (no API available yet)
+                const dummyReviews: Review[] = [
+                    {
+                        id: 1,
+                        employeeId: 'EMP001',
+                        feedback: 'Excellent work this month. Consistently delivering high-quality results.',
+                        strengths: 'Strong technical skills, great communication, proactive problem solving',
+                        areasOfImprovement: 'Time management, documentation could be improved',
+                        periodType: 'MONTHLY',
+                        rating: 'EXCELLENT',
+                        period: 'March 2026',
+                        createdAt: '2026-03-09T10:00:00'
+                    },
+                    {
+                        id: 2,
+                        employeeId: 'EMP001',
+                        feedback: 'Good overall performance. Meet most quarterly goals.',
+                        strengths: 'Team player, reliable, good collaboration',
+                        areasOfImprovement: 'Leadership skills, presentation abilities',
+                        periodType: 'QUARTERLY',
+                        rating: 'GOOD',
+                        period: 'Q4 2025',
+                        createdAt: '2026-01-15T14:30:00'
+                    },
+                    {
+                        id: 3,
+                        employeeId: 'EMP001',
+                        feedback: 'Satisfactory annual performance. Met key objectives.',
+                        strengths: 'Stable performer, good attendance, follows guidelines',
+                        areasOfImprovement: 'Initiative, challenging projects, skill development',
+                        periodType: 'YEARLY',
+                        rating: 'GOOD',
+                        period: 'Year 2025',
+                        createdAt: '2025-12-20T09:15:00'
+                    },
+                    {
+                        id: 4,
+                        employeeId: 'EMP001',
+                        feedback: 'Outstanding performance. Delivered critical projects on time.',
+                        strengths: 'Excellent coding, takes initiative, mentors juniors',
+                        areasOfImprovement: 'Code documentation, peer review responsiveness',
+                        periodType: 'MONTHLY',
+                        rating: 'EXCELLENT',
+                        period: 'February 2026',
+                        createdAt: '2026-03-05T11:45:00'
+                    },
+                    {
+                        id: 5,
+                        employeeId: 'EMP001',
+                        feedback: 'Average performance this month. Some concerns need addressing.',
+                        strengths: 'Responsive to feedback, willing to learn',
+                        areasOfImprovement: 'Task completion rate, deadline adherence, focus',
+                        periodType: 'MONTHLY',
+                        rating: 'AVERAGE',
+                        period: 'January 2026',
+                        createdAt: '2026-02-01T13:20:00'
+                    }
+                ];
+                const sortedReviews = dummyReviews.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                setAllReviews(sortedReviews);
+            } catch (error) {
+                console.error('Error loading reviews:', error);
+                // Fallback to dummy data on error
+                const dummyReviews: Review[] = [
+                    {
+                        id: 1,
+                        employeeId: 'EMP001',
+                        feedback: 'Excellent work this month. Consistently delivering high-quality results.',
+                        strengths: 'Strong technical skills, great communication, proactive problem solving',
+                        areasOfImprovement: 'Time management, documentation could be improved',
+                        periodType: 'MONTHLY',
+                        rating: 'EXCELLENT',
+                        period: 'March 2026',
+                        createdAt: '2026-03-09T10:00:00'
+                    },
+                    {
+                        id: 2,
+                        employeeId: 'EMP001',
+                        feedback: 'Good overall performance. Meet most quarterly goals.',
+                        strengths: 'Team player, reliable, good collaboration',
+                        areasOfImprovement: 'Leadership skills, presentation abilities',
+                        periodType: 'QUARTERLY',
+                        rating: 'GOOD',
+                        period: 'Q4 2025',
+                        createdAt: '2026-01-15T14:30:00'
+                    },
+                    {
+                        id: 3,
+                        employeeId: 'EMP001',
+                        feedback: 'Satisfactory annual performance. Met key objectives.',
+                        strengths: 'Stable performer, good attendance, follows guidelines',
+                        areasOfImprovement: 'Initiative, challenging projects, skill development',
+                        periodType: 'YEARLY',
+                        rating: 'GOOD',
+                        period: 'Year 2025',
+                        createdAt: '2025-12-20T09:15:00'
+                    },
+                    {
+                        id: 4,
+                        employeeId: 'EMP001',
+                        feedback: 'Outstanding performance. Delivered critical projects on time.',
+                        strengths: 'Excellent coding, takes initiative, mentors juniors',
+                        areasOfImprovement: 'Code documentation, peer review responsiveness',
+                        periodType: 'MONTHLY',
+                        rating: 'EXCELLENT',
+                        period: 'February 2026',
+                        createdAt: '2026-03-05T11:45:00'
+                    },
+                    {
+                        id: 5,
+                        employeeId: 'EMP001',
+                        feedback: 'Average performance this month. Some concerns need addressing.',
+                        strengths: 'Responsive to feedback, willing to learn',
+                        areasOfImprovement: 'Task completion rate, deadline adherence, focus',
+                        periodType: 'MONTHLY',
+                        rating: 'AVERAGE',
+                        period: 'January 2026',
+                        createdAt: '2026-02-01T13:20:00'
+                    }
+                ];
+                const sortedReviews = dummyReviews.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                setAllReviews(sortedReviews);
+            } finally {
+                setTimeout(() => setIsLoading(false), 300);
+            }
+        };
+        
+        fetchReviews();
     }, []);
 
     // Get current period value based on selected period
@@ -156,44 +312,17 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
     // Get all available time ranges (current + historical)
     const getAllTimeRanges = useMemo(() => {
-        if (selectedPeriod === 'monthly') {
-            const allMonths = [...new Set(allReviews.map(r => r.month))];
-            return allMonths.sort((a: string, b: string) => {
-                const dateA = new Date(a.split(' ')[1] + ' ' + a.split(' ')[0]);
-                const dateB = new Date(b.split(' ')[1] + ' ' + b.split(' ')[0]);
-                return dateB.getTime() - dateA.getTime();
-            });
-        } else if (selectedPeriod === 'quarterly') {
-            const allQuarters = [...new Set(allReviews.map(r => r.quarter))] as string[];
-            return allQuarters.sort((a: string, b: string) => {
-                const yearA = parseInt(a.split(' ')[1]);
-                const quarterA = parseInt(a.split(' ')[0].replace('Q', ''));
-                const yearB = parseInt(b.split(' ')[1]);
-                const quarterB = parseInt(b.split(' ')[0].replace('Q', ''));
-
-                if (yearB !== yearA) return yearB - yearA;
-                return quarterB - quarterA;
-            });
-        } else {
-            const allYears = [...new Set(allReviews.map(r => r.year.toString()))] as string[];
-            return allYears.sort((a, b) => parseInt(b) - parseInt(a));
-        }
-    }, [allReviews, selectedPeriod]);
+        const periods = [...new Set(allReviews.map(r => r.period))] as string[];
+        return periods.sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    }, [allReviews]);
 
     // Get reviews for selected period ONLY
     const filteredReviews = useMemo(() => {
-        const selectedValue = selectedTimeRange === 'current'
-            ? getCurrentPeriodValue()
-            : selectedTimeRange;
-
-        if (selectedPeriod === 'monthly') {
-            return allReviews.filter(r => r.month === selectedValue);
-        } else if (selectedPeriod === 'quarterly') {
-            return allReviews.filter(r => r.quarter === selectedValue);
-        } else {
-            return allReviews.filter(r => r.year.toString() === selectedValue);
+        if (selectedTimeRange === 'current') {
+            return allReviews.filter(r => r.periodType === selectedPeriod.toUpperCase());
         }
-    }, [allReviews, selectedPeriod, selectedTimeRange, currentInfo]);
+        return allReviews.filter(r => r.period === selectedTimeRange);
+    }, [allReviews, selectedPeriod, selectedTimeRange]);
 
     // Get recent reviews (all reviews, latest first)
     const recentReviews = useMemo(() => {
@@ -207,24 +336,24 @@ const EmployeePerformanceDashboard: React.FC = () => {
         }
 
         // Group reviews by rating
-        const ratingGroups: Record<number, { count: number; color: string }> = {};
+        const ratingGroups: Record<string, { count: number; color: string; value: number }> = {};
         filteredReviews.forEach(review => {
-            const roundedRating = Math.round(review.rating * 2) / 2; // Round to nearest 0.5
-            if (!ratingGroups[roundedRating]) {
-                ratingGroups[roundedRating] = { count: 0, color: RATING_COLORS[roundedRating.toFixed(1)] || '#3B82F6' };
+            if (!ratingGroups[review.rating]) {
+                ratingGroups[review.rating] = { count: 0, color: getRatingColor(review.rating), value: getRatingNumber(review.rating) };
             }
-            ratingGroups[roundedRating].count += 1;
+            ratingGroups[review.rating].count += 1;
         });
 
-        // Convert to array and sort by rating descending
+        // Convert to array sorted by rating
+        const ratingOrder = ['EXCELLENT', 'GOOD', 'AVERAGE', 'NEEDS_IMPROVEMENT', 'POOR'];
         return Object.entries(ratingGroups)
             .map(([rating, data]) => ({
-                name: `${rating} ★`,
+                name: rating,
                 value: data.count,
-                rating: parseFloat(rating),
+                rating: data.value,
                 color: data.color
             }))
-            .sort((a, b) => b.rating - a.rating);
+            .sort((a, b) => ratingOrder.indexOf(Object.keys(ratingGroups)[0]) - ratingOrder.indexOf(Object.keys(ratingGroups)[1]));
     }, [filteredReviews]);
 
     // Get trend chart data dynamically based on selected period
@@ -233,80 +362,36 @@ const EmployeePerformanceDashboard: React.FC = () => {
             return [];
         }
 
-        if (selectedPeriod === 'monthly') {
-            // Group by month and calculate averages
-            const monthGroups: Record<string, { ratings: number[]; period: string }> = {};
-            allReviews.forEach(review => {
-                if (!monthGroups[review.month]) {
-                    monthGroups[review.month] = { ratings: [], period: review.month };
-                }
-                monthGroups[review.month].ratings.push(review.rating);
-            });
+        // Group by period and calculate averages
+        const periodGroups: Record<string, { ratings: number[]; period: string }> = {};
+        allReviews.forEach(review => {
+            if (!periodGroups[review.period]) {
+                periodGroups[review.period] = { ratings: [], period: review.period };
+            }
+            periodGroups[review.period].ratings.push(getRatingNumber(review.rating));
+        });
 
-            return Object.values(monthGroups)
-                .map(group => ({
-                    period: group.period,
-                    average: Math.round((group.ratings.reduce((a, b) => a + b, 0) / group.ratings.length) * 10) / 10,
-                    count: group.ratings.length
-                }))
-                .sort((a, b) => new Date(a.period).getTime() - new Date(b.period).getTime());
-        } else if (selectedPeriod === 'quarterly') {
-            // Group by quarter and calculate averages
-            const quarterGroups: Record<string, { ratings: number[]; period: string }> = {};
-            allReviews.forEach(review => {
-                if (!quarterGroups[review.quarter]) {
-                    quarterGroups[review.quarter] = { ratings: [], period: review.quarter };
-                }
-                quarterGroups[review.quarter].ratings.push(review.rating);
-            });
-
-            return Object.values(quarterGroups)
-                .map(group => ({
-                    period: group.period,
-                    average: Math.round((group.ratings.reduce((a, b) => a + b, 0) / group.ratings.length) * 10) / 10,
-                    count: group.ratings.length
-                }))
-                .sort((a, b) => {
-                    const yearA = parseInt(a.period.split(' ')[1]);
-                    const quarterA = parseInt(a.period.split(' ')[0].replace('Q', ''));
-                    const yearB = parseInt(b.period.split(' ')[1]);
-                    const quarterB = parseInt(b.period.split(' ')[0].replace('Q', ''));
-                    if (yearA !== yearB) return yearA - yearB;
-                    return quarterA - quarterB;
-                });
-        } else {
-            // Group by year and calculate averages
-            const yearGroups: Record<string, { ratings: number[]; period: string }> = {};
-            allReviews.forEach(review => {
-                const year = review.year.toString();
-                if (!yearGroups[year]) {
-                    yearGroups[year] = { ratings: [], period: year };
-                }
-                yearGroups[year].ratings.push(review.rating);
-            });
-
-            return Object.values(yearGroups)
-                .map(group => ({
-                    period: group.period,
-                    average: Math.round((group.ratings.reduce((a, b) => a + b, 0) / group.ratings.length) * 10) / 10,
-                    count: group.ratings.length
-                }))
-                .sort((a, b) => parseInt(a.period) - parseInt(b.period));
-        }
-    }, [allReviews, selectedPeriod]);
+        return Object.values(periodGroups)
+            .map(group => ({
+                period: group.period,
+                average: Math.round((group.ratings.reduce((a, b) => a + b, 0) / group.ratings.length) * 10) / 10,
+                count: group.ratings.length
+            }))
+            .sort((a, b) => new Date(b.period).getTime() - new Date(a.period).getTime());
+    }, [allReviews]);
 
     // Statistics
     const averageRating = useMemo(() => {
         if (filteredReviews.length === 0) {
             return 0;
         }
-        const total = filteredReviews.reduce((sum, r) => sum + r.rating, 0);
+        const total = filteredReviews.reduce((sum, r) => sum + getRatingNumber(r.rating), 0);
         return Math.round((total / filteredReviews.length) * 10) / 10;
-    }, [filteredReviews, selectedPeriod, selectedTimeRange]);
+    }, [filteredReviews]);
 
     const overallAverageRating = useMemo(() => {
         if (allReviews.length === 0) return 0;
-        const total = allReviews.reduce((sum, r) => sum + r.rating, 0);
+        const total = allReviews.reduce((sum, r) => sum + getRatingNumber(r.rating), 0);
         return Math.round((total / allReviews.length) * 10) / 10;
     }, [allReviews]);
 
@@ -399,7 +484,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {/* Period Rating Card */}
                     <div className="group backdrop-blur-xl bg-gradient-to-br from-white via-blue-50 to-white border border-white border-opacity-30 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all">
                         <div className="flex items-center justify-between mb-4">
@@ -448,32 +533,14 @@ const EmployeePerformanceDashboard: React.FC = () => {
                             <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">Latest</span>
                         </div>
                         <div className="mb-3">
-                            <div className="text-4xl font-bold text-gray-900">{latestReview ? `${latestReview.rating.toFixed(1)}` : '-'}</div>
-                            <div className="text-sm text-gray-600 mt-1">{latestReview ? latestReview.month : 'N/A'}</div>
+                            <div className="text-4xl font-bold text-gray-900">{latestReview ? getRatingNumber(latestReview.rating).toFixed(1) : '-'}</div>
+                            <div className="text-sm text-gray-600 mt-1">{latestReview ? latestReview.period : 'N/A'}</div>
                         </div>
                         {latestReview && (
                             <div className="mt-4">
-                                <StarRating rating={latestReview.rating} size={14} />
+                                <StarRating rating={getRatingNumber(latestReview.rating)} size={14} />
                             </div>
                         )}
-                    </div>
-
-                    {/* Position Card */}
-                    <div className="group backdrop-blur-xl bg-gradient-to-br from-white via-pink-50 to-white border border-white border-opacity-30 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="p-3 bg-gradient-to-br from-pink-100 to-pink-50 rounded-xl group-hover:scale-110 transition-transform">
-                                <TrendingUp size={20} className="text-pink-600" />
-                            </div>
-                            <span className="text-xs font-semibold text-pink-600 bg-pink-100 px-2 py-1 rounded-full">Role</span>
-                        </div>
-                        <div className="mb-2">
-                            <div className="text-lg font-bold text-gray-900 line-clamp-1">{currentEmployee.position || 'N/A'}</div>
-                            <div className="text-sm text-gray-600 mt-1 line-clamp-1">{currentEmployee.department || 'N/A'}</div>
-                        </div>
-                        <div className="mt-4 flex items-center gap-2 text-xs text-pink-600">
-                            <div className="w-2 h-2 rounded-full bg-pink-400"></div>
-                            Active
-                        </div>
                     </div>
                 </div>
 
@@ -613,48 +680,48 @@ const EmployeePerformanceDashboard: React.FC = () => {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {recentReviews.map((review) => (
-                                <div key={review.id} className="group bg-gradient-to-br from-white via-gray-50 to-white border border-gray-200 rounded-xl p-4 hover:shadow-lg hover:border-blue-200 transition-all duration-300">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="flex items-center gap-3 flex-1">
-                                            <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                <UserIcon size={18} className="text-white" />
+                            {recentReviews.map((review) => {
+                                const ratingNum = getRatingNumber(review.rating);
+                                const ratingColor = getRatingColor(review.rating);
+                                return (
+                                    <div key={review.id} className="group bg-gradient-to-br from-white via-gray-50 to-white border border-gray-200 rounded-xl p-4 hover:shadow-lg hover:border-blue-200 transition-all duration-300">
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div className="flex-1">
+                                                <h4 className="font-semibold text-gray-900 text-sm">{review.period}</h4>
+                                                <p className="text-xs text-gray-500 mt-1">{getPeriodTypeLabel(review.periodType)} Review</p>
                                             </div>
-                                            <div className="min-w-0 flex-1">
-                                                <h4 className="font-semibold text-gray-900 text-sm truncate">{review.reviewer}</h4>
-                                                <p className="text-xs text-blue-600 truncate">{review.reviewerRole}</p>
+                                            <div className="text-right flex-shrink-0">
+                                                <div className="text-2xl font-bold" style={{ color: ratingColor }}>{ratingNum.toFixed(1)}</div>
+                                                <div className="text-xs text-gray-500">/5</div>
                                             </div>
                                         </div>
-                                        <div className="text-right flex-shrink-0">
-                                            <div className="text-2xl font-bold text-blue-600">{review.rating.toFixed(1)}</div>
-                                            <div className="text-xs text-gray-500">/5</div>
+
+                                        <div className="mb-3">
+                                            <StarRating rating={ratingNum} size={14} />
+                                        </div>
+
+                                        <div className="mb-4 space-y-2">
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-600 uppercase mb-1">Feedback</p>
+                                                <p className="text-sm text-gray-700 line-clamp-2">{review.feedback}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-semibold text-gray-600 uppercase mb-1">Strengths</p>
+                                                <p className="text-sm text-emerald-700 line-clamp-1">{review.strengths}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className={`py-2 px-3 rounded-lg text-xs font-medium text-center mb-3`} style={{ backgroundColor: ratingColor + '20', color: ratingColor }}>
+                                            {review.rating}
+                                        </div>
+
+                                        <div className="border-t border-gray-100 pt-3 text-xs text-gray-500 flex items-center justify-between">
+                                            <span>{new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                            <span className="font-medium" style={{ color: ratingColor }}>{getPeriodTypeLabel(review.periodType)}</span>
                                         </div>
                                     </div>
-
-                                    <div className="mb-3">
-                                        <StarRating rating={review.rating} size={14} />
-                                    </div>
-
-                                    <p className="text-sm text-gray-700 mb-4 line-clamp-2 h-10">
-                                        "{review.comment}"
-                                    </p>
-
-                                    <div className={`py-2 px-3 rounded-lg text-xs font-medium text-center ${review.rating >= 4.5 ? 'bg-emerald-100 text-emerald-700' :
-                                        review.rating >= 4.0 ? 'bg-blue-100 text-blue-700' :
-                                            review.rating >= 3.5 ? 'bg-yellow-100 text-yellow-700' :
-                                                'bg-gray-100 text-gray-700'
-                                        }`}>
-                                        {review.rating >= 4.5 ? '⭐ Excellent' :
-                                            review.rating >= 4.0 ? '✓ Good' :
-                                                review.rating >= 3.5 ? '~ Average' : '↗ Needs Work'}
-                                    </div>
-
-                                    <div className="border-t border-gray-100 mt-4 pt-3 text-xs text-gray-500 flex items-center justify-between">
-                                        <span>{new Date(review.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                                        <span className="text-blue-600 font-medium">{review.quarter}</span>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>

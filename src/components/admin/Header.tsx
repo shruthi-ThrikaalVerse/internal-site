@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import GlobalSearch from './GlobalSearch';
-import Icon from './Icon';
+import GlobalSearch from './GlobalSearch.tsx';
+import Icon from './Icon.tsx';
 import { useAuth } from '../../context/AuthContext.tsx';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/AppContext.tsx';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import * as LucideIcons from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

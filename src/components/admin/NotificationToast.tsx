@@ -1,6 +1,6 @@
 import React from 'react';
 import { useHRMS } from '../../context/HRMSContext.tsx';
-import Icon from './Icon';
+import Icon from './Icon.tsx';
 
 const NotificationToast: React.FC = () => {
   const { notifications, dismissNotification } = useHRMS();

@@ -1,3 +1,11 @@
+export const LOCATIONS = [
+  'Bangalore',
+  'Mumbai',
+  'Hyderabad',
+  'Delhi-NCR',
+  'Pune',
+  'Chennai'
+];
 import { Project } from './types.js';
 
 export const COLORS = {
@@ -11,35 +19,19 @@ export const COLORS = {
 export const DEPARTMENTS = [
   'RESEARCH AND DEVELOPMENT',
   'FULL STACK DEVELOPER',
-];
-
-export const TEAMS = [
-  'Frontend Squad',
-  'Backend Squad',
-  'Mobile App Team',
-  'Quality Assurance',
-  'Cloud Infrastructure',
-  'Brand Management',
-  'Direct Sales',
-  'Recruitment Squad',
-  'Employee Experience'
-];
-
-export const LOCATIONS = [
-  'Bangalore',
-  'Mumbai',
-  'Hyderabad',
-  'Delhi-NCR',
-  'Pune',
   'Chennai'
 ];
 
 export const NAV_ITEMS = [
   { id: 'admin/dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
+  { id: 'admin/adminattendance', label: 'Admin Attendance', icon: 'Clock' },
+  { id: 'admin/calendar', label: 'Admin Calendar', icon: 'Calendar' },
   { id: 'admin/employees', label: 'Employee Hub', icon: 'Users' },
   { id: 'admin/documents', label: 'Documents', icon: 'FileText' },
   { id: 'admin/attendance', label: 'Attendance', icon: 'CalendarCheck' },
-  { id: 'admin/leave', label: 'Leave Requests', icon: 'ClipboardList' },
+  { id: 'admin/leave', label: 'Apply Leave', icon: 'PlaneTakeoff' },
+  { id: 'admin/leave-requests', label: 'Leave Requests', icon: 'ClipboardList' },
+  { id: 'admin/projects', label: 'Projects', icon: 'FolderKanban' },
   { id: 'admin/requests', label: 'Support', icon: 'MessageCircle' },
   { id: 'admin/tasks', label: 'Task Assignment', icon: 'CheckSquare' },
   { id: 'admin/events', label: 'Events Hub', icon: 'CalendarDays' },
@@ -50,7 +42,6 @@ export const NAV_ITEMS = [
   { id: 'admin/audit-logs', label: 'Audit Logs', icon: 'Activity' },
   { id: 'admin/resignation', label: 'Resignation', icon: 'LogOut' },
   { id: 'admin/profile', label: 'My Profile', icon: 'UserCircle' },
-
 ];
 
 // Backwards-compat aliases used by some components
