@@ -400,7 +400,8 @@ const AdminLeave: React.FC = () => {
           startDate: formData.startDate,
           endDate: formData.endDate,
           reason: formData.reason,
-          attachment: medicalCertificateUrl || null
+          attachment: medicalCertificateUrl || null,
+          applicantRole: 'admin' // Add role to distinguish admin requests
         };
 
         const formDataObj = new FormData();
@@ -417,16 +418,25 @@ const AdminLeave: React.FC = () => {
           body: formDataObj,
           headers: {
             'Accept': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}` // Include token if required
           },
           credentials: 'include',
         });
 
+        console.log('Authorization Token:', localStorage.getItem('authToken'));
+        console.log('Payload:', payload);
+
+        console.log('Response Status:', response.status);
+        console.log('Response Headers:', response.headers);
         if (!response.ok) {
           let errorMessage = 'Failed to submit leave request';
           try {
             const errorData = await response.json();
+            console.log('Error Data:', errorData);
             errorMessage = errorData.message || errorMessage;
-          } catch {}
+          } catch (err) {
+            console.error('Error parsing response JSON:', err);
+          }
           toast.error(`${errorMessage} (Status: ${response.status})`);
           throw new Error(`HTTP error! status: ${response.status}`);
         }

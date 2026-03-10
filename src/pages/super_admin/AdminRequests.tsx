@@ -209,6 +209,59 @@ export const AdminRequests = () => {
     }
   }, [isSuperAdmin]);
 
+  useEffect(() => {
+    const fetchAdminLeaveRequests = async () => {
+      setIsLoadingTerminationRequests(true);
+      try {
+        const response = await fetch('http://localhost:8085/leave-requests/pending', {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          console.error(`Failed to fetch admin leave requests: ${response.status} ${response.statusText}`);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Admin Leave Requests Data:', data);
+
+        if (Array.isArray(data)) {
+          const mappedRequests = data.map((req: any, idx: number) => {
+            // Log actual response structure to debug ID field
+            console.log('Leave request item:', req);
+
+            // Try to extract numeric ID from potential field names
+            const numericId = req.id || req.requestId || req.leaveRequestId || req.leaveId;
+
+            return {
+              id: numericId?.toString() || `leave-${Date.now()}-${idx}`,
+              type: 'Admin Leave',
+              requestedBy: req.applicant || 'Admin',
+              requesterId: req.applicantId,
+              targetId: req.applicantId,
+              date: new Date(req.createdAt).toLocaleDateString() || new Date().toLocaleDateString(),
+              status: req.status || 'Pending',
+              details: req.reason || '',
+              dbId: numericId, // Store the actual numeric ID from backend
+            };
+          });
+          setTerminationRequests((prev) => [...prev, ...mappedRequests]);
+        } else {
+          console.error('Unexpected response shape:', data);
+        }
+      } catch (err) {
+        console.error('Error fetching admin leave requests:', err);
+      } finally {
+        setIsLoadingTerminationRequests(false);
+      }
+    };
+
+    if (isSuperAdmin) {
+      fetchAdminLeaveRequests();
+    }
+  }, [isSuperAdmin]);
+
   const filteredRequests = useMemo(() => {
     // Merge termination and resignation requests with local requests
     const allRequests = [...terminationRequests, ...resignationRequests, ...requests];
@@ -286,6 +339,41 @@ export const AdminRequests = () => {
       } catch (err: any) {
         console.error('Error handling resignation request:', err);
         alert(`Failed to ${status === 'Approved' ? 'approve' : 'reject'} resignation request: ${err.message}`);
+      }
+    } else if (request.type === 'Admin Leave') {
+      // Handle admin leave request approval/rejection
+      try {
+        const leaveId = request.dbId || request.id;
+        console.log('Processing Admin Leave request:', { leaveId, status, dbId: request.dbId, id: request.id });
+
+        const statusParam = status === 'Approved' ? 'APPROVED' : 'REJECTED';
+        const url = `http://localhost:8085/leave-requests/update-status/${leaveId}?status=${statusParam}`;
+
+        const response = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+          },
+          credentials: 'include',
+        });
+
+        const result = await response.text();
+        console.log('Admin Leave request response:', result);
+
+        if (response.ok) {
+          setTerminationRequests((prev) =>
+            prev.filter((req) => req.dbId !== request.dbId)
+          );
+          setViewingRequest(null);
+          alert(`Leave request ${status === 'Approved' ? 'approved' : 'rejected'} successfully.`);
+        } else {
+          const message = typeof result === 'string' ? result : (result as any)?.message || 'Unknown error';
+          alert(`Failed to ${status === 'Approved' ? 'approve' : 'reject'} leave request: ${message}`);
+        }
+      } catch (err: any) {
+        console.error('Error handling admin leave request:', err);
+        alert(`Error: ${err.message || 'An error occurred while processing the leave request'}`);
       }
     } else {
       // For other request types, use the standard behavior

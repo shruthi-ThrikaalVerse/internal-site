@@ -490,7 +490,7 @@ export enum AppSection {
 
 export interface AdminRequest {
   id: string;
-  type: 'Leave' | 'Termination' | 'Promotion' | 'Resignation' | 'Other';
+  type: 'Leave' | 'Termination' | 'Promotion' | 'Resignation' | 'Admin Leave' | 'Other';
   requestedBy: string;
   requesterId: string;
   targetId: string;
@@ -498,5 +498,5 @@ export interface AdminRequest {
   status: 'Pending' | 'Approved' | 'Rejected';
   details: string;
   metadata?: Record<string, any>;
-  dbId?: number; // Numeric ID from backend database
+  dbId?: number | string; // Numeric or string ID from backend database
 }
