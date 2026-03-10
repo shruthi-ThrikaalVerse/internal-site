@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { SectionHeader } from './UI.tsx';
 import { FormInput } from '../../components/super_admin/FormFields.tsx';
 import { User, Shield, Key, Bell, Globe, Camera, Loader, X } from 'lucide-react';
+import { apiClient } from '../../utils/apiClient.js';
+import { useApp } from '../../context/AppContext.tsx';
 
 interface UserProfile {
   employeeId: string;
@@ -24,6 +26,7 @@ interface UserProfile {
 }
 
 export const ProfileView = () => {
+  const { refreshCurrentUser } = useApp();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,22 +58,8 @@ export const ProfileView = () => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('accessToken');
-
-        const response = await fetch('http://localhost:8085/api/users/me', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setProfile(data);
-        } else {
-          setError('Failed to load profile');
-        }
+        const data = await apiClient.get<UserProfile>('/api/users/me');
+        setProfile(data);
       } catch (err) {
         console.error('Error fetching profile:', err);
         setError('Error loading profile');
@@ -91,15 +80,12 @@ export const ProfileView = () => {
       const formData = new FormData();
       formData.append('image', file);
 
-      const token = localStorage.getItem('accessToken');
       console.log('Uploading profile image...', { fileName: file.name, fileSize: file.size });
 
       const response = await fetch('http://localhost:8085/api/users/admin/profile-image', {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
+        credentials: 'include', // Include HttpOnly cookies
+        body: formData, // FormData - don't set Content-Type header
       });
 
       const responseData = await response.json().catch(() => null);
@@ -107,6 +93,7 @@ export const ProfileView = () => {
 
       if (response.ok) {
         setProfile(prev => prev ? { ...prev, profileImage: responseData?.profileImage } : null);
+        await refreshCurrentUser();
         alert('Profile image updated successfully!');
       } else {
         const errorMessage = responseData?.message || `Failed to upload image (Status: ${response.status})`;
@@ -129,14 +116,11 @@ export const ProfileView = () => {
 
     setDeletingImage(true);
     try {
-      const token = localStorage.getItem('accessToken');
       console.log('Deleting profile image...');
 
       const response = await fetch('http://localhost:8085/api/users/admin/profile-image', {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include', // Include HttpOnly cookies
       });
 
       const responseData = await response.json().catch(() => null);
@@ -144,6 +128,7 @@ export const ProfileView = () => {
 
       if (response.ok) {
         setProfile(prev => prev ? { ...prev, profileImage: null } : null);
+        await refreshCurrentUser();
         alert('Profile image removed successfully!');
       } else {
         const errorMessage = responseData?.message || `Failed to delete image (Status: ${response.status})`;
@@ -179,29 +164,16 @@ export const ProfileView = () => {
 
     setIsSaving(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:8085/api/users/super-admin/update-profile', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: editForm.firstName,
-          lastName: editForm.lastName,
-          phoneNumber: editForm.phoneNumber,
-          address: editForm.address,
-        }),
+      const updatedProfile = await apiClient.put<UserProfile>('/api/users/super-admin/update-profile', {
+        firstName: editForm.firstName,
+        lastName: editForm.lastName,
+        phoneNumber: editForm.phoneNumber,
+        address: editForm.address,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setProfile(prev => prev ? { ...prev, ...data } : null);
-        setIsEditing(false);
-        alert('Profile updated successfully!');
-      } else {
-        alert('Failed to update profile');
-      }
+      setProfile(prev => prev ? { ...prev, ...updatedProfile } : null);
+      await refreshCurrentUser();
+      setIsEditing(false);
+      alert('Profile updated successfully!');
     } catch (err) {
       console.error('Error updating profile:', err);
       alert('Error updating profile');

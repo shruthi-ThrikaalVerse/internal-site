@@ -1,10 +1,5 @@
 export const API_BASE = 'http://localhost:8085/tickets';
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('accessToken') || localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
 const parseText = async (resp: Response) => {
   const text = await resp.text();
   try { return JSON.parse(text); } catch { return text; }
@@ -23,7 +18,7 @@ export const getEmployeeTickets = async () => {
     const url = `${API_BASE}/admin/employee-tickets`;
     console.log('Fetching employee tickets from:', url);
     const resp = await fetch(url, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     });
     await throwIfError(resp);
@@ -41,7 +36,7 @@ export const updateTicketStatus = async (ticketId: string, status: string) => {
     console.log('Updating ticket status at:', url, 'to:', status);
     const resp = await fetch(url, {
       method: 'PUT',
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     });
     await throwIfError(resp);

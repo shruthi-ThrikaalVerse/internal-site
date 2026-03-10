@@ -88,7 +88,6 @@ export const AuditLogsView: React.FC = () => {
   const load = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
       const queryParams = new URLSearchParams();
 
       queryParams.append('page', (page - 1).toString());
@@ -105,9 +104,9 @@ export const AuditLogsView: React.FC = () => {
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
         }
       );
 
@@ -152,7 +151,6 @@ export const AuditLogsView: React.FC = () => {
 
   const exportCsv = async (fmt: 'csv' | 'json') => {
     try {
-      const token = localStorage.getItem('accessToken');
       const queryParams = new URLSearchParams();
 
       if (startDate) queryParams.append('startDate', startDate);
@@ -165,9 +163,7 @@ export const AuditLogsView: React.FC = () => {
         `http://localhost:8085/api/audit-log/admin/export?${queryParams.toString()}`,
         {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+          credentials: 'include',
         }
       );
 

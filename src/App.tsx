@@ -28,6 +28,7 @@ import { EventsView } from './pages/super_admin/EventsView.js';
 import { PaymentUpdatesView } from './pages/super_admin/PaymentUpdatesView.js';
 import { NotificationsView } from './pages/super_admin/NotificationsView.js';
 import { ProfileView } from './pages/super_admin/ProfileView.js';
+import DocumentsView from './pages/super_admin/DocumentsView.js';
 
 // Icon name to component mapper
 const iconMap: Record<string, React.ReactNode> = {
@@ -61,6 +62,7 @@ const sectionToUrlMap: Record<string, string> = {
   [AppSection.PaymentUpdates]: '/super-admin/payments',
   [AppSection.Notifications]: '/super-admin/notifications',
   [AppSection.SystemMaintenance]: '/super-admin/system',
+  [AppSection.Documents]: '/super-admin/documents',
   [AppSection.Profile]: '/super-admin/profile',
 };
 
@@ -135,6 +137,7 @@ const AppContent: React.FC = () => {
       '/super-admin/payments': AppSection.PaymentUpdates,
       '/super-admin/notifications': AppSection.Notifications,
       '/super-admin/system': AppSection.SystemMaintenance,
+      '/super-admin/documents': AppSection.Documents,
       '/super-admin/profile': AppSection.Profile,
     };
 
@@ -245,6 +248,8 @@ const AppContent: React.FC = () => {
         return <NotificationsView />;
       case AppSection.SystemMaintenance:
         return <SystemMaintenance />;
+      case AppSection.Documents:
+        return <DocumentsView />;
       case AppSection.Profile:
         return <ProfileView />;
       default: return <div className="p-20 text-center text-[#9aa8bd] italic bg-[#0b1220] rounded-2xl border border-[#1f2937] flex flex-col items-center gap-4">
@@ -313,52 +318,52 @@ const AppContent: React.FC = () => {
       </aside>
 
       {/* Main Container */}
-      <main className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
-        <header className="h-20 bg-white border-b border-gray-200 fixed top-0 right-0 z-40 flex items-center px-6 sm:px-8 justify-between" style={{ width: sidebarOpen ? 'calc(100% - 256px)' : 'calc(100% - 80px)' }}>
-          <div className="flex items-center gap-4 flex-1">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle sidebar" className="hidden lg:flex p-2 hover:bg-[#1f2937] rounded-xl text-[#9aa8bd] transition-colors">{sidebarOpen ? <X size={20} /> : <Menu size={20} />}</button>
-            <button onClick={() => setMobileSidebarOpen(true)} title="Open sidebar" className="lg:hidden p-2 hover:bg-[#1f2937] rounded-xl text-[#9aa8bd] transition-colors"><Menu size={20} /></button>
-            <div className="flex items-center gap-3 bg-white border border-gray-200 px-4 py-2.5 rounded-xl w-full max-w-lg focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-500/50 transition-all">
-              <Search size={18} className="text-gray-400 shrink-0" />
+      <main className={`flex-1 flex flex-col min-w-0 transition-all duration-300 pt-16 sm:pt-20 lg:pt-20 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
+        <header className={`h-16 sm:h-20 bg-white border-b border-gray-200 flex items-center px-3 sm:px-6 lg:px-8 justify-between fixed top-0 left-0 right-0 z-30 transition-all duration-300 ${sidebarOpen ? 'lg:left-64' : 'lg:left-20'}`}>
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 flex-1 min-w-0">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle sidebar" className="hidden lg:flex p-2 hover:bg-gray-100 rounded-xl text-gray-600 transition-colors shrink-0">{sidebarOpen ? <X size={20} /> : <Menu size={20} />}</button>
+            <button onClick={() => setMobileSidebarOpen(true)} title="Open sidebar" className="lg:hidden p-2 hover:bg-[#1f2937] rounded-xl text-[#9aa8bd] transition-colors shrink-0"><Menu size={20} /></button>
+            <div className="flex items-center gap-2 sm:gap-3 bg-white border border-gray-200 px-2 sm:px-4 lg:px-5 py-2 sm:py-2.5 rounded-xl flex-1 min-w-0 max-w-xs sm:max-w-lg lg:max-w-3xl focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-500/50 transition-all">
+              <Search size={16} className="text-gray-400 shrink-0 sm:w-[18px] lg:w-5" />
               <input
                 type="text"
                 placeholder="Search across authorized modules..."
-                className="bg-transparent border-none focus:ring-0 text-sm w-full text-gray-900 outline-none placeholder-gray-400"
+                className="bg-transparent border-none focus:ring-0 text-xs sm:text-sm lg:text-base w-full text-gray-900 outline-none placeholder-gray-400 min-w-0"
                 value={globalSearch}
                 onChange={(e) => setGlobalSearch(e.target.value)}
               />
             </div>
           </div>
-          <div className="flex items-center gap-4 ml-4">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg border border-gray-200">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 ml-2 sm:ml-4 lg:ml-6 shrink-0">
+            <div className="hidden md:flex items-center gap-2 px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 bg-blue-50 text-blue-600 rounded-lg border border-gray-200 whitespace-nowrap">
               <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.7)]"></div>
-              <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Production Node</span>
+              <span className="text-[9px] sm:text-[10px] lg:text-xs font-black uppercase tracking-widest">Production Node</span>
             </div>
             <button
               onClick={() => navigate(sectionToUrlMap[AppSection.Notifications])}
               title="View notifications"
-              className="relative p-2.5 text-gray-400 hover:bg-gray-100 rounded-xl transition-all"
+              className="relative p-2 sm:p-2.5 lg:p-3 text-gray-400 hover:bg-gray-100 rounded-xl transition-all shrink-0"
             >
-              <Bell size={20} />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-blue-600 rounded-full ring-4 ring-white animate-bounce"></span>
+              <Bell size={18} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+              <span className="absolute top-1.5 sm:top-2.5 lg:top-3 right-1.5 sm:right-2.5 lg:right-3 w-2 h-2 bg-blue-600 rounded-full ring-3 sm:ring-4 lg:ring-5 ring-white animate-bounce"></span>
             </button>
 
             {/* Profile Dropdown */}
             <div className="relative" ref={profileDropdownRef}>
               <button
                 onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-1.5 shadow-sm hover:border-indigo-100 transition-all"
+                className="flex items-center gap-2 sm:gap-3 lg:gap-4 bg-white border border-gray-100 rounded-2xl px-2 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 shadow-sm hover:border-indigo-100 transition-all shrink-0"
               >
-                <div className="flex flex-col items-end hidden sm:flex">
-                  <p className="text-xs font-bold text-gray-900 leading-none">{currentUser?.name || 'Super Admin'}</p>
+                <div className="hidden md:flex flex-col items-end gap-0">
+                  <p className="text-xs lg:text-sm font-bold text-gray-900 leading-none">{currentUser?.name || 'Super Admin'}</p>
                   <div className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-0.5">Active</p>
+                    <p className="text-[10px] lg:text-xs text-gray-500 font-black uppercase tracking-widest">Active</p>
                   </div>
                 </div>
                 <img
                   src={currentUser?.avatar || "https://picsum.photos/seed/admin/200"}
-                  className="w-8 h-8 rounded-full border-2 border-indigo-50 shadow-sm"
+                  className="w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-full border-2 border-indigo-50 shadow-sm shrink-0"
                   alt="Admin"
                 />
               </button>
@@ -392,7 +397,7 @@ const AppContent: React.FC = () => {
           </div>
         </header>
 
-        <div className="mt-24 pt-8 p-6 sm:p-10 max-w-screen-2xl mx-auto w-full overflow-x-hidden">
+        <div className="px-3 sm:px-6 lg:px-10 py-6 sm:py-8 lg:py-12 max-w-screen-2xl mx-auto w-full overflow-x-hidden">
           <div className="animate-in fade-in slide-in-from-bottom-6 duration-1000">
             {currentView}
           </div>

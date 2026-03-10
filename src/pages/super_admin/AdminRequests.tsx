@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   GitPullRequest, Check, X, Eye,
@@ -10,6 +9,7 @@ import { Badge, SectionHeader } from './UI.tsx';
 import { Modal } from '../../components/super_admin/Modal.tsx';
 import { useApp } from '../../context/AppContext.tsx';
 import { FormInput, FormSelect, FormTextArea } from '../../components/super_admin/FormFields.tsx';
+import { getPendingResignations, approveResignation, rejectResignation } from '../../api/resignations.js';
 
 interface PendingEmployee {
   employeeId: string;
@@ -46,6 +46,10 @@ export const AdminRequests = () => {
   const [terminationRequests, setTerminationRequests] = useState<AdminRequest[]>([]);
   const [isLoadingTerminationRequests, setIsLoadingTerminationRequests] = useState(false);
 
+  // State for resignation requests
+  const [resignationRequests, setResignationRequests] = useState<AdminRequest[]>([]);
+  const [isLoadingResignations, setIsLoadingResignations] = useState(false);
+
   // Fetch termination requests from backend
   useEffect(() => {
     const fetchTerminationRequests = async () => {
@@ -55,8 +59,8 @@ export const AdminRequests = () => {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
+          credentials: 'include',
         });
 
         const data = await response.json();
@@ -107,9 +111,7 @@ export const AdminRequests = () => {
 
     if (isSuperAdmin) {
       fetchTerminationRequests();
-      // Refresh every 5 seconds to see new requests
-      const interval = setInterval(fetchTerminationRequests, 5000);
-      return () => clearInterval(interval);
+      // Load once on mount only
     }
   }, [isSuperAdmin]);
 
@@ -122,8 +124,8 @@ export const AdminRequests = () => {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
+          credentials: 'include',
         });
 
         const data = await response.json();
@@ -158,15 +160,58 @@ export const AdminRequests = () => {
 
     if (isSuperAdmin) {
       fetchPendingEmployees();
-      // Refresh every 10 seconds
-      const interval = setInterval(fetchPendingEmployees, 10000);
-      return () => clearInterval(interval);
+      // Load once on mount only
+    }
+  }, [isSuperAdmin]);
+
+  // Fetch resignation requests for Super Admin
+  useEffect(() => {
+    const fetchSuperAdminResignations = async () => {
+      setIsLoadingResignations(true);
+      try {
+        const response = await getPendingResignations();
+        console.log('Super Admin Resignation Requests:', response);
+
+        const mappedRequests = response.map((req: any) => {
+          // Normalize status from backend (PENDING, APPROVED, REJECTED) to title case
+          let normalizedStatus: 'Pending' | 'Approved' | 'Rejected' = 'Pending';
+          if (req.status === 'APPROVED' || req.status === 'Approved') {
+            normalizedStatus = 'Approved';
+          } else if (req.status === 'REJECTED' || req.status === 'Rejected') {
+            normalizedStatus = 'Rejected';
+          }
+
+          return {
+            id: req.id?.toString() || `resign-${Date.now()}`,
+            type: 'Resignation' as const,
+            requestedBy: req.employeeName || req.approvedByName || `Employee ${req.employeeId}`,
+            requesterId: req.employeeId,
+            targetId: req.employeeId,
+            date: new Date(req.createdAt).toLocaleDateString() || new Date().toLocaleDateString(),
+            status: normalizedStatus,
+            details: req.reason || req.details,
+            dbId: req.id,
+          };
+        });
+        setResignationRequests(mappedRequests);
+        console.log('Mapped resignation requests:', mappedRequests);
+      } catch (err) {
+        console.error('Error fetching super admin resignation requests:', err);
+        setResignationRequests([]);
+      } finally {
+        setIsLoadingResignations(false);
+      }
+    };
+
+    if (isSuperAdmin) {
+      fetchSuperAdminResignations();
+      // Load once on mount only
     }
   }, [isSuperAdmin]);
 
   const filteredRequests = useMemo(() => {
-    // Merge backend termination requests with local requests
-    const allRequests = [...terminationRequests, ...requests];
+    // Merge termination and resignation requests with local requests
+    const allRequests = [...terminationRequests, ...resignationRequests, ...requests];
 
     // Remove duplicates by id
     const uniqueRequests = Array.from(
@@ -178,7 +223,7 @@ export const AdminRequests = () => {
       if (a.status !== 'Pending' && b.status === 'Pending') return 1;
       return 0;
     });
-  }, [requests, terminationRequests]);
+  }, [requests, terminationRequests, resignationRequests]);
 
   const handleAction = async (request: AdminRequest, status: 'Approved' | 'Rejected') => {
     if (request.type === 'Termination') {
@@ -205,8 +250,8 @@ export const AdminRequests = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
+          credentials: 'include',
         });
 
         const result = await response.text();
@@ -218,11 +263,29 @@ export const AdminRequests = () => {
           setViewingRequest(null);
           alert(result);
         } else {
-          alert(`Failed to ${status === 'Approved' ? 'approve' : 'reject'} termination request: ${result}`);
+          const message = typeof result === 'string' ? result : (result as any)?.message || 'Unknown error';
+          alert(`Failed to ${status === 'Approved' ? 'approve' : 'reject'} termination request: ${message}`);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error handling termination request:', err);
-        alert('An error occurred while processing the termination request');
+        alert(`Error: ${err.message || 'An error occurred while processing the termination request'}`);
+      }
+    } else if (request.type === 'Resignation') {
+      // Handle resignation request
+      try {
+        if (status === 'Approved') {
+          await approveResignation(request.dbId);
+        } else {
+          await rejectResignation(request.dbId);
+        }
+        setResignationRequests((prev) =>
+          prev.filter((req) => req.dbId !== request.dbId)
+        );
+        setViewingRequest(null);
+        alert(`Resignation request ${status === 'Approved' ? 'approved' : 'rejected'} successfully.`);
+      } catch (err: any) {
+        console.error('Error handling resignation request:', err);
+        alert(`Failed to ${status === 'Approved' ? 'approve' : 'reject'} resignation request: ${err.message}`);
       }
     } else {
       // For other request types, use the standard behavior
@@ -258,8 +321,8 @@ export const AdminRequests = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
+        credentials: 'include',
         body: JSON.stringify(approveData),
       });
 
@@ -295,8 +358,8 @@ export const AdminRequests = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
           },
+          credentials: 'include',
         }
       );
 
@@ -348,6 +411,22 @@ export const AdminRequests = () => {
     addEmployee(newUser);
     setIsAddModalOpen(false);
     // Mark recruitment request as fulfilled? Could add a custom status but Approved is fine for now
+  };
+
+  const handleApproveResignation = async (request: AdminRequest) => {
+    setIsApproving(true);
+    try {
+      await approveResignation(request.dbId);
+      alert('Resignation request approved successfully.');
+      setResignationRequests((prev) =>
+        prev.filter((req) => req.dbId !== request.dbId)
+      );
+    } catch (err) {
+      console.error('Error approving resignation:', err);
+      alert('An error occurred while approving the resignation request.');
+    } finally {
+      setIsApproving(false);
+    }
   };
 
   return (
@@ -472,7 +551,7 @@ export const AdminRequests = () => {
                         </div>
                         <div>
                           <div className="font-bold text-gray-900 tracking-tight">{req.type}</div>
-                          <div className="text-[10px] font-mono text-gray-500">{req.id.toUpperCase()}</div>
+                          <div className="text-[10px] font-mono text-gray-500">{typeof req.id === 'string' ? req.id.toUpperCase() : 'N/A'}</div>
                         </div>
                       </div>
                     </td>
@@ -525,7 +604,7 @@ export const AdminRequests = () => {
                           </>
                         )}
 
-                        {isSuperAdmin && req.status === 'Approved' && req.type === 'Recruitment' && (
+                        {isSuperAdmin && req.status === 'Approved' && req.type === 'Termination' && (
                           <button
                             onClick={() => handleRecruitmentProcessing(req)}
                             className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all flex items-center gap-2"

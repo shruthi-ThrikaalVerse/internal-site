@@ -1,11 +1,6 @@
 const API_BASE = 'http://localhost:8085/leave-requests';
 const FETCH_TIMEOUT = 15000; // 15 seconds
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('accessToken') || localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
 const parseText = async (resp: Response) => {
   const text = await resp.text();
   try { return JSON.parse(text); } catch { return text; }
@@ -31,7 +26,7 @@ const fetchWithTimeout = (url: string, options: RequestInit = {}, timeout = FETC
 export const getPendingLeaveRequests = async () => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/pending`, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
     await throwIfError(resp);
@@ -48,7 +43,7 @@ export const getPendingLeaveRequests = async () => {
 export const getNonPendingLeaveRequests = async () => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/non-pending`, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
     await throwIfError(resp);
@@ -66,7 +61,7 @@ export const deleteLeaveRequest = async (leaveId: number) => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/delete/${leaveId}`, {
       method: 'DELETE',
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
     await throwIfError(resp);
@@ -85,7 +80,7 @@ export const updateLeaveStatus = async (leaveId: string | number, status: 'appro
     const resp = (await fetchWithTimeout(`${API_BASE}/update-status/${encodeURIComponent(leaveId)}?status=${encodeURIComponent(status)}`, {
       method: 'PUT',
       credentials: 'include',
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
     })) as Response;
     await throwIfError(resp);
     return parseText(resp);
@@ -101,7 +96,7 @@ export const updateLeaveStatus = async (leaveId: string | number, status: 'appro
 export const getLeaveBalances = async () => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/leave-balance`, {
-      headers: { Accept: 'application/json', ...getAuthHeader() },
+      headers: { Accept: 'application/json' },
       credentials: 'include',
     })) as Response;
     await throwIfError(resp);
