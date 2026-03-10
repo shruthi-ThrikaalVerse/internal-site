@@ -479,12 +479,13 @@ export enum AppSection {
   PaymentUpdates = 'PaymentUpdates',
   Notifications = 'Notifications',
   SystemMaintenance = 'SystemMaintenance',
+  Documents = 'Documents',
   Profile = 'Profile'
 }
 
 export interface AdminRequest {
   id: string;
-  type: 'Leave' | 'Termination' | 'Promotion' | 'Other';
+  type: 'Leave' | 'Termination' | 'Promotion' | 'Resignation' | 'Other';
   requestedBy: string;
   requesterId: string;
   targetId: string;

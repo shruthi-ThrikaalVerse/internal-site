@@ -3,6 +3,7 @@ import { ChevronDown, Upload, AlertCircle, CheckCircle, X } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { submitResignation } from '../../api/resignations.ts';
 
 interface ResignationData {
     resignationDate: string;
@@ -196,29 +197,31 @@ const Resignation: React.FC = () => {
             const formDataToSend = new FormData();
             formDataToSend.append('resignationDate', formData.resignationDate);
             formDataToSend.append('lastWorkingDate', formData.lastWorkingDate);
+            formDataToSend.append('noticePeriod', formData.noticePeriod);
             formDataToSend.append('reason', formData.reason);
             formDataToSend.append('detailedReason', formData.detailedReason);
             formDataToSend.append('personalEmail', formData.personalEmail);
             formDataToSend.append('contactNumber', formData.contactNumber);
             if (formData.document) {
-                formDataToSend.append('document', formData.document);
+                formDataToSend.append('file', formData.document);
             }
 
-            const response = await axios.post('http://localhost:8085/api/resignation', formDataToSend, {
-                withCredentials: true,
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            // Log the payload for debugging
+            for (const [key, value] of formDataToSend.entries()) {
+                console.log(`${key}:`, value);
+            }
 
-            if (response.status === 200 || response.status === 201) {
+            const response = await submitResignation(formDataToSend);
+
+            if (response) {
+                toast.success('Resignation submitted successfully!');
                 setShowSuccessModal(true);
                 setTimeout(() => {
                     navigate('/employee/dashboard');
                 }, 3000);
             }
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to submit resignation');
+            toast.error(error.message || 'Failed to submit resignation');
         } finally {
             setIsSubmitting(false);
         }
