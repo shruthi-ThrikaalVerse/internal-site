@@ -19,7 +19,7 @@ export interface Review {
   strengths: string;
   areasOfImprovement: string;
   periodType: 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
-  rating: 'EXCELLENT' | 'GOOD' | 'AVERAGE' | 'NEEDS_IMPROVEMENT' | 'POOR';
+  rating: 'ONE' | 'TWO' | 'THREE' | 'FOUR' | 'FIVE';
   period: string;
   createdAt: string;
 }
@@ -119,16 +119,17 @@ export const getReviewById = async (reviewId: number): Promise<Review> => {
  */
 export const submitReview = async (reviewData: {
   employeeId: string;
+  employeeName?: string;
   feedback: string;
   strengths: string;
   areasOfImprovement: string;
   periodType: 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
-  rating: 'EXCELLENT' | 'GOOD' | 'AVERAGE' | 'NEEDS_IMPROVEMENT' | 'POOR';
+  rating: 'ONE' | 'TWO' | 'THREE' | 'FOUR' | 'FIVE';
   period: string;
 }): Promise<Review> => {
   try {
     const response = await apiClient.request<Review>(
-      `/api/performance/reviews`,
+      `/api/performance/create`,
       {
         method: 'POST',
         body: JSON.stringify(reviewData),
@@ -172,5 +173,64 @@ export const deleteReview = async (reviewId: number): Promise<void> => {
   } catch (error) {
     console.error(`Error deleting review ${reviewId}:`, error);
     throw error;
+  }
+};
+
+/**
+ * Get all reviews from all employees
+ */
+export const getAllReviews = async (): Promise<Review[]> => {
+  try {
+    const response = await apiClient.request<any>('/api/performance/reviews');
+    // API returns array directly, not wrapped in PerformanceResponse
+    if (Array.isArray(response)) {
+      return response;
+    }
+    // Fallback for PerformanceResponse structure
+    return response?.reviews || [];
+  } catch (error) {
+    console.error('Error fetching all reviews:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get current authenticated employee's reviews
+ */
+export const getMyReviews = async (): Promise<Review[]> => {
+  try {
+    const response = await apiClient.request<any>('/api/performance/my');
+    // API returns array directly, not wrapped in PerformanceResponse
+    if (Array.isArray(response)) {
+      return response;
+    }
+    // Fallback for PerformanceResponse structure
+    return response?.reviews || [];
+  } catch (error) {
+    console.error('Error fetching my reviews:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get performance dashboard data (department, employee, top/low performers)
+ */
+export const getPerformanceDashboard = async () => {
+  try {
+    const response = await apiClient.request<any>('/api/performance/dashboard');
+    return {
+      departmentPerformance: response?.departmentPerformance || [],
+      employeePerformance: response?.employeePerformance || [],
+      topPerformers: response?.topPerformers || [],
+      lowPerformers: response?.lowPerformers || []
+    };
+  } catch (error) {
+    console.error('Error fetching performance dashboard:', error);
+    return {
+      departmentPerformance: [],
+      employeePerformance: [],
+      topPerformers: [],
+      lowPerformers: []
+    };
   }
 };

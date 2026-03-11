@@ -411,12 +411,12 @@ export const ProjectsView = () => {
                 label="Project Manager"
                 value={editingProject.projectManagerId != null ? String(editingProject.projectManagerId) : ''}
                 onChange={(val) => {
-                  setEditingProject({ ...editingProject, projectManagerId: val ? parseInt(val) : undefined });
+                  setEditingProject({ ...editingProject, projectManagerId: val || undefined });
                 }}
                 options={(() => {
                   const opts = [
                     '',
-                    ...projectManagers.map((m) => `${m.id}`),
+                    ...projectManagers.map((m) => `${m.employeeId}`),
                   ];
                   console.log('Project Manager dropdown options:', opts);
                   console.log('projectManagers state:', projectManagers);
@@ -425,7 +425,7 @@ export const ProjectsView = () => {
                 })()}
                 renderOption={(opt) => {
                   if (!opt) return '-- Select --';
-                  const manager = projectManagers.find(m => m.id === parseInt(opt));
+                  const manager = projectManagers.find(m => m.employeeId === opt);
                   return manager ? `${manager.firstName} ${manager.lastName}` : opt;
                 }}
               />

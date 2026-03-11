@@ -15,6 +15,8 @@ import { FormInput, FormSelect } from '../../components/super_admin/FormFields.t
 import { useApp } from '../../context/AppContext.tsx';
 import { apiClient } from '../../utils/apiClient.js';
 import * as usersApi from '../../api/users.js';
+import { getAllReviews, submitReview, getPerformancePercentage } from '../../api/performance.ts';
+import { PerformanceAnalyticsResponse } from '../../types.tsx';
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts';
 
 const EMPLOYMENT_TYPES = ['FULL_TIME', 'PART_TIME', 'CONTRACT'];
@@ -104,6 +106,7 @@ export const AdminHub = () => {
     const [selectedReview, setSelectedReview] = useState<PerformanceReview | null>(null);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [activeTab, setActiveTab] = useState<'personal' | 'performance'>('personal');
+    const [analytics, setAnalytics] = useState<PerformanceAnalyticsResponse | null>(null);
 
     // Helper function to format base64 image data
     const formatBase64Image = (imageData: string | null | undefined): string => {
@@ -590,6 +593,28 @@ export const AdminHub = () => {
     // Performance Metrics Helpers
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+    // Helper function to convert numeric rating to API enum format
+    const convertRatingToEnum = (rating: string): 'ONE' | 'TWO' | 'THREE' | 'FOUR' | 'FIVE' => {
+        const ratingNum = parseFloat(rating);
+        if (ratingNum <= 1) return 'ONE';
+        if (ratingNum <= 2) return 'TWO';
+        if (ratingNum <= 3) return 'THREE';
+        if (ratingNum <= 4) return 'FOUR';
+        return 'FIVE';
+    };
+
+    // Helper function to convert API enum rating to applicable numeric rating
+    const convertRatingToNumber = (rating: string): number => {
+        const ratingMap: Record<string, number> = {
+            'ONE': 1,
+            'TWO': 2,
+            'THREE': 3,
+            'FOUR': 4,
+            'FIVE': 5
+        };
+        return ratingMap[rating] || 3;
+    };
+
     const availablePeriods = useMemo(() => {
         if (performanceViewPeriod === 'monthly') {
             return monthNames.map((m, i) => ({ label: m, value: (i + 1).toString() }));
@@ -649,163 +674,149 @@ export const AdminHub = () => {
 
     // Generate raw performance data with pie chart info
     const generatePerformanceData = () => {
-        // Generate random but consistent raw data
-        const seed = viewingUser?.id || 'default';
-        const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        if (!analytics || !analytics.leaveAnalyticsResponse || !analytics.attendanceAnayticsResponse) {
+            return {
+                attendance: [],
+                leave: [],
+                projects: []
+            };
+        }
+
+        // Handle attendance data
+        const attendanceData = [
+            { name: 'Present', value: analytics.attendanceAnayticsResponse.presentDays, fill: '#3b82f6' },
+            { name: 'Absent', value: analytics.attendanceAnayticsResponse.absentDays, fill: '#fbbf24' }
+        ];
+
+        // Handle leave data
+        const leaveData = [
+            { name: 'Leaves Taken', value: analytics.leaveAnalyticsResponse.leavesTaken, fill: '#ef4444' },
+            { name: 'Working Days', value: analytics.leaveAnalyticsResponse.workingDays - analytics.leaveAnalyticsResponse.leavesTaken, fill: '#10b981' }
+        ];
+
+        // Handle project/task data - prefer taskAnalyticsResponse if available, otherwise use projectAnalyticsResponse
+        let projectsData: any[] = [];
         
-        // Attendance data
-        const presentDays = 18 + (hash % 5);
-        const absentDays = 2 + (hash % 3);
-        
-        // Leave data
-        const leavesTaken = 2 + (hash % 6);
-        const workingDays = 25;
-        
-        // Projects data
-        const completedProjects = 5 + (hash % 5);
-        const pendingProjects = 2 + (hash % 3);
+        if (analytics.taskAnalyticsResponse) {
+            // If task data is available, use it
+            const pendingTasks = analytics.taskAnalyticsResponse.assigned - analytics.taskAnalyticsResponse.completed - analytics.taskAnalyticsResponse.inProgress;
+            projectsData = [
+                { name: 'Completed', value: analytics.taskAnalyticsResponse.completed, fill: '#10b981' },
+                { name: 'In Progress', value: analytics.taskAnalyticsResponse.inProgress, fill: '#3b82f6' },
+                { name: 'Pending', value: pendingTasks, fill: '#ef4444' }
+            ];
+        } else if (analytics.projectAnalyticsResponse) {
+            // If task data is not available, use project data
+            projectsData = [
+                { name: 'Completed', value: analytics.projectAnalyticsResponse.completed || 0, fill: '#10b981' },
+                { name: 'In Progress', value: analytics.projectAnalyticsResponse.inProgress || 0, fill: '#3b82f6' },
+                { name: 'Planning', value: analytics.projectAnalyticsResponse.planning || 0, fill: '#f59e0b' },
+                { name: 'New', value: analytics.projectAnalyticsResponse.newStatus || 0, fill: '#8b5cf6' },
+                { name: 'Deadline', value: analytics.projectAnalyticsResponse.deadline || 0, fill: '#ec4899' }
+            ];
+        }
         
         return {
-            attendance: [
-                { name: 'Present', value: presentDays, fill: '#3b82f6' },
-                { name: 'Absent', value: absentDays, fill: '#fbbf24' }
-            ],
-            leave: [
-                { name: 'Leaves Taken', value: leavesTaken, fill: '#ef4444' },
-                { name: 'Working Days', value: workingDays - leavesTaken, fill: '#10b981' }
-            ],
-            projects: [
-                { name: 'Completed', value: completedProjects, fill: '#10b981' },
-                { name: 'Pending', value: pendingProjects, fill: '#ef4444' }
-            ]
+            attendance: attendanceData,
+            leave: leaveData,
+            projects: projectsData
         };
     };
 
     const pieChartData = useMemo(() => {
         return generatePerformanceData();
-    }, [viewingUser?.id]);
+    }, [analytics]);
 
-    // Load dummy review history
+    // Load review history from API
     useEffect(() => {
         if (!viewingUser || activeTab !== 'performance') {
             setReviewHistory([]);
             return;
         }
 
-        const dummyReviews: PerformanceReview[] = [
-            {
-                id: '1',
-                adminName: viewingUser.name,
-                adminId: viewingUser.employeeId,
-                period: 'monthly',
-                periodLabel: 'March 2026',
-                rating: 4.8,
-                feedback: 'Outstanding performance in Q1. Exceptional management of security protocols and quick incident response.',
-                strengths: 'Proactive security measures, excellent team collaboration, strong leadership',
-                improvements: 'Minor: Document edge cases more thoroughly',
-                submittedDate: '2026-04-02',
-                submittedBy: 'Super Admin'
-            },
-            {
-                id: '2',
-                adminName: viewingUser.name,
-                adminId: viewingUser.employeeId,
-                period: 'monthly',
-                periodLabel: 'February 2026',
-                rating: 4.5,
-                feedback: 'Excellent performance managing administrative access and security protocols. Consistently maintains system integrity.',
-                strengths: 'Strong security awareness, proactive problem solving, excellent documentation',
-                improvements: 'Could improve response time during high-load periods',
-                submittedDate: '2026-03-01',
-                submittedBy: 'Super Admin'
-            },
-            {
-                id: '3',
-                adminName: viewingUser.name,
-                adminId: viewingUser.employeeId,
-                period: 'monthly',
-                periodLabel: 'January 2026',
-                rating: 4.2,
-                feedback: 'Good performance overall. Handles routine administrative tasks effectively with minimal errors.',
-                strengths: 'Detail-oriented, reliable, good communication skills',
-                improvements: 'Work on faster troubleshooting and optimization techniques',
-                submittedDate: '2026-02-01',
-                submittedBy: 'Super Admin'
-            },
-            {
-                id: '4',
-                adminName: viewingUser.name,
-                adminId: viewingUser.employeeId,
-                period: 'quarterly',
-                periodLabel: 'Q4 2025',
-                rating: 4.3,
-                feedback: 'Good overall performance. Shows improvement in user privilege management and access controls. Met all quarterly targets.',
-                strengths: 'Reliable, good documentation practices, team player, consistent performer',
-                improvements: 'Needs to improve audit log review frequency and stakeholder reporting',
-                submittedDate: '2026-01-15',
-                submittedBy: 'Super Admin'
-            },
-            {
-                id: '5',
-                adminName: viewingUser.name,
-                adminId: viewingUser.employeeId,
-                period: 'quarterly',
-                periodLabel: 'Q3 2025',
-                rating: 3.9,
-                feedback: 'Satisfactory performance in Q3. Completed assigned tasks but could improve efficiency and initiative.',
-                strengths: 'Follows procedures well, good attendance, cooperative attitude',
-                improvements: 'Need to show more initiative, take on challenging projects, improve response times',
-                submittedDate: '2025-10-20',
-                submittedBy: 'Super Admin'
-            },
-            {
-                id: '6',
-                adminName: viewingUser.name,
-                adminId: viewingUser.employeeId,
-                period: 'quarterly',
-                periodLabel: 'Q2 2025',
-                rating: 4.1,
-                feedback: 'Good quarterly performance with steady progress in key responsibilities. Demonstrates strong technical foundation.',
-                strengths: 'Technical skills, problem-solving ability, willing to learn',
-                improvements: 'Improve communication with team members, document processes better',
-                submittedDate: '2025-07-15',
-                submittedBy: 'Super Admin'
-            },
-            {
-                id: '7',
-                adminName: viewingUser.name,
-                adminId: viewingUser.employeeId,
-                period: 'yearly',
-                periodLabel: 'Year 2025',
-                rating: 4.1,
-                feedback: 'Good annual performance. Demonstrated consistent growth throughout 2025 with solid contributions to system administration.',
-                strengths: 'Reliable performer, good technical skills, team cooperation, continuous learning',
-                improvements: 'Work on leadership skills development, improve documentation practices, faster incident response',
-                submittedDate: '2025-12-20',
-                submittedBy: 'Super Admin'
-            },
-            {
-                id: '8',
-                adminName: viewingUser.name,
-                adminId: viewingUser.employeeId,
-                period: 'yearly',
-                periodLabel: 'Year 2024',
-                rating: 3.8,
-                feedback: 'Satisfactory annual performance. Met core job requirements with some areas needing improvement for career progression.',
-                strengths: 'Follows guidelines, stable attendance, basic technical competency',
-                improvements: 'Show more initiative, improve problem-solving skills, enhance communication',
-                submittedDate: '2024-12-22',
-                submittedBy: 'Super Admin'
+        const loadReviews = async () => {
+            try {
+                const reviews = await getAllReviews();
+                
+                // Filter and transform reviews - show reviews for this specific user
+                const userReviews = reviews
+                    .filter(review => {
+                        // Only include reviews explicitly for this user
+                        // Skip reviews with N/A employeeId as they don't belong to anyone specific
+                        if (review.employeeId === 'N/A') {
+                            return false;
+                        }
+                        // Include if it matches the viewing user's employee ID
+                        return review.employeeId === viewingUser.employeeId;
+                    })
+                    .map(review => ({
+                        id: review.id.toString(),
+                        adminName: viewingUser.name,
+                        adminId: viewingUser.employeeId,
+                        period: review.periodType.toLowerCase() as 'monthly' | 'quarterly' | 'yearly',
+                        periodLabel: review.period,
+                        rating: convertRatingToNumber(review.rating),
+                        feedback: review.feedback,
+                        strengths: review.strengths,
+                        improvements: review.areasOfImprovement,
+                        submittedDate: review.createdAt.split('T')[0],
+                        submittedBy: 'Admin User'
+                    }))
+                    .sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime());
+                
+                setReviewHistory(userReviews);
+            } catch (error) {
+                console.error('Failed to load reviews:', error);
+                setReviewHistory([]);
             }
-        ];
-        setReviewHistory(dummyReviews);
+        };
+
+        loadReviews();
     }, [viewingUser, activeTab]);
+
+    // Load performance analytics from API
+    useEffect(() => {
+        if (!viewingUser || activeTab !== 'performance') {
+            setAnalytics(null);
+            return;
+        }
+
+        const loadAnalytics = async () => {
+            try {
+                const year = performanceViewYear;
+                const month = performanceViewPeriod === 'monthly' ? parseInt(performanceViewFilter, 10) : undefined;
+                const quarter = performanceViewPeriod === 'quarterly' ? parseInt(performanceViewFilter, 10) : undefined;
+
+                const data = await getPerformancePercentage({
+                    employeeId: viewingUser.employeeId,
+                    periodType: performanceViewPeriod,
+                    year,
+                    month,
+                    quarter
+                });
+                setAnalytics(data);
+            } catch (error) {
+                console.error('Failed to load performance analytics:', error);
+                setAnalytics(null);
+            }
+        };
+
+        if (performanceViewFilter) {
+            loadAnalytics();
+        }
+    }, [viewingUser, activeTab, performanceViewPeriod, performanceViewFilter, performanceViewYear]);
 
     const handlePerformanceReviewSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         if (!performanceFormData.rating || !performanceFormData.feedback) {
             alert('Please fill in rating and feedback');
+            return;
+        }
+
+        // Use viewingUser as it's the consistently maintained reference
+        if (!viewingUser || !viewingUser.employeeId) {
+            alert('No user selected for review');
             return;
         }
 
@@ -816,10 +827,28 @@ export const AdminHub = () => {
                 ? `Q${performanceFormFilter} ${performanceViewYear}`
                 : `Year ${performanceFormFilter}`;
 
+            const periodTypeMap: Record<'monthly' | 'quarterly' | 'yearly', 'MONTHLY' | 'QUARTERLY' | 'YEARLY'> = {
+                'monthly': 'MONTHLY',
+                'quarterly': 'QUARTERLY',
+                'yearly': 'YEARLY'
+            };
+
+            // Submit the review to API with the correct employeeId
+            await submitReview({
+                employeeId: viewingUser.employeeId,
+                feedback: performanceFormData.feedback,
+                strengths: performanceFormData.strengths,
+                areasOfImprovement: performanceFormData.improvements,
+                periodType: periodTypeMap[performanceFormPeriod],
+                rating: convertRatingToEnum(performanceFormData.rating),
+                period: periodString
+            });
+
+            // Add to local state as well to reflect immediately
             const newReview: PerformanceReview = {
                 id: String(reviewHistory.length + 1),
-                adminName: viewingUserWithPerformance?.name || 'Unknown',
-                adminId: viewingUserWithPerformance?.employeeId || 'N/A',
+                adminName: viewingUser.name,
+                adminId: viewingUser.employeeId,
                 period: performanceFormPeriod,
                 periodLabel: periodString,
                 rating: parseFloat(performanceFormData.rating),
@@ -827,7 +856,7 @@ export const AdminHub = () => {
                 strengths: performanceFormData.strengths,
                 improvements: performanceFormData.improvements,
                 submittedDate: new Date().toISOString().split('T')[0],
-                submittedBy: 'Admin Review'
+                submittedBy: 'Admin User'
             };
 
             setReviewHistory([newReview, ...reviewHistory]);
@@ -1350,11 +1379,11 @@ export const AdminHub = () => {
                                             <div className="p-6 space-y-6">
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-4 border border-red-200">
-                                                        <p className="text-2xl font-black text-red-600">{pieChartData.leave[1]?.value || 0}</p>
+                                                        <p className="text-2xl font-black text-red-600">{pieChartData.leave[0]?.value || 0}</p>
                                                         <p className="text-xs font-bold text-red-700 uppercase tracking-widest mt-2">Leaves Taken</p>
                                                     </div>
                                                     <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 border border-green-200">
-                                                        <p className="text-2xl font-black text-green-600">{(pieChartData.leave[0]?.value || 0) + (pieChartData.leave[1]?.value || 1)}</p>
+                                                        <p className="text-2xl font-black text-green-600">{pieChartData.leave[1]?.value || 0}</p>
                                                         <p className="text-xs font-bold text-green-700 uppercase tracking-widest mt-2">Working Days</p>
                                                     </div>
                                                 </div>
@@ -1394,42 +1423,69 @@ export const AdminHub = () => {
                                                 </h3>
                                             </div>
                                             <div className="p-6 space-y-6">
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-4 border border-purple-200 text-center">
-                                                        <p className="text-2xl font-black text-purple-600">{pieChartData.projects[0]?.value || 0}</p>
-                                                        <p className="text-xs font-bold text-purple-00 uppercase tracking-widest mt-2 break-words">Completed</p>
+                                                {pieChartData.projects.length > 0 ? (
+                                                  <>
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                      {pieChartData.projects.map((item, idx) => {
+                                                        const colorConfigs = [
+                                                          { bg: 'from-purple-50 to-purple-100', border: 'border-purple-200', text: 'text-purple-600', label: 'text-purple-700' },
+                                                          { bg: 'from-blue-50 to-blue-100', border: 'border-blue-200', text: 'text-blue-600', label: 'text-blue-700' },
+                                                          { bg: 'from-amber-50 to-amber-100', border: 'border-amber-200', text: 'text-amber-600', label: 'text-amber-700' },
+                                                          { bg: 'from-orange-50 to-orange-100', border: 'border-orange-200', text: 'text-orange-600', label: 'text-orange-700' },
+                                                          { bg: 'from-pink-50 to-pink-100', border: 'border-pink-200', text: 'text-pink-600', label: 'text-pink-700' }
+                                                        ];
+                                                        const color = colorConfigs[idx % colorConfigs.length];
+                                                        return (
+                                                          <div key={idx} className={`bg-gradient-to-br ${color.bg} rounded-2xl p-4 ${color.border} border text-center`}>
+                                                            <p className={`text-2xl font-black ${color.text}`}>{item.value}</p>
+                                                            <p className={`text-xs font-bold ${color.label} uppercase tracking-widest mt-2 break-words`}>{item.name}</p>
+                                                          </div>
+                                                        );
+                                                      })}
+                                                      {pieChartData.projects.length > 0 && (
+                                                        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 border border-green-200 text-center">
+                                                          <p className="text-2xl font-black text-green-600">
+                                                            {(() => {
+                                                              const completed = pieChartData.projects.find(p => p.name === 'Completed')?.value || 0;
+                                                              const total = pieChartData.projects.reduce((sum, p) => sum + p.value, 0);
+                                                              return total > 0 ? Math.round((completed / total) * 100) : 0;
+                                                            })()}%
+                                                          </p>
+                                                          <p className="text-xs font-bold text-green-700 uppercase tracking-widest mt-2 break-words">Completion</p>
+                                                        </div>
+                                                      )}
                                                     </div>
-                                                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-4 border border-orange-200 text-center">
-                                                        <p className="text-2xl font-black text-orange-600">{pieChartData.projects[1]?.value || 0}</p>
-                                                        <p className="text-xs font-bold text-orange-700 uppercase tracking-widest mt-2 break-words">Pending</p>
-                                                    </div>
-                                                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 border border-green-200 text-center">
-                                                        <p className="text-2xl font-black text-green-600">{Math.round(((pieChartData.projects[0]?.value || 0) / ((pieChartData.projects[0]?.value || 0) + (pieChartData.projects[1]?.value || 1))) * 100)}%</p>
-                                                        <p className="text-xs font-bold text-green-700 uppercase tracking-widest mt-2 break-words">Rate</p>
-                                                    </div>
-                                                </div>
-                                                <div className="h-96">
-                                                    <ResponsiveContainer width="100%" height="100%">
+                                                    <div className="h-96">
+                                                      <ResponsiveContainer width="100%" height="100%">
                                                         <PieChart>
-                                                            <Pie
-                                                                data={pieChartData.projects}
-                                                                cx="50%"
-                                                                cy="50%"
-                                                                labelLine={false}
-                                                                label={({ name, value }) => `${name}: ${value}`}
-                                                                outerRadius={80}
-                                                                fill="#8884d8"
-                                                                dataKey="value"
-                                                            >
-                                                                {pieChartData.projects.map((entry, index) => (
-                                                                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                                                                ))}
-                                                            </Pie>
-                                                            <Tooltip formatter={(value) => `${value} projects`} />
-                                                            <Legend />
+                                                          <Pie
+                                                            data={pieChartData.projects}
+                                                            cx="50%"
+                                                            cy="45%"
+                                                            labelLine={false}
+                                                            outerRadius={90}
+                                                            fill="#8884d8"
+                                                            dataKey="value"
+                                                          >
+                                                            {pieChartData.projects.map((entry, index) => (
+                                                              <Cell key={`cell-${index}`} fill={entry.fill} />
+                                                            ))}
+                                                          </Pie>
+                                                          <Tooltip formatter={(value) => `${value}`} contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }} />
+                                                          <Legend 
+                                                            verticalAlign="bottom" 
+                                                            height={36}
+                                                            wrapperStyle={{ paddingTop: '20px' }}
+                                                          />
                                                         </PieChart>
-                                                    </ResponsiveContainer>
-                                                </div>
+                                                      </ResponsiveContainer>
+                                                    </div>
+                                                  </>
+                                                ) : (
+                                                  <div className="text-center py-8 text-gray-500">
+                                                    <p className="text-sm font-medium">No project or task data available</p>
+                                                  </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -1489,11 +1545,11 @@ export const AdminHub = () => {
                                                         className="w-full px-4 py-3 bg-white border-2 border-slate-300 rounded-xl font-medium text-sm text-black focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                                     >
                                                         <option value="">Select a rating</option>
-                                                        <option value="one">One</option>
-                                                        <option value="two">Two</option>
-                                                        <option value="three">Three</option>
-                                                        <option value="four">Four</option>
-                                                        <option value="five">Five</option>
+                                                        <option value="1">1 - Poor</option>
+                                                        <option value="2">2 - Fair</option>
+                                                        <option value="3">3 - Good</option>
+                                                        <option value="4">4 - Very Good</option>
+                                                        <option value="5">5 - Excellent</option>
                                                     </select>
                                                 </div>
 
@@ -1558,7 +1614,23 @@ export const AdminHub = () => {
                                                         </div>
                                                         <div className="text-center">
                                                             <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Average Rating</p>
-                                                            <p className="text-2xl font-black text-blue-600 mt-1">{(reviewHistory.reduce((acc, r) => acc + r.rating, 0) / reviewHistory.length).toFixed(1)}</p>
+                                                            {reviewHistory.length > 0 ? (
+                                                                <div className="flex gap-1 justify-center mt-2">
+                                                                    {(() => {
+                                                                        const avg = reviewHistory.reduce((acc, r) => acc + (Number(r.rating) || 0), 0) / reviewHistory.length;
+                                                                        const filledStars = isNaN(avg) ? 0 : Math.round(avg);
+                                                                        return [...Array(5)].map((_, i) => (
+                                                                            <Star
+                                                                                key={i}
+                                                                                size={20}
+                                                                                className={i < filledStars ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+                                                                            />
+                                                                        ));
+                                                                    })()}
+                                                                </div>
+                                                            ) : (
+                                                                <p className="text-2xl font-black text-gray-400 mt-1">--</p>
+                                                            )}
                                                         </div>
                                                     </div>
 

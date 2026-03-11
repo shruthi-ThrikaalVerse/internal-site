@@ -16,6 +16,7 @@ import { Task } from '../../types.ts';
 import { getTasks as getTasksFromAPI, addTaskReview as addTaskReviewAPI } from '../../api/tasks.ts';
 import { getTeams as getTeamsFromAPI } from '../../api/teams.ts';
 import { getAllEmployees as getEmployeesFromAPI } from '../../api/users.ts';
+import { getPerformanceDashboard } from '../../api/performance.ts';
 interface PerformanceData {
   id: string;
   name: string;
@@ -435,81 +436,107 @@ const EmployeePerformanceDashboard: React.FC = () => {
   const loadPerformanceData = () => {
     if (dashboardApiData) {
       // Use dashboard API data
-      const deptStats = (dashboardApiData.departmentWisePerformance || []).map((dept: any) => ({
-        name: dept.name || dept.department,
-        employees: dept.employees || dept.employeeCount || 0,
-        avgKPIScore: dept.avgKPIScore || dept.averageKPI || 75,
-        tasksCompleted: dept.tasksCompleted || dept.completedTasks || 0,
-        totalTasks: dept.totalTasks || 0,
-        attendance: dept.attendance || dept.averageAttendance || 85,
-        overallRating: dept.overallRating || dept.rating || 75
-      }));
+      // Handle both departmentPerformance and departmentWisePerformance keys
+      const deptData = dashboardApiData.departmentPerformance || dashboardApiData.departmentWisePerformance || [];
+      const deptStats = deptData.map((dept: any) => {
+        // Parse tasks format like "180/200"
+        let tasksCompleted = 0;
+        let totalTasks = 0;
+        if (typeof dept.tasks === 'string' && dept.tasks.includes('/')) {
+          const [completed, total] = dept.tasks.split('/').map(Number);
+          tasksCompleted = completed;
+          totalTasks = total;
+        } else {
+          tasksCompleted = dept.tasksCompleted || dept.completedTasks || 0;
+          totalTasks = dept.totalTasks || 0;
+        }
 
-      const employeeList = (dashboardApiData.employeePerformanceList || []).map((emp: any) => ({
+        return {
+          name: dept.name || dept.department,
+          employees: dept.employees || dept.employeeCount || 0,
+          avgKPIScore: dept.avgKpi || dept.avgKPIScore || dept.averageKPI || 0,
+          tasksCompleted: tasksCompleted,
+          totalTasks: totalTasks,
+          attendance: dept.attendance || dept.averageAttendance || 0,
+          overallRating: dept.avgRating || dept.overallRating || dept.rating || 0
+        };
+      });
+
+      // Handle both employeePerformance and employeePerformanceList keys
+      const empData = dashboardApiData.employeePerformance || dashboardApiData.employeePerformanceList || [];
+      const employeeList = empData.map((emp: any) => ({
         id: emp.id || emp.employeeId,
-        name: emp.name || emp.fullName || emp.employeeName || 'Unknown Employee',
-        role: emp.role || emp.designation || emp.position,
-        department: emp.department,
-        performanceScore: emp.performanceScore || emp.score || 3.5,
-        kpiScore: emp.kpiScore || emp.kpi || 75,
-        taskCompletion: emp.taskCompletion || emp.tasksCompleted || 80,
-        qualityScore: emp.qualityScore || emp.quality || 75,
-        attendance: emp.attendance || 85,
+        name: emp.name || emp.fullName || emp.employeeName || emp.employeeId,
+        role: emp.role || emp.designation || emp.position || 'Employee',
+        department: emp.department || 'N/A',
+        performanceScore: emp.performanceScore || emp.score || (emp.avgRating || 3.5),
+        kpiScore: emp.kpiPercentage || emp.kpiScore || emp.kpi || 0,
+        taskCompletion: emp.taskCompletion || emp.tasksCompleted || 0,
+        qualityScore: emp.qualityScore || emp.quality || 0,
+        attendance: emp.attendancePercentage || emp.attendance || 0,
         lastReview: emp.lastReview || emp.lastReviewDate || new Date().toISOString().split('T')[0],
         status: emp.status || 'meeting',
         trend: emp.trend || 'stable',
         email: emp.email || '',
         joinDate: emp.joinDate || emp.dateOfJoining || '',
         manager: emp.manager || emp.reportingManager || '',
-        projects: emp.projects || 0,
+        projects: emp.projects || emp.totalTasks || 0,
         achievements: emp.achievements || [],
         feedback: emp.feedback || [],
         goals: emp.goals || []
       }));
 
-      const topPerformers = (dashboardApiData.topPerformers || []).map((emp: any) => ({
-        id: emp.id || emp.employeeId,
-        name: emp.name || emp.fullName,
-        role: emp.role || emp.designation,
-        department: emp.department,
-        performanceScore: emp.performanceScore || emp.score || 4.5,
-        kpiScore: emp.kpiScore || emp.kpi || 85,
-        taskCompletion: emp.taskCompletion || 90,
-        qualityScore: emp.qualityScore || 85,
-        attendance: emp.attendance || 90,
-        lastReview: emp.lastReview,
-        status: emp.status || 'exceeding',
-        trend: emp.trend || 'up',
-        email: emp.email,
-        joinDate: emp.joinDate,
-        manager: emp.manager,
-        projects: emp.projects || 0,
-        achievements: emp.achievements || [],
-        feedback: emp.feedback || [],
-        goals: emp.goals || []
-      }));
+      const topPerfData = dashboardApiData.topPerformers || [];
+      const topPerformers = topPerfData.map((emp: any) => {
+        const perfScore = emp.avgRating || (emp.completedTasks / Math.max(emp.totalTasks, 1)) * 5 || 4.5;
+        return {
+          id: emp.id || emp.employeeId,
+          name: emp.name || emp.fullName || (apiEmployees.find((e: any) => e.id === emp.employeeId || e.employeeId === emp.employeeId)?.fullName || emp.employeeId),
+          role: emp.role || emp.designation || 'Employee',
+          department: emp.department || 'N/A',
+          performanceScore: perfScore,
+          kpiScore: emp.kpiPercentage || emp.kpi || 85,
+          taskCompletion: emp.completedTasks ? Math.round((emp.completedTasks / Math.max(emp.totalTasks, 1)) * 100) : 90,
+          qualityScore: emp.avgRating ? emp.avgRating * 20 : 85,
+          attendance: emp.attendance || 90,
+          lastReview: emp.lastReview,
+          status: emp.status || 'exceeding',
+          trend: emp.trend || 'up',
+          email: emp.email || '',
+          joinDate: emp.joinDate || '',
+          manager: emp.manager || '',
+          projects: emp.totalTasks || 0,
+          achievements: emp.achievements || [],
+          feedback: emp.feedback || [],
+          goals: emp.goals || []
+        };
+      });
 
-      const lowPerformers = (dashboardApiData.lowPerformers || []).map((emp: any) => ({
-        id: emp.id || emp.employeeId,
-        name: emp.name || emp.fullName,
-        role: emp.role || emp.designation,
-        department: emp.department,
-        performanceScore: emp.performanceScore || emp.score || 2.5,
-        kpiScore: emp.kpiScore || emp.kpi || 60,
-        taskCompletion: emp.taskCompletion || 65,
-        qualityScore: emp.qualityScore || 60,
-        attendance: emp.attendance || 75,
-        lastReview: emp.lastReview,
-        status: emp.status || 'needs-improvement',
-        trend: emp.trend || 'down',
-        email: emp.email,
-        joinDate: emp.joinDate,
-        manager: emp.manager,
-        projects: emp.projects || 0,
-        achievements: emp.achievements || [],
-        feedback: emp.feedback || [],
-        goals: emp.goals || []
-      }));
+      const lowPerfData = dashboardApiData.lowPerformers || [];
+      const lowPerformers = lowPerfData.map((emp: any) => {
+        const perfScore = emp.avgRating || (emp.completedTasks / Math.max(emp.totalTasks, 1)) * 5 || 2.5;
+        return {
+          id: emp.id || emp.employeeId,
+          name: emp.name || emp.fullName || (apiEmployees.find((e: any) => e.id === emp.employeeId || e.employeeId === emp.employeeId)?.fullName || emp.employeeId),
+          role: emp.role || emp.designation || 'Employee',
+          department: emp.department || 'N/A',
+          performanceScore: perfScore,
+          kpiScore: emp.kpiPercentage || emp.kpi || 60,
+          taskCompletion: emp.completedTasks ? Math.round((emp.completedTasks / Math.max(emp.totalTasks, 1)) * 100) : 65,
+          qualityScore: emp.avgRating ? emp.avgRating * 20 : 60,
+          attendance: emp.attendance || 75,
+          lastReview: emp.lastReview,
+          status: emp.status || 'needs-improvement',
+          trend: emp.trend || 'down',
+          email: emp.email || '',
+          joinDate: emp.joinDate || '',
+          manager: emp.manager || '',
+          projects: emp.totalTasks || 0,
+          achievements: emp.achievements || [],
+          feedback: emp.feedback || [],
+          goals: emp.goals || []
+        };
+      });
 
       setDepartmentStats(deptStats);
       setPerformanceData(employeeList);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { User as UserIcon, Star, Calendar, Loader, TrendingUp, BarChart3, Filter, ChevronDown, ChevronUp, Sparkles, Zap, ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, ComposedChart } from 'recharts';
-import { getEmployeeReviews } from '../../api/performance.ts';
+import { getMyReviews } from '../../api/performance.ts';
 
 // Types
 interface Review {
@@ -11,7 +11,7 @@ interface Review {
     strengths: string;
     areasOfImprovement: string;
     periodType: 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
-    rating: 'EXCELLENT' | 'GOOD' | 'AVERAGE' | 'NEEDS_IMPROVEMENT' | 'POOR';
+    rating: 'ONE' | 'TWO' | 'THREE' | 'FOUR' | 'FIVE';
     period: string;
     createdAt: string;
 }
@@ -21,22 +21,22 @@ interface Review {
 // Helper functions
 const getRatingNumber = (rating: string): number => {
     const ratingMap: Record<string, number> = {
-        'EXCELLENT': 4.5,
-        'GOOD': 4.0,
-        'AVERAGE': 3.0,
-        'NEEDS_IMPROVEMENT': 2.0,
-        'POOR': 1.0
+        'ONE': 1.0,
+        'TWO': 2.0,
+        'THREE': 3.0,
+        'FOUR': 4.0,
+        'FIVE': 5.0
     };
     return ratingMap[rating] || 3.0;
 };
 
 const getRatingColor = (rating: string): string => {
     const colorMap: Record<string, string> = {
-        'EXCELLENT': '#10B981',
-        'GOOD': '#3B82F6',
-        'AVERAGE': '#F59E0B',
-        'NEEDS_IMPROVEMENT': '#EF4444',
-        'POOR': '#6B7280'
+        'ONE': '#6B7280',      // POOR - gray
+        'TWO': '#EF4444',      // NEEDS_IMPROVEMENT - red
+        'THREE': '#F59E0B',    // AVERAGE - amber
+        'FOUR': '#3B82F6',     // GOOD - blue
+        'FIVE': '#10B981'      // EXCELLENT - green
     };
     return colorMap[rating] || '#3B82F6';
 };
@@ -169,132 +169,12 @@ const EmployeePerformanceDashboard: React.FC = () => {
         
         const fetchReviews = async () => {
             try {
-                // Try to fetch from API first
-                // const reviews = await getEmployeeReviews();
-                // setAllReviews(reviews);
-                
-                // Fallback to dummy data (no API available yet)
-                const dummyReviews: Review[] = [
-                    {
-                        id: 1,
-                        employeeId: 'EMP001',
-                        feedback: 'Excellent work this month. Consistently delivering high-quality results.',
-                        strengths: 'Strong technical skills, great communication, proactive problem solving',
-                        areasOfImprovement: 'Time management, documentation could be improved',
-                        periodType: 'MONTHLY',
-                        rating: 'EXCELLENT',
-                        period: 'March 2026',
-                        createdAt: '2026-03-09T10:00:00'
-                    },
-                    {
-                        id: 2,
-                        employeeId: 'EMP001',
-                        feedback: 'Good overall performance. Meet most quarterly goals.',
-                        strengths: 'Team player, reliable, good collaboration',
-                        areasOfImprovement: 'Leadership skills, presentation abilities',
-                        periodType: 'QUARTERLY',
-                        rating: 'GOOD',
-                        period: 'Q4 2025',
-                        createdAt: '2026-01-15T14:30:00'
-                    },
-                    {
-                        id: 3,
-                        employeeId: 'EMP001',
-                        feedback: 'Satisfactory annual performance. Met key objectives.',
-                        strengths: 'Stable performer, good attendance, follows guidelines',
-                        areasOfImprovement: 'Initiative, challenging projects, skill development',
-                        periodType: 'YEARLY',
-                        rating: 'GOOD',
-                        period: 'Year 2025',
-                        createdAt: '2025-12-20T09:15:00'
-                    },
-                    {
-                        id: 4,
-                        employeeId: 'EMP001',
-                        feedback: 'Outstanding performance. Delivered critical projects on time.',
-                        strengths: 'Excellent coding, takes initiative, mentors juniors',
-                        areasOfImprovement: 'Code documentation, peer review responsiveness',
-                        periodType: 'MONTHLY',
-                        rating: 'EXCELLENT',
-                        period: 'February 2026',
-                        createdAt: '2026-03-05T11:45:00'
-                    },
-                    {
-                        id: 5,
-                        employeeId: 'EMP001',
-                        feedback: 'Average performance this month. Some concerns need addressing.',
-                        strengths: 'Responsive to feedback, willing to learn',
-                        areasOfImprovement: 'Task completion rate, deadline adherence, focus',
-                        periodType: 'MONTHLY',
-                        rating: 'AVERAGE',
-                        period: 'January 2026',
-                        createdAt: '2026-02-01T13:20:00'
-                    }
-                ];
-                const sortedReviews = dummyReviews.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                const reviews = await getMyReviews();
+                const sortedReviews = reviews.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
                 setAllReviews(sortedReviews);
             } catch (error) {
                 console.error('Error loading reviews:', error);
-                // Fallback to dummy data on error
-                const dummyReviews: Review[] = [
-                    {
-                        id: 1,
-                        employeeId: 'EMP001',
-                        feedback: 'Excellent work this month. Consistently delivering high-quality results.',
-                        strengths: 'Strong technical skills, great communication, proactive problem solving',
-                        areasOfImprovement: 'Time management, documentation could be improved',
-                        periodType: 'MONTHLY',
-                        rating: 'EXCELLENT',
-                        period: 'March 2026',
-                        createdAt: '2026-03-09T10:00:00'
-                    },
-                    {
-                        id: 2,
-                        employeeId: 'EMP001',
-                        feedback: 'Good overall performance. Meet most quarterly goals.',
-                        strengths: 'Team player, reliable, good collaboration',
-                        areasOfImprovement: 'Leadership skills, presentation abilities',
-                        periodType: 'QUARTERLY',
-                        rating: 'GOOD',
-                        period: 'Q4 2025',
-                        createdAt: '2026-01-15T14:30:00'
-                    },
-                    {
-                        id: 3,
-                        employeeId: 'EMP001',
-                        feedback: 'Satisfactory annual performance. Met key objectives.',
-                        strengths: 'Stable performer, good attendance, follows guidelines',
-                        areasOfImprovement: 'Initiative, challenging projects, skill development',
-                        periodType: 'YEARLY',
-                        rating: 'GOOD',
-                        period: 'Year 2025',
-                        createdAt: '2025-12-20T09:15:00'
-                    },
-                    {
-                        id: 4,
-                        employeeId: 'EMP001',
-                        feedback: 'Outstanding performance. Delivered critical projects on time.',
-                        strengths: 'Excellent coding, takes initiative, mentors juniors',
-                        areasOfImprovement: 'Code documentation, peer review responsiveness',
-                        periodType: 'MONTHLY',
-                        rating: 'EXCELLENT',
-                        period: 'February 2026',
-                        createdAt: '2026-03-05T11:45:00'
-                    },
-                    {
-                        id: 5,
-                        employeeId: 'EMP001',
-                        feedback: 'Average performance this month. Some concerns need addressing.',
-                        strengths: 'Responsive to feedback, willing to learn',
-                        areasOfImprovement: 'Task completion rate, deadline adherence, focus',
-                        periodType: 'MONTHLY',
-                        rating: 'AVERAGE',
-                        period: 'January 2026',
-                        createdAt: '2026-02-01T13:20:00'
-                    }
-                ];
-                const sortedReviews = dummyReviews.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                setAllReviews(sortedReviews);
+                setAllReviews([]);
             } finally {
                 setTimeout(() => setIsLoading(false), 300);
             }
@@ -345,7 +225,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
         });
 
         // Convert to array sorted by rating
-        const ratingOrder = ['EXCELLENT', 'GOOD', 'AVERAGE', 'NEEDS_IMPROVEMENT', 'POOR'];
+        const ratingOrder = ['FIVE', 'FOUR', 'THREE', 'TWO', 'ONE'];
         return Object.entries(ratingGroups)
             .map(([rating, data]) => ({
                 name: rating,
