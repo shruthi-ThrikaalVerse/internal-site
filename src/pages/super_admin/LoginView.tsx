@@ -18,8 +18,7 @@ export const LoginView = () => {
 
   // Clear auth state when visiting this page
   useEffect(() => {
-    try { localStorage.removeItem('user'); } catch { }
-    try { localStorage.removeItem('authToken'); } catch { }
+    // No need to clear localStorage, authentication uses HttpOnly cookies
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

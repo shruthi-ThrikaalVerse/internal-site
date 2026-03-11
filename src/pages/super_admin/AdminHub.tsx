@@ -42,17 +42,17 @@ const EMPTY_ADMIN_STATE = {
 
 // Performance Review Type
 interface PerformanceReview {
-  id: string;
-  adminName: string;
-  adminId: string;
-  period: 'monthly' | 'quarterly' | 'yearly';
-  periodLabel: string;
-  rating: number;
-  feedback: string;
-  strengths: string;
-  improvements: string;
-  submittedDate: string;
-  submittedBy: string;
+    id: string;
+    adminName: string;
+    adminId: string;
+    period: 'monthly' | 'quarterly' | 'yearly';
+    periodLabel: string;
+    rating: number;
+    feedback: string;
+    strengths: string;
+    improvements: string;
+    submittedDate: string;
+    submittedBy: string;
 }
 
 export const AdminHub = () => {
@@ -314,9 +314,6 @@ export const AdminHub = () => {
 
                 const response = await fetch('http://localhost:8085/api/users/register', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
                     credentials: 'include',
                     body: formData,
                 });
@@ -338,11 +335,10 @@ export const AdminHub = () => {
                     try {
                         const refetchResponse = await fetch('http://localhost:8085/api/users/admin/employees', {
                             method: 'GET',
+                            credentials: 'include',
                             headers: {
-                                'Authorization': `Bearer ${token}`,
                                 'Content-Type': 'application/json',
                             },
-                            credentials: 'include',
                         });
 
                         const refetchData = await refetchResponse.json();
@@ -427,9 +423,6 @@ export const AdminHub = () => {
 
                 const updateResponse = await fetch(`http://localhost:8085/api/users/super_admin/update/${adminId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
                     credentials: 'include',
                     body: formData,
                 });
@@ -511,10 +504,10 @@ export const AdminHub = () => {
 
             const response = await fetch(`http://localhost:8085/api/users/admin/terminate/${empId}`, {
                 method: 'PUT',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include',
             });
 
             console.log('Terminate response status:', response.status);
@@ -674,48 +667,38 @@ export const AdminHub = () => {
 
     // Generate raw performance data with pie chart info
     const generatePerformanceData = () => {
-        if (!analytics || !analytics.leaveAnalyticsResponse || !analytics.attendanceAnayticsResponse) {
-            return {
-                attendance: [],
-                leave: [],
-                projects: []
-            };
-        }
+        // Generate random but consistent raw data
+        const seed = viewingUser?.id || 'default';
+        const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
-        // Handle attendance data
+        // Attendance data
+        const presentDays = 18 + (hash % 5);
+        const absentDays = 2 + (hash % 3);
+
+        // Leave data
+        const leavesTaken = 2 + (hash % 6);
+        const workingDays = 25;
+
+        // Projects data
+        const completedProjects = 5 + (hash % 5);
+        const pendingProjects = 2 + (hash % 3);
+
+        // Construct the data objects
         const attendanceData = [
-            { name: 'Present', value: analytics.attendanceAnayticsResponse.presentDays, fill: '#3b82f6' },
-            { name: 'Absent', value: analytics.attendanceAnayticsResponse.absentDays, fill: '#fbbf24' }
+            { name: 'Present', value: presentDays, fill: '#10b981' },
+            { name: 'Absent', value: absentDays, fill: '#ef4444' }
         ];
 
-        // Handle leave data
         const leaveData = [
-            { name: 'Leaves Taken', value: analytics.leaveAnalyticsResponse.leavesTaken, fill: '#ef4444' },
-            { name: 'Working Days', value: analytics.leaveAnalyticsResponse.workingDays - analytics.leaveAnalyticsResponse.leavesTaken, fill: '#10b981' }
+            { name: 'Leaves Taken', value: leavesTaken, fill: '#ef4444' },
+            { name: 'Working Days', value: workingDays, fill: '#10b981' }
         ];
 
-        // Handle project/task data - prefer taskAnalyticsResponse if available, otherwise use projectAnalyticsResponse
-        let projectsData: any[] = [];
-        
-        if (analytics.taskAnalyticsResponse) {
-            // If task data is available, use it
-            const pendingTasks = analytics.taskAnalyticsResponse.assigned - analytics.taskAnalyticsResponse.completed - analytics.taskAnalyticsResponse.inProgress;
-            projectsData = [
-                { name: 'Completed', value: analytics.taskAnalyticsResponse.completed, fill: '#10b981' },
-                { name: 'In Progress', value: analytics.taskAnalyticsResponse.inProgress, fill: '#3b82f6' },
-                { name: 'Pending', value: pendingTasks, fill: '#ef4444' }
-            ];
-        } else if (analytics.projectAnalyticsResponse) {
-            // If task data is not available, use project data
-            projectsData = [
-                { name: 'Completed', value: analytics.projectAnalyticsResponse.completed || 0, fill: '#10b981' },
-                { name: 'In Progress', value: analytics.projectAnalyticsResponse.inProgress || 0, fill: '#3b82f6' },
-                { name: 'Planning', value: analytics.projectAnalyticsResponse.planning || 0, fill: '#f59e0b' },
-                { name: 'New', value: analytics.projectAnalyticsResponse.newStatus || 0, fill: '#8b5cf6' },
-                { name: 'Deadline', value: analytics.projectAnalyticsResponse.deadline || 0, fill: '#ec4899' }
-            ];
-        }
-        
+        const projectsData = [
+            { name: 'Completed', value: completedProjects, fill: '#10b981' },
+            { name: 'Pending', value: pendingProjects, fill: '#f59e0b' }
+        ];
+
         return {
             attendance: attendanceData,
             leave: leaveData,
@@ -808,7 +791,7 @@ export const AdminHub = () => {
 
     const handlePerformanceReviewSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!performanceFormData.rating || !performanceFormData.feedback) {
             alert('Please fill in rating and feedback');
             return;
@@ -821,11 +804,11 @@ export const AdminHub = () => {
         }
 
         try {
-            const periodString = performanceFormPeriod === 'monthly' 
+            const periodString = performanceFormPeriod === 'monthly'
                 ? monthNames[parseInt(performanceFormFilter) - 1] + ' ' + performanceViewYear
                 : performanceFormPeriod === 'quarterly'
-                ? `Q${performanceFormFilter} ${performanceViewYear}`
-                : `Year ${performanceFormFilter}`;
+                    ? `Q${performanceFormFilter} ${performanceViewYear}`
+                    : `Year ${performanceFormFilter}`;
 
             const periodTypeMap: Record<'monthly' | 'quarterly' | 'yearly', 'MONTHLY' | 'QUARTERLY' | 'YEARLY'> = {
                 'monthly': 'MONTHLY',
@@ -860,7 +843,7 @@ export const AdminHub = () => {
             };
 
             setReviewHistory([newReview, ...reviewHistory]);
-            
+
             // Reset form
             setPerformanceFormData({
                 rating: '',
@@ -868,7 +851,7 @@ export const AdminHub = () => {
                 strengths: '',
                 improvements: ''
             });
-            
+
             alert('Performance review submitted successfully!');
         } catch (error) {
             console.error('Error submitting review:', error);
@@ -1001,13 +984,7 @@ export const AdminHub = () => {
                                         <div className="flex items-center justify-end gap-2">
                                             {isSuperAdmin && a.id !== currentUser?.id && a.status === 'active' && (
                                                 <>
-                                                    <button
-                                                        onClick={() => setConfirmDemoteId(a.id)}
-                                                        title="Demote to Employee Tier"
-                                                        className="p-2.5 bg-blue-600/10 hover:bg-blue-600 text-blue-600 hover:text-white rounded-xl transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                                                    >
-                                                        <TrendingDown size={18} />
-                                                    </button>
+
                                                     <button
                                                         onClick={() => setConfirmTerminateId(a.id)}
                                                         title="Directly Terminate Admin Access"
@@ -1064,22 +1041,20 @@ export const AdminHub = () => {
                     <div className="flex mb-6 border-b border-gray-200">
                         <button
                             onClick={() => setActiveTab('personal')}
-                            className={`flex-1 px-6 py-4 font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                                activeTab === 'personal'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                            }`}
+                            className={`flex-1 px-6 py-4 font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeTab === 'personal'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                                }`}
                         >
                             <UserPlus size={16} />
                             Personal Details
                         </button>
                         <button
                             onClick={() => setActiveTab('performance')}
-                            className={`flex-1 px-6 py-4 font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                                activeTab === 'performance'
-                                    ? 'bg-emerald-600 text-white'
-                                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                            }`}
+                            className={`flex-1 px-6 py-4 font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeTab === 'performance'
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                                }`}
                         >
                             <BarChart3 size={16} />
                             Performance Metrics
@@ -1273,11 +1248,10 @@ export const AdminHub = () => {
                                                     <button
                                                         key={period}
                                                         onClick={() => setPerformanceViewPeriod(period)}
-                                                        className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
-                                                            performanceViewPeriod === period
-                                                                ? 'bg-indigo-600 text-white shadow-lg'
-                                                                : 'bg-transparent text-slate-600 hover:text-black'
-                                                        }`}
+                                                        className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${performanceViewPeriod === period
+                                                            ? 'bg-indigo-600 text-white shadow-lg'
+                                                            : 'bg-transparent text-slate-600 hover:text-black'
+                                                            }`}
                                                     >
                                                         {period === 'monthly' ? 'Monthly' : period === 'quarterly' ? 'Quarterly' : 'Yearly'}
                                                     </button>
@@ -1289,6 +1263,7 @@ export const AdminHub = () => {
                                             <label className="text-xs font-black text-black uppercase tracking-widest mb-1 block">Year</label>
                                             <input
                                                 type="number"
+                                                title="Select performance review year"
                                                 value={performanceViewYear}
                                                 onChange={(e) => setPerformanceViewYear(parseInt(e.target.value, 10))}
                                                 className="w-24 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-sm text-black focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
@@ -1298,6 +1273,7 @@ export const AdminHub = () => {
                                         <div className="flex-1 max-w-xs">
                                             <label className="text-xs font-black text-black uppercase tracking-widest mb-1 block">Select Period</label>
                                             <select
+                                                title="Select performance review period"
                                                 value={performanceViewFilter}
                                                 onChange={(e) => setPerformanceViewFilter(e.target.value)}
                                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-sm text-black focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
@@ -1510,11 +1486,10 @@ export const AdminHub = () => {
                                                                 key={period}
                                                                 type="button"
                                                                 onClick={() => setPerformanceFormPeriod(period)}
-                                                                className={`flex-1 px-3 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
-                                                                    performanceFormPeriod === period
-                                                                        ? 'bg-indigo-600 text-white shadow-lg'
-                                                                        : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
-                                                                }`}
+                                                                className={`flex-1 px-3 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${performanceFormPeriod === period
+                                                                    ? 'bg-indigo-600 text-white shadow-lg'
+                                                                    : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+                                                                    }`}
                                                             >
                                                                 {period === 'monthly' ? 'Monthly' : period === 'quarterly' ? 'Quarterly' : 'Yearly'}
                                                             </button>
@@ -1525,6 +1500,7 @@ export const AdminHub = () => {
                                                 <div>
                                                     <label className="text-xs font-black text-black uppercase tracking-widest mb-3 block">Select Period</label>
                                                     <select
+                                                        title="Select performance review period"
                                                         value={performanceFormFilter}
                                                         onChange={(e) => setPerformanceFormFilter(e.target.value)}
                                                         className="w-full px-4 py-3 bg-white border-2 border-slate-300 rounded-xl font-semibold text-sm text-black focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
@@ -1540,6 +1516,7 @@ export const AdminHub = () => {
                                                 <div>
                                                     <label className="text-xs font-black text-black uppercase tracking-widest mb-3 block">Rating</label>
                                                     <select
+                                                        title="Select performance rating"
                                                         value={performanceFormData.rating}
                                                         onChange={(e) => setPerformanceFormData({ ...performanceFormData, rating: e.target.value })}
                                                         className="w-full px-4 py-3 bg-white border-2 border-slate-300 rounded-xl font-medium text-sm text-black focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
@@ -1651,41 +1628,37 @@ export const AdminHub = () => {
                                                         <div className="flex gap-2 flex-wrap">
                                                             <button
                                                                 onClick={() => setReviewHistoryPeriodFilter('all')}
-                                                                className={`px-2 py-1 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
-                                                                    reviewHistoryPeriodFilter === 'all'
-                                                                        ? 'bg-indigo-600 text-white shadow-lg'
-                                                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                                                }`}
+                                                                className={`px-2 py-1 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${reviewHistoryPeriodFilter === 'all'
+                                                                    ? 'bg-indigo-600 text-white shadow-lg'
+                                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                                    }`}
                                                             >
                                                                 All
                                                             </button>
                                                             <button
                                                                 onClick={() => setReviewHistoryPeriodFilter('monthly')}
-                                                                className={`px-2 py-1 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
-                                                                    reviewHistoryPeriodFilter === 'monthly'
-                                                                        ? 'bg-blue-600 text-white shadow-lg'
-                                                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                                                }`}
+                                                                className={`px-2 py-1 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${reviewHistoryPeriodFilter === 'monthly'
+                                                                    ? 'bg-blue-600 text-white shadow-lg'
+                                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                                    }`}
                                                             >
                                                                 Monthly
                                                             </button>
                                                             <button
                                                                 onClick={() => setReviewHistoryPeriodFilter('quarterly')}
-                                                                className={`px-2 py-1 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
-                                                                    reviewHistoryPeriodFilter === 'quarterly'
-                                                                        ? 'bg-purple-600 text-white shadow-lg'
-                                                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                                                }`}
+                                                                className={`px-2 py-1 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${reviewHistoryPeriodFilter === 'quarterly'
+                                                                    ? 'bg-purple-600 text-white shadow-lg'
+                                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                                    }`}
                                                             >
                                                                 Quarterly
                                                             </button>
                                                             <button
                                                                 onClick={() => setReviewHistoryPeriodFilter('yearly')}
-                                                                className={`px-2 py-1 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
-                                                                    reviewHistoryPeriodFilter === 'yearly'
-                                                                        ? 'bg-green-600 text-white shadow-lg'
-                                                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                                                }`}
+                                                                className={`px-2 py-1 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${reviewHistoryPeriodFilter === 'yearly'
+                                                                    ? 'bg-green-600 text-white shadow-lg'
+                                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                                    }`}
                                                             >
                                                                 Yearly
                                                             </button>
@@ -1696,8 +1669,8 @@ export const AdminHub = () => {
                                                     <div className="space-y-2">
                                                         {reviewHistory
                                                             .filter((review) => {
-                                                                const matchesSearch = review.periodLabel.toLowerCase().includes(searchReview.toLowerCase()) || 
-                                                                                    review.feedback.toLowerCase().includes(searchReview.toLowerCase());
+                                                                const matchesSearch = review.periodLabel.toLowerCase().includes(searchReview.toLowerCase()) ||
+                                                                    review.feedback.toLowerCase().includes(searchReview.toLowerCase());
                                                                 const matchesPeriod = reviewHistoryPeriodFilter === 'all' || review.period === reviewHistoryPeriodFilter;
                                                                 return matchesSearch && matchesPeriod;
                                                             })
@@ -1861,6 +1834,7 @@ export const AdminHub = () => {
                                 ref={fileInputRef}
                                 type="file"
                                 accept="image/*"
+                                title="Upload profile image"
                                 onChange={handleImageSelect}
                                 className="hidden"
                             />
@@ -1938,6 +1912,7 @@ export const AdminHub = () => {
                                     ref={fileInputRef}
                                     type="file"
                                     accept="image/*"
+                                    title="Upload profile photo"
                                     onChange={(e) => {
                                         const file = e.target.files?.[0];
                                         if (file) {

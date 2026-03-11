@@ -10,6 +10,11 @@ export interface User {
   username?: string;
   role: 'admin' | 'manager' | 'auditor' | 'employee' | 'super_admin';
   avatar: string;
+  performance?: {
+    projectsCompleted: number;
+    averageRating: number;
+    attendance: string;
+  };
 }
 
 // Normalize role strings coming from backend to our union type

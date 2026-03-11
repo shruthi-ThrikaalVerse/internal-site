@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getTasks as apiGetTasks, getMyTasks as apiGetMyTasks, getSelfTasks as apiGetSelfTasks, createSelfTask, deleteSelfTask } from '../../api/tasks.ts';
+import { getTasks as apiGetTasks, getMyTasks as apiGetMyTasks, getSelfTasks as apiGetSelfTasks, createSelfTask, deleteSelfTask, updateTask as apiUpdateTask } from '../../api/tasks.ts';
 import {
   CheckCircle, Clock, MoreVertical, Plus, Filter, Grid, List,
   X, Trash2, Loader2, AlertCircle, User, Tag,
@@ -476,13 +476,56 @@ const Tasks: React.FC = () => {
     })();
   };
 
-  const updateTaskStatus = (taskId: string, newStatus: Task['status']) => {
-    setTasks(prev => prev.map(task =>
-      task.id === taskId ? { ...task, status: newStatus } : task
-    ));
-    if (selectedTask?.id === taskId) {
-      setSelectedTask(prev => prev ? { ...prev, status: newStatus } : null);
+  const updateTaskStatus = async (taskId: string, newStatus: Task['status']) => {
+    try {
+      // Map local status to backend status
+      const statusMap: { [key: string]: string } = {
+        'todo': 'PENDING',
+        'in_progress': 'IN_PROGRESS',
+        'review': 'REVIEW',
+        'completed': 'COMPLETED'
+      };
+      
+      const backendStatus = statusMap[newStatus] || 'PENDING';
+      
+      // Call API to update status
+      const response = await apiUpdateTask(taskId, { status: backendStatus });
+      
+      if (response) {
+        // Update local state
+        setTasks(prev => prev.map(task =>
+          task.id === taskId ? { ...task, status: newStatus } : task
+        ));
+        if (selectedTask?.id === taskId) {
+          setSelectedTask(prev => prev ? { ...prev, status: newStatus } : null);
+        }
+      }
+    } catch (err) {
+      console.error('Error updating task status:', err);
+      alert('Failed to update task status. Please try again.');
     }
+  };
+
+  // Helper function to determine which status buttons should be enabled
+  const getEnabledStatusButtons = (currentStatus: Task['status']) => {
+    const status = currentStatus.toUpperCase();
+    return {
+      assigned: status === 'TODO',
+      inProgress: status === 'TODO' || status === 'ASSIGNED',
+      completed: status === 'IN_PROGRESS' || status === 'REVIEW',
+      breached: false // Breached is not clickable
+    };
+  };
+
+  // Helper function to determine active (current) status
+  const getActiveStatus = (status: Task['status']) => {
+    const statusMap: { [key: string]: string } = {
+      'todo': 'ASSIGNED',
+      'in_progress': 'IN_PROGRESS',
+      'review': 'REVIEW',
+      'completed': 'COMPLETED'
+    };
+    return statusMap[status] || 'PENDING';
   };
 
   const isTaskBreached = (task: Task) => {
@@ -1486,13 +1529,66 @@ const Tasks: React.FC = () => {
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                          <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
-                            <div className="text-sm text-gray-600 flex items-center gap-1 mb-1">
+                          <div className="col-span-2 md:col-span-4 bg-gray-50 p-4 md:p-5 rounded-lg">
+                            <div className="text-sm text-gray-600 flex items-center gap-1 mb-3">
                               <CheckCircle size={14} className="text-green-500" />
-                              Status
+                              Task Status
                             </div>
-                            <div className="font-medium text-gray-900 mt-1 text-sm md:text-base capitalize flex items-center gap-1">
-                              {selectedTask.status === 'todo' ? 'To Do' : selectedTask.status.replace('_', ' ')}
+                            <div className="flex flex-wrap gap-2">
+                              {/* Assigned Button */}
+                              <button
+                                onClick={() => updateTaskStatus(selectedTask.id, 'todo')}
+                                disabled={!getEnabledStatusButtons(selectedTask.status).assigned && getActiveStatus(selectedTask.status) !== 'ASSIGNED'}
+                                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                                  getActiveStatus(selectedTask.status) === 'ASSIGNED'
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : getEnabledStatusButtons(selectedTask.status).assigned
+                                      ? 'bg-gray-200 text-gray-800 hover:bg-gray-300 cursor-pointer'
+                                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                }`}
+                              >
+                                Assigned
+                              </button>
+
+                              {/* In Progress Button */}
+                              <button
+                                onClick={() => updateTaskStatus(selectedTask.id, 'in_progress')}
+                                disabled={!getEnabledStatusButtons(selectedTask.status).inProgress && getActiveStatus(selectedTask.status) !== 'IN_PROGRESS'}
+                                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                                  getActiveStatus(selectedTask.status) === 'IN_PROGRESS'
+                                    ? 'bg-orange-600 text-white shadow-md'
+                                    : getEnabledStatusButtons(selectedTask.status).inProgress
+                                      ? 'bg-gray-200 text-gray-800 hover:bg-gray-300 cursor-pointer'
+                                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                }`}
+                              >
+                                In Progress
+                              </button>
+
+                              {/* Completed Button */}
+                              <button
+                                onClick={() => updateTaskStatus(selectedTask.id, 'completed')}
+                                disabled={!getEnabledStatusButtons(selectedTask.status).completed && getActiveStatus(selectedTask.status) !== 'COMPLETED'}
+                                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                                  getActiveStatus(selectedTask.status) === 'COMPLETED'
+                                    ? 'bg-green-600 text-white shadow-md'
+                                    : getEnabledStatusButtons(selectedTask.status).completed
+                                      ? 'bg-gray-200 text-gray-800 hover:bg-gray-300 cursor-pointer'
+                                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                }`}
+                              >
+                                Completed
+                              </button>
+
+                              {/* Breached Button - Shows if task is breached */}
+                              {isTaskBreached(selectedTask) && (
+                                <button
+                                  disabled
+                                  className="px-4 py-2 rounded-lg font-medium text-sm bg-red-600 text-white shadow-md cursor-not-allowed"
+                                >
+                                  Breached
+                                </button>
+                              )}
                             </div>
                           </div>
                           <div className="bg-gray-50 p-3 md:p-4 rounded-lg">

@@ -310,9 +310,6 @@ export const EmployeeHub = () => {
       const updateResponse = await fetch(`http://localhost:8085/api/users/super_admin/update/${employeeId}`, {
         method: 'PUT',
         credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
         body: formData,
       });
 
@@ -409,7 +406,7 @@ export const EmployeeHub = () => {
       // Try with query parameter first
       let response = await fetch(`http://localhost:8085/api/users/super_admin/promote/${employeeId}?roleName=${selectedAdminRole}`, {
         method: 'POST',
-        credentials: 'include', // Send HttpOnly cookie
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -485,7 +482,7 @@ export const EmployeeHub = () => {
 
       const response = await fetch(`http://localhost:8085/api/users/admin/terminate/${empId}`, {
         method: 'PUT',
-        credentials: 'include', // Send HttpOnly cookie
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
