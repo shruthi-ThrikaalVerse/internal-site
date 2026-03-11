@@ -53,6 +53,7 @@ import AdminNotificationsAdmin from './pages/admin/NotificationsAdmin.tsx';
 import AdminPayrollProcessing from './pages/admin/PayrollProcessing.tsx';
 import AdminPayslipsAdmin from './pages/admin/PayslipsAdmin.tsx';
 import AdminPerformanceManagement from './pages/admin/PerformanceManagement.tsx';
+import AdminPerformanceReviews from './pages/admin/AdminPerformanceReviews.tsx';
 import AdminProfile from './pages/admin/Profile.tsx';
 import AdminRequests from './pages/admin/Requests.tsx';
 import AdminTasks from './pages/admin/Tasks.tsx';
@@ -397,6 +398,12 @@ const AdminPerformanceManagementPage = () => (
   </AdminPageWithLogout>
 );
 
+const AdminPerformanceReviewsPage = () => (
+  <AdminPageWithLogout>
+    <AdminPerformanceReviews />
+  </AdminPageWithLogout>
+);
+
 const AdminProfilePage = () => (
   <AdminPageWithLogout>
     <AdminProfile />
@@ -552,6 +559,7 @@ root.render(
               <Route path="/admin/payroll-processing" element={<AdminPayrollProcessingPage />} />
               <Route path="/admin/payslips" element={<AdminPayslipsPage />} />
               <Route path="/admin/performance-management" element={<AdminPerformanceManagementPage />} />
+              <Route path="/admin/performance-reviews" element={<AdminPerformanceReviewsPage />} />
               <Route path="/admin/profile" element={<AdminProfilePage />} />
               <Route path="/admin/requests" element={<AdminRequestsPage />} />
               <Route path="/admin/tasks" element={<AdminTasksPage />} />

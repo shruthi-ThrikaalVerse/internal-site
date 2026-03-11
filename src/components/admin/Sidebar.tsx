@@ -40,6 +40,7 @@ const Sidebar: React.FC<{ isOpen: boolean; setOpen: (val: boolean) => void }> = 
       'admin/payroll': '/admin/payroll-processing',
       'admin/payslips': '/admin/payslips',
       'admin/performance': '/admin/performance-management',
+      'admin/performance-reviews': '/admin/performance-reviews',
       'admin/audit-logs': '/admin/audit-logs',
       'admin/profile': '/admin/profile',
       'admin/resignation': '/admin/resignation',
