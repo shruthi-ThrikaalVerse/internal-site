@@ -404,7 +404,7 @@ const AdminAttendance: React.FC = () => {
 
     // Try to persist to backend first. On failure, fall back to localStorage so app remains functional offline.
     try {
-      const resp = await fetch('http://localhost:8085/api/admin_attend/check-in', {
+      const resp = await fetch('http://localhost:8085/api/employee_attend/check-in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -497,7 +497,7 @@ const AdminAttendance: React.FC = () => {
 
       // Try to call server checkout endpoint first
       try {
-        const resp = await fetch('http://localhost:8085/api/admin_attend/check-out', {
+        const resp = await fetch('http://localhost:8085/api/employee_attend/check-out', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
