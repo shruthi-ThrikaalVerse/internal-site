@@ -24,13 +24,67 @@ interface PendingEmployee {
   createdAt: string;
 }
 
+interface LeaveRequest {
+  leaveId: number;
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  department: string;
+  profileImage: string | null;
+  category: string;
+  startDate: string;
+  endDate: string;
+  duration: string;
+  reason: string;
+  status: string;
+  appliedDate: string;
+}
+
+interface TerminationRequest {
+  requestId: number;
+  employeeId: string;
+  employeeName: string;
+  reason: string;
+  status: string;
+  createdAt: string;
+  requestedBy: string;
+  requestedByName: string;
+}
+
+interface ResignationRequest {
+  id: number;
+  employeeId: string;
+  resignationDate: string;
+  lastWorkingDate: string;
+  approvedBy: string;
+  approvedByName: string;
+  approvedByEmail: string;
+  noticePeriod: string;
+  reason: string;
+  detailedReason: string;
+  contactEmail: string;
+  contactPhone: string;
+  status: string;
+  createdAt: string;
+}
+
 export const AdminRequests = () => {
   const { requests, processRequest, currentUser, addEmployee, employees } = useApp();
+  const [activeSection, setActiveSection] = useState<'leave' | 'employee' | 'termination' | 'resignation'>('leave');
   const [viewingRequest, setViewingRequest] = useState<AdminRequest | null>(null);
   const [viewingPendingEmployee, setViewingPendingEmployee] = useState<PendingEmployee | null>(null);
+  const [viewingLeaveRequest, setViewingLeaveRequest] = useState<LeaveRequest | null>(null);
+  const [viewingTerminationRequest, setViewingTerminationRequest] = useState<TerminationRequest | null>(null);
+  const [viewingResignationRequest, setViewingResignationRequest] = useState<ResignationRequest | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [pendingEmployees, setPendingEmployees] = useState<PendingEmployee[]>([]);
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [terminationRequests, setTerminationRequests] = useState<TerminationRequest[]>([]);
+  const [resignationRequests, setResignationRequests] = useState<ResignationRequest[]>([]);
   const [isLoadingPending, setIsLoadingPending] = useState(false);
+  const [isLoadingLeave, setIsLoadingLeave] = useState(false);
+  const [isLoadingTermination, setIsLoadingTermination] = useState(false);
+  const [isLoadingResignation, setIsLoadingResignation] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [newEmployeeForm, setNewEmployeeForm] = useState({
     firstName: '',
@@ -42,18 +96,79 @@ export const AdminRequests = () => {
 
   const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
 
-  // State for backend termination requests
-  const [terminationRequests, setTerminationRequests] = useState<AdminRequest[]>([]);
-  const [isLoadingTerminationRequests, setIsLoadingTerminationRequests] = useState(false);
+  // Handler for leave request approval/rejection
+  const handleLeaveRequestAction = async (leave: LeaveRequest, status: 'Approved' | 'Rejected') => {
+    try {
+      const statusParam = status === 'Approved' ? 'APPROVED' : 'REJECTED';
+      const response = await fetch(
+        `http://localhost:8085/leave-requests/update-status/${leave.leaveId}?status=${statusParam}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        }
+      );
 
-  // State for resignation requests
-  const [resignationRequests, setResignationRequests] = useState<AdminRequest[]>([]);
-  const [isLoadingResignations, setIsLoadingResignations] = useState(false);
+      if (response.ok) {
+        setLeaveRequests((prev) => prev.filter((req) => req.leaveId !== leave.leaveId));
+        setViewingLeaveRequest(null);
+        alert(`Leave request ${status === 'Approved' ? 'approved' : 'rejected'} successfully!`);
+      } else {
+        alert('Failed to update leave request status');
+      }
+    } catch (err) {
+      console.error('Error updating leave request:', err);
+      alert('Error updating leave request status');
+    }
+  };
+
+  // Handler for termination request approval/rejection
+  const handleTerminationRequestAction = async (termination: TerminationRequest, status: 'Approved' | 'Rejected') => {
+    try {
+      const endpoint = status === 'Approved'
+        ? `http://localhost:8085/api/admin-hub/approve/${termination.requestId}`
+        : `http://localhost:8085/api/admin-hub/reject/${termination.requestId}`;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        setTerminationRequests((prev) => prev.filter((req) => req.requestId !== termination.requestId));
+        setViewingTerminationRequest(null);
+        alert(`Termination request ${status === 'Approved' ? 'approved' : 'rejected'} successfully!`);
+      } else {
+        alert('Failed to update termination request status');
+      }
+    } catch (err) {
+      console.error('Error updating termination request:', err);
+      alert('Error updating termination request status');
+    }
+  };
+
+  // Handler for resignation request approval/rejection
+  const handleResignationRequestAction = async (resignation: ResignationRequest, status: 'Approved' | 'Rejected') => {
+    try {
+      if (status === 'Approved') {
+        await approveResignation(resignation.id);
+      } else {
+        await rejectResignation(resignation.id);
+      }
+      setResignationRequests((prev) => prev.filter((req) => req.id !== resignation.id));
+      setViewingResignationRequest(null);
+      alert(`Resignation request ${status === 'Approved' ? 'approved' : 'rejected'} successfully!`);
+    } catch (err) {
+      console.error('Error updating resignation request:', err);
+      alert('Error updating resignation request status');
+    }
+  };
 
   // Fetch termination requests from backend
   useEffect(() => {
     const fetchTerminationRequests = async () => {
-      setIsLoadingTerminationRequests(true);
+      setIsLoadingTermination(true);
       try {
         const response = await fetch('http://localhost:8085/api/admin-hub/termination-requests', {
           method: 'GET',
@@ -67,36 +182,13 @@ export const AdminRequests = () => {
         console.log('Termination Requests Response:', data);
 
         if (response.ok) {
-          // Handle both single object and array responses
-          let fetchedRequests: AdminRequest[] = [];
+          let fetchedRequests: TerminationRequest[] = [];
           if (Array.isArray(data)) {
-            fetchedRequests = data.map((req: any) => ({
-              id: req.requestId?.toString() || `req-${Date.now()}`,
-              type: 'Termination' as const,
-              requestedBy: req.requestedByName || `Employee ${req.requestedBy}` || 'System',
-              requesterId: req.requestedBy || 'sys',
-              targetId: req.employeeId || req.targetId || '',
-              date: new Date(req.createdAt).toLocaleDateString() || new Date().toISOString().split('T')[0],
-              status: req.status === 'PENDING' ? 'Pending' : req.status === 'APPROVED' ? 'Approved' : 'Rejected',
-              details: req.reason || req.details || '',
-              dbId: req.requestId // Store the numeric requestId from backend
-            }));
+            fetchedRequests = data;
           } else if (data && typeof data === 'object') {
-            fetchedRequests = [{
-              id: data.requestId?.toString() || `req-${Date.now()}`,
-              type: 'Termination' as const,
-              requestedBy: data.requestedByName || `Employee ${data.requestedBy}` || 'System',
-              requesterId: data.requestedBy || 'sys',
-              targetId: data.employeeId || data.targetId || '',
-              date: new Date(data.createdAt).toLocaleDateString() || new Date().toISOString().split('T')[0],
-              status: data.status === 'PENDING' ? 'Pending' : data.status === 'APPROVED' ? 'Approved' : 'Rejected',
-              details: data.reason || data.details || '',
-              dbId: data.requestId // Store the numeric requestId from backend
-            }];
+            fetchedRequests = [data];
           }
-
           setTerminationRequests(fetchedRequests);
-          console.log('Mapped termination requests:', fetchedRequests);
         } else {
           console.error('Failed to fetch termination requests:', data);
           setTerminationRequests([]);
@@ -105,13 +197,12 @@ export const AdminRequests = () => {
         console.error('Error fetching termination requests:', err);
         setTerminationRequests([]);
       } finally {
-        setIsLoadingTerminationRequests(false);
+        setIsLoadingTermination(false);
       }
     };
 
     if (isSuperAdmin) {
       fetchTerminationRequests();
-      // Load once on mount only
     }
   }, [isSuperAdmin]);
 
@@ -167,51 +258,28 @@ export const AdminRequests = () => {
   // Fetch resignation requests for Super Admin
   useEffect(() => {
     const fetchSuperAdminResignations = async () => {
-      setIsLoadingResignations(true);
+      setIsLoadingResignation(true);
       try {
         const response = await getPendingResignations();
         console.log('Super Admin Resignation Requests:', response);
-
-        const mappedRequests = response.map((req: any) => {
-          // Normalize status from backend (PENDING, APPROVED, REJECTED) to title case
-          let normalizedStatus: 'Pending' | 'Approved' | 'Rejected' = 'Pending';
-          if (req.status === 'APPROVED' || req.status === 'Approved') {
-            normalizedStatus = 'Approved';
-          } else if (req.status === 'REJECTED' || req.status === 'Rejected') {
-            normalizedStatus = 'Rejected';
-          }
-
-          return {
-            id: req.id?.toString() || `resign-${Date.now()}`,
-            type: 'Resignation' as const,
-            requestedBy: req.employeeName || req.approvedByName || `Employee ${req.employeeId}`,
-            requesterId: req.employeeId,
-            targetId: req.employeeId,
-            date: new Date(req.createdAt).toLocaleDateString() || new Date().toLocaleDateString(),
-            status: normalizedStatus,
-            details: req.reason || req.details,
-            dbId: req.id,
-          };
-        });
-        setResignationRequests(mappedRequests);
-        console.log('Mapped resignation requests:', mappedRequests);
+        setResignationRequests(response);
       } catch (err) {
         console.error('Error fetching super admin resignation requests:', err);
         setResignationRequests([]);
       } finally {
-        setIsLoadingResignations(false);
+        setIsLoadingResignation(false);
       }
     };
 
     if (isSuperAdmin) {
       fetchSuperAdminResignations();
-      // Load once on mount only
     }
   }, [isSuperAdmin]);
 
+  // Fetch leave requests from backend
   useEffect(() => {
-    const fetchAdminLeaveRequests = async () => {
-      setIsLoadingTerminationRequests(true);
+    const fetchLeaveRequests = async () => {
+      setIsLoadingLeave(true);
       try {
         const response = await fetch('http://localhost:8085/leave-requests/pending', {
           method: 'GET',
@@ -219,168 +287,33 @@ export const AdminRequests = () => {
         });
 
         if (!response.ok) {
-          console.error(`Failed to fetch admin leave requests: ${response.status} ${response.statusText}`);
+          console.error(`Failed to fetch leave requests: ${response.status} ${response.statusText}`);
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('Admin Leave Requests Data:', data);
+        console.log('Leave Requests Data:', data);
 
         if (Array.isArray(data)) {
-          const mappedRequests = data.map((req: any, idx: number) => {
-            // Log actual response structure to debug ID field
-            console.log('Leave request item:', req);
-
-            // Try to extract numeric ID from potential field names
-            const numericId = req.id || req.requestId || req.leaveRequestId || req.leaveId;
-
-            return {
-              id: numericId?.toString() || `leave-${Date.now()}-${idx}`,
-              type: 'Admin Leave',
-              requestedBy: req.applicant || 'Admin',
-              requesterId: req.applicantId,
-              targetId: req.applicantId,
-              date: new Date(req.createdAt).toLocaleDateString() || new Date().toLocaleDateString(),
-              status: req.status || 'Pending',
-              details: req.reason || '',
-              dbId: numericId, // Store the actual numeric ID from backend
-            };
-          });
-          setTerminationRequests((prev) => [...prev, ...mappedRequests]);
+          setLeaveRequests(data);
+        } else if (data && typeof data === 'object') {
+          setLeaveRequests([data]);
         } else {
           console.error('Unexpected response shape:', data);
+          setLeaveRequests([]);
         }
       } catch (err) {
-        console.error('Error fetching admin leave requests:', err);
+        console.error('Error fetching leave requests:', err);
+        setLeaveRequests([]);
       } finally {
-        setIsLoadingTerminationRequests(false);
+        setIsLoadingLeave(false);
       }
     };
 
     if (isSuperAdmin) {
-      fetchAdminLeaveRequests();
+      fetchLeaveRequests();
     }
   }, [isSuperAdmin]);
-
-  const filteredRequests = useMemo(() => {
-    // Merge termination and resignation requests with local requests
-    const allRequests = [...terminationRequests, ...resignationRequests, ...requests];
-
-    // Remove duplicates by id
-    const uniqueRequests = Array.from(
-      new Map(allRequests.map(req => [req.id, req])).values()
-    );
-
-    return uniqueRequests.sort((a, b) => {
-      if (a.status === 'Pending' && b.status !== 'Pending') return -1;
-      if (a.status !== 'Pending' && b.status === 'Pending') return 1;
-      return 0;
-    });
-  }, [requests, terminationRequests, resignationRequests]);
-
-  const handleAction = async (request: AdminRequest, status: 'Approved' | 'Rejected') => {
-    if (request.type === 'Termination') {
-      // Handle termination request via backend endpoints
-      try {
-        // Use numeric dbId from backend, fallback to string id if not available
-        const requestId = request.dbId || request.id;
-
-        const endpoint = status === 'Approved'
-          ? `http://localhost:8085/api/admin-hub/approve/${requestId}`
-          : `http://localhost:8085/api/admin-hub/reject/${requestId}`;
-
-        let url = endpoint;
-
-        // For rejections, optionally prompt for rejection reason
-        if (status === 'Rejected') {
-          const rejectionReason = prompt('Please provide a reason for rejection (optional):');
-          if (rejectionReason) {
-            url = `${endpoint}?rejectionReason=${encodeURIComponent(rejectionReason)}`;
-          }
-        }
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
-
-        const result = await response.text();
-        console.log('Termination request response:', result);
-
-        if (response.ok) {
-          // Update local state via context
-          processRequest(request.id, status);
-          setViewingRequest(null);
-          alert(result);
-        } else {
-          const message = typeof result === 'string' ? result : (result as any)?.message || 'Unknown error';
-          alert(`Failed to ${status === 'Approved' ? 'approve' : 'reject'} termination request: ${message}`);
-        }
-      } catch (err: any) {
-        console.error('Error handling termination request:', err);
-        alert(`Error: ${err.message || 'An error occurred while processing the termination request'}`);
-      }
-    } else if (request.type === 'Resignation') {
-      // Handle resignation request
-      try {
-        if (status === 'Approved') {
-          await approveResignation(request.dbId);
-        } else {
-          await rejectResignation(request.dbId);
-        }
-        setResignationRequests((prev) =>
-          prev.filter((req) => req.dbId !== request.dbId)
-        );
-        setViewingRequest(null);
-        alert(`Resignation request ${status === 'Approved' ? 'approved' : 'rejected'} successfully.`);
-      } catch (err: any) {
-        console.error('Error handling resignation request:', err);
-        alert(`Failed to ${status === 'Approved' ? 'approve' : 'reject'} resignation request: ${err.message}`);
-      }
-    } else if (request.type === 'Admin Leave') {
-      // Handle admin leave request approval/rejection
-      try {
-        const leaveId = request.dbId || request.id;
-        console.log('Processing Admin Leave request:', { leaveId, status, dbId: request.dbId, id: request.id });
-
-        const statusParam = status === 'Approved' ? 'APPROVED' : 'REJECTED';
-        const url = `http://localhost:8085/leave-requests/update-status/${leaveId}?status=${statusParam}`;
-
-        const response = await fetch(url, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
-          },
-          credentials: 'include',
-        });
-
-        const result = await response.text();
-        console.log('Admin Leave request response:', result);
-
-        if (response.ok) {
-          setTerminationRequests((prev) =>
-            prev.filter((req) => req.dbId !== request.dbId)
-          );
-          setViewingRequest(null);
-          alert(`Leave request ${status === 'Approved' ? 'approved' : 'rejected'} successfully.`);
-        } else {
-          const message = typeof result === 'string' ? result : (result as any)?.message || 'Unknown error';
-          alert(`Failed to ${status === 'Approved' ? 'approve' : 'reject'} leave request: ${message}`);
-        }
-      } catch (err: any) {
-        console.error('Error handling admin leave request:', err);
-        alert(`Error: ${err.message || 'An error occurred while processing the leave request'}`);
-      }
-    } else {
-      // For other request types, use the standard behavior
-      processRequest(request.id, status);
-      setViewingRequest(null);
-    }
-  };
 
   const handleApprovePendingEmployee = async (employee: PendingEmployee) => {
     setIsApproving(true);
@@ -501,22 +434,6 @@ export const AdminRequests = () => {
     // Mark recruitment request as fulfilled? Could add a custom status but Approved is fine for now
   };
 
-  const handleApproveResignation = async (request: AdminRequest) => {
-    setIsApproving(true);
-    try {
-      await approveResignation(request.dbId);
-      alert('Resignation request approved successfully.');
-      setResignationRequests((prev) =>
-        prev.filter((req) => req.dbId !== request.dbId)
-      );
-    } catch (err) {
-      console.error('Error approving resignation:', err);
-      alert('An error occurred while approving the resignation request.');
-    } finally {
-      setIsApproving(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <SectionHeader
@@ -524,191 +441,495 @@ export const AdminRequests = () => {
         description="Review and process administrative workflows initiated by department heads."
       />
 
-      {/* Pending Employee Approvals Section */}
-      {isSuperAdmin && pendingEmployees.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 mb-4">
-            <Clock size={20} className="text-amber-500" />
-            <h3 className="text-lg font-bold text-gray-900 tracking-tight">Pending Employee Approvals</h3>
-            <Badge color="yellow">{pendingEmployees.length} Pending</Badge>
-          </div>
-
-          <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-2xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[1200px]">
-                <thead className="bg-amber-50 backdrop-blur-md border-b border-amber-200">
-                  <tr>
-                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Employee Name</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Employee ID</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Email</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Department</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Created By</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Created At</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {pendingEmployees.map((employee) => (
-                    <tr key={employee.employeeId} className="hover:bg-amber-50 transition-all group border-l-2 border-transparent hover:border-amber-500">
-                      <td className="px-8 py-5 cursor-pointer" onClick={() => setViewingPendingEmployee(employee)}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 font-bold text-sm">
-                            {employee.firstName.charAt(0)}{employee.lastName.charAt(0)}
-                          </div>
-                          <div>
-                            <div className="font-bold text-gray-900">{employee.firstName} {employee.lastName}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-8 py-5">
-                        <span className="text-sm font-mono text-gray-900 bg-gray-100 px-3 py-1 rounded-lg">{employee.employeeId}</span>
-                      </td>
-                      <td className="px-8 py-5">
-                        <span className="text-sm text-gray-900">{employee.email}</span>
-                      </td>
-                      <td className="px-8 py-5">
-                        <Badge color="blue">{employee.department}</Badge>
-                      </td>
-                      <td className="px-8 py-5">
-                        <div className="text-sm text-gray-900 font-medium">{employee.createdByName}</div>
-                      </td>
-                      <td className="px-8 py-5">
-                        <div className="text-sm text-gray-900">{new Date(employee.createdAt).toLocaleDateString()}</div>
-                      </td>
-                      <td className="px-8 py-5 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => setViewingPendingEmployee(employee)}
-                            className="p-2.5 bg-gray-100 text-gray-500 hover:text-gray-900 rounded-xl transition-all"
-                            title="View Details"
-                          >
-                            <Eye size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleApprovePendingEmployee(employee)}
-                            disabled={isApproving}
-                            className="p-2.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl transition-all active:scale-90 disabled:opacity-50"
-                            title="Approve"
-                          >
-                            <Check size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleRejectPendingEmployee(employee)}
-                            className="p-2.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all active:scale-90"
-                            title="Reject"
-                          >
-                            <X size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+      {/* Section Tabs */}
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-md">
+        <div className="flex flex-wrap border-b border-gray-200">
+          <button
+            onClick={() => setActiveSection('leave')}
+            className={`flex-1 px-6 py-4 text-sm font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+              activeSection === 'leave'
+                ? 'bg-blue-600 text-white border-b-2 border-blue-600'
+                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <Calendar size={16} />
+            Leave Approval ({leaveRequests.length})
+          </button>
+          <button
+            onClick={() => setActiveSection('employee')}
+            className={`flex-1 px-6 py-4 text-sm font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+              activeSection === 'employee'
+                ? 'bg-amber-600 text-white border-b-2 border-amber-600'
+                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <UserPlus size={16} />
+            Approve Employee ({pendingEmployees.length})
+          </button>
+          <button
+            onClick={() => setActiveSection('termination')}
+            className={`flex-1 px-6 py-4 text-sm font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+              activeSection === 'termination'
+                ? 'bg-rose-600 text-white border-b-2 border-rose-600'
+                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <Trash2 size={16} />
+            Terminate Employee ({terminationRequests.length})
+          </button>
+          <button
+            onClick={() => setActiveSection('resignation')}
+            className={`flex-1 px-6 py-4 text-sm font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+              activeSection === 'resignation'
+                ? 'bg-purple-600 text-white border-b-2 border-purple-600'
+                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <FileText size={16} />
+            Resignation Request ({resignationRequests.length})
+          </button>
         </div>
-      )}
 
-      {/* Original Admin Requests Section */}
-      <div className={pendingEmployees.length > 0 ? 'pt-6 border-t border-gray-200' : ''}>
-        {pendingEmployees.length > 0 && (
-          <h3 className="text-lg font-bold text-gray-900 tracking-tight mb-6">Administrative Requests</h3>
-        )}
-
-        <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1000px]">
-              <thead className="bg-gray-50 backdrop-blur-md border-b border-gray-200">
-                <tr>
-                  <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Request ID & Type</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Initiated By</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Submission Date</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Target Entity</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em]">Status</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredRequests.map((req) => (
-                  <tr key={req.id} className="hover:bg-gray-50 transition-all group border-l-2 border-transparent hover:border-blue-300">
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-xl border ${req.type === 'Termination' ? 'bg-rose-50 border-rose-200 text-rose-500' : 'bg-blue-100 border-blue-200 text-blue-600'}`}>
-                          <GitPullRequest size={18} />
+        {/* Section Content */}
+        <div className="p-6">
+          {/* Leave Approval Section */}
+          {activeSection === 'leave' && (
+            <div className="space-y-4">
+              {isLoadingLeave ? (
+                <div className="text-center py-8">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />
+                  <p className="text-gray-600 mt-2">Loading leave requests...</p>
+                </div>
+              ) : leaveRequests.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar size={32} className="mx-auto opacity-50 mb-2" />
+                  <p>No pending leave requests</p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {leaveRequests.map((leave) => (
+                    <div
+                      key={leave.leaveId}
+                      onClick={() => setViewingLeaveRequest(leave)}
+                      className="p-4 border border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-bold text-gray-900">{leave.firstName} {leave.lastName}</h3>
+                            <Badge color="blue">{leave.department}</Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">ID: {leave.employeeId} • {leave.category}</p>
+                          <p className="text-xs text-gray-500">{leave.startDate} to {leave.endDate} ({leave.duration})</p>
+                          <p className="text-sm text-gray-700 mt-1 line-clamp-1">Reason: {leave.reason}</p>
                         </div>
-                        <div>
-                          <div className="font-bold text-gray-900 tracking-tight">{req.type}</div>
-                          <div className="text-[10px] font-mono text-gray-500">{typeof req.id === 'string' ? req.id.toUpperCase() : 'N/A'}</div>
+                        <div className="text-right flex-shrink-0">
+                          <Badge color={leave.status === 'Pending' ? 'yellow' : leave.status === 'Approved' ? 'green' : 'red'}>
+                            {leave.status}
+                          </Badge>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-2 text-sm text-gray-900 font-semibold">
-                        <User size={14} className="text-gray-400" /> {req.requestedBy}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-2 text-sm text-gray-900">
-                        <Calendar size={14} /> {req.date}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <div className="text-sm font-medium text-gray-900">
-                        {req.targetId ? employees.find(e => e.id === req.targetId)?.name || 'N/A' : 'New Candidate'}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <Badge color={req.status === 'Approved' ? 'green' : req.status === 'Rejected' ? 'red' : 'yellow'}>
-                        {req.status.toUpperCase()}
-                      </Badge>
-                    </td>
-                    <td className="px-8 py-5 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => setViewingRequest(req)}
-                          className="p-2.5 bg-gray-100 text-gray-500 hover:text-gray-900 rounded-xl transition-all"
-                          title="View Details"
-                        >
-                          <Eye size={18} />
-                        </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-                        {isSuperAdmin && req.status === 'Pending' && (
-                          <>
-                            <button
-                              onClick={() => handleAction(req, 'Approved')}
-                              className="p-2.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl transition-all active:scale-90"
-                              title="Approve"
-                            >
-                              <Check size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleAction(req, 'Rejected')}
-                              className="p-2.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all active:scale-90"
-                              title="Reject"
-                            >
-                              <X size={18} />
-                            </button>
-                          </>
-                        )}
-
-                        {isSuperAdmin && req.status === 'Approved' && req.type === 'Termination' && (
-                          <button
-                            onClick={() => handleRecruitmentProcessing(req)}
-                            className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all flex items-center gap-2"
-                          >
-                            <UserPlus size={14} /> Hire Now
-                          </button>
-                        )}
+          {/* Employee Approval Section */}
+          {activeSection === 'employee' && (
+            <div className="space-y-4">
+              {isLoadingPending ? (
+                <div className="text-center py-8">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-amber-600" />
+                  <p className="text-gray-600 mt-2">Loading employee requests...</p>
+                </div>
+              ) : pendingEmployees.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <UserPlus size={32} className="mx-auto opacity-50 mb-2" />
+                  <p>No pending employee approvals</p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {pendingEmployees.map((employee) => (
+                    <div
+                      key={employee.employeeId}
+                      onClick={() => setViewingPendingEmployee(employee)}
+                      className="p-4 border border-gray-200 rounded-xl hover:border-amber-400 hover:bg-amber-50 cursor-pointer transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-bold text-gray-900">{employee.firstName} {employee.lastName}</h3>
+                            <Badge color="amber">{employee.department}</Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">ID: {employee.employeeId} • {employee.role}</p>
+                          <p className="text-xs text-gray-500">Email: {employee.email}</p>
+                          <p className="text-xs text-gray-500 mt-1">Created by: {employee.createdByName}</p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <Badge color="yellow">PENDING</Badge>
+                        </div>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Termination Request Section */}
+          {activeSection === 'termination' && (
+            <div className="space-y-4">
+              {isLoadingTermination ? (
+                <div className="text-center py-8">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-rose-600" />
+                  <p className="text-gray-600 mt-2">Loading termination requests...</p>
+                </div>
+              ) : terminationRequests.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Trash2 size={32} className="mx-auto opacity-50 mb-2" />
+                  <p>No pending termination requests</p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {terminationRequests.map((termination) => (
+                    <div
+                      key={termination.requestId}
+                      onClick={() => setViewingTerminationRequest(termination)}
+                      className="p-4 border border-gray-200 rounded-xl hover:border-rose-400 hover:bg-rose-50 cursor-pointer transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-bold text-gray-900">{termination.employeeName}</h3>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">ID: {termination.employeeId} • Requested by: {termination.requestedByName}</p>
+                          <p className="text-sm text-gray-700 mt-1 line-clamp-2">Reason: {termination.reason}</p>
+                          <p className="text-xs text-gray-500 mt-2">Date: {new Date(termination.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <Badge color={termination.status === 'PENDING' ? 'yellow' : termination.status === 'APPROVED' ? 'green' : 'red'}>
+                            {termination.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Resignation Request Section */}
+          {activeSection === 'resignation' && (
+            <div className="space-y-4">
+              {isLoadingResignation ? (
+                <div className="text-center py-8">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-600" />
+                  <p className="text-gray-600 mt-2">Loading resignation requests...</p>
+                </div>
+              ) : resignationRequests.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <FileText size={32} className="mx-auto opacity-50 mb-2" />
+                  <p>No pending resignation requests</p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {resignationRequests.map((resignation) => (
+                    <div
+                      key={resignation.id}
+                      onClick={() => setViewingResignationRequest(resignation)}
+                      className="p-4 border border-gray-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 cursor-pointer transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-bold text-gray-900">Employee ID: {resignation.employeeId}</h3>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">Resignation Date: {resignation.resignationDate} • Last Working: {resignation.lastWorkingDate}</p>
+                          <p className="text-sm text-gray-700 mt-1 line-clamp-2">Reason: {resignation.reason}</p>
+                          <div className="flex gap-2 mt-2 flex-wrap">
+                            <Badge color="blue">{resignation.noticePeriod}</Badge>
+                            <Badge color="blue">{resignation.contactEmail}</Badge>
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <Badge color={resignation.status === 'PENDING_SUPER_ADMIN' ? 'yellow' : resignation.status === 'APPROVED' ? 'green' : 'red'}>
+                            {resignation.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Leave Request Details Modal */}
+      {viewingLeaveRequest && (
+        <Modal
+          isOpen={!!viewingLeaveRequest}
+          onClose={() => setViewingLeaveRequest(null)}
+          title={`Leave Request - ${viewingLeaveRequest.firstName} ${viewingLeaveRequest.lastName}`}
+          onSave={() => setViewingLeaveRequest(null)}
+        >
+          <div className="space-y-6 pb-4">
+            <div className="p-6 rounded-2xl bg-blue-50 border border-blue-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Employee Name</p>
+                  <p className="text-lg font-black text-gray-900">{viewingLeaveRequest.firstName} {viewingLeaveRequest.lastName}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Employee ID</p>
+                  <p className="text-lg font-black text-gray-900 font-mono">{viewingLeaveRequest.employeeId}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Department</p>
+                  <p className="text-lg font-bold text-gray-900">{viewingLeaveRequest.department}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Status</p>
+                  <Badge color={viewingLeaveRequest.status === 'Pending' ? 'yellow' : viewingLeaveRequest.status === 'Approved' ? 'green' : 'red'}>
+                    {viewingLeaveRequest.status}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white border border-gray-200 space-y-4">
+              <div>
+                <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-2">Leave Category</p>
+                <p className="text-base font-bold text-gray-900">{viewingLeaveRequest.category}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Start Date</p>
+                  <p className="text-base font-bold text-gray-900">{viewingLeaveRequest.startDate}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">End Date</p>
+                  <p className="text-base font-bold text-gray-900">{viewingLeaveRequest.endDate}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Duration</p>
+                <p className="text-base font-bold text-gray-900">{viewingLeaveRequest.duration}</p>
+              </div>
+              <div>
+                <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-2">Reason</p>
+                <p className="text-sm text-gray-700 leading-relaxed">{viewingLeaveRequest.reason}</p>
+              </div>
+              <div>
+                <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Applied Date</p>
+                <p className="text-sm text-gray-700">{new Date(viewingLeaveRequest.appliedDate).toLocaleDateString()} {new Date(viewingLeaveRequest.appliedDate).toLocaleTimeString()}</p>
+              </div>
+            </div>
+
+            {isSuperAdmin && viewingLeaveRequest.status === 'Pending' && (
+              <div className="flex gap-4 pt-4">
+                <button
+                  onClick={() => handleLeaveRequestAction(viewingLeaveRequest, 'Approved')}
+                  className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all"
+                >
+                  <Check size={18} className="inline mr-2" />
+                  Approve Leave
+                </button>
+                <button
+                  onClick={() => handleLeaveRequestAction(viewingLeaveRequest, 'Rejected')}
+                  className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-600 transition-all"
+                >
+                  <X size={18} className="inline mr-2" />
+                  Reject Leave
+                </button>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* Termination Request Details Modal */}
+      {viewingTerminationRequest && (
+        <Modal
+          isOpen={!!viewingTerminationRequest}
+          onClose={() => setViewingTerminationRequest(null)}
+          title={`Termination Request - ${viewingTerminationRequest.employeeName}`}
+          onSave={() => setViewingTerminationRequest(null)}
+        >
+          <div className="space-y-6 pb-4">
+            <div className="p-6 rounded-2xl bg-rose-50 border border-rose-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Employee Name</p>
+                  <p className="text-lg font-black text-gray-900">{viewingTerminationRequest.employeeName}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Employee ID</p>
+                  <p className="text-lg font-black text-gray-900 font-mono">{viewingTerminationRequest.employeeId}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Requested By</p>
+                  <p className="text-lg font-bold text-gray-900">{viewingTerminationRequest.requestedByName}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Status</p>
+                  <Badge color={viewingTerminationRequest.status === 'PENDING' ? 'yellow' : viewingTerminationRequest.status === 'APPROVED' ? 'green' : 'red'}>
+                    {viewingTerminationRequest.status}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white border border-gray-200 space-y-4">
+              <div>
+                <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-2">Termination Reason</p>
+                <p className="text-sm text-gray-700 leading-relaxed">{viewingTerminationRequest.reason}</p>
+              </div>
+              <div>
+                <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Request Date</p>
+                <p className="text-sm text-gray-700">{new Date(viewingTerminationRequest.createdAt).toLocaleDateString()} {new Date(viewingTerminationRequest.createdAt).toLocaleTimeString()}</p>
+              </div>
+            </div>
+
+            {isSuperAdmin && viewingTerminationRequest.status === 'PENDING' && (
+              <div className="flex gap-4 pt-4">
+                <button
+                  onClick={() => handleTerminationRequestAction(viewingTerminationRequest, 'Approved')}
+                  className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all"
+                >
+                  <Check size={18} className="inline mr-2" />
+                  Approve Termination
+                </button>
+                <button
+                  onClick={() => handleTerminationRequestAction(viewingTerminationRequest, 'Rejected')}
+                  className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-600 transition-all"
+                >
+                  <X size={18} className="inline mr-2" />
+                  Reject Termination
+                </button>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* Resignation Request Details Modal */}
+      {viewingResignationRequest && (
+        <Modal
+          isOpen={!!viewingResignationRequest}
+          onClose={() => setViewingResignationRequest(null)}
+          title={`Resignation Request - Employee ${viewingResignationRequest.employeeId}`}
+          onSave={() => setViewingResignationRequest(null)}
+        >
+          <div className="space-y-6 pb-4">
+            <div className="p-6 rounded-2xl bg-purple-50 border border-purple-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Employee ID</p>
+                  <p className="text-lg font-black text-gray-900 font-mono">{viewingResignationRequest.employeeId}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Status</p>
+                  <Badge color={viewingResignationRequest.status === 'PENDING_SUPER_ADMIN' ? 'yellow' : viewingResignationRequest.status === 'APPROVED' ? 'green' : 'red'}>
+                    {viewingResignationRequest.status}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-6 rounded-2xl bg-white border border-gray-200">
+                <h4 className="text-xs font-black text-gray-700 uppercase tracking-widest mb-4">Resignation Details</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs font-black text-gray-600 uppercase tracking-widest mb-1">Resignation Date</p>
+                    <p className="text-base font-bold text-gray-900">{viewingResignationRequest.resignationDate}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-gray-600 uppercase tracking-widest mb-1">Last Working Date</p>
+                    <p className="text-base font-bold text-gray-900">{viewingResignationRequest.lastWorkingDate}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-gray-600 uppercase tracking-widest mb-1">Notice Period</p>
+                    <p className="text-base font-bold text-gray-900">{viewingResignationRequest.noticePeriod}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-gray-600 uppercase tracking-widest mb-1">Application Date</p>
+                    <p className="text-base font-bold text-gray-900">{new Date(viewingResignationRequest.createdAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-white border border-gray-200">
+                <h4 className="text-xs font-black text-gray-700 uppercase tracking-widest mb-4">Resignation Reason</h4>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs font-black text-gray-600 uppercase tracking-widest mb-1">Primary Reason</p>
+                    <p className="text-sm text-gray-700">{viewingResignationRequest.reason}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-gray-600 uppercase tracking-widest mb-1">Detailed Reason</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{viewingResignationRequest.detailedReason}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-white border border-gray-200">
+                <h4 className="text-xs font-black text-gray-700 uppercase tracking-widest mb-4">Contact Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs font-black text-gray-600 uppercase tracking-widest mb-1">Email</p>
+                    <p className="text-sm text-gray-700 break-all">{viewingResignationRequest.contactEmail}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-gray-600 uppercase tracking-widest mb-1">Phone</p>
+                    <p className="text-sm text-gray-700">{viewingResignationRequest.contactPhone}</p>
+                  </div>
+                </div>
+              </div>
+
+              {viewingResignationRequest.approvedBy && (
+                <div className="p-6 rounded-2xl bg-white border border-gray-200">
+                  <h4 className="text-xs font-black text-gray-700 uppercase tracking-widest mb-4">Approval Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs font-black text-gray-600 uppercase tracking-widest mb-1">Approved By Name</p>
+                      <p className="text-sm text-gray-700">{viewingResignationRequest.approvedByName}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-gray-600 uppercase tracking-widest mb-1">Approved By Email</p>
+                      <p className="text-sm text-gray-700 break-all">{viewingResignationRequest.approvedByEmail}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {isSuperAdmin && viewingResignationRequest.status === 'PENDING_SUPER_ADMIN' && (
+              <div className="flex gap-4 pt-4">
+                <button
+                  onClick={() => handleResignationRequestAction(viewingResignationRequest, 'Approved')}
+                  className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all"
+                >
+                  <Check size={18} className="inline mr-2" />
+                  Approve Resignation
+                </button>
+                <button
+                  onClick={() => handleResignationRequestAction(viewingResignationRequest, 'Rejected')}
+                  className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-600 transition-all"
+                >
+                  <X size={18} className="inline mr-2" />
+                  Reject Resignation
+                </button>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
 
       {/* Pending Employee Details Modal */}
       {viewingPendingEmployee && (
@@ -817,93 +1038,6 @@ export const AdminRequests = () => {
                 Reject
               </button>
             </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* Request Details Modal */}
-      {viewingRequest && (
-        <Modal
-          isOpen={!!viewingRequest}
-          onClose={() => setViewingRequest(null)}
-          title={`${viewingRequest.type} Request Details`}
-          onSave={() => setViewingRequest(null)}
-        >
-          <div className="space-y-8 pb-4">
-            <div className={`p-6 rounded-[2rem] border overflow-hidden relative shadow-2xl ${viewingRequest.type === 'Termination' ? 'bg-rose-500/5 border-rose-500/20' : 'bg-[#f37321]/5 border-[#f37321]/20'}`}>
-              <div className="flex items-start gap-6">
-                <div className={`p-5 rounded-2xl ${viewingRequest.type === 'Termination' ? 'bg-rose-500/10 text-rose-500' : 'bg-blue-600/10 text-gray-900'}`}>
-                  {viewingRequest.type === 'Termination' ? <Trash2 size={32} /> : viewingRequest.type === 'Promotion' ? <UserPlus size={32} /> : <Calendar size={32} />}
-                </div>
-                <div>
-                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">{viewingRequest.type}</h3>
-                  <p className="text-[10px] text-gray-900 font-black uppercase tracking-widest mt-1">Submission Reference: {viewingRequest.id}</p>
-                  <div className="flex gap-2 mt-4">
-                    <Badge color={viewingRequest.status === 'Approved' ? 'green' : viewingRequest.status === 'Rejected' ? 'red' : 'yellow'}>
-                      {viewingRequest.status.toUpperCase()}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
-                <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                  <User size={14} className="text-blue-600" /> Initiator Context
-                </h4>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-gray-900">Requested By</span>
-                    <span className="text-gray-900 font-bold">{viewingRequest.requestedBy}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-900">Request Date</span>
-                    <span className="text-gray-900 font-bold">{viewingRequest.date}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
-                <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                  <Info size={14} className="text-blue-600" /> Target Context
-                </h4>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-gray-900">Target Employee</span>
-                    <span className="text-gray-900 font-bold">
-                      {viewingRequest.targetId ? employees.find(e => e.id === viewingRequest.targetId)?.name || 'N/A' : 'External Vacancy'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-white border border-gray-200">
-              <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
-                <FileText size={14} className="text-blue-600" /> Justification & Details
-              </h4>
-              <p className="text-sm text-gray-700 leading-relaxed italic">
-                "{viewingRequest.details}"
-              </p>
-            </div>
-
-            {isSuperAdmin && viewingRequest.status === 'Pending' && (
-              <div className="flex gap-4 pt-4">
-                <button
-                  onClick={() => handleAction(viewingRequest, 'Approved')}
-                  className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 shadow-xl shadow-emerald-500/20 active:scale-95 transition-all"
-                >
-                  Authorize Request
-                </button>
-                <button
-                  onClick={() => handleAction(viewingRequest, 'Rejected')}
-                  className="flex-1 py-4 bg-[#1f2937] text-rose-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 active:scale-95 transition-all"
-                >
-                  Decline
-                </button>
-              </div>
-            )}
           </div>
         </Modal>
       )}

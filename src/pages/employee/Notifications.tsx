@@ -233,18 +233,33 @@ const formatTime = (iso: string) => {
 const getFriendlyMessage = (msg: string) => {
   if (!msg) return '';
   const trimmed = msg.trim();
-  // if html present, parse and extract innerText
-  if (trimmed.startsWith('<')) {
-    try {
+  
+  // Try to parse HTML content
+  try {
+    // Check if it looks like HTML
+    if (trimmed.startsWith('<') || trimmed.includes('</')) {
       const div = document.createElement('div');
       div.innerHTML = msg;
-      // Use innerText to preserve line breaks
-      return div.innerText || div.textContent || '';
-    } catch {
-      return msg;
+      
+      // Get text content and clean it up
+      let text = div.innerText || div.textContent || '';
+      
+      // Decode HTML entities
+      const textarea = document.createElement('textarea');
+      textarea.innerHTML = text;
+      text = textarea.value;
+      
+      // Clean up extra whitespace and line breaks
+      text = text.replace(/\n\n+/g, '\n').trim();
+      
+      return text;
     }
+  } catch (e) {
+    // If parsing fails, continue with raw message
   }
-  return msg;
+  
+  // Return as-is if not HTML or plain text already
+  return trimmed;
 };
 
 const NotificationItem: React.FC<{
@@ -252,6 +267,7 @@ const NotificationItem: React.FC<{
   isSelected: boolean;
   isExpanded: boolean;
   highlight?: boolean;
+  activeTab: NotificationTab;
   onToggleSelect: () => void;
   onToggleExpand: () => void;
   onMarkAsRead: () => void;
@@ -262,6 +278,7 @@ const NotificationItem: React.FC<{
   isSelected,
   isExpanded,
   highlight = false,
+  activeTab,
   onToggleSelect,
   onToggleExpand,
   onMarkAsRead,
@@ -306,8 +323,15 @@ const NotificationItem: React.FC<{
     };
 
     return (
-      <div onClick={handleClick} className={`notification-card bg-white rounded-xl border ${notification.read ? 'border-slate-200' : 'border-blue-200 unread-glow'
-        } ${isSelected ? 'ring-2 ring-blue-500 ring-inset' : ''} ${!notification.read ? 'unread' : ''} ${highlight && !notification.read ? 'bg-yellow-50' : ''} hover:shadow-lg transition-all duration-200`}>
+      <div onClick={handleClick} className={`notification-card bg-white rounded-xl border ${
+        !notification.read && activeTab === 'unread' 
+          ? 'border-blue-200 unread-glow' 
+          : notification.read 
+            ? 'border-slate-200' 
+            : 'border-slate-200'
+      } ${isSelected ? 'ring-2 ring-blue-500 ring-inset' : ''} ${
+        !notification.read && activeTab === 'unread' ? 'unread' : ''
+      } ${highlight && !notification.read ? 'bg-yellow-50' : ''} hover:shadow-lg transition-all duration-200`}>
         <div className="p-4">
           <div className="flex gap-4">
             {/* Selection checkbox */}
@@ -411,8 +435,19 @@ const NotificationItem: React.FC<{
                         onClick={async (e) => { 
                           e.stopPropagation();
                           try {
-                            await markNotificationAsRead(notification.id);
-                            onMarkAsRead();
+                            const response = await fetch(
+                              `http://localhost:8085/api/notifications/markRead/${notification.id}`,
+                              {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                              }
+                            );
+                            if (response.ok) {
+                              onMarkAsRead();
+                            } else {
+                              console.error('Failed to mark notification as read');
+                            }
                           } catch (err) {
                             console.error('Failed to mark notification as read:', err);
                           }
@@ -515,6 +550,7 @@ const EmployeeNotifications: React.FC = () => {
   const [expandedNotifications, setExpandedNotifications] = useState<string[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
   // Fetch unread count
   useEffect(() => {
     (async () => {
@@ -590,6 +626,8 @@ const EmployeeNotifications: React.FC = () => {
       n.id === id ? { ...n, read: true } : n
     ));
     setUnreadCount(prev => Math.max(0, prev - 1));
+    // Trigger refetch to keep data in sync with backend
+    setRefetchTrigger(prev => prev + 1);
   };
 
   const markAllRead = async () => {
@@ -598,11 +636,15 @@ const EmployeeNotifications: React.FC = () => {
       // Update local state
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
+      // Trigger refetch to keep data in sync with backend
+      setRefetchTrigger(prev => prev + 1);
     } catch (err) {
       console.error('Failed to mark all as read:', err);
       // Fallback to local update
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
+      // Still trigger refetch on error to sync state
+      setRefetchTrigger(prev => prev + 1);
     }
   };
 
@@ -612,7 +654,7 @@ const EmployeeNotifications: React.FC = () => {
     );
   };
 
-  // Fetch notifications from API based on activeTab
+  // Fetch notifications from API based on activeTab and refetchTrigger
   useEffect(() => {
     (async () => {
       try {
@@ -682,7 +724,7 @@ const EmployeeNotifications: React.FC = () => {
         console.warn(`getMyNotifications for ${activeTab} failed, keeping local notifications.`, err);
       }
     })();
-  }, [activeTab, storageKey]);
+  }, [activeTab, storageKey, refetchTrigger]);
 
   const selectAllOnPage = () => {
     const pageIds = getFilteredNotifications().map(n => n.id);
@@ -698,6 +740,8 @@ const EmployeeNotifications: React.FC = () => {
       selectedIds.includes(n.id) ? { ...n, read: true } : n
     ));
     setSelectedIds([]);
+    // Trigger refetch to keep data in sync with backend
+    setRefetchTrigger(prev => prev + 1);
   };
 
 
@@ -1072,6 +1116,7 @@ const EmployeeNotifications: React.FC = () => {
                       isSelected={selectedIds.includes(n.id)}
                       isExpanded={expandedNotifications.includes(n.id)}
                       highlight={activeTab === 'all' && !n.read}
+                      activeTab={activeTab}
                       onToggleSelect={() => toggleSelect(n.id)}
                       onToggleExpand={() => toggleNotificationExpand(n.id)}
                       onMarkAsRead={() => markAsRead(n.id)}
