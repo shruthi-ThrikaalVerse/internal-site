@@ -479,6 +479,7 @@ export enum AppSection {
   PaymentUpdates = 'PaymentUpdates',
   Notifications = 'Notifications',
   SystemMaintenance = 'SystemMaintenance',
+  Documents = 'Documents',
   Profile = 'Profile'
 }
 

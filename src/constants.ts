@@ -170,6 +170,7 @@ export const NAVIGATION_ITEMS = [
   { id: AppSection.PaymentUpdates, label: 'Payments', iconName: 'TrendingUp' },
   { id: AppSection.Notifications, label: 'Notifications', iconName: 'Bell' },
   { id: AppSection.SystemMaintenance, label: 'System', iconName: 'Wrench' },
+  { id: AppSection.Documents, label: 'Documents', iconName: 'FileText' },
   { id: AppSection.Profile, label: 'Profile', iconName: 'Users' },
 ];
 
