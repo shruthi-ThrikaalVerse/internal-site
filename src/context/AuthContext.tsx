@@ -7,6 +7,7 @@ export interface User {
   id: string;
   fullName: string;
   email: string;
+  username?: string;
   role: 'admin' | 'manager' | 'auditor' | 'employee' | 'super_admin';
   avatar: string;
 }
@@ -63,6 +64,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           id: userData.id || userData._id || userData.employeeId || '',
           fullName: fullName,
           email: userData.email || '',
+          username: userData.username,
           role: normalizeRole(userData.role),
           avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.email}`,
         };

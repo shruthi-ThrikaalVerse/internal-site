@@ -163,6 +163,78 @@ const EmployeeDetails: React.FC = () => {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
+  const handlePerformanceReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedEmployee) return;
+
+    try {
+      // Map rating to the expected format
+      const ratingMap: { [key: string]: string } = {
+        '1': 'POOR',
+        '1.5': 'POOR',
+        '2': 'BELOW_AVERAGE', 
+        '2.5': 'BELOW_AVERAGE',
+        '3': 'AVERAGE',
+        '3.5': 'GOOD',
+        '4': 'GOOD',
+        '4.5': 'EXCELLENT',
+        '5': 'EXCELLENT'
+      };
+
+      const rating = ratingMap[performanceFormData.rating] || 'AVERAGE';
+
+      // Format period based on type
+      let period = '';
+      if (performanceFormPeriod === 'monthly') {
+        const monthIndex = parseInt(performanceFormFilter) - 1;
+        period = `${monthNames[monthIndex]} ${performanceViewYear}`;
+      } else if (performanceFormPeriod === 'quarterly') {
+        period = `Q${performanceFormFilter} ${performanceViewYear}`;
+      } else {
+        period = performanceFormFilter;
+      }
+
+      const reviewData = {
+        feedback: performanceFormData.feedback,
+        strengths: performanceFormData.strengths,
+        areasOfImprovement: performanceFormData.improvements,
+        periodType: performanceFormPeriod.toUpperCase(),
+        rating: rating,
+        period: period,
+        employeeId: selectedEmployee.employeeId
+      };
+
+      const response = await fetch('http://localhost:8085/api/performance/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(reviewData)
+      });
+
+      if (response.ok) {
+        // Reset form
+        setPerformanceFormData({
+          rating: '',
+          feedback: '',
+          strengths: '',
+          improvements: ''
+        });
+        
+        // Show success message
+        alert('Performance review submitted successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to submit performance review: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error submitting performance review:', error);
+      alert('An error occurred while submitting the performance review.');
+    }
+  };
+
   if (!selectedEmployee) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
@@ -598,7 +670,7 @@ const EmployeeDetails: React.FC = () => {
                       Performance Review
                     </h3>
 
-                    <form className="space-y-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-md sticky top-6">
+                    <form onSubmit={handlePerformanceReviewSubmit} className="space-y-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-md sticky top-6">
                       <div>
                         <label className="text-xs font-black text-black uppercase tracking-widest mb-3 block">Period Type</label>
                         <div className="flex gap-2 bg-slate-100 p-2 rounded-xl">

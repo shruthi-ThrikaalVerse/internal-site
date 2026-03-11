@@ -102,7 +102,7 @@ const EmployeePerformanceModal: React.FC<{
         <div className="p-4 md:p-6 border-b flex items-center justify-between bg-white sticky top-0 z-10">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
-              {employee.name.charAt(0)}
+              {(employee.name || 'U').charAt(0)}
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900">{employee.name}</h2>
@@ -128,8 +128,8 @@ const EmployeePerformanceModal: React.FC<{
                   <h3 className="text-lg font-semibold text-gray-900">Performance Score</h3>
                   <div className="flex items-center gap-2">
                     {getTrendIcon(employee.trend)}
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getPerformanceColor(employee.performanceScore)}`}>
-                      {employee.status.toUpperCase().replace('-', ' ')}
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getPerformanceColor(employee.performanceScore || 0)}`}>
+                      {(employee.status || 'meeting').toUpperCase().replace('-', ' ')}
                     </span>
                   </div>
                 </div>
@@ -138,7 +138,7 @@ const EmployeePerformanceModal: React.FC<{
                     <div className="relative w-20 h-20 md:w-32 md:h-32 mx-auto">
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center">
-                          <span className="text-2xl md:text-4xl font-bold text-gray-900">{employee.performanceScore.toFixed(1)}</span>
+                          <span className="text-2xl md:text-4xl font-bold text-gray-900">{(employee.performanceScore || 0).toFixed(1)}</span>
                           <span className="text-gray-500">/5</span>
                           <div className="mt-2">
                             {renderStars(employee.performanceScore)}
@@ -369,8 +369,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
   const [apiEmployeesLoading, setApiEmployeesLoading] = useState<boolean>(false);
   const [performanceDataState, setPerformanceData] = useState<PerformanceData[]>([]);
   const [departmentStats, setDepartmentStats] = useState<DepartmentStats[]>([]);
-  const [deptApiData, setDeptApiData] = useState<any[]>([]);
-  const [employeePerfApi, setEmployeePerfApi] = useState<any[]>([]);
   const [topPerformersApi, setTopPerformersApi] = useState<any[]>([]);
   const [lowPerformersApi, setLowPerformersApi] = useState<any[]>([]);
   const [dashboardApiData, setDashboardApiData] = useState<any>(null);
@@ -449,7 +447,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
       const employeeList = (dashboardApiData.employeePerformanceList || []).map((emp: any) => ({
         id: emp.id || emp.employeeId,
-        name: emp.name || emp.fullName || emp.employeeName,
+        name: emp.name || emp.fullName || emp.employeeName || 'Unknown Employee',
         role: emp.role || emp.designation || emp.position,
         department: emp.department,
         performanceScore: emp.performanceScore || emp.score || 3.5,
@@ -474,11 +472,11 @@ const EmployeePerformanceDashboard: React.FC = () => {
         name: emp.name || emp.fullName,
         role: emp.role || emp.designation,
         department: emp.department,
-        performanceScore: emp.performanceScore || emp.score,
-        kpiScore: emp.kpiScore || emp.kpi,
-        taskCompletion: emp.taskCompletion,
-        qualityScore: emp.qualityScore,
-        attendance: emp.attendance,
+        performanceScore: emp.performanceScore || emp.score || 4.5,
+        kpiScore: emp.kpiScore || emp.kpi || 85,
+        taskCompletion: emp.taskCompletion || 90,
+        qualityScore: emp.qualityScore || 85,
+        attendance: emp.attendance || 90,
         lastReview: emp.lastReview,
         status: emp.status || 'exceeding',
         trend: emp.trend || 'up',
@@ -496,11 +494,11 @@ const EmployeePerformanceDashboard: React.FC = () => {
         name: emp.name || emp.fullName,
         role: emp.role || emp.designation,
         department: emp.department,
-        performanceScore: emp.performanceScore || emp.score,
-        kpiScore: emp.kpiScore || emp.kpi,
-        taskCompletion: emp.taskCompletion,
-        qualityScore: emp.qualityScore,
-        attendance: emp.attendance,
+        performanceScore: emp.performanceScore || emp.score || 2.5,
+        kpiScore: emp.kpiScore || emp.kpi || 60,
+        taskCompletion: emp.taskCompletion || 65,
+        qualityScore: emp.qualityScore || 60,
+        attendance: emp.attendance || 75,
         lastReview: emp.lastReview,
         status: emp.status || 'needs-improvement',
         trend: emp.trend || 'down',
@@ -577,7 +575,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
       return {
         id: emp.id || `emp-${index}`,
-        name: emp.fullName,
+        name: emp.fullName || 'Unknown Employee',
         role: emp.designation || 'Employee',
         department: emp.department,
         performanceScore: parseFloat(performanceScore.toFixed(1)),
@@ -663,30 +661,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
     const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
 
-    const fetchDept = async () => {
-      try {
-        const res = await fetch('http://localhost:8085/api/performance/department-wise', { method: 'GET', credentials: 'include', headers });
-        if (res.ok) {
-          const data = await res.json().catch(() => []);
-          setDeptApiData(Array.isArray(data) ? data : []);
-        }
-      } catch (err) {
-        console.error('Failed to fetch department-wise performance', err);
-      }
-    };
-
-    const fetchEmployeesPerf = async () => {
-      try {
-        const res = await fetch('http://localhost:8085/api/performance/employees', { method: 'GET', credentials: 'include', headers });
-        if (res.ok) {
-          const data = await res.json().catch(() => []);
-          setEmployeePerfApi(Array.isArray(data) ? data : []);
-        }
-      } catch (err) {
-        console.error('Failed to fetch employee performance list', err);
-      }
-    };
-
     const fetchTop = async () => {
       try {
         const res = await fetch('http://localhost:8085/api/tasks/top-performers', { method: 'GET', credentials: 'include', headers });
@@ -737,8 +711,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
       }
     };
 
-    fetchDept();
-    fetchEmployeesPerf();
     fetchTop();
     fetchLow();
     fetchDashboard();
@@ -865,7 +837,16 @@ const EmployeePerformanceDashboard: React.FC = () => {
   // Get top performers
   const topPerformers = useMemo(() => {
     if (topPerformersApi.length > 0) {
-      return topPerformersApi;
+      // Ensure all performers have required properties with defaults
+      return topPerformersApi.map(emp => ({
+        ...emp,
+        performanceScore: emp.performanceScore || emp.score || 4.5,
+        kpiScore: emp.kpiScore || emp.kpi || 85,
+        taskCompletion: emp.taskCompletion || 90,
+        qualityScore: emp.qualityScore || 85,
+        attendance: emp.attendance || 90,
+        name: emp.name || emp.fullName || 'Unknown Employee'
+      }));
     }
     return [...performanceDataState]
       .filter(emp => emp.performanceScore >= 4.5)
@@ -876,7 +857,16 @@ const EmployeePerformanceDashboard: React.FC = () => {
   // Get low performers
   const lowPerformersList = useMemo(() => {
     if (lowPerformersApi.length > 0) {
-      return lowPerformersApi;
+      // Ensure all performers have required properties with defaults
+      return lowPerformersApi.map(emp => ({
+        ...emp,
+        performanceScore: emp.performanceScore || emp.score || 2.5,
+        kpiScore: emp.kpiScore || emp.kpi || 60,
+        taskCompletion: emp.taskCompletion || 65,
+        qualityScore: emp.qualityScore || 60,
+        attendance: emp.attendance || 75,
+        name: emp.name || emp.fullName || 'Unknown Employee'
+      }));
     }
     return [...performanceDataState]
       .filter(emp => emp.performanceScore < 3)
@@ -903,42 +893,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
   // Get department stats for dropdown
   const departmentStatsForDropdown = useMemo(() => {
-    if (deptApiData.length > 0) {
-      // Use performance data from deptApiData, but ensure all departments from departmentsApiData are included
-      const performanceMap = new Map(deptApiData.map((dept: any) => [
-        dept.name || dept.department,
-        {
-          name: dept.name || dept.department,
-          employees: dept.employees || dept.employeeCount || 0,
-          avgKPIScore: dept.avgKPIScore || dept.averageKPI || 75,
-          tasksCompleted: dept.tasksCompleted || dept.completedTasks || 0,
-          totalTasks: dept.totalTasks || 0,
-          attendance: dept.attendance || dept.averageAttendance || 85,
-          overallRating: dept.overallRating || dept.rating || 75
-        }
-      ]));
-
-      // If we have departments from the departments API, use those as base and merge with performance data
-      if (departmentsApiData.length > 0) {
-        return departmentsApiData.map(deptName => {
-          const existingStats = performanceMap.get(deptName);
-          return existingStats || {
-            name: deptName,
-            employees: 0,
-            avgKPIScore: 75,
-            tasksCompleted: 0,
-            totalTasks: 0,
-            attendance: 85,
-            overallRating: 75
-          };
-        });
-      }
-
-      // Otherwise use the performance data as is
-      return Array.from(performanceMap.values());
-    }
     return departmentStats;
-  }, [departmentStats, deptApiData, departmentsApiData]);
+  }, [departmentStats]);
 
   // Star rendering function
   const renderStars = (rating: number, maxStars = 5) => {
@@ -1704,7 +1660,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                                 dept.name === 'Marketing' ? 'bg-gradient-to-br from-pink-100 to-pink-200 text-pink-600' :
                                   'bg-gradient-to-br from-purple-100 to-purple-200 text-purple-600'
                             }`}>
-                            <span className="text-sm font-bold">{dept.name.charAt(0)}</span>
+                            <span className="text-sm font-bold">{(dept.name || 'D').charAt(0)}</span>
                           </div>
                           <span className="text-sm font-medium text-gray-900">{dept.name}</span>
                         </div>
@@ -1809,7 +1765,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                     <div className="relative">
                       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-sm">
                         <span className="text-lg font-bold text-white">
-                          {emp.name.charAt(0)}
+                          {(emp.name || 'U').charAt(0)}
                         </span>
                       </div>
                       <div className="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center shadow-sm">
@@ -1823,7 +1779,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <div className="flex items-center gap-2 justify-end mb-1">
-                      <span className="text-xl font-bold text-gray-900">{emp.performanceScore.toFixed(1)}</span>
+                      <span className="text-xl font-bold text-gray-900">{(emp.performanceScore || 0).toFixed(1)}</span>
                       <Star className="w-5 h-5 text-amber-500 fill-current" />
                     </div>
                     <div className="flex items-center gap-2 justify-end">
@@ -1858,7 +1814,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center shadow-sm">
                       <span className="text-lg font-bold text-white">
-                        {emp.name.charAt(0)}
+                        {(emp.name || 'U').charAt(0)}
                       </span>
                     </div>
                     <div>
@@ -1868,7 +1824,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <div className="flex items-center gap-2 justify-end mb-1">
-                      <span className="text-xl font-bold text-gray-900">{emp.performanceScore.toFixed(1)}</span>
+                      <span className="text-xl font-bold text-gray-900">{(emp.performanceScore || 0).toFixed(1)}</span>
                       <Star className="w-5 h-5 text-gray-300" />
                     </div>
                     <div className="flex items-center gap-2 justify-end">
@@ -1921,7 +1877,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center shadow-sm">
-                            <span className="text-sm font-bold text-blue-600">{emp.name.charAt(0)}</span>
+                            <span className="text-sm font-bold text-blue-600">{(emp.name || 'U').charAt(0)}</span>
                           </div>
                           <div>
                             <p className="font-semibold text-gray-900 text-sm">{emp.name}</p>
@@ -1936,7 +1892,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                         <div className="flex items-center gap-2">
                           {renderStars(emp.performanceScore)}
                           <span className="text-xs text-gray-500 font-medium">
-                            ({emp.performanceScore.toFixed(1)})
+                            ({(emp.performanceScore || 0).toFixed(1)})
                           </span>
                         </div>
                       </td>
