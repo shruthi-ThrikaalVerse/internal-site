@@ -466,27 +466,27 @@ const ResignationAdmin: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">Admin ID</label>
-                    <input type="text" value={user?.employeeId || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                    <input type="text" value={user?.employeeId || '--'} disabled title="Employee ID" className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">Name</label>
-                    <input type="text" value={user?.name || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                    <input type="text" value={user?.name || '--'} disabled title="Employee name" className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">Department</label>
-                    <input type="text" value={user?.department || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                    <input type="text" value={user?.department || '--'} disabled title="Department" className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">Designation</label>
-                    <input type="text" value={user?.designation || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                    <input type="text" value={user?.designation || '--'} disabled title="Job designation" className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">Official Email</label>
-                    <input type="email" value={user?.email || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                    <input type="email" value={user?.email || '--'} disabled title="Official email address" className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">Date of Joining</label>
-                    <input type="text" value={user?.dateOfJoining || '--'} disabled className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
+                    <input type="text" value={user?.dateOfJoining || '--'} disabled title="Employee joining date" className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-black text-sm font-medium cursor-not-allowed" />
                   </div>
                 </div>
               </div>
@@ -514,7 +514,7 @@ const ResignationAdmin: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">Notice Period</label>
-                  <select name="noticePeriod" value={formData.noticePeriod} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.noticePeriod ? 'border-red-500' : 'border-gray-300'}`}>
+                  <select name="noticePeriod" value={formData.noticePeriod} onChange={handleInputChange} title="Select notice period" className={`w-full px-4 py-2 border rounded-lg text-black ${errors.noticePeriod ? 'border-red-500' : 'border-gray-300'}`}>
                     <option value="">Select notice period</option>
                     {noticePeriodOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
@@ -523,7 +523,7 @@ const ResignationAdmin: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">Reason</label>
-                  <select name="reason" value={formData.reason} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.reason ? 'border-red-500' : 'border-gray-300'}`}>
+                  <select name="reason" value={formData.reason} onChange={handleInputChange} title="Select resignation reason" className={`w-full px-4 py-2 border rounded-lg text-black ${errors.reason ? 'border-red-500' : 'border-gray-300'}`}>
                     <option value="">Select reason</option>
                     {resignationReasons.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
@@ -532,30 +532,30 @@ const ResignationAdmin: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">Detailed Reason</label>
-                  <textarea name="detailedReason" value={formData.detailedReason} onChange={handleInputChange} rows={3} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.detailedReason ? 'border-red-500' : 'border-gray-300'}`} />
+                  <textarea name="detailedReason" value={formData.detailedReason} onChange={handleInputChange} rows={3} title="Enter detailed reason for resignation" placeholder="Enter your detailed reason here" className={`w-full px-4 py-2 border rounded-lg text-black ${errors.detailedReason ? 'border-red-500' : 'border-gray-300'}`} />
                   {errors.detailedReason && <p className="text-red-500 text-xs mt-1">{errors.detailedReason}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">Personal Email</label>
-                    <input type="email" name="personalEmail" value={formData.personalEmail} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.personalEmail ? 'border-red-500' : 'border-gray-300'}`} />
+                    <input type="email" name="personalEmail" value={formData.personalEmail} onChange={handleInputChange} title="Personal email address" placeholder="your.email@example.com" className={`w-full px-4 py-2 border rounded-lg text-black ${errors.personalEmail ? 'border-red-500' : 'border-gray-300'}`} />
                     {errors.personalEmail && <p className="text-red-500 text-xs mt-1">{errors.personalEmail}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">Contact Number</label>
-                    <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} className={`w-full px-4 py-2 border rounded-lg text-black ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'}`} />
+                    <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} title="Contact phone number" placeholder="+1 (555) 000-0000" className={`w-full px-4 py-2 border rounded-lg text-black ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'}`} />
                     {errors.contactNumber && <p className="text-red-500 text-xs mt-1">{errors.contactNumber}</p>}
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">Attach Document (optional)</label>
-                  <input type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileChange} className="text-black" />
+                  <input type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileChange} title="Attach supporting document (PDF or Word)" className="text-black" />
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <input type="checkbox" checked={formData.declarationAccepted} onChange={handleDeclarationChange} />
+                  <input type="checkbox" checked={formData.declarationAccepted} onChange={handleDeclarationChange} title="Declare that information is true and accurate" />
                   <div>
                     <p className="text-sm text-black">I hereby declare that the information provided is true and accurate.</p>
                     {errors.declaration && <p className="text-red-500 text-xs mt-1">{errors.declaration}</p>}

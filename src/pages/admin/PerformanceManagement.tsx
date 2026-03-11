@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Users, TrendingUp, Calendar, AlertTriangle, Search,
   Star, Trophy, Award, Clock, Target, BarChart3,
@@ -47,6 +47,33 @@ interface DepartmentStats {
   attendance: number;
   overallRating: number;
 }
+
+// Custom hook to set CSS custom properties dynamically
+const useStyleProperty = (ref: React.RefObject<HTMLElement>, property: string, value: string) => {
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.setProperty(property, value);
+    }
+  }, [value]);
+};
+
+// Reusable ProgressBar component
+interface ProgressBarProps {
+  value: number;
+  fillClassName?: string;
+}
+
+const ProgressBar: React.FC<ProgressBarProps> = ({
+  value,
+  fillClassName = 'h-2 rounded-full bg-blue-500 [width:var(--width)]'
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  useStyleProperty(ref, '--width', `${value}%`);
+
+  return (
+    <div ref={ref} className={fillClassName} />
+  );
+};
 
 const EmployeePerformanceModal: React.FC<{
   employee: PerformanceData;
@@ -166,10 +193,7 @@ const EmployeePerformanceModal: React.FC<{
                       <p className="text-sm text-gray-600">KPI Score</p>
                       <div className="flex items-center gap-2">
                         <div className="w-32 bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`bg-emerald-500 h-2 rounded-full [width:var(--width)]`}
-                            style={{ '--width': `${employee.kpiScore}%` } as React.CSSProperties}
-                          />
+                          <ProgressBar value={employee.kpiScore} fillClassName="h-2 rounded-full bg-emerald-500 [width:var(--width)]" />
                         </div>
                         <span className="text-lg font-bold text-gray-900">{employee.kpiScore}%</span>
                       </div>
@@ -178,10 +202,7 @@ const EmployeePerformanceModal: React.FC<{
                       <p className="text-sm text-gray-600">Task Completion</p>
                       <div className="flex items-center gap-2">
                         <div className="w-32 bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`bg-blue-500 h-2 rounded-full [width:var(--width)]`}
-                            style={{ '--width': `${employee.taskCompletion}%` } as React.CSSProperties}
-                          />
+                          <ProgressBar value={employee.taskCompletion} fillClassName="h-2 rounded-full bg-blue-500 [width:var(--width)]" />
                         </div>
                         <span className="text-lg font-bold text-gray-900">{employee.taskCompletion}%</span>
                       </div>
@@ -190,10 +211,7 @@ const EmployeePerformanceModal: React.FC<{
                       <p className="text-sm text-gray-600">Quality Score</p>
                       <div className="flex items-center gap-2">
                         <div className="w-32 bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`bg-amber-500 h-2 rounded-full [width:var(--width)]`}
-                            style={{ '--width': `${employee.qualityScore}%` } as React.CSSProperties}
-                          />
+                          <ProgressBar value={employee.qualityScore} fillClassName="h-2 rounded-full bg-amber-500 [width:var(--width)]" />
                         </div>
                         <span className="text-lg font-bold text-gray-900">{employee.qualityScore}%</span>
                       </div>
@@ -226,9 +244,9 @@ const EmployeePerformanceModal: React.FC<{
                           <span className="font-semibold text-gray-900">{goal.progress}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full [width:var(--width)] ${goal.progress >= 70 ? 'bg-emerald-500' : goal.progress >= 40 ? 'bg-blue-500' : 'bg-amber-500'}`}
-                            style={{ '--width': `${goal.progress}%` } as React.CSSProperties}
+                          <ProgressBar
+                            value={goal.progress}
+                            fillClassName={`h-2 rounded-full [width:var(--width)] ${goal.progress >= 70 ? 'bg-emerald-500' : goal.progress >= 40 ? 'bg-blue-500' : 'bg-amber-500'}`}
                           />
                         </div>
                       </div>
@@ -1436,9 +1454,9 @@ const EmployeePerformanceDashboard: React.FC = () => {
                 </div>
                 <div className="flex justify-center">
                   <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`bg-emerald-500 h-2 rounded-full [width:var(--width)]`}
-                      style={{ '--width': `${avgAttendance}%` } as React.CSSProperties}
+                    <ProgressBar
+                      value={avgAttendance}
+                      fillClassName="h-2 rounded-full bg-emerald-500 [width:var(--width)]"
                     />
                   </div>
                 </div>
@@ -1517,9 +1535,9 @@ const EmployeePerformanceDashboard: React.FC = () => {
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-24 bg-gray-200 rounded-full h-2">
-                            <div
-                              className={`h-2 rounded-full bg-blue-500 [width:var(--width)]`}
-                              style={{ '--width': `${dept.avgKPIScore}%` } as React.CSSProperties}
+                            <ProgressBar
+                              value={dept.avgKPIScore}
+                              fillClassName="h-2 rounded-full bg-blue-500 [width:var(--width)]"
                             />
                           </div>
                           <span className="text-sm font-medium text-gray-900 min-w-[40px]">{dept.avgKPIScore}%</span>
@@ -1529,9 +1547,9 @@ const EmployeePerformanceDashboard: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-gray-900 font-medium">{dept.tasksCompleted}/{dept.totalTasks}</span>
                           <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                            <div
-                              className={`h-1.5 rounded-full bg-emerald-500 [width:var(--width)]`}
-                              style={{ '--width': `${(dept.tasksCompleted / Math.max(dept.totalTasks, 1)) * 100}%` } as React.CSSProperties}
+                            <ProgressBar
+                              value={(dept.tasksCompleted / Math.max(dept.totalTasks, 1)) * 100}
+                              fillClassName="h-1.5 rounded-full bg-emerald-500 [width:var(--width)]"
                             />
                           </div>
                         </div>
@@ -1572,9 +1590,9 @@ const EmployeePerformanceDashboard: React.FC = () => {
                     <span className="text-sm font-bold text-gray-900">{kpi.value}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                    <div
-                      className={`h-2.5 rounded-full ${kpi.color} transition-all duration-500 ease-out [width:var(--width)]`}
-                      style={{ '--width': `${kpi.value}%` } as React.CSSProperties}
+                    <ProgressBar
+                      value={kpi.value}
+                      fillClassName={`h-2.5 rounded-full ${kpi.color} transition-all duration-500 ease-out [width:var(--width)]`}
                     />
                   </div>
                 </div>
@@ -1742,9 +1760,9 @@ const EmployeePerformanceDashboard: React.FC = () => {
                       <td className="p-4">
                         <div className="flex items-center gap-2">
                           <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                            <div
-                              className={`h-1.5 rounded-full [width:var(--width)] ${emp.kpiScore >= 80 ? 'bg-emerald-500' : emp.kpiScore >= 60 ? 'bg-blue-500' : 'bg-amber-500'}`}
-                              style={{ '--width': `${emp.kpiScore}%` } as React.CSSProperties}
+                            <ProgressBar
+                              value={emp.kpiScore}
+                              fillClassName={`h-1.5 rounded-full [width:var(--width)] ${emp.kpiScore >= 80 ? 'bg-emerald-500' : emp.kpiScore >= 60 ? 'bg-blue-500' : 'bg-amber-500'}`}
                             />
                           </div>
                           <span className="text-sm font-medium text-gray-900">{emp.kpiScore}%</span>
@@ -1880,6 +1898,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                     return (
                       <select
                         disabled
+                        title="Team members selection"
                         className="text-blackw-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900 opacity-50"
                       >
                         <option className="text-gray-900">Error: No team ID found</option>
