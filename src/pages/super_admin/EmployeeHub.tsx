@@ -244,7 +244,6 @@ export const EmployeeHub = () => {
 
     setIsLoadingSave(true);
     try {
-      const token = localStorage.getItem('accessToken');
       const employeeData = localEmployees.find(e => e.id === editingId);
       const employeeId = employeeData?.employeeId || editingId;
 
@@ -307,9 +306,6 @@ export const EmployeeHub = () => {
       const updateResponse = await fetch(`http://localhost:8085/api/users/super_admin/update/${employeeId}`, {
         method: 'PUT',
         credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
         body: formData,
       });
 
@@ -403,13 +399,11 @@ export const EmployeeHub = () => {
         fullData: employeeData,
       });
 
-      const token = localStorage.getItem('accessToken');
-
       // Try with query parameter first
       let response = await fetch(`http://localhost:8085/api/users/super_admin/promote/${employeeId}?roleName=${selectedAdminRole}`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -474,7 +468,6 @@ export const EmployeeHub = () => {
 
   const handleDirectTermination = async (employeeId: string) => {
     try {
-      const token = localStorage.getItem('accessToken');
       const employeeData = localEmployees.find(e => e.id === employeeId);
       const empId = employeeData?.employeeId || employeeId;
 
@@ -485,8 +478,8 @@ export const EmployeeHub = () => {
 
       const response = await fetch(`http://localhost:8085/api/users/admin/terminate/${empId}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });

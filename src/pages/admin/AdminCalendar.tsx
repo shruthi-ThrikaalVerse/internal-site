@@ -824,10 +824,10 @@ const AdminCalendar: React.FC = () => {
                 {selectedRecord && selectedRecord.status !== 'Events' && (
                   <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-2 sm:mt-3">
                     <div className={`px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-white ${selectedRecord.status === 'Working Saturday' ? 'bg-orange-500' :
-                        selectedRecord.timeIn ? 'bg-emerald-500' :
-                          selectedRecord.status === 'Future' ? 'bg-gray-500' :
-                            selectedRecord.status === 'Weekend' ? 'bg-slate-400' :
-                              getBGColorClass(selectedRecord)
+                      selectedRecord.timeIn ? 'bg-emerald-500' :
+                        selectedRecord.status === 'Future' ? 'bg-gray-500' :
+                          selectedRecord.status === 'Weekend' ? 'bg-slate-400' :
+                            getBGColorClass(selectedRecord)
                       }`}>
                       {selectedRecord.status === 'Future' ? 'FUTURE' :
                         selectedRecord.status === 'Weekend' ? 'WEEKEND' :

@@ -674,6 +674,19 @@ const Tasks: React.FC = () => {
     })();
   };
 
+  const handleEditTask = (task: any) => {
+    setEditingTaskId(task.id ?? task.taskId ?? task._id);
+    setNewTask({
+      title: task.title,
+      description: task.description,
+      assigneeType: (task.assigneeType?.toLowerCase() || 'employee') as 'employee' | 'team' | 'department',
+      assignedTo: task.employeeId || task.teamId || task.department || '',
+      priority: (task.priority?.toLowerCase() || 'p2') as TaskPriority,
+      dueDate: task.dueDate || calculateSLADueDate(task.priority?.toLowerCase() || 'p2')
+    });
+    setIsModalOpen(true);
+  };
+
   const handleEditTeam = (team: any) => {
     setEditingTeamId(team.id || team.teamId);
     setNewTeam({
@@ -773,7 +786,18 @@ const Tasks: React.FC = () => {
           </div>
           {activeTab === 'tasks' ? (
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => {
+                setEditingTaskId(null);
+                setNewTask({
+                  title: '',
+                  description: '',
+                  assigneeType: 'employee',
+                  assignedTo: '',
+                  priority: 'p2',
+                  dueDate: calculateSLADueDate('p2')
+                });
+                setIsModalOpen(true);
+              }}
               className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-white rounded-2xl hover:opacity-90 hover:shadow-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-purple-200 transition-all active:scale-95"
             >
               <Icon name="Plus" className="w-5 h-5" /> Create Task
@@ -841,9 +865,26 @@ const Tasks: React.FC = () => {
                           ⏱️ {SLA_CONFIG[task.priority as keyof typeof SLA_CONFIG]?.label || '3 Days'}
                         </span>
                       </div>
-                      <button title={`Delete task ${task.title}`} aria-label={`Delete task ${task.title}`} type="button" onClick={() => setConfirmDelete({ kind: 'task', id: task.id ?? task.taskId ?? task._id, name: task.title })} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-white/50 transition-all rounded-xl">
-                        <Icon name="Trash2" className="w-4 h-4" />
-                      </button>
+                      <div className="flex gap-1">
+                        <button
+                          title={`Edit task ${task.title}`}
+                          aria-label={`Edit task ${task.title}`}
+                          type="button"
+                          onClick={() => handleEditTask(task)}
+                          className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white/50 transition-all rounded-xl"
+                        >
+                          <Icon name="Edit3" className="w-4 h-4" />
+                        </button>
+                        <button
+                          title={`Delete task ${task.title}`}
+                          aria-label={`Delete task ${task.title}`}
+                          type="button"
+                          onClick={() => setConfirmDelete({ kind: 'task', id: task.id ?? task.taskId ?? task._id, name: task.title })}
+                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-white/50 transition-all rounded-xl"
+                        >
+                          <Icon name="Trash2" className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                     <h3 className="text-lg font-black text-slate-900 leading-tight mb-2">{task.title}</h3>
                     <p className="text-sm text-slate-700 font-medium mb-6 line-clamp-2">{task.description}</p>
@@ -975,8 +1016,11 @@ const Tasks: React.FC = () => {
         </div>
       )}
 
-      {/* CREATE TASK MODAL */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Create Assignment">
+      {/* CREATE/EDIT TASK MODAL */}
+      <Modal isOpen={isModalOpen} onClose={() => {
+        setIsModalOpen(false);
+        setEditingTaskId(null);
+      }} title={editingTaskId ? "Edit Assignment" : "Create Assignment"}>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Task Title</label>
@@ -1084,8 +1128,13 @@ const Tasks: React.FC = () => {
           </div>
 
           <div className="pt-6 border-t border-slate-100 flex gap-4">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all text-black">Discard</button>
-            <button type="submit" className="flex-1 py-4 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-purple-100 hover:opacity-90 transition-all active:scale-95">🎯 Confirm Assignment</button>
+            <button type="button" onClick={() => {
+              setIsModalOpen(false);
+              setEditingTaskId(null);
+            }} className="flex-1 py-4 text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all text-black">Discard</button>
+            <button type="submit" className="flex-1 py-4 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-purple-100 hover:opacity-90 transition-all active:scale-95">
+              {editingTaskId ? "✏️ Update Assignment" : "🎯 Confirm Assignment"}
+            </button>
           </div>
         </form>
       </Modal>
