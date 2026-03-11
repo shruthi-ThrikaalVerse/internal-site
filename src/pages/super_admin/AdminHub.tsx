@@ -278,8 +278,6 @@ export const AdminHub = () => {
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            const token = localStorage.getItem('accessToken');
-
             if (isNew) {
                 // CREATE NEW ADMIN - POST to register endpoint
                 const formData = new FormData();
@@ -309,9 +307,6 @@ export const AdminHub = () => {
 
                 const response = await fetch('http://localhost:8085/api/users/register', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
                     credentials: 'include',
                     body: formData,
                 });
@@ -333,11 +328,10 @@ export const AdminHub = () => {
                     try {
                         const refetchResponse = await fetch('http://localhost:8085/api/users/admin/employees', {
                             method: 'GET',
+                            credentials: 'include',
                             headers: {
-                                'Authorization': `Bearer ${token}`,
                                 'Content-Type': 'application/json',
                             },
-                            credentials: 'include',
                         });
 
                         if (refetchResponse.ok) {
@@ -421,9 +415,6 @@ export const AdminHub = () => {
 
                 const updateResponse = await fetch(`http://localhost:8085/api/users/super_admin/update/${adminId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
                     credentials: 'include',
                     body: formData,
                 });
@@ -495,7 +486,6 @@ export const AdminHub = () => {
 
     const handleDirectTerminateAdmin = async (adminId: string) => {
         try {
-            const token = localStorage.getItem('accessToken');
             const adminData = admins.find(a => a.id === adminId);
             const empId = adminData?.employeeId || adminId;
 
@@ -506,11 +496,10 @@ export const AdminHub = () => {
 
             const response = await fetch(`http://localhost:8085/api/users/admin/terminate/${empId}`, {
                 method: 'PUT',
+                credentials: 'include',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include',
             });
 
             console.log('Terminate response status:', response.status);
@@ -971,13 +960,7 @@ export const AdminHub = () => {
                                         <div className="flex items-center justify-end gap-2">
                                             {isSuperAdmin && a.id !== currentUser?.id && a.status === 'active' && (
                                                 <>
-                                                    <button
-                                                        onClick={() => setConfirmDemoteId(a.id)}
-                                                        title="Demote to Employee Tier"
-                                                        className="p-2.5 bg-blue-600/10 hover:bg-blue-600 text-blue-600 hover:text-white rounded-xl transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                                                    >
-                                                        <TrendingDown size={18} />
-                                                    </button>
+
                                                     <button
                                                         onClick={() => setConfirmTerminateId(a.id)}
                                                         title="Directly Terminate Admin Access"
@@ -1035,8 +1018,8 @@ export const AdminHub = () => {
                         <button
                             onClick={() => setActiveTab('personal')}
                             className={`flex-1 px-6 py-4 font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeTab === 'personal'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                                 }`}
                         >
                             <UserPlus size={16} />
@@ -1045,8 +1028,8 @@ export const AdminHub = () => {
                         <button
                             onClick={() => setActiveTab('performance')}
                             className={`flex-1 px-6 py-4 font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeTab === 'performance'
-                                    ? 'bg-emerald-600 text-white'
-                                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                                 }`}
                         >
                             <BarChart3 size={16} />
@@ -1242,8 +1225,8 @@ export const AdminHub = () => {
                                                         key={period}
                                                         onClick={() => setPerformanceViewPeriod(period)}
                                                         className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${performanceViewPeriod === period
-                                                                ? 'bg-indigo-600 text-white shadow-lg'
-                                                                : 'bg-transparent text-slate-600 hover:text-black'
+                                                            ? 'bg-indigo-600 text-white shadow-lg'
+                                                            : 'bg-transparent text-slate-600 hover:text-black'
                                                             }`}
                                                     >
                                                         {period === 'monthly' ? 'Monthly' : period === 'quarterly' ? 'Quarterly' : 'Yearly'}
@@ -1453,8 +1436,8 @@ export const AdminHub = () => {
                                                                 type="button"
                                                                 onClick={() => setPerformanceFormPeriod(period)}
                                                                 className={`flex-1 px-3 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${performanceFormPeriod === period
-                                                                        ? 'bg-indigo-600 text-white shadow-lg'
-                                                                        : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+                                                                    ? 'bg-indigo-600 text-white shadow-lg'
+                                                                    : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
                                                                     }`}
                                                             >
                                                                 {period === 'monthly' ? 'Monthly' : period === 'quarterly' ? 'Quarterly' : 'Yearly'}
@@ -1579,8 +1562,8 @@ export const AdminHub = () => {
                                                             <button
                                                                 onClick={() => setReviewHistoryPeriodFilter('all')}
                                                                 className={`px-2 py-1 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${reviewHistoryPeriodFilter === 'all'
-                                                                        ? 'bg-indigo-600 text-white shadow-lg'
-                                                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                                    ? 'bg-indigo-600 text-white shadow-lg'
+                                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                                                     }`}
                                                             >
                                                                 All
@@ -1588,8 +1571,8 @@ export const AdminHub = () => {
                                                             <button
                                                                 onClick={() => setReviewHistoryPeriodFilter('monthly')}
                                                                 className={`px-2 py-1 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${reviewHistoryPeriodFilter === 'monthly'
-                                                                        ? 'bg-blue-600 text-white shadow-lg'
-                                                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                                    ? 'bg-blue-600 text-white shadow-lg'
+                                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                                                     }`}
                                                             >
                                                                 Monthly
@@ -1597,8 +1580,8 @@ export const AdminHub = () => {
                                                             <button
                                                                 onClick={() => setReviewHistoryPeriodFilter('quarterly')}
                                                                 className={`px-2 py-1 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${reviewHistoryPeriodFilter === 'quarterly'
-                                                                        ? 'bg-purple-600 text-white shadow-lg'
-                                                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                                    ? 'bg-purple-600 text-white shadow-lg'
+                                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                                                     }`}
                                                             >
                                                                 Quarterly
@@ -1606,8 +1589,8 @@ export const AdminHub = () => {
                                                             <button
                                                                 onClick={() => setReviewHistoryPeriodFilter('yearly')}
                                                                 className={`px-2 py-1 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${reviewHistoryPeriodFilter === 'yearly'
-                                                                        ? 'bg-green-600 text-white shadow-lg'
-                                                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                                    ? 'bg-green-600 text-white shadow-lg'
+                                                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                                                     }`}
                                                             >
                                                                 Yearly
