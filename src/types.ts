@@ -235,6 +235,7 @@ export interface Document {
 }
 
 export interface EmployeeDocument {
+  id?: number | string;
   type: string;
   status: 'uploaded' | 'pending' | 'verified';
   uploadedDate?: string;

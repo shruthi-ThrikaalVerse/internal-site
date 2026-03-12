@@ -81,6 +81,13 @@ export const AdminHub = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
 
+    // Form Validation State
+    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({
+        email: '',
+        employeeId: '',
+        phoneNumber: ''
+    });
+
     // Confirmation Modals State
     const [confirmDemoteId, setConfirmDemoteId] = useState<string | null>(null);
     const [confirmTerminateId, setConfirmTerminateId] = useState<string | null>(null);
@@ -248,6 +255,7 @@ export const AdminHub = () => {
     const handleEdit = (admin: User) => {
         setIsNew(false);
         setEditingId(admin.id);
+        setValidationErrors({ email: '', employeeId: '', phoneNumber: '' });
         console.log('Editing admin with ID:', admin.id);
         console.log('Admin object:', admin);
         setFormState({
@@ -274,6 +282,7 @@ export const AdminHub = () => {
 
     const handleAddNew = () => {
         setFormState(EMPTY_ADMIN_STATE);
+        setValidationErrors({ email: '', employeeId: '', phoneNumber: '' });
         setIsNew(true);
         setEditingId(null);
         setSelectedImage(null);
@@ -282,6 +291,12 @@ export const AdminHub = () => {
     };
 
     const handleSave = async () => {
+        // Validate form before submission
+        if (!validateForm()) {
+            alert('Please fix the validation errors before submitting');
+            return;
+        }
+
         setIsLoading(true);
         try {
             if (isNew) {
@@ -543,6 +558,62 @@ export const AdminHub = () => {
 
     const updateField = (field: keyof typeof EMPTY_ADMIN_STATE, value: any) => {
         setFormState(prev => ({ ...prev, [field]: value }));
+        // Clear error when user starts typing
+        if (validationErrors[field]) {
+            setValidationErrors(prev => ({ ...prev, [field]: '' }));
+        }
+    };
+
+    // Validation Functions
+    const validateEmail = (email: string): string => {
+        if (!email.trim()) {
+            return 'Email address is required';
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return 'Please enter a valid email address';
+        }
+        return '';
+    };
+
+    const validateEmployeeId = (empId: string): string => {
+        if (!empId.trim()) {
+            return 'Employee ID is required';
+        }
+        if (!/^\d+$/.test(empId)) {
+            return 'Employee ID must contain only numbers';
+        }
+        if (empId.length > 6) {
+            return 'Employee ID must be maximum 6 digits';
+        }
+        return '';
+    };
+
+    const validatePhoneNumber = (phone: string): string => {
+        if (!phone.trim()) {
+            return 'Phone number is required';
+        }
+        if (!/^\d+$/.test(phone)) {
+            return 'Phone number must contain only numbers';
+        }
+        if (phone.length !== 10) {
+            return 'Phone number must be exactly 10 digits';
+        }
+        // Indian phone number validation (should start with 6-9)
+        if (!/^[6-9]/.test(phone)) {
+            return 'Indian phone number must start with 6, 7, 8, or 9';
+        }
+        return '';
+    };
+
+    const validateForm = (): boolean => {
+        const errors: Record<string, string> = {};
+        errors.email = validateEmail(formState.email);
+        errors.employeeId = validateEmployeeId(formState.employeeId);
+        errors.phoneNumber = validatePhoneNumber(formState.phoneNumber);
+
+        setValidationErrors(errors);
+        return !Object.values(errors).some(error => error !== '');
     };
 
     const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1873,7 +1944,14 @@ export const AdminHub = () => {
                         <FormInput label="First Name" value={formState.firstName} onChange={(val) => updateField('firstName', val)} placeholder="e.g. Tarak" />
                         <FormInput label="Last Name" value={formState.lastName} onChange={(val) => updateField('lastName', val)} placeholder="e.g. RATNA" />
                         <FormInput label="Username" value={formState.username} onChange={(val) => updateField('username', val)} placeholder="e.g. TARAK" />
-                        <FormInput label="Email Address" value={formState.email} onChange={(val) => updateField('email', val)} placeholder="tarakjr@example.com" />
+                        <div className="space-y-2 w-full">
+                            <FormInput label="Email Address" value={formState.email} onChange={(val) => updateField('email', val)} placeholder="tarakjr@example.com" />
+                            {validationErrors.email && (
+                                <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
+                                    <span>⚠️</span> {validationErrors.email}
+                                </p>
+                            )}
+                        </div>
 
                         <div className="md:col-span-2 mt-4">
                             <h5 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
@@ -1881,7 +1959,19 @@ export const AdminHub = () => {
                                 Professional Details
                             </h5>
                         </div>
-                        <FormInput label="Employee ID" value={formState.employeeId} onChange={(val) => updateField('employeeId', val)} placeholder="202501" />
+                        <div className="space-y-2 w-full">
+                            <FormInput label="Employee ID" value={formState.employeeId} onChange={(val) => {
+                                // Allow only numbers and limit to 6 digits
+                                const cleanedValue = val.replace(/\D/g, '').slice(0, 6);
+                                updateField('employeeId', cleanedValue);
+                            }} placeholder="202501" />
+                            <p className="text-xs text-gray-500 font-medium">Maximum 6 digits, numbers only</p>
+                            {validationErrors.employeeId && (
+                                <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
+                                    <span>⚠️</span> {validationErrors.employeeId}
+                                </p>
+                            )}
+                        </div>
                         <FormInput label="Designation" value={formState.designation} onChange={(val) => updateField('designation', val)} placeholder="SOFTWARE ENGINEER" />
                         <FormSelect label="Department" value={formState.department} onChange={(val) => updateField('department', val)} options={DEPARTMENTS} />
                         <FormSelect label="Employment Type" value={formState.userType} onChange={(val) => updateField('userType', val)} options={EMPLOYMENT_TYPES} />
@@ -1892,7 +1982,19 @@ export const AdminHub = () => {
                                 Contact Information
                             </h5>
                         </div>
-                        <FormInput label="Phone Number" value={formState.phoneNumber} onChange={(val) => updateField('phoneNumber', val)} placeholder="9876543210" />
+                        <div className="space-y-2 w-full">
+                            <FormInput label="Phone Number" value={formState.phoneNumber} onChange={(val) => {
+                                // Allow only numbers and limit to 10 digits
+                                const cleanedValue = val.replace(/\D/g, '').slice(0, 10);
+                                updateField('phoneNumber', cleanedValue);
+                            }} placeholder="9876543210" />
+                            <p className="text-xs text-gray-500 font-medium">10 digit Indian number (6-9 start)</p>
+                            {validationErrors.phoneNumber && (
+                                <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
+                                    <span>⚠️</span> {validationErrors.phoneNumber}
+                                </p>
+                            )}
+                        </div>
                         <FormInput label="Address" value={formState.address} onChange={(val) => updateField('address', val)} placeholder="guntur" />
 
                         <div className="md:col-span-2 mt-4">
