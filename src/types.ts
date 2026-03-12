@@ -485,7 +485,8 @@ export enum AppSection {
   Notifications = 'Notifications',
   SystemMaintenance = 'SystemMaintenance',
   Documents = 'Documents',
-  Profile = 'Profile'
+  Profile = 'Profile',
+  AttendanceMonitor = 'AttendanceMonitor', // Added for super admin attendance
 }
 
 export interface AdminRequest {

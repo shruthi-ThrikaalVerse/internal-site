@@ -161,6 +161,7 @@ export const NAVIGATION_ITEMS = [
   { id: AppSection.EmployeeHub, label: 'Employees', iconName: 'Users' },
   { id: AppSection.AdminHub, label: 'Admin Hub', iconName: 'Settings' },
   { id: AppSection.AdminRequests, label: 'Requests', iconName: 'FileText' },
+  { id: AppSection.AttendanceMonitor, label: 'Attendance Monitor', iconName: 'Calendar' }, // Moved below Requests
   { id: AppSection.AuditLogs, label: 'Audit Logs', iconName: 'AlertCircle' },
   { id: AppSection.Payroll, label: 'Payroll', iconName: 'DollarSign' },
   { id: AppSection.Projects, label: 'Projects', iconName: 'GitBranch' },
