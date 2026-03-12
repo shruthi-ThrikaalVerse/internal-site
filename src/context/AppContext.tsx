@@ -129,14 +129,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   React.useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) return;
-
         const response = await fetch('http://localhost:8085/api/admin-hub/requests', {
           method: 'GET',
+          credentials: 'include', // Send HttpOnly cookie
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
           },
         });
 
@@ -144,15 +141,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           const data = await response.json();
           const mappedRequests = Array.isArray(data) ? data : data.requests || [];
           setRequests(mappedRequests);
+        } else if (response.status === 404) {
+          // Endpoint doesn't exist, skip polling
+          console.debug('Requests endpoint not available on backend');
         }
       } catch (err) {
-        console.error('Error fetching requests:', err);
+        console.debug('Error fetching requests (endpoint may not be available):', err);
       }
     };
 
     fetchRequests();
-    const interval = setInterval(fetchRequests, 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
+    // Comment out polling as endpoint returns 404 - only fetch once
+    // const interval = setInterval(fetchRequests, 30000); // Refresh every 30 seconds
+    // return () => clearInterval(interval);
   }, []);
 
   const addEmployee = (newEmployee: User) => {

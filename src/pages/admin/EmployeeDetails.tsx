@@ -4,11 +4,23 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts';
 import { PerformanceAnalyticsResponse } from '../../types.ts';
-import { getPerformancePercentage, submitReview } from '../../api/performance.ts';
+import { getPerformancePercentage, submitReview, getAllReviews } from '../../api/performance.ts';
 
 const Icon = ({ name, className, onClick }: { name: string; className?: string; onClick?: () => void }) => {
   const LucideIcon = (LucideIcons as any)[name];
   return LucideIcon ? <LucideIcon className={className} onClick={onClick} /> : null;
+};
+
+// Helper function to convert rating string to number
+const convertRatingToNumber = (rating: string): number => {
+  const ratingMap: Record<string, number> = {
+    'ONE': 1,
+    'TWO': 2,
+    'THREE': 3,
+    'FOUR': 4,
+    'FIVE': 5
+  };
+  return ratingMap[rating] || 1;
 };
 
 
@@ -58,63 +70,37 @@ const EmployeeDetails: React.FC = () => {
 
   // whenever the period or filter or year changes, fire off an API call
   useEffect(() => {
-    // Load dummy review history data
-    const dummyReviews: PerformanceReview[] = [
-      {
-        id: '1',
-        employeeName: 'Rajesh Kumar',
-        employeeId: 'EMP001',
-        period: 'monthly',
-        periodLabel: 'January 2026',
-        rating: 4.5,
-        feedback: 'Excellent performance this month. Consistently delivers high-quality work.',
-        strengths: 'Strong technical skills, great communication, proactive problem solving',
-        improvements: 'Could improve time management, sometimes misses deadlines',
-        submittedDate: '2026-02-01',
-        submittedBy: 'Admin User'
-      },
-      {
-        id: '2',
-        employeeName: 'Priya Singh',
-        employeeId: 'EMP002',
-        period: 'quarterly',
-        periodLabel: 'Q4 2025',
-        rating: 4.2,
-        feedback: 'Good overall performance. Shows improvement in leadership skills.',
-        strengths: 'Team player, reliable, good documentation practices',
-        improvements: 'Needs to improve presentation skills and stakeholder communication',
-        submittedDate: '2026-01-15',
-        submittedBy: 'Admin User'
-      },
-      {
-        id: '3',
-        employeeName: 'Amit Patel',
-        employeeId: 'EMP003',
-        period: 'yearly',
-        periodLabel: 'Year 2025',
-        rating: 3.8,
-        feedback: 'Satisfactory performance. Met most of the annual goals.',
-        strengths: 'Stable performer, good attendance, follows guidelines',
-        improvements: 'Needs to show more initiative, could take on more challenging projects',
-        submittedDate: '2025-12-20',
-        submittedBy: 'Admin User'
-      },
-      {
-        id: '4',
-        employeeName: 'Rajesh Kumar',
-        employeeId: 'EMP001',
-        period: 'monthly',
-        periodLabel: 'December 2025',
-        rating: 4.8,
-        feedback: 'Outstanding performance this month. Delivered critical project on time.',
-        strengths: 'Excellent coding skills, takes initiative, mentors junior developers',
-        improvements: 'Could document code better',
-        submittedDate: '2026-01-05',
-        submittedBy: 'Admin User'
+    // Load reviews from API
+    const loadReviews = async () => {
+      try {
+        const reviews = await getAllReviews();
+        // Transform API review to PerformanceReview format
+        const formattedReviews: PerformanceReview[] = reviews.map((review) => {
+          // Find employee name from the employees list
+          const employee = employees.find(emp => emp.employeeId === review.employeeId);
+          return {
+            id: review.id.toString(),
+            employeeName: employee?.fullName || 'Unknown',
+            employeeId: review.employeeId,
+            period: review.periodType.toLowerCase() as 'monthly' | 'quarterly' | 'yearly',
+            periodLabel: review.period,
+            rating: convertRatingToNumber(review.rating),
+            feedback: review.feedback,
+            strengths: review.strengths,
+            improvements: review.areasOfImprovement,
+            submittedDate: review.createdAt.split('T')[0],
+            submittedBy: 'Admin User'
+          };
+        });
+        setReviewHistory(formattedReviews);
+      } catch (error) {
+        console.error('Failed to load reviews:', error);
+        setReviewHistory([]);
       }
-    ];
-    setReviewHistory(dummyReviews);
-  }, []);
+    };
+
+    loadReviews();
+  }, [employees]);
 
   useEffect(() => {
     if (!selectedEmployee) {
@@ -165,13 +151,20 @@ const EmployeeDetails: React.FC = () => {
   }, [performanceViewPeriod, performanceViewYear]);
 
   const pieChartData = useMemo(() => {
-    if (!analytics) {
+    if (!analytics || !analytics.leaveAnalyticsResponse || !analytics.attendanceAnayticsResponse) {
       return { leaves: [], attendance: [], tasks: [] };
     }
-    const pendingTasks =
-      analytics.taskAnalyticsResponse.assigned -
-      analytics.taskAnalyticsResponse.completed -
-      analytics.taskAnalyticsResponse.inProgress;
+    
+    // Handle task data if available
+    let tasksData: any[] = [];
+    if (analytics.taskAnalyticsResponse) {
+      const pendingTasks = analytics.taskAnalyticsResponse.assigned - analytics.taskAnalyticsResponse.completed;
+      tasksData = [
+        { name: 'Completed', value: analytics.taskAnalyticsResponse.completed, fill: '#10b981' },
+        { name: 'Pending', value: pendingTasks, fill: '#ef4444' }
+      ];
+    }
+    
     return {
       leaves: [
         { name: 'Leaves Taken', value: analytics.leaveAnalyticsResponse.leavesTaken, fill: '#ef4444' },
@@ -185,10 +178,7 @@ const EmployeeDetails: React.FC = () => {
         { name: 'Present', value: analytics.attendanceAnayticsResponse.presentDays, fill: '#3b82f6' },
         { name: 'Absent', value: analytics.attendanceAnayticsResponse.absentDays, fill: '#fbbf24' }
       ],
-      tasks: [
-        { name: 'Completed', value: analytics.taskAnalyticsResponse.completed, fill: '#10b981' },
-        { name: 'Pending', value: pendingTasks, fill: '#ef4444' }
-      ]
+      tasks: tasksData
     };
   }, [analytics]);
 
@@ -252,12 +242,12 @@ const EmployeeDetails: React.FC = () => {
 
     try {
       // Convert rating string to enum format
-      const ratingMap: Record<string, 'EXCELLENT' | 'GOOD' | 'AVERAGE' | 'NEEDS_IMPROVEMENT' | 'POOR'> = {
-        '4.5': 'EXCELLENT',
-        '4': 'GOOD',
-        '3': 'AVERAGE',
-        '2': 'NEEDS_IMPROVEMENT',
-        '1': 'POOR'
+      const ratingMap: Record<string, 'ONE' | 'TWO' | 'THREE' | 'FOUR' | 'FIVE'> = {
+        'one': 'ONE',
+        'two': 'TWO',
+        'three': 'THREE',
+        'four': 'FOUR',
+        'five': 'FIVE'
       };
 
       const periodTypeMap: Record<'monthly' | 'quarterly' | 'yearly', 'MONTHLY' | 'QUARTERLY' | 'YEARLY'> = {
@@ -276,11 +266,12 @@ const EmployeeDetails: React.FC = () => {
       try {
         await submitReview({
           employeeId: selectedEmployee?.employeeId || 'N/A',
+          employeeName: selectedEmployee?.fullName || 'Unknown',
           feedback: performanceFormData.feedback,
           strengths: performanceFormData.strengths,
           areasOfImprovement: performanceFormData.improvements,
           periodType: periodTypeMap[performanceFormPeriod],
-          rating: ratingMap[performanceFormData.rating] || 'GOOD',
+          rating: ratingMap[performanceFormData.rating] || 'ONE',
           period: periodString
         });
       } catch (apiError) {
@@ -289,13 +280,21 @@ const EmployeeDetails: React.FC = () => {
       }
 
       // Add to local state regardless
+      const ratingValueMap: Record<string, number> = {
+        'one': 1,
+        'two': 2,
+        'three': 3,
+        'four': 4,
+        'five': 5
+      };
+
       const newReview: PerformanceReview = {
         id: String(reviewHistory.length + 1),
         employeeName: selectedEmployee?.fullName || 'Unknown',
         employeeId: selectedEmployee?.employeeId || 'N/A',
         period: performanceFormPeriod,
         periodLabel: periodString,
-        rating: parseFloat(performanceFormData.rating),
+        rating: ratingValueMap[performanceFormData.rating] || 1,
         feedback: performanceFormData.feedback,
         strengths: performanceFormData.strengths,
         improvements: performanceFormData.improvements,

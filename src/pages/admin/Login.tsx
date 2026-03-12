@@ -38,12 +38,6 @@ const Login: React.FC = () => {
         case 'admin':
           navigate('/admin/dashboard');
           break;
-        case 'manager':
-          navigate('/manager/dashboard');
-          break;
-        case 'auditor':
-          navigate('/auditor/dashboard');
-          break;
         default:
           navigate('/dashboard');
       }

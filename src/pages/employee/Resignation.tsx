@@ -200,8 +200,8 @@ const Resignation: React.FC = () => {
             formDataToSend.append('noticePeriod', formData.noticePeriod);
             formDataToSend.append('reason', formData.reason);
             formDataToSend.append('detailedReason', formData.detailedReason);
-            formDataToSend.append('personalEmail', formData.personalEmail);
-            formDataToSend.append('contactNumber', formData.contactNumber);
+            formDataToSend.append('contactEmail', formData.personalEmail); // Updated field name
+            formDataToSend.append('contactPhone', formData.contactNumber); // Updated field name
             if (formData.document) {
                 formDataToSend.append('file', formData.document);
             }

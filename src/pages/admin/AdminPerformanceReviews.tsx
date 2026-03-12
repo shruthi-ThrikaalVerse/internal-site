@@ -1,36 +1,23 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { User as UserIcon, Star, Calendar, Loader, TrendingUp, BarChart3, Filter, ChevronDown, ChevronUp, Sparkles, Zap, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2 } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, ComposedChart } from 'recharts';
-import { getEmployeeReviews, getMyReviews } from '../../api/performance.ts';
-import { getAllReviews } from '../../api/tasks.ts';
+import { Star, Calendar, Loader, TrendingUp, BarChart3, Filter, Sparkles, Zap, Clock, CheckCircle2 } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { getEmployeeReviews } from '../../api/performance.ts';
 import { getUserData } from '../../utils/storage.ts';
 
 // Types
 interface Review {
     id: number;
     employeeId: string;
+    employeeName: string;
     feedback: string;
     strengths: string;
     areasOfImprovement: string;
     periodType: 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
-    rating: 'ONE' | 'TWO' | 'THREE' | 'FOUR' | 'FIVE';
+    rating: 'EXCELLENT' | 'GOOD' | 'AVERAGE' | 'NEEDS_IMPROVEMENT' | 'POOR';
     period: string;
     createdAt: string;
-}
-
-interface TaskReview {
-    reviewId: number;
-    taskId: number;
-    employeeId: string;
-    rating: 'ONE' | 'TWO' | 'THREE' | 'FOUR' | 'FIVE';
-    comments: string;
     reviewedBy: string;
-    createdAt: string;
-    updatedAt: string;
-    taskTitle?: string;
 }
-
-
 
 // Helper functions
 const getRatingNumber = (rating: string): number => {
@@ -40,11 +27,6 @@ const getRatingNumber = (rating: string): number => {
         'AVERAGE': 3.0,
         'NEEDS_IMPROVEMENT': 2.0,
         'POOR': 1.0,
-        'FIVE': 5.0,
-        'FOUR': 4.0,
-        'THREE': 3.0,
-        'TWO': 2.0,
-        'ONE': 1.0
     };
     return ratingMap[rating] || 3.0;
 };
@@ -56,11 +38,6 @@ const getRatingColor = (rating: string): string => {
         'AVERAGE': '#F59E0B',
         'NEEDS_IMPROVEMENT': '#EF4444',
         'POOR': '#6B7280',
-        'FIVE': '#10B981',
-        'FOUR': '#3B82F6',
-        'THREE': '#F59E0B',
-        'TWO': '#EF4444',
-        'ONE': '#6B7280'
     };
     return colorMap[rating] || '#3B82F6';
 };
@@ -105,13 +82,6 @@ const getCurrentDateInfo = () => {
     };
 };
 
-// Colors
-const CHART_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
-const RATING_COLORS: Record<string, string> = {
-    '5.0': '#10B981', '4.5': '#34D399', '4.0': '#3B82F6', '3.5': '#60A5FA',
-    '3.0': '#F59E0B', '2.5': '#FBBF24', '2.0': '#EF4444', '1.5': '#F87171', '1.0': '#6B7280'
-};
-
 // Star Rating Component
 const StarRating: React.FC<{ rating: number; size?: number; showNumber?: boolean }> = ({ rating, size = 16, showNumber = false }) => {
     return (
@@ -119,7 +89,6 @@ const StarRating: React.FC<{ rating: number; size?: number; showNumber?: boolean
             {[1, 2, 3, 4, 5].map((star) => {
                 const fillPercentage = Math.min(Math.max((rating - (star - 1)) * 100, 0), 100);
                 return (
-                    // eslint-disable-next-line
                     <div
                         key={star}
                         className="relative"
@@ -128,13 +97,11 @@ const StarRating: React.FC<{ rating: number; size?: number; showNumber?: boolean
                             height: `${size}px`
                         }}
                     >
-                        {/* Background Star */}
                         <Star
                             size={size}
                             className="text-gray-300 absolute top-0 left-0"
                             fill="#e5e7eb"
                         />
-                        {/* Foreground Star with Fill Percentage */}
                         <div
                             className="absolute top-0 left-0 overflow-hidden"
                             style={{
@@ -165,38 +132,56 @@ const GradientBg = () => (
     </div>
 );
 
-// Main Dashboard Component
-const EmployeePerformanceDashboard: React.FC = () => {
+// Main Component
+const AdminPerformanceReviews: React.FC = () => {
     const [allReviews, setAllReviews] = useState<Review[]>([]);
-    const [taskReviews, setTaskReviews] = useState<TaskReview[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isLoadingTaskReviews, setIsLoadingTaskReviews] = useState(true);
     const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
     const [selectedTimeRange, setSelectedTimeRange] = useState<string>('current');
-    const [activeRatingPieIndex, setActiveRatingPieIndex] = useState<number>(0);
 
-    // TODO: Replace with actual API call to fetch employee data
-    const [currentEmployee, setCurrentEmployee] = useState({
-        id: '',
-        firstName: '',
-        lastName: '',
-        employeeId: '',
-        department: '',
-        position: '',
-        hireDate: ''
-    });
-
-    // Get current date info
     const currentInfo = useMemo(() => getCurrentDateInfo(), []);
 
-    // TODO: Replace with actual API call to fetch reviews
+    // Fetch reviews for current admin user
     useEffect(() => {
         setIsLoading(true);
         
         const fetchReviews = async () => {
             try {
-                const reviews = await getMyReviews();
-                const sortedReviews = reviews.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                // Get current admin user
+                const userData = getUserData();
+                const adminEmployeeId = userData?.id || userData?.employeeId;
+
+                if (!adminEmployeeId) {
+                    console.warn('No employee ID found for admin');
+                    setAllReviews([]);
+                    return;
+                }
+
+                // Fetch all reviews from API
+                const apiReviews = await getEmployeeReviews();
+
+                // Map API reviews to our Review interface and filter by admin (as employee receiving reviews)
+                const mappedReviews: Review[] = apiReviews
+                    .filter((review: any) => review.employeeId === adminEmployeeId)
+                    .map((review: any) => ({
+                        id: review.id,
+                        employeeId: review.employeeId,
+                        employeeName: userData?.name || 'You',
+                        feedback: review.feedback,
+                        strengths: review.strengths,
+                        areasOfImprovement: review.areasOfImprovement,
+                        periodType: review.periodType,
+                        rating: review.rating,
+                        period: review.period,
+                        createdAt: review.createdAt,
+                        reviewedBy: review.reviewedBy
+                    }));
+
+                // Sort by creation date (newest first)
+                const sortedReviews = mappedReviews.sort((a: Review, b: Review) => 
+                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                );
+
                 setAllReviews(sortedReviews);
             } catch (error) {
                 console.error('Error loading reviews:', error);
@@ -205,47 +190,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                 setTimeout(() => setIsLoading(false), 300);
             }
         };
-        
-        fetchReviews();
-    }, []);
 
-    // Fetch task reviews
-    useEffect(() => {
-        setIsLoadingTaskReviews(true);
-        
-        const fetchTaskReviews = async () => {
-            try {
-                // Get current user's employee ID
-                const userData = getUserData();
-                const currentEmployeeId = userData?.id || userData?.employeeId;
-                
-                if (!currentEmployeeId) {
-                    console.warn('No employee ID found in user data');
-                    setTaskReviews([]);
-                    return;
-                }
-                
-                // Fetch reviews from API
-                const allReviews = await getAllReviews();
-                
-                // Filter reviews by current employee ID
-                const filteredReviews = allReviews.filter((review: TaskReview) => review.employeeId === currentEmployeeId);
-                
-                // Sort by creation date (newest first)
-                const sortedReviews = filteredReviews.sort((a: TaskReview, b: TaskReview) => 
-                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                );
-                
-                setTaskReviews(sortedReviews);
-            } catch (error) {
-                console.error('Error loading task reviews:', error);
-                setTaskReviews([]);
-            } finally {
-                setTimeout(() => setIsLoadingTaskReviews(false), 300);
-            }
-        };
-        
-        fetchTaskReviews();
     }, []);
 
     // Get current period value based on selected period
@@ -255,32 +200,37 @@ const EmployeePerformanceDashboard: React.FC = () => {
         return currentInfo.currentYear.toString();
     };
 
-    // Get all available time ranges (current + historical)
+    // Get all available time ranges
     const getAllTimeRanges = useMemo(() => {
         const periods = [...new Set(allReviews.map(r => r.period))] as string[];
         return periods.sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
     }, [allReviews]);
 
-    // Get reviews for selected period ONLY
+    // Get filtered reviews
     const filteredReviews = useMemo(() => {
+        let reviews = allReviews;
+
+        // Filter by time range
         if (selectedTimeRange === 'current') {
-            return allReviews.filter(r => r.periodType === selectedPeriod.toUpperCase());
+            reviews = allReviews.filter(r => r.periodType === selectedPeriod.toUpperCase());
+        } else {
+            reviews = allReviews.filter(r => r.period === selectedTimeRange);
         }
-        return allReviews.filter(r => r.period === selectedTimeRange);
+
+        return reviews;
     }, [allReviews, selectedPeriod, selectedTimeRange]);
 
-    // Get recent reviews (all reviews, latest first)
+    // Get recent reviews
     const recentReviews = useMemo(() => {
-        return allReviews.slice(0, 8); // Show 8 most recent reviews
+        return allReviews.slice(0, 8);
     }, [allReviews]);
 
-    // Get rating distribution data dynamically based on filtered reviews
+    // Get rating distribution data
     const getRatingDistributionData = useMemo(() => {
         if (filteredReviews.length === 0) {
             return [];
         }
 
-        // Group reviews by rating
         const ratingGroups: Record<string, { count: number; color: string; value: number }> = {};
         filteredReviews.forEach(review => {
             if (!ratingGroups[review.rating]) {
@@ -289,8 +239,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
             ratingGroups[review.rating].count += 1;
         });
 
-        // Convert to array sorted by rating
-        const ratingOrder = ['FIVE', 'FOUR', 'THREE', 'TWO', 'ONE'];
+        const ratingOrder = ['EXCELLENT', 'GOOD', 'AVERAGE', 'NEEDS_IMPROVEMENT', 'POOR'];
         return Object.entries(ratingGroups)
             .map(([rating, data]) => ({
                 name: rating,
@@ -301,13 +250,12 @@ const EmployeePerformanceDashboard: React.FC = () => {
             .sort((a, b) => ratingOrder.indexOf(Object.keys(ratingGroups)[0]) - ratingOrder.indexOf(Object.keys(ratingGroups)[1]));
     }, [filteredReviews]);
 
-    // Get trend chart data dynamically based on selected period
+    // Get trend chart data
     const getTrendChartData = useMemo(() => {
         if (allReviews.length === 0) {
             return [];
         }
 
-        // Group by period and calculate averages
         const periodGroups: Record<string, { ratings: number[]; period: string }> = {};
         allReviews.forEach(review => {
             if (!periodGroups[review.period]) {
@@ -340,11 +288,6 @@ const EmployeePerformanceDashboard: React.FC = () => {
         return Math.round((total / allReviews.length) * 10) / 10;
     }, [allReviews]);
 
-    const latestReview = useMemo(() => {
-        return allReviews[0] || null;
-    }, [allReviews]);
-
-    // Get display text for filter
     const getFilterDisplayText = () => {
         if (selectedTimeRange === 'current') {
             if (selectedPeriod === 'monthly') return currentInfo.currentMonth;
@@ -354,13 +297,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
         return selectedTimeRange;
     };
 
-    // Get total reviews in ALL periods
     const totalReviews = allReviews.length;
-
-    // Get filtered reviews count
-    const filteredReviewsCount = useMemo(() => {
-        return filteredReviews.length;
-    }, [filteredReviews]);
+    const filteredReviewsCount = filteredReviews.length;
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -375,7 +313,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                                 <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
                                     <Sparkles size={24} className="text-white" />
                                 </div>
-                                <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Performance Hub</h1>
+                                <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Admin Performance</h1>
                             </div>
                             <p className="text-gray-600 text-lg md:text-xl">Track your growth and achievements</p>
                         </div>
@@ -392,7 +330,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                             <Filter size={20} className="text-blue-600" />
                             <div>
                                 <div className="text-sm font-semibold text-gray-900">Filter Reviews</div>
-                                <div className="text-xs text-gray-500">Select period to view analytics</div>
+                                <div className="text-xs text-gray-500">Select period and time range</div>
                             </div>
                         </div>
                         <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
@@ -469,23 +407,21 @@ const EmployeePerformanceDashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Latest Review Card */}
+                    {/* Reviews Count Card */}
                     <div className="group backdrop-blur-xl bg-gradient-to-br from-white via-purple-50 to-white border border-white border-opacity-30 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all">
                         <div className="flex items-center justify-between mb-4">
                             <div className="p-3 bg-gradient-to-br from-purple-100 to-purple-50 rounded-xl group-hover:scale-110 transition-transform">
                                 <Clock size={20} className="text-purple-600" />
                             </div>
-                            <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">Latest</span>
+                            <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">Count</span>
                         </div>
                         <div className="mb-3">
-                            <div className="text-4xl font-bold text-gray-900">{latestReview ? getRatingNumber(latestReview.rating).toFixed(1) : '-'}</div>
-                            <div className="text-sm text-gray-600 mt-1">{latestReview ? latestReview.period : 'N/A'}</div>
+                            <div className="text-4xl font-bold text-gray-900">{filteredReviewsCount}</div>
+                            <div className="text-sm text-gray-600 mt-1">Reviews this period</div>
                         </div>
-                        {latestReview && (
-                            <div className="mt-4">
-                                <StarRating rating={getRatingNumber(latestReview.rating)} size={14} />
-                            </div>
-                        )}
+                        <div className="mt-4">
+                            <p className="text-xs text-gray-500">Total: {totalReviews} reviews</p>
+                        </div>
                     </div>
                 </div>
 
@@ -544,7 +480,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                                 <div className="p-2 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-lg">
                                     <TrendingUp size={20} className="text-emerald-600" />
                                 </div>
-                                <h3 className="text-lg font-bold text-gray-900">Performance Trend</h3>
+                                <h3 className="text-lg font-bold text-gray-900">Review Trend</h3>
                             </div>
                             <p className="text-sm text-gray-600">Ratings over time</p>
                         </div>
@@ -578,7 +514,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                                                 return (
                                                     <div className="p-3 space-y-1">
                                                         <div className="font-semibold text-gray-900">{data.period}</div>
-                                                        <div className="text-sm text-blue-600">Rating: {data.average}/5</div>
+                                                        <div className="text-sm text-blue-600">Average: {data.average}/5</div>
                                                         <div className="text-sm text-gray-600">Reviews: {data.count}</div>
                                                     </div>
                                                 );
@@ -595,7 +531,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
             </div>
 
             {/* Recent Reviews */}
-            <div className="mt-8">
+            <div className="relative z-10 mt-8 max-w-7xl mx-auto px-4 md:px-8 pb-12">
                 <div className="backdrop-blur-xl bg-white bg-opacity-70 border border-white border-opacity-30 rounded-2xl p-6 shadow-lg overflow-hidden">
                     <div className="mb-6">
                         <div className="flex items-center justify-between">
@@ -671,82 +607,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
                     )}
                 </div>
             </div>
-
-            {/* Task Reviews Section */}
-            <div className="mt-8">
-                <div className="backdrop-blur-xl bg-white bg-opacity-70 border border-white border-opacity-30 rounded-2xl p-6 shadow-lg overflow-hidden">
-                    <div className="mb-6">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-gradient-to-br from-indigo-100 to-indigo-50 rounded-lg">
-                                    <CheckCircle2 size={20} className="text-indigo-600" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-bold text-gray-900">Task Reviews</h3>
-                                    <p className="text-sm text-gray-600">Performance feedback on your assigned tasks</p>
-                                </div>
-                            </div>
-                            <div className="text-sm font-semibold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full">
-                                {taskReviews.length}
-                            </div>
-                        </div>
-                    </div>
-
-                    {isLoadingTaskReviews ? (
-                        <div className="flex justify-center items-center py-16">
-                            <Loader size={32} className="animate-spin text-indigo-500" />
-                        </div>
-                    ) : taskReviews.length === 0 ? (
-                        <div className="text-center py-16">
-                            <CheckCircle2 size={48} className="mx-auto mb-4 text-gray-300" />
-                            <p className="text-gray-600">No task reviews yet</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {taskReviews.map((review) => {
-                                const ratingNum = getRatingNumber(review.rating);
-                                const ratingColor = getRatingColor(review.rating);
-                                return (
-                                    <div key={review.reviewId} className="group bg-gradient-to-br from-white via-indigo-50 to-white border border-gray-200 rounded-xl p-4 hover:shadow-lg hover:border-indigo-200 transition-all duration-300">
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className="flex-1">
-                                                <h4 className="font-semibold text-gray-900 text-sm">{review.taskTitle || `Task #${review.taskId}`}</h4>
-                                                <p className="text-xs text-gray-500 mt-1">Task Review</p>
-                                            </div>
-                                            <div className="text-right flex-shrink-0">
-                                                <div className="text-2xl font-bold" style={{ color: ratingColor }}>{ratingNum.toFixed(1)}</div>
-                                                <div className="text-xs text-gray-500">/5</div>
-                                            </div>
-                                        </div>
-
-                                        <div className="mb-3">
-                                            <StarRating rating={ratingNum} size={14} />
-                                        </div>
-
-                                        <div className="mb-4">
-                                            <div>
-                                                <p className="text-xs font-semibold text-gray-600 uppercase mb-2">Comments</p>
-                                                <p className="text-sm text-gray-700 line-clamp-3">{review.comments}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className={`py-2 px-3 rounded-lg text-xs font-medium text-center mb-3`} style={{ backgroundColor: ratingColor + '20', color: ratingColor }}>
-                                            {review.rating}
-                                        </div>
-
-                                        <div className="border-t border-gray-100 pt-3 text-xs text-gray-500 flex items-center justify-between">
-                                            <span>{new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                                            <span className="font-medium" style={{ color: ratingColor }}>Task Review</span>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
-            </div>
         </div>
     );
 };
 
-export default EmployeePerformanceDashboard;
+export default AdminPerformanceReviews;

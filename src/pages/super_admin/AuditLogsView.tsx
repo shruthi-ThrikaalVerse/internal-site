@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import * as LucideIcons from 'lucide-react';
+import { apiClient } from '../../utils/apiClient.js';
 
 const LEVELS = ['ALL', 'INFO', 'WARN', 'ERROR', 'CRITICAL', 'LOGIN', 'SECURITY', 'CREATE', 'UPDATE', 'DELETE'];
 
@@ -110,8 +111,9 @@ export const AuditLogsView: React.FC = () => {
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
+
+      if (data) {
         const auditLogs = (data.logs || data.content || []).map((l: any) => ({
           ...l,
           details: maskSensitive(typeof l.details === 'string' ? tryParse(l.details) : l.details)
@@ -119,7 +121,7 @@ export const AuditLogsView: React.FC = () => {
         setLogs(auditLogs);
         setTotal(data.total || auditLogs.length);
       } else {
-        console.error('Failed to fetch audit logs:', response.statusText);
+        console.error('Failed to fetch audit logs');
       }
     } catch (e: any) {
       console.error(e);

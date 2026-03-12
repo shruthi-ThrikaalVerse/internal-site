@@ -379,10 +379,26 @@ export interface TaskAnalyticsResponse {
   assignedPercentage: number;
 }
 
+export interface ProjectAnalyticsResponse {
+  completed: number;
+  inProgress: number;
+  assigned: number;
+  planning: number;
+  newStatus: number;
+  deadline: number;
+  completedPercentage: number;
+  inProgressPercentage: number;
+  assignedPercentage: number;
+  planningPercentage: number;
+  newPercentage: number;
+  deadlinePercentage: number;
+}
+
 export interface PerformanceAnalyticsResponse {
   leaveAnalyticsResponse: LeaveAnalyticsResponse;
   attendanceAnayticsResponse: AttendanceAnalyticsResponse;
-  taskAnalyticsResponse: TaskAnalyticsResponse;
+  taskAnalyticsResponse?: TaskAnalyticsResponse | null;
+  projectAnalyticsResponse?: ProjectAnalyticsResponse | null;
 }
 
 export interface GoalTracking {
@@ -466,7 +482,7 @@ export interface Project {
   budget?: number;
   currency?: string;
   createdBy?: number;
-  projectManagerId?: number;
+  projectManagerId?: number | string;
 }
 
 // ============= Super Admin Navigation =============

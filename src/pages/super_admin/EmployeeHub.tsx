@@ -14,6 +14,7 @@ import { Badge, SectionHeader } from './UI.tsx';
 import { Modal } from '../../components/super_admin/Modal.tsx';
 import { FormInput, FormSelect, FormTextArea } from '../../components/super_admin/FormFields.tsx';
 import { useApp } from '../../context/AppContext.tsx';
+import { apiClient } from '../../utils/apiClient.js';
 import * as usersApi from '../../api/users.ts';
 
 const DEPARTMENTS = ['Engineering', 'Design', 'Marketing', 'People', 'Infrastructure', 'Quality', 'Data'];
@@ -23,6 +24,9 @@ const ADMIN_TIERS = ['ADMIN', 'PROJECT_MANAGER', 'HR', 'OPERATIONAL_MANAGER', 'S
 export const EmployeeHub = () => {
   const { globalSearch, employees, setEmployees, updateEmployee, removeEmployee, promoteToAdmin, currentUser, requestEmployeeTermination } = useApp();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Get token from localStorage
+  const token = localStorage.getItem('token');
   const [localEmployees, setLocalEmployees] = useState<User[]>([]);
 
   // Filter States
@@ -188,7 +192,7 @@ export const EmployeeHub = () => {
     };
     load();
   }, [setEmployees]);
-  const isAdminTier = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN' || currentUser?.role === 'SYSTEM_ADMIN' || currentUser?.role === 'SECURITY_ADMIN';
+  const isAdminTier = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN';
 
   const handleResetFilters = () => {
     setSelectedDept('All Departments');
@@ -640,7 +644,7 @@ export const EmployeeHub = () => {
                                 console.log('Loading image for:', e.name, 'src:', formatBase64Image(e.avatar));
                               }}
                             />
-                            <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-[3px] border-white ${e.status === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : e.status === 'pending' ? 'bg-amber-500 shadow-[0_0_8px_#f59e0b]' : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'}`}></span>
+                            <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-[3px] border-white ${e.status === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'}`}></span>
                           </>
                         ) : (
                           <div className="w-14 h-14 rounded-2xl border border-gray-200 shadow-xl bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
@@ -668,7 +672,7 @@ export const EmployeeHub = () => {
                     </div>
                   </td>
                   <td className="px-8 py-5">
-                    <Badge color={e.status === 'active' ? 'green' : e.status === 'pending' ? 'yellow' : 'red'}>
+                    <Badge color={e.status === 'active' ? 'green' : 'red'}>
                       {e.status ? e.status.toUpperCase() : ''}
                     </Badge>
                   </td>
@@ -970,7 +974,7 @@ export const EmployeeHub = () => {
 
             <div className="space-y-2">
               <p className="text-[10px] text-gray-500 font-semibold">
-                <strong>Selected:</strong> {selectedAdminRole}
+                <strong>Selected:</strong>{selectedAdminRole}
               </p>
             </div>
 
