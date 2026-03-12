@@ -517,7 +517,7 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6 animate-in fade-in duration-500">
+    <div className="min-h-screen p-4 md:p-6 animate-in fade-in duration-500" style={{ backgroundColor: '#f5ede3' }}>
       {/* Page Header */}
       <div className="mb-6 md:mb-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
@@ -543,7 +543,8 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
 
             <button
               onClick={() => setShowNewRequestModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 md:px-6 md:py-3 bg-blue-600 text-white rounded-xl md:rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 active:scale-95 flex-1 md:flex-none justify-center"
+              className="flex items-center gap-2 px-4 py-2.5 md:px-6 md:py-3 text-white rounded-xl md:rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 active:scale-95 flex-1 md:flex-none justify-center"
+              style={{ backgroundColor: '#c97a4c' }}
             >
               <Plus className="w-4 h-4 md:w-5 md:h-5" />
               <span className="font-bold text-xs md:text-sm uppercase tracking-widest truncate">New Request</span>

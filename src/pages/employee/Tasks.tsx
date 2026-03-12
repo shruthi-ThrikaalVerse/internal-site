@@ -948,7 +948,7 @@ const Tasks: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="min-h-screen p-4 md:p-6" style={{ backgroundColor: '#f5ede3' }}>
       {/* Header Section */}
       <div className="mb-6 md:mb-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -968,7 +968,8 @@ const Tasks: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-blue-600 text-white rounded-lg transition-colors text-sm"
+              style={{ backgroundColor: '#c97a4c' }}
             >
               <Plus size={16} />
               <span className="font-medium">Self-Assign Task</span>

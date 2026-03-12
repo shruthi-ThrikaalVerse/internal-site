@@ -144,7 +144,7 @@ const Profile: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+    <div className="min-h-screen p-4 sm:p-6" style={{ backgroundColor: '#f5ede3' }}>
       {/* Image Preview Modal - Responsive */}
       {showImagePreview && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-2 sm:p-4">
@@ -280,14 +280,15 @@ const Profile: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowChangePasswordModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm sm:text-base"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm sm:text-base text-black"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isChangingPassword}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center justify-center gap-2 text-sm sm:text-base"
+                  className="px-4 py-2 bg-gradient-to-br rounded-lg flex items-center justify-center gap-2 text-sm sm:text-base"
+                  style={{ backgroundColor: '#c97a4c' }}
                 >
                   {isChangingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   <span>Change Password</span>

@@ -57,7 +57,7 @@ const Layout: React.FC<LayoutProps> = ({ onLogout, children }) => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f5ede3' }}>
 
       {/* Sidebar */}
       <div className={`${isMobile ? 'fixed inset-y-0 left-0 z-40' : 'relative'}`}>

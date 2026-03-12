@@ -245,7 +245,7 @@ const Resignation: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen py-6 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: '#f5ede3' }}>
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
@@ -613,7 +613,8 @@ const Resignation: React.FC = () => {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg transition-colors text-sm sm:text-base disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            style={{ backgroundColor: '#c97a4c' }}
                         >
                             {isSubmitting ? (
                                 <>
