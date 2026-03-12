@@ -108,6 +108,48 @@ export const updateTask = async (taskId: string, payload: any) => {
   }
 };
 
+// Update task status
+export const updateTaskStatus = async (taskId: string, status: string, priority?: string, assigneeType?: string) => {
+  try {
+    const payload: any = { status };
+    if (priority) payload.priority = priority;
+    if (assigneeType) payload.assigneeType = assigneeType;
+    
+    const resp = (await fetchWithTimeout(`${API_BASE}/status/${taskId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    })) as Response;
+    await throwIfError(resp);
+    return parseText(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The task status update request took too long. Please try again.');
+    }
+    throw err;
+  }
+};
+
+// Update task time logged
+export const updateTimeLogged = async (taskId: string, timeLogged: number) => {
+  try {
+    const resp = (await fetchWithTimeout(`${API_BASE}/update/${taskId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ timeLogged }),
+    })) as Response;
+    await throwIfError(resp);
+    return parseText(resp);
+  } catch (err: any) {
+    if (err.message === 'Request timeout') {
+      throw new Error('The time update request took too long. Please try again.');
+    }
+    throw err;
+  }
+};
+
 export const deleteTask = async (taskId: string) => {
   try {
     const resp = (await fetchWithTimeout(`${API_BASE}/delete/${taskId}`, {
