@@ -239,6 +239,7 @@ export interface EmployeeDocument {
   status: 'uploaded' | 'pending' | 'verified';
   uploadedDate?: string;
   fileName?: string;
+  verified?: boolean;
 }
 
 // ============= Payroll Management =============

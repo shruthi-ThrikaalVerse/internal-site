@@ -59,8 +59,7 @@ export const AdminHub = () => {
     const { globalSearch, admins, setAdmins, currentUser, demoteToEmployee, terminateAdmin } = useApp();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Get token from localStorage
-    const token = localStorage.getItem('token');
+    // Removed localStorage token usage. Only HttpOnly cookies are used for authentication.
 
     // Filter States
     const [selectedStatus, setSelectedStatus] = useState('All Statuses');
@@ -720,7 +719,7 @@ export const AdminHub = () => {
         const loadReviews = async () => {
             try {
                 const reviews = await getAllReviews();
-                
+
                 // Filter and transform reviews - show reviews for this specific user
                 const userReviews = reviews
                     .filter(review => {
@@ -746,7 +745,7 @@ export const AdminHub = () => {
                         submittedBy: 'Admin User'
                     }))
                     .sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime());
-                
+
                 setReviewHistory(userReviews);
             } catch (error) {
                 console.error('Failed to load reviews:', error);
@@ -1410,67 +1409,67 @@ export const AdminHub = () => {
                                             </div>
                                             <div className="p-6 space-y-6">
                                                 {pieChartData.projects.length > 0 ? (
-                                                  <>
-                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                                      {pieChartData.projects.map((item, idx) => {
-                                                        const colorConfigs = [
-                                                          { bg: 'from-purple-50 to-purple-100', border: 'border-purple-200', text: 'text-purple-600', label: 'text-purple-700' },
-                                                          { bg: 'from-blue-50 to-blue-100', border: 'border-blue-200', text: 'text-blue-600', label: 'text-blue-700' },
-                                                          { bg: 'from-amber-50 to-amber-100', border: 'border-amber-200', text: 'text-amber-600', label: 'text-amber-700' },
-                                                          { bg: 'from-orange-50 to-orange-100', border: 'border-orange-200', text: 'text-orange-600', label: 'text-orange-700' },
-                                                          { bg: 'from-pink-50 to-pink-100', border: 'border-pink-200', text: 'text-pink-600', label: 'text-pink-700' }
-                                                        ];
-                                                        const color = colorConfigs[idx % colorConfigs.length];
-                                                        return (
-                                                          <div key={idx} className={`bg-gradient-to-br ${color.bg} rounded-2xl p-4 ${color.border} border text-center`}>
-                                                            <p className={`text-2xl font-black ${color.text}`}>{item.value}</p>
-                                                            <p className={`text-xs font-bold ${color.label} uppercase tracking-widest mt-2 break-words`}>{item.name}</p>
-                                                          </div>
-                                                        );
-                                                      })}
-                                                      {pieChartData.projects.length > 0 && (
-                                                        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 border border-green-200 text-center">
-                                                          <p className="text-2xl font-black text-green-600">
-                                                            {(() => {
-                                                              const completed = pieChartData.projects.find(p => p.name === 'Completed')?.value || 0;
-                                                              const total = pieChartData.projects.reduce((sum, p) => sum + p.value, 0);
-                                                              return total > 0 ? Math.round((completed / total) * 100) : 0;
-                                                            })()}%
-                                                          </p>
-                                                          <p className="text-xs font-bold text-green-700 uppercase tracking-widest mt-2 break-words">Completion</p>
+                                                    <>
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                            {pieChartData.projects.map((item, idx) => {
+                                                                const colorConfigs = [
+                                                                    { bg: 'from-purple-50 to-purple-100', border: 'border-purple-200', text: 'text-purple-600', label: 'text-purple-700' },
+                                                                    { bg: 'from-blue-50 to-blue-100', border: 'border-blue-200', text: 'text-blue-600', label: 'text-blue-700' },
+                                                                    { bg: 'from-amber-50 to-amber-100', border: 'border-amber-200', text: 'text-amber-600', label: 'text-amber-700' },
+                                                                    { bg: 'from-orange-50 to-orange-100', border: 'border-orange-200', text: 'text-orange-600', label: 'text-orange-700' },
+                                                                    { bg: 'from-pink-50 to-pink-100', border: 'border-pink-200', text: 'text-pink-600', label: 'text-pink-700' }
+                                                                ];
+                                                                const color = colorConfigs[idx % colorConfigs.length];
+                                                                return (
+                                                                    <div key={idx} className={`bg-gradient-to-br ${color.bg} rounded-2xl p-4 ${color.border} border text-center`}>
+                                                                        <p className={`text-2xl font-black ${color.text}`}>{item.value}</p>
+                                                                        <p className={`text-xs font-bold ${color.label} uppercase tracking-widest mt-2 break-words`}>{item.name}</p>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                            {pieChartData.projects.length > 0 && (
+                                                                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 border border-green-200 text-center">
+                                                                    <p className="text-2xl font-black text-green-600">
+                                                                        {(() => {
+                                                                            const completed = pieChartData.projects.find(p => p.name === 'Completed')?.value || 0;
+                                                                            const total = pieChartData.projects.reduce((sum, p) => sum + p.value, 0);
+                                                                            return total > 0 ? Math.round((completed / total) * 100) : 0;
+                                                                        })()}%
+                                                                    </p>
+                                                                    <p className="text-xs font-bold text-green-700 uppercase tracking-widest mt-2 break-words">Completion</p>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                      )}
-                                                    </div>
-                                                    <div className="h-96">
-                                                      <ResponsiveContainer width="100%" height="100%">
-                                                        <PieChart>
-                                                          <Pie
-                                                            data={pieChartData.projects}
-                                                            cx="50%"
-                                                            cy="45%"
-                                                            labelLine={false}
-                                                            outerRadius={90}
-                                                            fill="#8884d8"
-                                                            dataKey="value"
-                                                          >
-                                                            {pieChartData.projects.map((entry, index) => (
-                                                              <Cell key={`cell-${index}`} fill={entry.fill} />
-                                                            ))}
-                                                          </Pie>
-                                                          <Tooltip formatter={(value) => `${value}`} contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }} />
-                                                          <Legend 
-                                                            verticalAlign="bottom" 
-                                                            height={36}
-                                                            wrapperStyle={{ paddingTop: '20px' }}
-                                                          />
-                                                        </PieChart>
-                                                      </ResponsiveContainer>
-                                                    </div>
-                                                  </>
+                                                        <div className="h-96">
+                                                            <ResponsiveContainer width="100%" height="100%">
+                                                                <PieChart>
+                                                                    <Pie
+                                                                        data={pieChartData.projects}
+                                                                        cx="50%"
+                                                                        cy="45%"
+                                                                        labelLine={false}
+                                                                        outerRadius={90}
+                                                                        fill="#8884d8"
+                                                                        dataKey="value"
+                                                                    >
+                                                                        {pieChartData.projects.map((entry, index) => (
+                                                                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                                                                        ))}
+                                                                    </Pie>
+                                                                    <Tooltip formatter={(value) => `${value}`} contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }} />
+                                                                    <Legend
+                                                                        verticalAlign="bottom"
+                                                                        height={36}
+                                                                        wrapperStyle={{ paddingTop: '20px' }}
+                                                                    />
+                                                                </PieChart>
+                                                            </ResponsiveContainer>
+                                                        </div>
+                                                    </>
                                                 ) : (
-                                                  <div className="text-center py-8 text-gray-500">
-                                                    <p className="text-sm font-medium">No project or task data available</p>
-                                                  </div>
+                                                    <div className="text-center py-8 text-gray-500">
+                                                        <p className="text-sm font-medium">No project or task data available</p>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
