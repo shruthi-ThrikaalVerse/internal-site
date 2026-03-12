@@ -626,7 +626,8 @@ const Calendar: React.FC = () => {
           </div>
           <button
             onClick={() => setCurrentMonth(new Date())}
-            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white text-xs font-black rounded-xl sm:rounded-2xl uppercase tracking-wider hover:bg-blue-700 shadow active:scale-95 transition-all w-full sm:w-auto"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 text-white text-xs font-black rounded-xl sm:rounded-2xl uppercase tracking-wider shadow active:scale-95 transition-all w-full sm:w-auto"
+            style={{ backgroundColor: '#c97a4c' }}
           >
             Today
           </button>

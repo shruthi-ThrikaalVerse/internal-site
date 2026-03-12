@@ -119,25 +119,25 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <header className="h-16 md:h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 lg:px-10 z-50 sticky top-0">
+    <header className="h-16 md:h-20 flex items-center justify-between px-4 sm:px-6 lg:px-10 z-50 sticky top-0" style={{ backgroundColor: '#2c3e50', borderBottom: '1px solid #1a252f' }}>
       {/* Left Section: Menu Toggle & Search */}
       <div className="flex items-center gap-2 md:gap-6 flex-1 min-w-0">
         <button
           onClick={toggleSidebar}
-          className="p-2 md:p-3 hover:bg-slate-100 rounded-2xl text-slate-500 transition-all active:scale-90 flex-shrink-0"
+          className="p-2 md:p-3 hover:bg-slate-700 rounded-2xl text-white transition-all active:scale-90 flex-shrink-0"
           aria-label="Toggle Sidebar"
         >
-          <Menu size={20} className="md:size-22 text-black" />
+          <Menu size={20} className="md:size-22 text-white" />
         </button>
 
         {/* Desktop Search Bar */}
         <div className="hidden md:flex items-center flex-1 max-w-xl">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-black size-5" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 size-5" />
             <input
               type="text"
-              placeholder="Search reports, employees, documents..."
-              className="w-full pl-12 pr-4 py-3 bg-slate-50 border-0 rounded-[1.5rem] text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
+              placeholder="Search employees, modules, activity..."
+              className="w-full pl-12 pr-4 py-3 bg-slate-100 border-0 rounded-[1.5rem] text-sm font-medium text-slate-700 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
             />
           </div>
         </div>
@@ -145,10 +145,10 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         {/* Mobile Search Button */}
         <button
           onClick={() => setShowMobileSearch(true)}
-          className="md:hidden p-2 hover:bg-slate-100 rounded-2xl text-slate-500 transition-all active:scale-90 flex-shrink-0"
+          className="md:hidden p-2 hover:bg-slate-700 rounded-2xl text-white transition-all active:scale-90 flex-shrink-0"
           aria-label="Open Search"
         >
-          <Search size={20} className="text-black" />
+          <Search size={20} className="text-white" />
         </button>
 
         {/* Mobile Search Overlay */}
@@ -199,12 +199,20 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         <div className="relative" ref={notificationRef}>
           <button
             onClick={() => { setShowNotifications(!showNotifications); setShowProfileMenu(false); }}
-            className={`relative p-2 md:p-3 rounded-2xl transition-all active:scale-90 ${showNotifications ? 'bg-blue-600 text-white shadow-xl shadow-blue-200' : 'text-slate-500 hover:bg-slate-100'}`}
+            className={`relative p-2 md:p-3 rounded-2xl transition-all active:scale-90 ${
+              showNotifications
+                ? 'bg-orange-600 text-white shadow-xl'
+                : 'text-slate-300 hover:text-white hover:bg-slate-700'
+            }`}
             aria-label={unreadCount > 0 ? `Show ${unreadCount} unread notifications` : 'Show notifications'}
           >
             <Bell size={20} className="md:size-22" />
             {unreadCount > 0 && (
-              <span className={`absolute top-1.5 right-1.5 md:top-2.5 md:right-2.5 w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded-full border-2 border-white text-[8px] md:text-[9px] font-black ${showNotifications ? 'bg-white text-blue-600' : 'bg-red-500 text-white animate-pulse'}`}>
+              <span className={`absolute top-1.5 right-1.5 md:top-2.5 md:right-2.5 w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded-full border-2 border-white text-[8px] md:text-[9px] font-black ${
+                showNotifications
+                  ? 'bg-white text-orange-600'
+                  : 'bg-red-500 text-white animate-pulse'
+              }`}>
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -307,16 +315,20 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         </div>
 
         {/* Divider - Hidden on mobile */}
-        <div className="w-px h-6 md:h-8 bg-slate-200 hidden sm:block mx-1"></div>
+        <div className="w-px h-6 md:h-8 bg-slate-700 hidden sm:block mx-1"></div>
 
         {/* Profile Menu */}
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => { setShowProfileMenu(!showProfileMenu); setShowNotifications(false); }}
-            className={`flex items-center gap-2 md:gap-3 pl-2 pr-3 md:pr-4 py-1.5 md:py-2 rounded-[1.5rem] transition-all border ${showProfileMenu ? 'bg-blue-50 border-blue-200 shadow-lg shadow-blue-50' : 'hover:bg-slate-50 border-transparent hover:border-slate-200'}`}
+            className={`flex items-center gap-2 md:gap-3 pl-2 pr-3 md:pr-4 py-1.5 md:py-2 rounded-[1.5rem] transition-all border ${
+              showProfileMenu
+                ? 'bg-slate-700 border-slate-600 shadow-lg'
+                : 'hover:bg-slate-700 border-transparent'
+            }`}
             aria-label="Open profile menu"
           >
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-sm shadow-md overflow-hidden flex-shrink-0">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-black text-sm shadow-md overflow-hidden flex-shrink-0">
               {user.avatar ? (
                 <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
               ) : (
@@ -324,7 +336,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               )}
             </div>
             <div className="hidden sm:block text-left">
-              <p className="text-xs font-black text-slate-900 leading-none truncate max-w-[120px]">{displayName}</p>
+              <p className="text-xs font-black text-white leading-none truncate max-w-[120px]">{displayName}</p>
               <p className="text-[10px] text-slate-400 uppercase tracking-[0.1em] font-black mt-0.5">{displayRole}</p>
             </div>
             <ChevronDown

@@ -325,25 +325,29 @@ const Dashboard: React.FC = () => {
       case 'not_checked_in':
         return {
           text: 'Check In',
-          color: 'bg-blue-600 hover:bg-blue-700',
+          color: 'text-white',
+          bgColor: '#c97a4c',
           icon: <CheckCircle className="w-4 h-4" />
         };
       case 'checked_in':
         return {
           text: 'Check Out',
-          color: 'bg-green-600 hover:bg-green-700',
+          color: 'text-white',
+          bgColor: '#10b981',
           icon: <XCircle className="w-4 h-4" />
         };
       case 'checked_out':
         return {
           text: 'Check In Again',
-          color: 'bg-blue-600 hover:bg-blue-700',
+          color: 'text-white',
+          bgColor: '#c97a4c',
           icon: <CheckCircle className="ml-2 w-4 h-4" />
         };
       default:
         return {
           text: 'Check In',
-          color: 'bg-blue-600 hover:bg-blue-700',
+          color: 'text-white',
+          bgColor: '#c97a4c',
           icon: <CheckCircle className="w-4 h-4" />
         };
     }
@@ -358,7 +362,7 @@ const Dashboard: React.FC = () => {
   const statusButton = getStatusButton();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6 font-sans">
+    <div className="min-h-screen p-4 md:p-6 font-sans" style={{ backgroundColor: '#f5ede3' }}>
       <div className="mb-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
           <div>
@@ -376,7 +380,8 @@ const Dashboard: React.FC = () => {
           <div className="flex gap-3">
             <button
               onClick={() => navigate('/employee/attendance')}
-              className="px-4 md:px-6 py-2.5 md:py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold flex items-center gap-2 shadow-md shadow-blue-100"
+              className="px-4 md:px-6 py-2.5 md:py-3 text-white rounded-xl transition-colors font-semibold flex items-center gap-2 shadow-md"
+              style={{ backgroundColor: '#c97a4c' }}
             >
               <CheckCircle className="w-4 h-4 md:w-5 md:h-5" /> Mark Attendance
             </button>
@@ -478,7 +483,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Today's Status Card */}
-        <div className="bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl p-4 text-white hover:shadow-lg transition-all">
+        <div className="rounded-xl p-4 text-white hover:shadow-lg transition-all" style={{ backgroundColor: '#c97a4c' }}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 opacity-70 ml-4" />
@@ -493,6 +498,7 @@ const Dashboard: React.FC = () => {
             <button
               onClick={() => navigate('/employee/attendance')}
               className={`w-full py-2 rounded-lg font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 ${statusButton.color}`}
+              style={{ backgroundColor: statusButton.bgColor }}
             >
               {statusButton.icon} {statusButton.text}
             </button>

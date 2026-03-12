@@ -153,18 +153,18 @@ const Sidebar: React.FC<SidebarProps> = ({
           fixed lg:relative 
           top-0 left-0 
           h-full 
-          bg-slate-900 
           flex flex-col 
           z-40 
           transition-all duration-300 ease-in-out
           ${isMobile ? (isOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
           ${sidebarWidth}
         `}
+        style={{ backgroundColor: '#2c3e50' }}
       >
         {/* Sidebar Header */}
         <div className="p-4 sm:p-6 flex items-center justify-between">
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <Building2 size={20} className="text-white" />
             </div>
             {(isOpen || (!isMobile && !isCollapsed)) && (
@@ -196,9 +196,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                 key={item.path}
                 to={item.path}
                 className={`flex items-center px-4 py-3 rounded-lg transition-colors group ${isActive
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  ? 'text-white'
+                  : 'text-white/70 hover:text-white'
                   }`}
+                style={isActive ? { backgroundColor: '#c97a4c' } : {}}
                 onClick={handleLinkClick}
               >
                 <Icon size={18} className="flex-shrink-0" />
@@ -211,10 +212,11 @@ const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         {/* Logout Button */}
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
           <button
             onClick={handleLogoutClick}
-            className={`flex items-center px-4 py-3 w-full rounded-lg text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors group`}
+            className={`flex items-center px-4 py-3 w-full rounded-lg transition-colors group hover:bg-opacity-80`}
+            style={{ backgroundColor: '#c97a4c', color: 'white' }}
           >
             <LogOut size={18} />
             {(isOpen || (!isMobile && !isCollapsed)) && (

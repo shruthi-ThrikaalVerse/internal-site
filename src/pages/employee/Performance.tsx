@@ -363,7 +363,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
     }, [filteredReviews]);
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen p-4 md:p-6" style={{ backgroundColor: '#f5ede3' }}>
             <GradientBg />
 
             {/* Hero Header */}
@@ -372,7 +372,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div>
                             <div className="flex items-center gap-3 mb-3">
-                                <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
+                                <div className="p-2 bg-gradient-to-br rounded-xl" style={{ backgroundColor: '#c97a4c' }}>
                                     <Sparkles size={24} className="text-white" />
                                 </div>
                                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Performance Hub</h1>

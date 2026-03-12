@@ -372,7 +372,7 @@ const Documents: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen p-4 md:p-6" style={{ backgroundColor: '#f5ede3' }}>
       <div className="flex flex-col lg:flex-row">
         {/* Mobile Header - Only visible on mobile */}
         <div className="lg:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30 w-full">

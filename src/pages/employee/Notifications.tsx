@@ -833,7 +833,7 @@ const EmployeeNotifications: React.FC = () => {
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
             <div className="flex-1">
               <div className="flex items-center gap-4 mb-2">
-                <div className="p-3 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl shadow-lg">
+                <div className="p-3 bg-gradient-to-br rounded-xl shadow-lg" style={{ backgroundColor: '#c97a4c' }}>
                   <Bell className="w-8 h-8 text-white" />
                 </div>
                 <div>
@@ -918,24 +918,29 @@ const EmployeeNotifications: React.FC = () => {
                   <h3 className="font-bold text-slate-900">Filter by Status</h3>
                 </div>
                 <div className="p-3">
-                  {(['all', 'unread', 'read'] as const).map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl mb-2 transition-all ${activeTab === tab
-                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
-                        : 'text-slate-700 hover:bg-slate-50 hover:shadow'
-                        }`}
-                    >
-                      <span className="font-medium capitalize">{tab}</span>
-                      {tab === 'unread' && unreadCount > 0 && (
-                        <span className={`px-2 py-1 text-xs font-bold rounded-full ${activeTab === tab ? 'bg-white/20' : 'bg-blue-100 text-blue-700'
-                          }`}>
-                          {unreadCount}
-                        </span>
-                      )}
-                    </button>
-                  ))}
+                  {(['all', 'unread', 'read'] as const).map((tab) => {
+                    const isActive = activeTab === tab;
+                    const inactiveBg = '#f5e6da'; // light brown shade
+                    return (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl mb-2 transition-all ${isActive
+                          ? 'text-white shadow-lg'
+                          : 'text-slate-700 hover:shadow'
+                          }`}
+                        style={isActive ? { backgroundColor: '#c97a4c' } : { backgroundColor: inactiveBg }}
+                      >
+                        <span className="font-medium capitalize">{tab}</span>
+                        {tab === 'unread' && unreadCount > 0 && (
+                          <span className={`px-2 py-1 text-xs font-bold rounded-full ${isActive ? 'bg-white/20' : 'bg-blue-100 text-blue-700'
+                            }`}>
+                            {unreadCount}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

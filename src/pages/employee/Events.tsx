@@ -364,7 +364,7 @@ const Events: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-6 font-sans">
+        <div className="min-h-screen p-4 md:p-6 font-sans" style={{ backgroundColor: '#f5ede3' }}>
             {/* Header */}
             <div className="mb-6">
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
@@ -385,7 +385,8 @@ const Events: React.FC = () => {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setShowCalendarSection(!showCalendarSection)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
+                            className="px-4 py-2 text-white rounded-lg transition-colors font-medium flex items-center gap-2"
+                            style={{ backgroundColor: '#c97a4c' }}
                         >
                             <Calendar className="w-4 h-4" />
                             My Calendar ({calendarEvents.length})

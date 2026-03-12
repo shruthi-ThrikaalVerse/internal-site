@@ -562,7 +562,7 @@ const Leave: React.FC = () => {
   ).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8" style={{ backgroundColor: '#f5ede3' }}>
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -576,7 +576,8 @@ const Leave: React.FC = () => {
               setFormData({ type: 'Casual Leave', startDate: '', endDate: '', reason: '' });
               setShowApplyModal(true);
             }}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-white rounded-lg transition-colors shadow-sm w-full sm:w-auto"
+            style={{ backgroundColor: '#c97a4c' }}
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="font-medium text-sm sm:text-base">Apply for Leave</span>
@@ -1115,7 +1116,8 @@ const Leave: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting || !!dateError}
-                    className="px-6 py-2.5 sm:px-8 sm:py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-700 shadow-xl shadow-blue-100 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all flex items-center justify-center gap-2"
+                    className="px-6 py-2.5 sm:px-8 sm:py-3 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all flex items-center justify-center gap-2"
+                    style={{ backgroundColor: '#c97a4c' }}
                   >
                     {isSubmitting ? (
                       <>
