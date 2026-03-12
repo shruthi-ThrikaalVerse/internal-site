@@ -789,13 +789,22 @@ export const AdminHub = () => {
         }
     }, [viewingUser, activeTab, performanceViewPeriod, performanceViewFilter, performanceViewYear]);
 
+    const [ratingError, setRatingError] = useState<string | null>(null);
     const handlePerformanceReviewSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!performanceFormData.rating || !performanceFormData.feedback) {
-            alert('Please fill in rating and feedback');
-            return;
+        let hasError = false;
+        if (!performanceFormData.rating) {
+            setRatingError('Please select a rating');
+            hasError = true;
+        } else {
+            setRatingError(null);
         }
+        if (!performanceFormData.feedback) {
+            alert('Please fill in feedback');
+            hasError = true;
+        }
+        if (hasError) return;
 
         // Use viewingUser as it's the consistently maintained reference
         if (!viewingUser || !viewingUser.employeeId) {
@@ -851,6 +860,7 @@ export const AdminHub = () => {
                 strengths: '',
                 improvements: ''
             });
+            setRatingError(null);
 
             alert('Performance review submitted successfully!');
         } catch (error) {
@@ -1528,6 +1538,9 @@ export const AdminHub = () => {
                                                         <option value="4">4 - Very Good</option>
                                                         <option value="5">5 - Excellent</option>
                                                     </select>
+                                                    {ratingError && (
+                                                        <div className="text-red-500 text-xs mt-1">{ratingError}</div>
+                                                    )}
                                                 </div>
 
                                                 <div>

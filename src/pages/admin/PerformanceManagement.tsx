@@ -409,6 +409,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
   const [selectedTaskForReview, setSelectedTaskForReview] = useState<Task | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
   const [reviewEmployeeId, setReviewEmployeeId] = useState<string>('');
+  const [reviewEmployeeError, setReviewEmployeeError] = useState<string>('');
   const [reviewRating, setReviewRating] = useState<number>(5);
   const [reviewComment, setReviewComment] = useState<string>('');
 
@@ -1121,6 +1122,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
     setSelectedTaskForReview(null);
     setIsReviewModalOpen(false);
     setReviewEmployeeId('');
+    setReviewEmployeeError('');
     setReviewRating(5);
     setReviewComment('');
   };
@@ -1128,9 +1130,10 @@ const EmployeePerformanceDashboard: React.FC = () => {
   const submitReview = () => {
     if (!selectedTaskForReview) return;
     if (!reviewEmployeeId) {
-      notify('Please select an employee to review.', 'warning');
+      setReviewEmployeeError('Please select an employee to review.');
       return;
     }
+    setReviewEmployeeError('');
     // Map numeric rating to enum expected by backend
     const ratingEnum = reviewRating === 5 ? 'FIVE' : reviewRating === 4 ? 'FOUR' : reviewRating === 3 ? 'THREE' : reviewRating === 2 ? 'TWO' : 'ONE';
 
@@ -2004,7 +2007,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-900 mb-2 block">Review For</label>
+                <label className="text-sm font-medium text-gray-900 mb-2 block">Review For *</label>
 
                 {selectedTaskForReview.assigneeType === 'employee' && (() => {
                   const taskAssigned = (selectedTaskForReview as any).assignedEmployees || (selectedTaskForReview as any).assigned_employees || [];
@@ -2025,15 +2028,25 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   // Fallback: render a select for employee (preselected if reviewEmployeeId already set)
                   return (
                     (console.debug('Render employee select', selectedTaskForReview), (
-                      <select
-                        title="Select employee for review"
-                        value={reviewEmployeeId}
-                        onChange={(e) => setReviewEmployeeId(e.target.value)}
-                        className="text-black w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
-                      >
-                        <option value="" className="text-black">Select employee</option>
-                        <option value={selectedTaskForReview.assignedTo} className="text-gray-900">{selectedTaskForReview.assigneeName ? `${selectedTaskForReview.assigneeName} (${selectedTaskForReview.assignedTo})` : selectedTaskForReview.assignedTo}</option>
-                      </select>
+                      <>
+                        <select
+                          title="Select employee for review"
+                          value={reviewEmployeeId}
+                          onChange={(e) => {
+                            setReviewEmployeeId(e.target.value);
+                            if (e.target.value) setReviewEmployeeError('');
+                          }}
+                          className={`text-black w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 bg-white text-sm text-gray-900 ${
+                            reviewEmployeeError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                          }`}
+                        >
+                          <option value="" className="text-black">Select employee</option>
+                          <option value={selectedTaskForReview.assignedTo} className="text-gray-900">{selectedTaskForReview.assigneeName ? `${selectedTaskForReview.assigneeName} (${selectedTaskForReview.assignedTo})` : selectedTaskForReview.assignedTo}</option>
+                        </select>
+                        {reviewEmployeeError && (
+                          <p className="text-red-500 text-xs mt-1">{reviewEmployeeError}</p>
+                        )}
+                      </>
                     ))
                   );
                 })()}
@@ -2057,19 +2070,29 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   if (Array.isArray(taskAssigned) && taskAssigned.length > 0) {
                     console.debug('Render team select from taskAssigned', taskAssigned, selectedTaskForReview);
                     return (
-                      <select
-                        title="Select employee for review"
-                        value={reviewEmployeeId}
-                        onChange={(e) => setReviewEmployeeId(e.target.value)}
-                        className="text-black w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
-                      >
-                        <option value="" className="text-gray-900">Select employee</option>
-                        {taskAssigned.map((ae: any) => (
-                          <option key={ae.employeeId || ae.id} value={ae.employeeId || ae.id} className="text-gray-900">
-                            {ae.employeeId || ae.id || ae.employeeName || ae.employee_name || ae.fullName || ae.employeeEmail || 'Unknown'}
-                          </option>
-                        ))}
-                      </select>
+                      <>
+                        <select
+                          title="Select employee for review"
+                          value={reviewEmployeeId}
+                          onChange={(e) => {
+                            setReviewEmployeeId(e.target.value);
+                            if (e.target.value) setReviewEmployeeError('');
+                          }}
+                          className={`text-black w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 bg-white text-sm text-gray-900 ${
+                            reviewEmployeeError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                          }`}
+                        >
+                          <option value="" className="text-gray-900">Select employee</option>
+                          {taskAssigned.map((ae: any) => (
+                            <option key={ae.employeeId || ae.id} value={ae.employeeId || ae.id} className="text-gray-900">
+                              {ae.employeeId || ae.id || ae.employeeName || ae.employee_name || ae.fullName || ae.employeeEmail || 'Unknown'}
+                            </option>
+                          ))}
+                        </select>
+                        {reviewEmployeeError && (
+                          <p className="text-red-500 text-xs mt-1">{reviewEmployeeError}</p>
+                        )}
+                      </>
                     );
                   }
 

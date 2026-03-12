@@ -167,45 +167,60 @@ const ResignationAdmin: React.FC = () => {
     if (!formData.detailedReason.trim()) newErrors.detailedReason = 'Please provide detailed reason';
     if (!formData.personalEmail.trim()) newErrors.personalEmail = 'Personal email is required';
     if (!formData.contactNumber.trim()) newErrors.contactNumber = 'Contact number is required';
-    if (!formData.declarationAccepted) newErrors.declaration = 'You must accept the declaration';
+        if (!formData.document) newErrors.document = 'Document upload is required';
+        if (!formData.declarationAccepted) newErrors.declaration = 'You must accept the declaration';
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (formData.personalEmail && !emailRegex.test(formData.personalEmail)) {
-      newErrors.personalEmail = 'Please enter a valid email';
-    }
+        // Validate email format - must contain @ and domain extension
+        if (formData.personalEmail && formData.personalEmail.trim()) {
+            if (!formData.personalEmail.includes('@')) {
+                newErrors.personalEmail = 'Email must contain @ symbol';
+            } else if (!formData.personalEmail.includes('.')) {
+                newErrors.personalEmail = 'Email must contain a domain extension';
+            } else {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(formData.personalEmail)) {
+                    newErrors.personalEmail = 'Please enter a valid email format';
+                }
+            }
+        }
 
-    if (formData.resignationDate && formData.lastWorkingDate && isValidDate(formData.resignationDate) && isValidDate(formData.lastWorkingDate)) {
-      const [resMonth, resDay, resYear] = formData.resignationDate.split('/').map(Number);
-      const [lastMonth, lastDay, lastYear] = formData.lastWorkingDate.split('/').map(Number);
-      const resignDate = new Date(resYear, resMonth - 1, resDay);
-      const lastDate = new Date(lastYear, lastMonth - 1, lastDay);
+        if (formData.resignationDate && formData.lastWorkingDate && isValidDate(formData.resignationDate) && isValidDate(formData.lastWorkingDate)) {
+            const [resMonth, resDay, resYear] = formData.resignationDate.split('/').map(Number);
+            const [lastMonth, lastDay, lastYear] = formData.lastWorkingDate.split('/').map(Number);
+            const resignDate = new Date(resYear, resMonth - 1, resDay);
+            const lastDate = new Date(lastYear, lastMonth - 1, lastDay);
 
-      if (lastDate < resignDate) {
-        newErrors.lastWorkingDate = 'Last working date must be after resignation date';
-      }
-    }
+            if (lastDate < resignDate) {
+                newErrors.lastWorkingDate = 'Last working date must be after resignation date';
+            }
+        }
 
-    if (formData.contactNumber && !/^\d{10,}$/.test(formData.contactNumber.replace(/\D/g, ''))) {
-      newErrors.contactNumber = 'Please enter a valid contact number';
-    }
+        // Validate Indian phone number format
+        if (formData.contactNumber && formData.contactNumber.trim()) {
+            const phoneDigits = formData.contactNumber.replace(/\D/g, '');
+            // Must be exactly 10 digits starting with 6-9
+            if (phoneDigits.length !== 10 || !/^[6-9]\d{9}$/.test(phoneDigits)) {
+                newErrors.contactNumber = 'Please enter a valid 10-digit Indian mobile number';
+            }
+        }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
-  const formatDateInput = (value: string): string => {
-    // Remove all non-numeric characters
-    const numbers = value.replace(/\D/g, '');
+    const formatDateInput = (value: string): string => {
+        // Remove all non-numeric characters
+        const numbers = value.replace(/\D/g, '');
 
-    // Format as mm/dd/yyyy
-    if (numbers.length <= 2) {
-      return numbers;
-    } else if (numbers.length <= 4) {
-      return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
-    } else {
-      return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
-    }
-  };
+        // Format as mm/dd/yyyy
+        if (numbers.length <= 2) {
+            return numbers;
+        } else if (numbers.length <= 4) {
+            return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+        } else {
+            return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+        }
+    };
 
   const isValidDate = (dateString: string): boolean => {
     const regex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/;
@@ -219,13 +234,15 @@ const ResignationAdmin: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
-    // Format date fields
-    if ((name === 'resignationDate' || name === 'lastWorkingDate') && value) {
-      const formattedValue = formatDateInput(value);
-      setFormData(prev => ({ ...prev, [name]: formattedValue }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+    // For contact number: only allow numbers and limit to 10 digits
+    let finalValue = value;
+    if (name === 'contactNumber') {
+      finalValue = value.replace(/\D/g, '').slice(0, 10);
+    } else if ((name === 'resignationDate' || name === 'lastWorkingDate') && value) {
+      finalValue = formatDateInput(value);
     }
+
+    setFormData(prev => ({ ...prev, [name]: finalValue }));
 
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -544,14 +561,15 @@ const ResignationAdmin: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-black mb-2">Contact Number</label>
-                    <input type="text" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} title="Contact phone number" placeholder="+1 (555) 000-0000" className={`w-full px-4 py-2 border rounded-lg text-black ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'}`} />
+                    <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} title="Contact phone number" placeholder="9876543210" maxLength={10} inputMode="numeric" className={`w-full px-4 py-2 border rounded-lg text-black ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'}`} />
                     {errors.contactNumber && <p className="text-red-500 text-xs mt-1">{errors.contactNumber}</p>}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-black mb-2">Attach Document (optional)</label>
-                  <input type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileChange} title="Attach supporting document (PDF or Word)" className="text-black" />
+                  <label className="block text-sm font-medium text-black mb-2">Attach Document <span className="text-red-500">*</span></label>
+                  <input type="file" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileChange} title="Attach supporting document (PDF or Word)" className={`text-black border rounded-lg p-2 w-full ${errors.document ? 'border-red-500 bg-red-50' : 'border-gray-300'}`} />
+                  {errors.document && <p className="text-red-500 text-xs mt-1">{errors.document}</p>}
                 </div>
 
                 <div className="flex items-start gap-3">

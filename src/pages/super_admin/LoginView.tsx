@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 // switch to authentication context for real login
 import { useAuth } from '../../context/AuthContext.tsx';
@@ -21,28 +21,47 @@ export const LoginView = () => {
     // No need to clear localStorage, authentication uses HttpOnly cookies
   }, []);
 
+  const validateEmail = (emailValue: string): string | null => {
+    if (!emailValue.includes('@')) {
+      return 'Email must contain @ symbol';
+    }
+    if (!emailValue.includes('.')) {
+      return 'Email must contain a domain extension (e.g., .com)';
+    }
+    const afterAtSymbol = emailValue.split('@')[1];
+    if (!afterAtSymbol || !afterAtSymbol.includes('.')) {
+      return 'Email must contain a valid domain extension (e.g., .com)';
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
     try {
+      const emailError = validateEmail(email);
+      if (emailError) {
+        setError(emailError);
+        setIsLoading(false);
+        return;
+      }
+
       const user = await login(email, password);
 
       // Validate that user has SUPER_ADMIN role
       if (user.role !== 'super_admin') {
         // Log out the user if they don't have the correct role
         try { await logout(); } catch { }
-        setError('Invalid credentials. Only super administrators can access this portal.');
-        setIsLoading(false);
-        return;
+        throw new Error('Invalid role');
       }
 
       setIsAuthenticated(true);
       navigate('/super-admin/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.message || 'An error occurred. Please try again.');
+      setError('Invalid email or password. Please try again.');
       setIsLoading(false);
     }
   };
@@ -66,6 +85,13 @@ export const LoginView = () => {
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back!</h1>
             <p className="text-slate-500 mt-2 text-sm">Please enter your credentials to access the admin portal</p>
           </div>
+
+          {error && (
+            <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 animate-in shake duration-300 mb-6">
+              <AlertCircle size={20} />
+              <p className="text-sm font-bold">{error}</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -126,12 +152,6 @@ export const LoginView = () => {
               />
               <label htmlFor="remember" className="text-sm text-slate-600 cursor-pointer select-none">Remember for 30 days</label>
             </div>
-
-            {error && (
-              <div className="bg-rose-500/10 border border-rose-500/20 text-rose-600 p-3 rounded-xl text-xs font-bold">
-                {error}
-              </div>
-            )}
 
             <button
               type="submit"
