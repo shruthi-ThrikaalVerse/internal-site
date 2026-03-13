@@ -1,96 +1,290 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { NAV_ITEMS } from '../../constants.ts';
+import {
+  LayoutDashboard,
+  Clock,
+  CalendarDays,
+  Wallet,
+  CheckSquare,
+  FileText,
+  HelpCircle,
+  Calendar,
+  User,
+  LogOut,
+  X,
+  Building2,
+  Bell,
+  TrendingUp,
+  Menu,
+  BookOpen,
+  Users,
+  BarChart3,
+  PlaneTakeoff,
+  ClipboardList,
+  FolderKanban,
+  MessageCircle,
+  CalendarCheck,
+  ReceiptText,
+  Star,
+  Activity,
+  CheckCircle2
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.tsx';
-import { useApp } from '../../context/AppContext.tsx';
-import Icon from './Icon.tsx';
+import { NAV_ITEMS } from '../../constants.js';
 
-const Sidebar: React.FC<{ isOpen: boolean; setOpen: (val: boolean) => void }> = ({ isOpen, setOpen }) => {
+interface SidebarProps {
+  isOpen: boolean;
+  toggleSidebar: () => void;
+  isCollapsed?: boolean;
+  isMobile?: boolean;
+  onRouteChange?: () => void;
+}
+
+// Icon name to Lucide component mapper
+const iconMap: Record<string, React.ComponentType<any>> = {
+  'LayoutDashboard': LayoutDashboard,
+  'Clock': Clock,
+  'Calendar': Calendar,
+  'CalendarCheck': CalendarCheck,
+  'Users': Users,
+  'FileText': FileText,
+  'PlaneTakeoff': PlaneTakeoff,
+  'ClipboardList': ClipboardList,
+  'FolderKanban': FolderKanban,
+  'MessageCircle': MessageCircle,
+  'CheckSquare': CheckSquare,
+  'CalendarDays': CalendarDays,
+  'Bell': Bell,
+  'IndianRupee': Wallet,
+  'ReceiptText': ReceiptText,
+  'Star': Star,
+  'CheckCircle2': CheckCircle2,
+  'Activity': Activity,
+  'LogOut': LogOut,
+  'UserCircle': User,
+};
+
+// Map NAV_ITEMS ids to actual routes
+const navIdToRouteMap: Record<string, string> = {
+  'admin/dashboard': '/admin/dashboard',
+  'admin/adminattendance': '/admin/adminattendance',
+  'admin/calendar': '/admin/calendar',
+  'admin/employees': '/admin/employee-hub',
+  'admin/documents': '/admin/documents',
+  'admin/attendance': '/admin/attendance',
+  'admin/leave': '/admin/leave',
+  'admin/leave-requests': '/admin/leave-requests',
+  'admin/projects': '/admin/projects',
+  'admin/requests': '/admin/requests',
+  'admin/tasks': '/admin/tasks',
+  'admin/events': '/admin/events',
+  'admin/notifications': '/admin/notifications',
+  'admin/payroll': '/admin/payroll',
+  'admin/payslips': '/admin/payslips',
+  'admin/performance': '/admin/performance',
+  'admin/performance-reviews': '/admin/performance-reviews',
+  'admin/audit-logs': '/admin/audit-logs',
+  'admin/resignation': '/admin/resignation',
+  'admin/profile': '/admin/profile',
+};
+
+const Sidebar: React.FC<SidebarProps> = ({
+  isOpen,
+  toggleSidebar,
+  isCollapsed = false,
+  isMobile = false,
+  onRouteChange = () => { }
+}) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
 
-  const { setIsAuthenticated } = useApp();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const handleLogout = async () => {
+  // Use NAV_ITEMS from constants with route mapping
+  const menuItems = NAV_ITEMS.map((item) => ({
+    name: item.label,
+    icon: item.icon,
+    path: navIdToRouteMap[item.id] || `/${item.id}`,
+  }));
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    setShowLogoutModal(false);
     try {
       await logout();
     } catch (e) {
       console.error('Logout error:', e);
     }
-    setIsAuthenticated(false);
     navigate('/admin/login');
   };
 
-  // Map NAV_ITEMS IDs to actual route paths
-  const getRoutePath = (itemId: string) => {
-    const pathMap: Record<string, string> = {
-      'admin/dashboard': '/admin/dashboard',
-      'admin/adminattendance': '/attendance',
-      'admin/calendar': '/admin/calendar',
-      'admin/employees': '/admin/employee-hub',
-      'admin/documents': '/admin/documents',
-      'admin/attendance': '/admin/attendance-monitor',
-      'admin/leave': '/admin/leave',
-      'admin/leave-requests': '/admin/leave-center',
-      'admin/requests': '/admin/requests',
-      'admin/tasks': '/admin/tasks',
-      'admin/events': '/admin/events',
-      'admin/notifications': '/admin/notifications',
-      'admin/payroll': '/admin/payroll-processing',
-      'admin/payslips': '/admin/payslips',
-      'admin/performance': '/admin/performance-management',
-      'admin/performance-reviews': '/admin/performance-reviews',
-      'admin/audit-logs': '/admin/audit-logs',
-      'admin/profile': '/admin/profile',
-      'admin/resignation': '/admin/resignation',
-      'admin/projects': '/admin/projects',
-    };
-    return pathMap[itemId] || `/${itemId}`;
+  const handleCancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
-  // Check if current path matches the item
-  const isActive = (itemId: string) => {
-    const routePath = getRoutePath(itemId);
-    return location.pathname === routePath;
+  const handleLinkClick = () => {
+    if (isMobile && isOpen) {
+      toggleSidebar();
+    }
+    onRouteChange();
   };
+
+  // Determine sidebar width based on state
+  const sidebarWidth = isMobile ? 'w-64' : (isCollapsed ? 'w-20' : 'w-64');
 
   return (
-    <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-      <div className="flex flex-col h-full">
-        <div className="p-6 flex items-center gap-2 border-b">
-          <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-100">H</div>
-          <span className="text-xl font-bold text-gray-800 tracking-tight">Admin <span className="text-indigo-600">Sync</span></span>
+    <>
+      {/* Add custom scrollbar styles */}
+      <style>{`
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .scrollbar-hide {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+        
+        /* Thin transparent scrollbar for those who want subtle scrolling */
+        .scrollbar-thin::-webkit-scrollbar {
+          width: 4px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          background: rgba(148, 163, 184, 0.3);
+          border-radius: 2px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+          background: rgba(148, 163, 184, 0.5);
+        }
+      `}</style>
+
+      {/* Logout Confirmation Modal - Centered on the page */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              Confirm Logout
+            </h3>
+            <p className="text-slate-600 mb-6">
+              Are you sure you want to logout from your account?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCancelLogout}
+                className="px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 border border-slate-300 hover:border-slate-400 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmLogout}
+                className="px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors"
+              >
+                Yes, Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sidebar Overlay for mobile */}
+      {isMobile && isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          onClick={toggleSidebar}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div
+        className={`
+          fixed lg:relative 
+          top-0 left-0 
+          h-full 
+          flex flex-col 
+          z-40 
+          transition-all duration-300 ease-in-out
+          ${isMobile ? (isOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
+          ${sidebarWidth}
+        `}
+        style={{ backgroundColor: '#2c3e50' }}
+      >
+        {/* Sidebar Header */}
+        <div className="p-4 sm:p-6 flex items-center justify-between">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Building2 size={20} className="text-white" />
+            </div>
+            {(isOpen || (!isMobile && !isCollapsed)) && (
+              <span className="font-bold text-lg text-white tracking-tight truncate">
+                Admin Portal
+              </span>
+            )}
+          </div>
+          {(isMobile && isOpen) && (
+            <button
+              onClick={toggleSidebar}
+              className="lg:hidden p-2 text-slate-400 hover:text-white transition-colors"
+              title="Close sidebar"
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
 
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto invisible-scrollbar">
-          {(NAV_ITEMS || []).map((item) => (
-            <Link
-              key={item.id}
-              to={getRoutePath(item.id)}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 ${isActive(item.id)
-                ? 'bg-indigo-600 text-white font-semibold shadow-xl shadow-indigo-200'
-                : 'text-gray-500 hover:bg-gray-50 hover:text-indigo-600'
-                }`}
-            >
-              <Icon name={item.icon} className="w-5 h-5" />
-              {item.label}
-            </Link>
-          ))}
+        {/* Navigation Menu - Added scrollbar classes */}
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto mt-4 scrollbar-hide scrollbar-thin">
+          {menuItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            const IconComponent = iconMap[item.icon] || LayoutDashboard;
+            const shouldShowText = isOpen || (!isMobile && !isCollapsed);
+
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center px-4 py-3 rounded-lg transition-colors group ${isActive
+                  ? 'text-white'
+                  : 'text-white/70 hover:text-white'
+                  }`}
+                style={isActive ? { backgroundColor: '#c97a4c' } : {}}
+                onClick={handleLinkClick}
+              >
+                <IconComponent size={18} className="flex-shrink-0" />
+                {shouldShowText && (
+                  <span className="ml-4 font-medium text-sm truncate">{item.name}</span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="p-4 border-t">
+        {/* Logout Button */}
+        <div className="p-4 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
           <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-rose-500 font-bold text-sm hover:bg-rose-50 transition-all active:scale-95"
+            onClick={handleLogoutClick}
+            className={`flex items-center px-4 py-3 w-full rounded-lg transition-colors group hover:bg-opacity-80`}
+            style={{ backgroundColor: '#c97a4c', color: 'white' }}
           >
-            <Icon name="LogOut" className="w-5 h-5" />
-            Sign Out
+            <LogOut size={18} />
+            {(isOpen || (!isMobile && !isCollapsed)) && (
+              <span className="ml-4 font-medium text-sm truncate">Logout</span>
+            )}
           </button>
         </div>
       </div>
-    </aside>
+    </>
   );
 };
 

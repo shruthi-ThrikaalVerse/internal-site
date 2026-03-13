@@ -225,7 +225,7 @@ export const AuditLogsView: React.FC = () => {
                   onChange={(e) => setLiveTail(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" style={{ringColor: '#c97a4c', backgroundColor: 'rgb(229, 231, 235)'}} peer-checked:style={{backgroundColor: '#c97a4c'}}></div>
               </label>
             </div>
 
@@ -268,8 +268,8 @@ export const AuditLogsView: React.FC = () => {
                 <p className="text-sm text-gray-900">Total Logs</p>
                 <p className="text-2xl font-bold mt-1 text-black">{total.toLocaleString()}</p>
               </div>
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <LucideIcons.Database size={24} className="text-blue-600" />
+              <div className="p-3 rounded-lg" style={{backgroundColor: '#f5ede3', color: '#c97a4c'}}>
+                <LucideIcons.Database size={24} style={{color: '#c97a4c'}} />
               </div>
             </div>
           </div>
@@ -320,7 +320,7 @@ export const AuditLogsView: React.FC = () => {
                 <span className="text-xs font-medium text-gray-500 mr-1">Quick:</span>
                 <button
                   onClick={presets.today}
-                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-medium transition-colors"
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors" style={{backgroundColor: '#f5ede3', color: '#8b5a3c'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e8d4c1'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f5ede3'}
                 >
                   Today
                 </button>
@@ -350,7 +350,7 @@ export const AuditLogsView: React.FC = () => {
                   <select
                     value={level}
                     onChange={(e) => setLevel(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm outline-none text-gray-900" onFocus={(e) => {e.currentTarget.style.boxShadow = '0 0 0 2px rgba(201, 122, 76, 0.2)'; e.currentTarget.style.borderColor = '#c97a4c';}} onBlur={(e) => {e.currentTarget.style.boxShadow = ''; e.currentTarget.style.borderColor = 'rgb(209, 213, 219)';}}
                   >
                     {LEVELS.map(l => (
                       <option key={l} value={l}>{l}</option>
@@ -370,7 +370,7 @@ export const AuditLogsView: React.FC = () => {
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       placeholder="User, message, IP..."
-                      className="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 text-gray-900"
+                      className="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm outline-none placeholder:text-gray-400 text-gray-900" onFocus={(e) => {e.currentTarget.style.boxShadow = '0 0 0 2px rgba(201, 122, 76, 0.2)'; e.currentTarget.style.borderColor = '#c97a4c';}} onBlur={(e) => {e.currentTarget.style.boxShadow = ''; e.currentTarget.style.borderColor = 'rgb(209, 213, 219)';}}
                     />
                   </div>
                 </div>
@@ -421,7 +421,7 @@ export const AuditLogsView: React.FC = () => {
                 </button>
                 <button
                   onClick={() => { setPage(1); load(); }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm flex items-center gap-2"
+                  className="px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors shadow-sm flex items-center gap-2" style={{backgroundColor: '#c97a4c'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
                 >
                   <LucideIcons.Filter className="w-4 h-4" />
                   Apply Filters

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { EmployeeSummary } from '../../types.ts';
 import { DEPARTMENTS, LOCATIONS } from '../../constants.ts';
+import { getAllEmployees } from '../../api/users.js';
 
 const Icon = ({ name, className, onClick }: { name: string; className?: string; onClick?: () => void }) => {
   const LucideIcon = (LucideIcons as any)[name];
@@ -236,14 +237,14 @@ const DatePicker = ({
           readOnly
           value={value ? formatDisplayDate(value) : ''}
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-black cursor-pointer caret-transparent"
+          className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black cursor-pointer caret-transparent"
           placeholder="Select date"
           required={required}
         />
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-black hover:text-indigo-600 transition-colors"
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-black hover:text-amber-700 transition-colors"
         >
           <Icon name="Calendar" className="w-4 h-4" />
         </button>
@@ -335,12 +336,13 @@ const DatePicker = ({
                       className={`
                         p-2 rounded-xl text-sm font-medium transition-all
                         ${dayObj.isCurrentMonth ? 'text-black' : 'text-slate-400'}
-                        ${dayObj.isToday ? 'bg-indigo-50 text-black font-black' : ''}
-                        ${isSelected ? 'bg-indigo-600 text-white font-black' : ''}
+                        ${dayObj.isToday ? 'bg-[#f0e6dc] text-black font-black' : ''}
+                        ${isSelected ? 'text-white font-black' : ''}
                         ${!isSelected && !dayObj.isToday ? 'hover:bg-slate-50' : ''}
                         ${!dayObj.isCurrentMonth ? 'cursor-default' : ''}
                         disabled:opacity-50 disabled:cursor-not-allowed
                       `}
+                      style={{backgroundColor: isSelected ? '#c97a4c' : ''}}
                     >
                       {dayObj.date.getDate()}
                     </button>
@@ -376,7 +378,7 @@ const DatePicker = ({
                     onClick={() => handleMonthSelect(monthIndex)}
                     className={`
                       p-3 rounded-xl text-sm font-medium text-center transition-all
-                      ${isSelected ? 'bg-indigo-600 text-white font-black' : 'text-black hover:bg-slate-50'}
+                      ${isSelected ? 'bg-amber-700 text-white font-black' : 'text-black hover:bg-slate-50'}
                     `}
                   >
                     {getMonthName(monthIndex).slice(0, 3)}
@@ -400,8 +402,8 @@ const DatePicker = ({
                     onClick={() => handleYearSelect(year)}
                     className={`
                       p-3 rounded-xl text-sm font-medium text-center transition-all
-                      ${isSelected ? 'bg-indigo-600 text-white font-black' : 'text-black hover:bg-slate-50'}
-                      ${year === today.getFullYear() ? 'ring-2 ring-indigo-200' : ''}
+                      ${isSelected ? 'bg-amber-700 text-white font-black' : 'text-black hover:bg-slate-50'}
+                      ${year === today.getFullYear() ? 'ring-2 ring-amber-200' : ''}
                     `}
                   >
                     {year}
@@ -465,74 +467,66 @@ const EmployeeHub: React.FC = () => {
   // Fetch employees from backend API (idempotent). Reusable for mount/refresh.
   const fetchEmployees = async () => {
     try {
-      const res = await fetch('http://localhost:8085/api/admin-hub/employees', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+      const data = await getAllEmployees();
+      const empList = Array.isArray(data) ? data : data.data || [];
+
+      // Deduplicate the fetched list by ID to prevent duplicates from backend
+      const seenIds = new Set<string>();
+      const uniqueEmpList = empList.filter((emp: any) => {
+        const empId = emp.id || emp._id || emp.employeeId || emp.email;
+        if (seenIds.has(empId)) {
+          console.warn(`Duplicate employee ID detected: ${empId}, skipping...`);
+          return false;
+        }
+        seenIds.add(empId);
+        return true;
       });
 
-      if (res.ok) {
-        const data = await res.json().catch(() => []);
-        const empList = Array.isArray(data) ? data : data.data || [];
+      // Map backend response to EmployeeSummary format (runs even for empty arrays)
+      const backendEmployees: EmployeeSummary[] = uniqueEmpList.map((emp: any) => {
+        // Determine status based on active field or terminatedAt
+        let status: 'active' | 'inactive' | 'probation' | 'resigned' = 'active';
+        if (emp.terminatedAt || emp.active === false) {
+          status = 'resigned';
+        } else if (emp.active === false) {
+          status = 'inactive';
+        }
 
-        // Deduplicate the fetched list by ID to prevent duplicates from backend
-        const seenIds = new Set<string>();
-        const uniqueEmpList = empList.filter((emp: any) => {
-          const empId = emp.id || emp._id || emp.employeeId || emp.email;
-          if (seenIds.has(empId)) {
-            console.warn(`Duplicate employee ID detected: ${empId}, skipping...`);
-            return false;
-          }
-          seenIds.add(empId);
-          return true;
-        });
+        return {
+          id: emp.id || emp._id || emp.employeeId || emp.email,
+          employeeId: emp.employeeId || emp.id || emp._id || emp.email,
+          fullName: emp.fullName || emp.name || `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username || '',
+          email: emp.email || '',
+          designation: emp.designation || '',
+          department: emp.department || '',
+          avatar: emp.profileImage || emp.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.fullName || emp.name || emp.username || emp.email || 'User')}`,
+          status,
+          dateOfJoining: emp.dateOfJoining || '',
+          location: emp.locationName || emp.location || '',
+          reportingManager: emp.reportingManager || emp.createdByName || 'Unassigned',
+          phone: emp.phone || emp.phoneNumber || '',
+          leaveBalance: emp.totalLeaveBalance || emp.leaveBalance || 20,
+          tags: [],
+          password: emp.password,
+          employmentType: emp.userType || emp.employmentType || '',
+          role: emp.role || emp.createdByRole || undefined,
+          dateOfBirth: emp.dateOfBirth || '',
+          username: emp.username || undefined,
+          profileImage: emp.profileImage || null,
+          locationName: emp.locationName || undefined,
+          createdByRole: emp.createdByRole || undefined,
+          createdByName: emp.createdByName || undefined,
+          totalLeaveBalance: emp.totalLeaveBalance || undefined,
+          userType: emp.userType || undefined,
+          active: emp.active !== undefined ? emp.active : true,
+          terminationReason: emp.terminationReason || null,
+          terminatedAt: emp.terminatedAt || null
+        } as EmployeeSummary;
+      });
 
-        // Map backend response to EmployeeSummary format (runs even for empty arrays)
-        const backendEmployees: EmployeeSummary[] = uniqueEmpList.map((emp: any) => {
-          // Determine status based on active field or terminatedAt
-          let status: 'active' | 'inactive' | 'probation' | 'resigned' = 'active';
-          if (emp.terminatedAt || emp.active === false) {
-            status = 'resigned';
-          } else if (emp.active === false) {
-            status = 'inactive';
-          }
-
-          return {
-            id: emp.id || emp._id || emp.employeeId || emp.email,
-            employeeId: emp.employeeId || emp.id || emp._id || emp.email,
-            fullName: emp.fullName || emp.name || `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username || '',
-            email: emp.email || '',
-            designation: emp.designation || '',
-            department: emp.department || '',
-            avatar: emp.profileImage || emp.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.fullName || emp.name || emp.username || emp.email || 'User')}`,
-            status,
-            dateOfJoining: emp.dateOfJoining || '',
-            location: emp.locationName || emp.location || '',
-            reportingManager: emp.reportingManager || emp.createdByName || 'Unassigned',
-            phone: emp.phone || emp.phoneNumber || '',
-            leaveBalance: emp.totalLeaveBalance || emp.leaveBalance || 20,
-            tags: [],
-            password: emp.password,
-            employmentType: emp.userType || emp.employmentType || '',
-            role: emp.role || emp.createdByRole || undefined,
-            dateOfBirth: emp.dateOfBirth || '',
-            username: emp.username || undefined,
-            profileImage: emp.profileImage || null,
-            locationName: emp.locationName || undefined,
-            createdByRole: emp.createdByRole || undefined,
-            createdByName: emp.createdByName || undefined,
-            totalLeaveBalance: emp.totalLeaveBalance || undefined,
-            userType: emp.userType || undefined,
-            active: emp.active !== undefined ? emp.active : true,
-            terminationReason: emp.terminationReason || null,
-            terminatedAt: emp.terminatedAt || null
-          } as EmployeeSummary;
-        });
-
-        // Direct replacement: overwrite local state with backend data only.
-        // Also filter to include only active employees for display.
-        syncEmployees(backendEmployees.filter(e => e.active));
-      }
+      // Direct replacement: overwrite local state with backend data only.
+      // Also filter to include only active employees for display.
+      syncEmployees(backendEmployees.filter(e => e.active));
     } catch (err) {
       console.error('Failed to fetch employees:', err);
     }
@@ -925,8 +919,8 @@ const EmployeeHub: React.FC = () => {
           </button>
           <button
             onClick={() => setAddModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-3.5 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 transition-all active:scale-95"
-          >
+            className="flex items-center gap-2 px-6 py-3.5 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
+            style={{backgroundColor: '#c97a4c', boxShadow: 'rgba(201, 122, 76, 0.2) 0px 20px 25px -5px'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}  >
             <Icon name="Plus" className="w-5 h-5 text-white" />New Staff Enrollment
           </button>
         </div>
@@ -941,32 +935,32 @@ const EmployeeHub: React.FC = () => {
             <div className="flex items-center bg-slate-50 rounded-2xl p-1.5 border border-slate-100">
               <button
                 onClick={() => setView('table')}
-                className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-xs font-black uppercase tracking-widest ${view === 'table' ? 'bg-white shadow-md text-indigo-600' : 'text-black hover:text-indigo-600'}`}>
+                className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-xs font-black uppercase tracking-widest ${view === 'table' ? 'bg-white shadow-md text-amber-700' : 'text-black hover:text-amber-700'}`}>
                 <Icon name="List" className="w-4 h-4" /> Table
               </button>
               <button
                 onClick={() => setView('grid')}
-                className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-xs font-black uppercase tracking-widest ${view === 'grid' ? 'bg-white shadow-md text-indigo-600' : 'text-black hover:text-indigo-600'}`}>
+                className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-xs font-black uppercase tracking-widest ${view === 'grid' ? 'bg-white shadow-md text-amber-700' : 'text-black hover:text-amber-700'}`}>
                 <Icon name="LayoutGrid" className="w-4 h-4" /> Cards
               </button>
             </div>
             <div className="flex flex-1 items-center gap-4 w-full max-w-3xl">
               <div className="relative flex-1 group">
-                <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black group-focus-within:text-indigo-500 transition-colors" />
+                <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black group-focus-within:text-amber-600 transition-colors" />
                 <input
                   type="text"
                   aria-label="Search employees"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Lookup by name, ID, or keyword..."
-                  className="w-full pl-12 pr-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium text-black placeholder:text-slate-400"
+                  className="w-full pl-12 pr-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-amber-600 outline-none transition-all font-medium text-black placeholder:text-slate-400"
                 />
               </div>
               <select
                 aria-label="Filter by department"
                 value={deptFilter}
                 onChange={(e) => setDeptFilter(e.target.value)}
-                className="px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-black text-xs uppercase tracking-widest text-black"
+                className="px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-black text-xs uppercase tracking-widest text-black"
               >
                 <option value="All" className="text-black">All Departments</option>
                 {DEPARTMENTS.map(d => <option key={d} value={d} className="text-black">{d}</option>)}
@@ -1012,7 +1006,7 @@ const EmployeeHub: React.FC = () => {
                         </div>
                       </td>
                       <td className="py-6 px-8">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${emp.employmentType === 'Full-time' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${emp.employmentType === 'Full-time' ? 'bg-[#f5ede3] text-[#8b5a3c]' : 
                           emp.employmentType === 'Part-time' ? 'bg-purple-50 text-purple-600 border-purple-100' :
                             'bg-amber-50 text-amber-600 border-amber-100'
                           }`}>
@@ -1032,12 +1026,12 @@ const EmployeeHub: React.FC = () => {
                         </div>
                       </td>
                       <td className="py-6 px-8">
-                        <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg uppercase tracking-widest">{emp.department}</span>
+                        <span className="text-xs font-black text-amber-700 bg-amber-50 px-3 py-1 rounded-lg uppercase tracking-widest">{emp.department}</span>
                       </td>
                       <td className="py-6 px-8 text-xs font-bold text-black uppercase tracking-widest">{emp.dateOfJoining}</td>
                       <td className="py-6 px-8 text-right">
                         <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
-                          <button onClick={(e) => { e.stopPropagation(); navigate(`/admin/employee-hub/${emp.id}`); }} aria-label="View details" className="p-2 text-black hover:text-indigo-600 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-indigo-100">
+                          <button onClick={(e) => { e.stopPropagation(); navigate(`/admin/employee-hub/${emp.id}`); }} aria-label="View details" className="p-2 text-black hover:text-amber-700 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-amber-100">
                             <Icon name="Eye" className="w-4 h-4" />
                           </button>
                           <button onClick={(e) => { e.stopPropagation(); setEmployeeToDelete(emp); }} aria-label="Delete employee" className="p-2 text-black hover:text-rose-600 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-rose-100">
@@ -1056,7 +1050,7 @@ const EmployeeHub: React.FC = () => {
                 <div
                   key={emp.id}
                   onClick={() => navigate(`/admin/employee-hub/${emp.id}`)}
-                  className="bg-white border border-slate-100 rounded-[32px] p-6 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all group relative cursor-pointer flex flex-col h-full"
+                  className="bg-white border border-slate-100 rounded-[32px] p-6 hover:shadow-2xl hover:shadow-amber-600/10 transition-all group relative cursor-pointer flex flex-col h-full"
                 >
                   <div className="flex items-start justify-between mb-6">
                     <div className="relative">
@@ -1079,7 +1073,7 @@ const EmployeeHub: React.FC = () => {
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">{emp.employeeId}</p>
 
                     <div className="flex flex-wrap gap-2 mb-4">
-                      <span className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${emp.employmentType === 'Full-time' ? 'bg-blue-50 text-blue-600' :
+                      <span className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${emp.employmentType === 'Full-time' ? 'bg-[#f5ede3] text-[#8b5a3c]' : 
                         emp.employmentType === 'Part-time' ? 'bg-purple-50 text-purple-600' :
                           'bg-amber-50 text-amber-600'
                         }`}>
@@ -1087,7 +1081,7 @@ const EmployeeHub: React.FC = () => {
                       </span>
                       {/* Display role badge if available */}
                       {(emp as any).role && (
-                        <span className="px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest bg-indigo-50 text-indigo-600">
+                        <span className="px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest bg-amber-50 text-amber-700">
                           {(emp as any).role}
                         </span>
                       )}
@@ -1100,7 +1094,7 @@ const EmployeeHub: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
-                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-3 py-1.5 rounded-lg">{emp.department}</span>
+                    <span className="text-[10px] font-black text-amber-700 uppercase tracking-widest bg-amber-50 px-3 py-1.5 rounded-lg">{emp.department}</span>
                     <span className="text-[9px] font-bold text-black uppercase">{emp.location}</span>
                   </div>
                 </div>
@@ -1136,7 +1130,7 @@ const EmployeeHub: React.FC = () => {
               <label htmlFor="terminationReason" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Reason for Termination *</label>
               <textarea
                 id="terminationReason"
-                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-black placeholder:text-slate-400 min-h-[100px]"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400 min-h-[100px]"
                 placeholder="e.g., Violation of company policies, Insubordination, etc."
                 value={terminationReason}
                 onChange={(e) => setTerminationReason(e.target.value)}
@@ -1194,7 +1188,7 @@ const EmployeeHub: React.FC = () => {
               <button
                 type="button"
                 onClick={triggerFileInput}
-                className="absolute bottom-2 right-2 p-3 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-colors"
+                className="absolute bottom-2 right-2 p-3 bg-amber-700 text-white rounded-full shadow-lg hover:bg-amber-800 transition-colors"
                 title="Upload profile image"
               >
                 <Icon name="Camera" className="w-5 h-5 text-white" />
@@ -1222,7 +1216,7 @@ const EmployeeHub: React.FC = () => {
               <input
                 id="newEmpFirstName"
                 required
-                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-black placeholder:text-slate-400"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400"
                 placeholder="John"
                 value={newEmp.firstName}
                 onChange={e => setNewEmp({ ...newEmp, firstName: e.target.value })}
@@ -1233,7 +1227,7 @@ const EmployeeHub: React.FC = () => {
               <input
                 id="newEmpLastName"
                 required
-                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-black placeholder:text-slate-400"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400"
                 placeholder="Doe"
                 value={newEmp.lastName}
                 onChange={e => setNewEmp({ ...newEmp, lastName: e.target.value })}
@@ -1245,7 +1239,7 @@ const EmployeeHub: React.FC = () => {
             <label htmlFor="newEmpEmployeeId" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Employee ID (optional)</label>
             <input
               id="newEmpEmployeeId"
-              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-black placeholder:text-slate-400"
+              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400"
               placeholder="EMP123456 or custom ID"
               value={newEmp.employeeId}
               onChange={e => setNewEmp({ ...newEmp, employeeId: e.target.value })}
@@ -1259,7 +1253,7 @@ const EmployeeHub: React.FC = () => {
                 id="newEmpEmail"
                 required
                 type="email"
-                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-black placeholder:text-slate-400"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400"
                 placeholder="john.doe@company.com"
                 value={newEmp.email}
                 onChange={e => setNewEmp({ ...newEmp, email: e.target.value })}
@@ -1270,7 +1264,7 @@ const EmployeeHub: React.FC = () => {
               <input
                 id="newEmpPhone"
                 type="tel"
-                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-black placeholder:text-slate-400"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400"
                 placeholder="+91 9876543210"
                 value={newEmp.phone}
                 onChange={e => setNewEmp({ ...newEmp, phone: e.target.value })}
@@ -1282,7 +1276,7 @@ const EmployeeHub: React.FC = () => {
             <label htmlFor="newEmpAddress" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Address</label>
             <textarea
               id="newEmpAddress"
-              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-black placeholder:text-slate-400 min-h-[80px]"
+              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400 min-h-[80px]"
               placeholder="Full residential address"
               value={newEmp.address}
               onChange={e => setNewEmp({ ...newEmp, address: e.target.value })}
@@ -1315,7 +1309,7 @@ const EmployeeHub: React.FC = () => {
               <select
                 id="newEmpEmploymentType"
                 required
-                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-black text-[10px] uppercase tracking-widest text-black"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-black text-[10px] uppercase tracking-widest text-black"
                 value={newEmp.employmentType}
                 onChange={e => setNewEmp({ ...newEmp, employmentType: e.target.value })}
               >
@@ -1327,7 +1321,7 @@ const EmployeeHub: React.FC = () => {
               <input
                 id="newEmpDesignation"
                 required
-                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-black placeholder:text-slate-400"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400"
                 placeholder="Software Engineer"
                 value={newEmp.designation}
                 onChange={e => setNewEmp({ ...newEmp, designation: e.target.value })}
@@ -1341,7 +1335,7 @@ const EmployeeHub: React.FC = () => {
             <select
               id="newEmpRole"
               required
-              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-black text-[10px] uppercase tracking-widest text-black"
+              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-black text-[10px] uppercase tracking-widest text-black"
               value={newEmp.role}
               onChange={e => setNewEmp({ ...newEmp, role: e.target.value })}
             >
@@ -1351,7 +1345,7 @@ const EmployeeHub: React.FC = () => {
 
           {/* Login Credentials Section */}
           <div className="p-6 bg-slate-50 rounded-[24px] border border-slate-100 space-y-4">
-            <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Initial Access Configuration</h4>
+            <h4 className="text-[10px] font-black text-amber-700 uppercase tracking-widest">Initial Access Configuration</h4>
             <div className="space-y-2">
               <label htmlFor="newEmpPassword" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">System Password *</label>
               <div className="flex items-center gap-2">
@@ -1359,7 +1353,7 @@ const EmployeeHub: React.FC = () => {
                   <input
                     id="newEmpPassword"
                     required
-                    className="w-full pl-6 pr-24 py-4 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-black text-sm tracking-widest text-black"
+                    className="w-full pl-6 pr-24 py-4 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-black text-sm tracking-widest text-black"
                     value={newEmp.password}
                     onChange={e => setNewEmp({ ...newEmp, password: e.target.value })}
                     placeholder="••••••••"
@@ -1368,7 +1362,7 @@ const EmployeeHub: React.FC = () => {
                   <button
                     type="button"
                     onClick={generatePassword}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[9px] font-black uppercase tracking-tighter hover:bg-indigo-100 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-2 bg-amber-50 text-amber-700 rounded-xl text-[9px] font-black uppercase tracking-tighter hover:bg-amber-100 transition-colors"
                   >
                     Auto-Generate
                   </button>
@@ -1389,7 +1383,7 @@ const EmployeeHub: React.FC = () => {
                     }
                   }}
                   aria-label="Toggle password visibility"
-                  className="p-4 bg-white border border-slate-200 text-black hover:text-indigo-600 rounded-2xl transition-colors"
+                  className="p-4 bg-white border border-slate-200 text-black hover:text-amber-700 rounded-2xl transition-colors"
                 >
                   <Icon name="Eye" className="w-4 h-4" />
                 </button>
@@ -1404,7 +1398,7 @@ const EmployeeHub: React.FC = () => {
               <select
                 id="newEmpDepartment"
                 required
-                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-black text-[10px] uppercase tracking-widest text-black"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-black text-[10px] uppercase tracking-widest text-black"
                 value={newEmp.department}
                 onChange={e => setNewEmp({ ...newEmp, department: e.target.value })}
               >
@@ -1416,7 +1410,7 @@ const EmployeeHub: React.FC = () => {
               <select
                 id="newEmpLocation"
                 required
-                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-black text-[10px] uppercase tracking-widest text-black"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-black text-[10px] uppercase tracking-widest text-black"
                 value={newEmp.location}
                 onChange={e => setNewEmp({ ...newEmp, location: e.target.value })}
               >
@@ -1427,7 +1421,7 @@ const EmployeeHub: React.FC = () => {
 
           <div className="pt-6 border-t border-slate-100 flex gap-4">
             <button type="button" onClick={handleCloseAddModal} className="flex-1 py-4 text-black font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all">Cancel</button>
-            <button type="submit" className="flex-1 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all">Add Employee</button>
+            <button type="submit" className="flex-1 py-4 bg-amber-700 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-amber-100 hover:bg-amber-800 transition-all">Add Employee</button>
           </div>
         </form>
       </Modal>

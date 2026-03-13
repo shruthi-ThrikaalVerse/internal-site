@@ -528,7 +528,7 @@ const AdminAttendance: React.FC = () => {
             'Check-Out Successful',
             `Checked out at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
             'Clock',
-            'text-blue-500 bg-blue-50'
+            'text-[#c97a4c] bg-[#f5ede3]'
           );
 
           setIsProcessingCheckout(false);
@@ -712,8 +712,9 @@ const AdminAttendance: React.FC = () => {
                     ? 'bg-gradient-to-r from-slate-300 to-slate-400 text-black cursor-not-allowed shadow-slate-200'
                     : todayRecord?.timeOut
                       ? 'bg-gradient-to-r from-green-300 to-green-400 text-black cursor-not-allowed shadow-green-200'
-                      : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-blue-200'
-                  } disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none`}
+                      : 'text-white rounded-lg text-sm px-4 py-2 font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none'
+                }`}
+                style={!isPunchedIn && !isHoliday(getTodayString()) && !(isWeekend(new Date()) && !isWorkingSaturday(new Date())) && !todayRecord?.timeOut ? { background: 'linear-gradient(90deg, #c97a4c 0%, #a56137 100%)', ...(isResolvingLocation && { opacity: 0.5 }) } : undefined}
               >
                 {isResolvingLocation ? (
                   <Loader2 className="animate-spin" size={24} />
@@ -767,7 +768,7 @@ const AdminAttendance: React.FC = () => {
               {(isPunchedIn || todayRecord?.timeOut) && (
                 <div className="bg-slate-50 border border-slate-100 p-4 rounded-xl flex items-center justify-between">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-blue-600">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-[#c97a4c]">
                       <MapPin size={16} />
                     </div>
                     {isEditingLocation ? (
@@ -776,7 +777,7 @@ const AdminAttendance: React.FC = () => {
                         title="Edit location name"
                         value={customLocationName}
                         onChange={(e) => setCustomLocationName(e.target.value)}
-                        className="bg-white border border-blue-200 rounded px-2 py-1 text-xs font-bold w-full focus:ring-2 focus:ring-blue-100 outline-none text-black"
+                        className="bg-white border-2 rounded px-2 py-1 text-xs font-bold w-full outline-none text-black" style={{borderColor: '#c97a4c'}} onFocus={(e) => (e.target.style.boxShadow = '0 0 0 3px rgba(201, 122, 76, 0.1)')} onBlur={(e) => (e.target.style.boxShadow = '')}
                         autoFocus
                       />
                     ) : (
@@ -795,7 +796,7 @@ const AdminAttendance: React.FC = () => {
           <div className="grid grid-cols-2 gap-6">
             <div className="bg-white p-6 border border-slate-200 rounded-xl shadow-sm">
               <div className="flex items-center gap-3 mb-4">
-                <Navigation size={18} className="text-blue-500" />
+                <Navigation size={18} className="text-[#c97a4c]" />
                 <h3 className="text-[10px] font-black text-black uppercase tracking-widest">GPS Coordinates</h3>
               </div>
               <p className="text-sm font-bold text-black">
@@ -807,7 +808,7 @@ const AdminAttendance: React.FC = () => {
             </div>
             <div className="bg-white p-6 border border-slate-200 rounded-xl shadow-sm">
               <div className="flex items-center gap-3 mb-4">
-                <Timer size={18} className="text-blue-500" />
+                <Timer size={18} className="text-[#c97a4c]" />
                 <h3 className="text-[10px] font-black text-black uppercase tracking-widest">Logged Work Hours</h3>
               </div>
               <p className="text-3xl font-black text-black tabular-nums tracking-tight">{workDuration}</p>
@@ -818,7 +819,7 @@ const AdminAttendance: React.FC = () => {
         {/* Sidebar Logs */}
         <div className="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
           <h3 className="font-bold text-black mb-8 flex items-center gap-3">
-            <Activity size={20} className="text-blue-600" /> Today's Timeline
+            <Activity size={20} className="text-[#c97a4c]" /> Today's Timeline
           </h3>
           <div className="space-y-8 relative">
             <div className="absolute left-5 top-2 bottom-2 w-px bg-slate-100"></div>
@@ -911,7 +912,7 @@ const AdminAttendance: React.FC = () => {
               <h2 className="font-bold text-black text-lg md:text-xl">Admin Historical Registry</h2>
               <button
                 onClick={clearFilters}
-                className="flex items-center gap-2 text-[10px] font-black text-black hover:text-blue-600 uppercase tracking-widest transition-colors md:hidden"
+                className="flex items-center gap-2 text-[10px] font-black text-black uppercase tracking-widest transition-colors md:hidden hover:text-[#c97a4c]"
               >
                 <RotateCcw size={12} /> Clear
               </button>
@@ -925,7 +926,7 @@ const AdminAttendance: React.FC = () => {
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                   title="Filter by attendance status"
-                  className="text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 px-3 py-2 rounded-lg outline-none focus:ring-4 focus:ring-blue-100 transition-all w-full text-black"
+                  className="text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 px-3 py-2 rounded-lg outline-none focus:ring-4 transition-all w-full text-black" style={{outlineColor: '#c97a4c'}}
                 >
                   <option className="text-black">All</option>
                   <option className="text-black">Present</option>
@@ -971,7 +972,7 @@ const AdminAttendance: React.FC = () => {
               <div className="flex items-end">
                 <button
                   onClick={clearFilters}
-                  className="hidden md:flex items-center gap-2 text-[10px] font-black text-black hover:text-blue-600 uppercase tracking-widest transition-colors h-10"
+                  className="hidden md:flex items-center gap-2 text-[10px] font-black text-black uppercase tracking-widest transition-colors h-10 hover:text-[#c97a4c]"
                 >
                   <RotateCcw size={12} /> Clear Filters
                 </button>
@@ -1026,7 +1027,7 @@ const AdminAttendance: React.FC = () => {
                     {/* Location */}
                     <div className="px-2">
                       <div className="flex items-center gap-2">
-                        <MapPin size={12} className="text-blue-500 flex-shrink-0" />
+                        <MapPin size={12} className="text-[#c97a4c] flex-shrink-0" />
                         <span
                           className="text-xs font-semibold text-black truncate"
                           title={displayLocation}

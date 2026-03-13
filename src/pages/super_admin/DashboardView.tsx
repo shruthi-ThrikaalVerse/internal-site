@@ -51,13 +51,13 @@ export const DashboardView = ({
           <div className="grid grid-cols-1 gap-8">
             {filteredEmployees.length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Users size={16} className="text-blue-600" /> Employees ({filteredEmployees.length})</h3>
+                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Users size={16} style={{color: '#c97a4c'}} /> Employees ({filteredEmployees.length})</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredEmployees.slice(0, 6).map(e => (
-                    <div key={e.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4 hover:border-blue-300 transition-colors group">
+                    <div key={e.id} className="bg-white p-4 rounded-xl border-2 border-gray-200 shadow-sm flex items-center gap-4 hover:border-[#c97a4c] transition-colors group">
                       <img src={e.avatar} alt={e.name} className="w-10 h-10 rounded-full border border-gray-200" />
                       <div className="min-w-0">
-                        <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors truncate">{e.name}</div>
+                        <div className="font-bold text-gray-900 transition-colors truncate" style={{color: 'inherit'}} onMouseEnter={(e) => e.currentTarget.style.color = '#c97a4c'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgb(17, 24, 39)'}>{e.name}</div>
                         <div className="text-[10px] text-gray-500 truncate">{e.role} • {e.department}</div>
                       </div>
                     </div>
@@ -102,12 +102,12 @@ export const DashboardView = ({
           <div className="h-48 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>
-                <defs><linearGradient id="dashGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} /><stop offset="95%" stopColor="#3b82f6" stopOpacity={0} /></linearGradient></defs>
+                <defs><linearGradient id="dashGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#c97a4c" stopOpacity={0.2} /><stop offset="95%" stopColor="#c97a4c" stopOpacity={0} /></linearGradient></defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 10 }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 10 }} />
                 <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', color: '#111827', borderRadius: '8px' }} />
-                <Area type="monotone" dataKey="value" stroke="#3b82f6" fillOpacity={1} fill="url(#dashGrad)" strokeWidth={3} />
+                <Area type="monotone" dataKey="value" stroke="#c97a4c" fillOpacity={1} fill="url(#dashGrad)" strokeWidth={3} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -121,7 +121,7 @@ export const DashboardView = ({
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 10 }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 10 }} />
                 <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', color: '#111827', borderRadius: '8px' }} />
-                <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" fill="#c97a4c" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

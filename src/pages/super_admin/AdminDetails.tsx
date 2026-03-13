@@ -102,7 +102,7 @@ const AdminDetails: React.FC = () => {
                 }
             ],
             attendance: [
-                { name: 'Present', value: analytics.attendanceAnayticsResponse.presentDays, fill: '#3b82f6' },
+                { name: 'Present', value: analytics.attendanceAnayticsResponse.presentDays, fill: '#c97a4c' },
                 { name: 'Absent', value: analytics.attendanceAnayticsResponse.absentDays, fill: '#fbbf24' }
             ],
             tasks: [
@@ -245,7 +245,7 @@ const AdminDetails: React.FC = () => {
                                         </span>
                                         <span
                                             className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest border ${selectedAdmin.employmentType === 'FULL_TIME'
-                                                    ? 'bg-blue-50 text-blue-600 border-blue-100'
+                                                    ? 'bg-[#f5ede3] text-[#8b5a3c]'
                                                     : selectedAdmin.employmentType === 'PART_TIME'
                                                         ? 'bg-purple-50 text-purple-600 border-purple-100'
                                                         : 'bg-amber-50 text-amber-600 border-amber-100'
@@ -446,11 +446,11 @@ const AdminDetails: React.FC = () => {
                                         </div>
 
                                         {/* Attendance Chart */}
-                                        <div className="bg-white rounded-3xl shadow-md border border-blue-200 overflow-hidden hover:shadow-lg transition-shadow">
-                                            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 border-b border-blue-200">
+                                        <div className="bg-white rounded-3xl shadow-md border-2 overflow-hidden hover:shadow-lg transition-shadow" style={{borderColor: '#c97a4c'}}>
+                                            <div className="bg-gradient-to-r p-6 border-b" style={{backgroundImage: 'linear-gradient(90deg, #f5ede3 0%, #f0e6dc 100%)', borderColor: '#c97a4c'}}>
                                                 <h3 className="text-lg font-black text-black flex items-center gap-3">
-                                                    <div className="p-2 bg-blue-100 rounded-xl">
-                                                        <Icon name="CheckCircle" className="w-6 h-6 text-blue-600" />
+                                                    <div className="p-2 rounded-xl" style={{backgroundColor: '#f5ede3', color: '#c97a4c'}}>
+                                                        <Icon name="CheckCircle" className="w-6 h-6" style={{color: '#c97a4c'}} />
                                                     </div>
                                                     Attendance Record
                                                 </h3>
@@ -466,9 +466,9 @@ const AdminDetails: React.FC = () => {
                                                         : 0;
                                                     return attendanceData ? (
                                                         <div className="grid grid-cols-3 gap-3">
-                                                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4 border border-blue-200 text-center">
-                                                                <p className="text-2xl font-black text-blue-600">{attendanceData.presentDays}</p>
-                                                                <p className="text-xs font-bold text-blue-700 uppercase tracking-widest mt-2">Present</p>
+                                                            <div className="rounded-2xl p-4 text-center" style={{backgroundColor: '#f5ede3', borderColor: '#c97a4c', borderWidth: '2px'}}>
+                                                                <p className="text-2xl font-black" style={{color: '#c97a4c'}}>{attendanceData.presentDays}</p>
+                                                                <p className="text-xs font-bold uppercase tracking-widest mt-2" style={{color: '#8b5a3c'}}>Present</p>
                                                             </div>
                                                             <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-4 border border-yellow-200 text-center">
                                                                 <p className="text-2xl font-black text-yellow-600">{attendanceData.absentDays}</p>

@@ -267,11 +267,11 @@ const AppContent: React.FC = () => {
   // Redirect happens in useEffect above if not authenticated
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-white border-r border-gray-200">
-      <div className="p-6 border-b border-[#1f2937] shrink-0">
+    <div className="flex flex-col h-full transition-colors duration-300" style={{ backgroundColor: '#2c3e50' }}>
+      <div className="p-6 border-b shrink-0" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black shrink-0 shadow-lg shadow-indigo-100">S</div>
-          {(sidebarOpen || mobileSidebarOpen) && <span className="text-gray-900 font-bold text-xl tracking-tight truncate">SuperAdmin</span>}
+          <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center text-white font-black shrink-0">S</div>
+          {(sidebarOpen || mobileSidebarOpen) && <span className="text-white font-bold text-xl tracking-tight truncate">Super Admin</span>}
         </div>
       </div>
       <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
@@ -285,18 +285,24 @@ const AppContent: React.FC = () => {
               }
               setMobileSidebarOpen(false);
             }}
-            className={`w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-all ${activeSection === item.id ? 'bg-indigo-600 text-white font-semibold shadow-xl shadow-indigo-200' : 'text-gray-500 hover:bg-gray-50 hover:text-indigo-600'}`}
+            className={`w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-all ${
+              activeSection === item.id 
+                ? 'text-white font-semibold' 
+                : 'text-white/70 hover:text-white'
+            }`}
+            style={activeSection === item.id ? { backgroundColor: '#c97a4c' } : {}}
           >
             <span className="shrink-0">{iconMap[item.iconName] || <HelpCircle size={20} />}</span>
             {(sidebarOpen || mobileSidebarOpen) && <span className="text-sm truncate">{item.label}</span>}
           </button>
         ))}
       </nav>
-      <div className="p-4 border-t border-[#1f2937] shrink-0">
+      <div className="p-4 border-t shrink-0" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
         <button
           onClick={handleLogout}
           title="Logout"
-          className="flex items-center gap-4 w-full px-3 py-3 rounded-xl text-[#9aa8bd] hover:bg-rose-500/10 hover:text-rose-400 transition-all font-bold"
+          className="flex items-center gap-4 w-full px-3 py-3 rounded-xl transition-all font-bold text-white hover:bg-opacity-80"
+          style={{ backgroundColor: '#c97a4c' }}
         >
           <LogOut size={20} />
           {(sidebarOpen || mobileSidebarOpen) && <span className="text-sm">Logout</span>}
@@ -306,7 +312,7 @@ const AppContent: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen flex text-gray-900 bg-[#f8fafc] overflow-x-hidden selection:bg-blue-300">
+    <div className="min-h-screen flex text-gray-900 overflow-x-hidden selection:bg-blue-300" style={{ backgroundColor: '#f5ede3' }}>
       {/* Mobile Backdrop */}
       {mobileSidebarOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] lg:hidden animate-in fade-in duration-300" onClick={() => setMobileSidebarOpen(false)} />
@@ -318,66 +324,64 @@ const AppContent: React.FC = () => {
       </aside>
 
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex fixed inset-y-0 left-0 z-50 bg-white transition-all duration-300 flex-col shadow-2xl shadow-black/50 ${sidebarOpen ? 'w-64' : 'w-20'}`}>
+      <aside className={`hidden lg:flex fixed inset-y-0 left-0 z-50 transition-all duration-300 flex-col ${sidebarOpen ? 'w-64' : 'w-20'}`} style={{ backgroundColor: '#2c3e50' }}>
         <SidebarContent />
       </aside>
 
       {/* Main Container */}
       <main className={`flex-1 flex flex-col min-w-0 transition-all duration-300 pt-16 sm:pt-20 lg:pt-20 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
-        <header className={`h-16 sm:h-20 bg-white border-b border-gray-200 flex items-center px-3 sm:px-6 lg:px-8 justify-between fixed top-0 left-0 right-0 z-30 transition-all duration-300 ${sidebarOpen ? 'lg:left-64' : 'lg:left-20'}`}>
+        <header className={`h-16 sm:h-20 flex items-center px-3 sm:px-6 lg:px-8 justify-between fixed top-0 left-0 right-0 z-30 transition-all duration-300 ${sidebarOpen ? 'lg:left-64' : 'lg:left-20'}`} style={{ backgroundColor: '#2c3e50', borderBottom: '1px solid #1a252f' }}>
           <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 flex-1 min-w-0">
             <button onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle sidebar" className="hidden lg:flex p-2 hover:bg-gray-100 rounded-xl text-gray-600 transition-colors shrink-0">{sidebarOpen ? <X size={20} /> : <Menu size={20} />}</button>
             <button onClick={() => setMobileSidebarOpen(true)} title="Open sidebar" className="lg:hidden p-2 hover:bg-[#1f2937] rounded-xl text-[#9aa8bd] transition-colors shrink-0"><Menu size={20} /></button>
-            <div className="flex items-center gap-2 sm:gap-3 bg-white border border-gray-200 px-2 sm:px-4 lg:px-5 py-2 sm:py-2.5 rounded-xl flex-1 min-w-0 max-w-xs sm:max-w-lg lg:max-w-3xl focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-500/50 transition-all">
-              <Search size={16} className="text-gray-400 shrink-0 sm:w-[18px] lg:w-5" />
+            <div className="flex items-center gap-2 sm:gap-3 bg-slate-100 border-0 px-2 sm:px-4 lg:px-5 py-2 sm:py-2.5 rounded-xl flex-1 min-w-0 max-w-xs sm:max-w-lg lg:max-w-3xl focus-within:ring-4 focus-within:ring-blue-500/50 transition-all">
+              <Search size={16} className="text-slate-400 shrink-0 sm:w-[18px] lg:w-5" />
               <input
                 type="text"
                 placeholder="Search across authorized modules..."
-                className="bg-transparent border-none focus:ring-0 text-xs sm:text-sm lg:text-base w-full text-gray-900 outline-none placeholder-gray-400 min-w-0"
+                className="bg-transparent border-none focus:ring-0 text-xs sm:text-sm lg:text-base w-full text-slate-700 outline-none placeholder-slate-500 min-w-0"
                 value={globalSearch}
                 onChange={(e) => setGlobalSearch(e.target.value)}
               />
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 ml-2 sm:ml-4 lg:ml-6 shrink-0">
-            <div className="hidden md:flex items-center gap-2 px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 bg-blue-50 text-blue-600 rounded-lg border border-gray-200 whitespace-nowrap">
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.7)]"></div>
+            <div className="hidden md:flex items-center gap-2 px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 text-orange-400 rounded-lg border-0 whitespace-nowrap">
+              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(249,115,22,0.7)]"></div>
               <span className="text-[9px] sm:text-[10px] lg:text-xs font-black uppercase tracking-widest">Production Node</span>
             </div>
             <button
               onClick={() => navigate(sectionToUrlMap[AppSection.Notifications])}
               title="View notifications"
-              className="relative p-2 sm:p-2.5 lg:p-3 text-gray-400 hover:bg-gray-100 rounded-xl transition-all shrink-0"
+              className="relative p-2 sm:p-2.5 lg:p-3 text-slate-300 hover:bg-slate-700 rounded-xl transition-all shrink-0"
             >
               <Bell size={18} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
-              <span className="absolute top-1.5 sm:top-2.5 lg:top-3 right-1.5 sm:right-2.5 lg:right-3 w-2 h-2 bg-blue-600 rounded-full ring-3 sm:ring-4 lg:ring-5 ring-white animate-bounce"></span>
+              <span className="absolute top-1.5 sm:top-2.5 lg:top-3 right-1.5 sm:right-2.5 lg:right-3 w-2 h-2 bg-orange-500 rounded-full ring-3 sm:ring-4 lg:ring-5 ring-white animate-bounce"></span>
             </button>
 
             {/* Profile Dropdown */}
             <div className="relative" ref={profileDropdownRef}>
               <button
                 onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                className="flex items-center gap-2 sm:gap-3 lg:gap-4 bg-white border border-gray-100 rounded-2xl px-2 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 shadow-sm hover:border-indigo-100 transition-all shrink-0"
+                className="flex items-center gap-2 sm:gap-3 lg:gap-4 rounded-2xl px-2 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 hover:bg-slate-700 transition-all shrink-0"
               >
                 <div className="hidden md:flex flex-col items-end gap-0">
-                  <p className="text-xs lg:text-sm font-bold text-gray-900 leading-none">{currentUser?.name || 'Super Admin'}</p>
+                  <p className="text-xs lg:text-sm font-bold text-white leading-none">{currentUser?.name || 'Super Admin'}</p>
                   <div className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    <p className="text-[10px] lg:text-xs text-gray-500 font-black uppercase tracking-widest">Active</p>
+                    <p className="text-[10px] lg:text-xs text-slate-300 font-black uppercase tracking-widest">Active</p>
                   </div>
                 </div>
-                <img
-                  src={currentUser?.avatar || "https://picsum.photos/seed/admin/200"}
-                  className="w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-full border-2 border-indigo-50 shadow-sm shrink-0"
-                  alt="Admin"
-                />
+                <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ backgroundColor: '#c97a4c' }}>
+                  {(currentUser?.name || 'Super Admin').charAt(0).toUpperCase()}
+                </div>
               </button>
 
               {showProfileDropdown && (
                 <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-200 z-50">
                   <div className="px-4 py-3 border-b border-slate-50">
-                    <p className="text-xs font-black text-slate-900 truncate">{currentUser?.email || 'vijay@example.com'}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Global Cluster 01</p>
+                    <p className="text-xs font-black text-slate-900 truncate">{currentUser?.email || 'admin@example.com'}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Super Admin Portal</p>
                   </div>
                   <button
                     onClick={() => {

@@ -448,9 +448,10 @@ export const AdminRequests = () => {
             onClick={() => setActiveSection('leave')}
             className={`flex-1 px-6 py-4 text-sm font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
               activeSection === 'leave'
-                ? 'bg-blue-600 text-white border-b-2 border-blue-600'
+                ? 'text-white border-b-2'
                 : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
             }`}
+            style={activeSection === 'leave' ? {backgroundColor: '#c97a4c', borderColor: '#c97a4c'} : undefined}
           >
             <Calendar size={16} />
             Leave Approval ({leaveRequests.length})
@@ -497,7 +498,7 @@ export const AdminRequests = () => {
             <div className="space-y-4">
               {isLoadingLeave ? (
                 <div className="text-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto" style={{color: '#c97a4c'}} />
                   <p className="text-gray-600 mt-2">Loading leave requests...</p>
                 </div>
               ) : leaveRequests.length === 0 ? (
@@ -511,7 +512,7 @@ export const AdminRequests = () => {
                     <div
                       key={leave.leaveId}
                       onClick={() => setViewingLeaveRequest(leave)}
-                      className="p-4 border border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-all"
+                      className="p-4 border border-gray-200 rounded-xl cursor-pointer transition-all" onMouseEnter={(e) => {e.currentTarget.style.borderColor = '#c97a4c'; e.currentTarget.style.backgroundColor = '#f5ede3';}} onMouseLeave={(e) => {e.currentTarget.style.borderColor = 'rgb(229, 231, 235)'; e.currentTarget.style.backgroundColor = 'white';}}
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
@@ -678,7 +679,7 @@ export const AdminRequests = () => {
           onSave={() => setViewingLeaveRequest(null)}
         >
           <div className="space-y-6 pb-4">
-            <div className="p-6 rounded-2xl bg-blue-50 border border-blue-200">
+            <div className="p-6 rounded-2xl" style={{backgroundColor: '#f5ede3', borderColor: '#c97a4c', borderWidth: '2px'}}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs font-black text-gray-700 uppercase tracking-widest mb-1">Employee Name</p>
@@ -960,7 +961,7 @@ export const AdminRequests = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
                 <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                  <User size={14} className="text-blue-600" /> Employee Details
+                  <User size={14} style={{color: '#c97a4c'}} /> Employee Details
                 </h4>
                 <div className="space-y-3 text-xs">
                   <div className="flex justify-between">
@@ -984,7 +985,7 @@ export const AdminRequests = () => {
 
               <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
                 <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                  <Info size={14} className="text-blue-600" /> Assignment Details
+                  <Info size={14} style={{color: '#c97a4c'}} /> Assignment Details
                 </h4>
                 <div className="space-y-3 text-xs">
                   <div className="flex justify-between">
@@ -1005,7 +1006,7 @@ export const AdminRequests = () => {
 
             <div className="p-6 rounded-2xl bg-white border border-gray-200">
               <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2 mb-4">
-                <FileText size={14} className="text-blue-600" /> Creation Details
+                <FileText size={14} style={{color: '#c97a4c'}} /> Creation Details
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div>

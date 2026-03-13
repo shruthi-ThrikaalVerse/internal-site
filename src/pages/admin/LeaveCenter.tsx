@@ -235,13 +235,15 @@ const LeaveCenter: React.FC = () => {
         <div className="flex items-center bg-white p-1 rounded-xl border border-gray-100 shadow-sm">
           <button
             onClick={() => setActiveTab('pending')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'pending' ? 'bg-blue-600 text-white shadow-md' : 'text-black hover:text-blue-600'}`}
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'pending' ? 'text-white shadow-md' : 'text-black hover:text-[#c97a4c]'}`}
+            style={{backgroundColor: activeTab === 'pending' ? '#c97a4c' : ''}}
           >
             Pending ({pendingLeaves.length})
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'history' ? 'bg-blue-600 text-white shadow-md' : 'text-black hover:text-blue-600'}`}
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'history' ? 'text-white shadow-md' : 'text-black hover:text-[#c97a4c]'}`}
+            style={{backgroundColor: activeTab === 'history' ? '#c97a4c' : ''}}
           >
             History
           </button>
@@ -308,7 +310,10 @@ const LeaveCenter: React.FC = () => {
                   <>
                     <button
                       onClick={() => handleUpdateStatus(req.id, req.leaveId, 'approved')}
-                      className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all uppercase text-xs"
+                      className="flex-1 py-3 text-white font-bold rounded-xl shadow-lg transition-all uppercase text-xs"
+                      style={{backgroundColor: '#c97a4c', boxShadow: 'rgba(201, 122, 76, 0.2) 0px 20px 25px -5px'}}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
                     >
                       Approve Leave
                     </button>
@@ -355,9 +360,9 @@ const LeaveCenter: React.FC = () => {
           <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-black">Upcoming Holidays</h2>
-              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
-                {SYSTEM_HOLIDAYS.length} Total
-              </span>
+                    <span className="px-2 py-1 rounded-lg text-[10px] font-bold bg-[#f5ede3]" style={{color: '#8b5a3c'}}>
+                      {SYSTEM_HOLIDAYS.length} Total
+                    </span>
             </div>
 
             <div className="space-y-3 max-h-[420px] overflow-y-auto pr-2">
@@ -368,10 +373,10 @@ const LeaveCenter: React.FC = () => {
                     key={i}
                     className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-all group border border-transparent hover:border-gray-100"
                   >
-                    <div className="min-w-14 h-14 rounded-xl flex flex-col items-center justify-center font-bold bg-blue-50 text-blue-500 border border-blue-100">
+                    <div className="min-w-14 h-14 rounded-xl flex flex-col items-center justify-center font-bold border" style={{backgroundColor: '#f5ede3', color: '#c97a4c', borderColor: '#c97a4c'}}>
                       <span className="text-[10px] uppercase leading-none font-bold tracking-wider text-black">{label.month}</span>
                       <span className="text-lg leading-tight font-bold text-black">{label.day}</span>
-                      <span className="text-[9px] text-blue-600 font-medium mt-[-2px]">{label.weekday}</span>
+                      <span className="text-[9px] font-medium mt-[-2px]" style={{color: '#c97a4c'}}>{label.weekday}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-black group-hover:text-blue-600 transition-colors truncate">
@@ -379,7 +384,7 @@ const LeaveCenter: React.FC = () => {
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-[10px] font-bold text-black">2026</span>
-                        <span className="text-[10px] text-blue-600 font-medium bg-blue-50 px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] font-bold bg-[#f5ede3] px-1.5 py-0.5 rounded" style={{color: '#8b5a3c'}}>
                           Public Holiday
                         </span>
                       </div>

@@ -64,8 +64,8 @@ const ConfirmDialog = ({
       <div className="bg-white rounded-[24px] w-full max-w-md relative shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col">
         <div className="p-6 space-y-4">
           <div className="flex items-start gap-4">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDangerous ? 'bg-rose-100' : 'bg-indigo-100'}`}>
-              <Icon name={isDangerous ? 'AlertTriangle' : 'HelpCircle'} className={`w-6 h-6 ${isDangerous ? 'text-rose-600' : 'text-indigo-600'}`} />
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDangerous ? 'bg-rose-100' : 'bg-amber-100'}`}>
+              <Icon name={isDangerous ? 'AlertTriangle' : 'HelpCircle'} className={`w-6 h-6 ${isDangerous ? 'text-rose-600' : 'text-amber-700'}`} />
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-black text-slate-900">{title}</h3>
@@ -90,7 +90,7 @@ const ConfirmDialog = ({
             className={`px-4 py-2 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg disabled:opacity-60 ${
               isDangerous
                 ? 'bg-gradient-to-r from-rose-600 to-red-500 hover:opacity-90 shadow-rose-200'
-                : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 shadow-indigo-200'
+                : 'bg-gradient-to-r from-amber-700 to-orange-600 hover:opacity-90 shadow-amber-200'
             }`}
           >
             {isLoading ? 'Deleting...' : confirmText}
@@ -243,14 +243,14 @@ const DatePicker = ({
           readOnly
           value={value ? formatDisplayDate(value) : ''}
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700 cursor-pointer caret-transparent shadow-inner"
+          className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-slate-700 cursor-pointer caret-transparent shadow-inner"
           placeholder="Select date"
           required={required}
         />
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-amber-700 transition-colors"
         >
           <Icon name="Calendar" className="w-4 h-4" />
         </button>
@@ -336,8 +336,8 @@ const DatePicker = ({
                       className={`
                         p-2 rounded-xl text-sm font-medium transition-all
                         ${dayObj.isCurrentMonth ? 'text-slate-700' : 'text-slate-300'}
-                        ${dayObj.isToday ? 'bg-indigo-50 text-indigo-600 font-black' : ''}
-                        ${isSelected ? 'bg-indigo-600 text-white font-black' : ''}
+                        ${dayObj.isToday ? 'bg-amber-50 text-amber-700 font-black' : ''}
+                        ${isSelected ? 'bg-amber-700 text-white font-black' : ''}
                         ${!isSelected && !dayObj.isToday ? 'hover:bg-slate-50' : ''}
                         ${!dayObj.isCurrentMonth || !isValidDate ? 'cursor-default opacity-50' : ''}
                         disabled:opacity-50 disabled:cursor-not-allowed
@@ -375,7 +375,7 @@ const DatePicker = ({
                     onClick={() => handleMonthSelect(monthIndex)}
                     className={`
                       p-3 rounded-xl text-sm font-medium text-center transition-all
-                      ${isSelected ? 'bg-indigo-600 text-white font-black' : 'text-slate-700 hover:bg-slate-50'}
+                      ${isSelected ? 'bg-amber-700 text-white font-black' : 'text-slate-700 hover:bg-slate-50'}
                     `}
                   >
                     {getMonthName(monthIndex).slice(0, 3)}
@@ -398,8 +398,8 @@ const DatePicker = ({
                     onClick={() => handleYearSelect(year)}
                     className={`
                       p-3 rounded-xl text-sm font-medium text-center transition-all
-                      ${isSelected ? 'bg-indigo-600 text-white font-black' : 'text-slate-700 hover:bg-slate-50'}
-                      ${year === today.getFullYear() ? 'ring-2 ring-indigo-200' : ''}
+                      ${isSelected ? 'bg-amber-700 text-white font-black' : 'text-slate-700 hover:bg-slate-50'}
+                      ${year === today.getFullYear() ? 'ring-2 ring-amber-200' : ''}
                     `}
                   >
                     {year}
@@ -416,7 +416,7 @@ const DatePicker = ({
 
 const EVENT_GRADIENTS: any = {
   holiday: 'bg-gradient-to-br from-rose-500/20 via-pink-400/15 to-red-400/10 border-rose-200/60 shadow-rose-100/30',
-  training: 'bg-gradient-to-br from-indigo-500/20 via-purple-400/15 to-violet-400/10 border-indigo-200/60 shadow-indigo-100/30',
+  training: 'bg-gradient-to-br from-amber-500/20 via-orange-400/15 to-yellow-400/10 border-amber-200/60 shadow-amber-100/30',
   meeting: 'bg-gradient-to-br from-blue-500/20 via-cyan-400/15 to-teal-400/10 border-blue-200/60 shadow-blue-100/30',
   company: 'bg-gradient-to-br from-emerald-500/20 via-green-400/15 to-lime-400/10 border-emerald-200/60 shadow-emerald-100/30',
   team: 'bg-gradient-to-br from-amber-500/20 via-orange-400/15 to-yellow-400/10 border-amber-200/60 shadow-amber-100/30',
@@ -424,7 +424,7 @@ const EVENT_GRADIENTS: any = {
 
 const EVENT_BADGE_STYLES: any = {
   holiday: 'bg-gradient-to-r from-rose-600 via-pink-500 to-rose-500 text-white border-rose-400/40',
-  training: 'bg-gradient-to-r from-indigo-600 via-purple-500 to-indigo-500 text-white border-indigo-400/40',
+  training: 'bg-gradient-to-r from-amber-700 via-orange-600 to-amber-600 text-white border-amber-400/40',
   meeting: 'bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-500 text-white border-blue-400/40',
   company: 'bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-500 text-white border-emerald-400/40',
   team: 'bg-gradient-to-r from-amber-600 via-orange-500 to-amber-500 text-white border-amber-400/40',
@@ -432,7 +432,7 @@ const EVENT_BADGE_STYLES: any = {
 
 const TIME_BADGE_STYLES: any = {
   holiday: 'bg-gradient-to-r from-rose-500/30 to-pink-400/30 text-rose-800 border-rose-300/60',
-  training: 'bg-gradient-to-r from-indigo-500/30 to-purple-400/30 text-indigo-800 border-indigo-300/60',
+  training: 'bg-gradient-to-r from-amber-500/30 to-orange-400/30 text-amber-800 border-amber-300/60',
   meeting: 'bg-gradient-to-r from-blue-500/30 to-cyan-400/30 text-blue-800 border-blue-300/60',
   company: 'bg-gradient-to-r from-emerald-500/30 to-green-400/30 text-emerald-800 border-emerald-300/60',
   team: 'bg-gradient-to-r from-amber-500/30 to-orange-400/30 text-amber-800 border-amber-300/60',
@@ -745,20 +745,22 @@ const EventsAdmin: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex bg-gradient-to-r from-indigo-100/50 to-purple-100/50 p-1 rounded-2xl border border-indigo-100/30 shadow-sm mr-2">
+          <div className="flex bg-white p-1 rounded-2xl border border-gray-100 shadow-sm mr-2">
             <button
               onClick={() => setViewTab('board')}
               className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
-                viewTab === 'board' ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg' : 'text-slate-500 hover:text-indigo-600'
+                viewTab === 'board' ? 'text-white shadow-lg' : 'text-slate-500 hover:text-[#c97a4c]'
               }`}
+              style={{backgroundColor: viewTab === 'board' ? '#c97a4c' : ''}}
             >
               📊 Board
             </button>
             <button
               onClick={() => setViewTab('list')}
               className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
-                viewTab === 'list' ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg' : 'text-slate-500 hover:text-indigo-600'
+                viewTab === 'list' ? 'text-white shadow-lg' : 'text-slate-500 hover:text-[#c97a4c]'
               }`}
+              style={{backgroundColor: viewTab === 'list' ? '#c97a4c' : ''}}
             >
               📅 Upcoming
             </button>
@@ -769,23 +771,24 @@ const EventsAdmin: React.FC = () => {
               resetForm();
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-white rounded-2xl hover:opacity-90 hover:shadow-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-purple-200 transition-all active:scale-95"
+            className="flex items-center gap-2 px-6 py-3.5 text-white rounded-2xl hover:opacity-90 hover:shadow-xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
+            style={{backgroundColor: '#c97a4c', boxShadow: 'rgba(201, 122, 76, 0.2) 0px 20px 25px -5px'}}
           >
             <Icon name="Plus" className="w-5 h-5" /> Schedule Event
           </button>
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-white via-indigo-50/20 to-purple-50/20 p-6 rounded-[32px] border border-slate-100/50 shadow-sm space-y-6">
+      <div className="bg-gradient-to-br from-white via-[#f5ede3]/20 to-[#f0e6dc]/20 p-6 rounded-[32px] border border-slate-100/50 shadow-sm space-y-6">
         <div className="relative group w-full">
-          <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
+          <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-amber-600 transition-colors" />
           <input
             aria-label="Search events"
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Lookup by event title or description..."
-            className="w-full pl-12 pr-6 py-4 bg-white/50 backdrop-blur-sm border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium text-slate-600 shadow-inner"
+            className="w-full pl-12 pr-6 py-4 bg-white/50 backdrop-blur-sm border-none rounded-2xl focus:ring-2 focus:ring-amber-600 outline-none transition-all font-medium text-slate-600 shadow-inner"
           />
         </div>
 
@@ -841,7 +844,7 @@ const EventsAdmin: React.FC = () => {
                             title={`Edit event ${evt.title}`}
                             aria-label={`Edit event ${evt.title}`}
                             onClick={() => handleEdit(evt)}
-                            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white/50 transition-all rounded-xl"
+                            className="p-2 text-slate-400 hover:text-amber-700 hover:bg-white/50 transition-all rounded-xl"
                           >
                             <Icon name="Edit3" className="w-4 h-4" />
                           </button>
@@ -891,8 +894,8 @@ const EventsAdmin: React.FC = () => {
               })
             ) : (
               <div className="col-span-full py-24 text-center">
-                <div className="w-24 h-24 bg-gradient-to-br from-indigo-100/50 to-purple-100/50 rounded-[32px] flex items-center justify-center mx-auto mb-6">
-                  <Icon name="CalendarOff" className="w-12 h-12 text-indigo-300" />
+                <div className="w-24 h-24 bg-gradient-to-br from-amber-100/50 to-orange-100/50 rounded-[32px] flex items-center justify-center mx-auto mb-6">
+                  <Icon name="CalendarOff" className="w-12 h-12 text-amber-300" />
                 </div>
                 <p className="text-slate-400 font-black uppercase text-xs tracking-widest">Zero scheduled events found.</p>
                 <p className="text-slate-300 text-[10px] font-medium mt-2">Try changing your search or schedule a new event</p>
@@ -902,7 +905,7 @@ const EventsAdmin: React.FC = () => {
         ) : (
           <div className="overflow-x-auto rounded-[24px] border border-slate-100/50 backdrop-blur-sm">
             <table className="w-full text-left">
-              <thead className="bg-gradient-to-r from-indigo-50/50 to-purple-50/50">
+              <thead className="bg-gradient-to-r from-amber-50/50 to-orange-50/50">
                 <tr className="border-b border-slate-100/50">
                   <th className="px-8 py-5 text-[10px] font-black text-slate-600 uppercase tracking-widest">🎯 Event</th>
                   <th className="px-8 py-5 text-[10px] font-black text-slate-600 uppercase tracking-widest">👥 Target</th>                  <th className="px-8 py-5 text-[10px] font-black text-slate-600 uppercase tracking-widest text-right">⚡ Actions</th>
@@ -998,7 +1001,7 @@ const EventsAdmin: React.FC = () => {
 
                       <td className="px-8 py-6 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button aria-label={`Edit event ${evt.title}`} onClick={() => handleEdit(evt)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/50 rounded-xl transition-all">
+                          <button aria-label={`Edit event ${evt.title}`} onClick={() => handleEdit(evt)} className="p-2 text-slate-400 hover:text-amber-700 hover:bg-amber-50/50 rounded-xl transition-all">
                             <Icon name="Settings" className="w-4 h-4" />
                           </button>
                           <button type="button" aria-label={`Delete event ${evt.id}`} onClick={() => handleDeleteClick(evt.id)} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50/50 rounded-xl transition-all">
@@ -1021,7 +1024,7 @@ const EventsAdmin: React.FC = () => {
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">🎯 Event Title</label>
             <input
               required
-              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-slate-700 shadow-inner"
+              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-amber-600 outline-none font-medium text-slate-700 shadow-inner"
               placeholder="e.g. Q4 Townhall Meeting"
               value={formData.title || ''}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -1032,7 +1035,7 @@ const EventsAdmin: React.FC = () => {
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">📝 Description</label>
             <textarea
               required
-              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-slate-700 min-h-[100px] shadow-inner"
+              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-amber-600 outline-none font-medium text-slate-700 min-h-[100px] shadow-inner"
               placeholder="Details about the agenda, speakers, or objective..."
               value={formData.description || ''}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -1043,7 +1046,7 @@ const EventsAdmin: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">🏷️ Category</label>
               <select
-                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-600 shadow-inner"
+                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-amber-600 outline-none text-xs font-bold text-slate-600 shadow-inner"
                 value={formData.type as any}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
                 title="Select event category"
@@ -1086,7 +1089,7 @@ const EventsAdmin: React.FC = () => {
                 type="text"
                 required
                 placeholder="09:00 AM"
-                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-600 shadow-inner"
+                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-amber-600 outline-none text-xs font-bold text-slate-600 shadow-inner"
                 value={(formData.startTime as any) || ''}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
               />
@@ -1110,14 +1113,14 @@ const EventsAdmin: React.FC = () => {
               <input
                 type="text"
                 placeholder="10:00 AM"
-                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-600 shadow-inner"
+                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-amber-600 outline-none text-xs font-bold text-slate-600 shadow-inner"
                 value={(formData.endTime as any) || ''}
                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
               />
             </div>
           </div>
 
-          <div className="p-6 bg-gradient-to-br from-slate-50 to-indigo-50/30 rounded-[28px] border border-slate-100 space-y-4">
+          <div className="p-6 bg-gradient-to-br from-slate-50 to-amber-50/30 rounded-[28px] border border-slate-100 space-y-4">
             <div className="flex items-center justify-between">
               <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">📍 Mode & Location</label>
               <div className="flex items-center gap-2">
@@ -1125,7 +1128,7 @@ const EventsAdmin: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, isOnline: !formData.isOnline })}
-                  className={`w-10 h-5 rounded-full relative transition-colors shadow-sm ${formData.isOnline ? 'bg-gradient-to-r from-blue-500 to-cyan-500' : 'bg-slate-300'}`}
+                  className={`w-10 h-5 rounded-full relative transition-colors shadow-sm ${formData.isOnline ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-slate-300'}`}
                   aria-label="Toggle virtual event mode"
                 >
                   <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all shadow-sm ${formData.isOnline ? 'left-6' : 'left-1'}`}></div>
@@ -1135,7 +1138,7 @@ const EventsAdmin: React.FC = () => {
 
             <input
               required
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-700 shadow-inner"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-600 outline-none text-xs font-bold text-slate-700 shadow-inner"
               placeholder={formData.isOnline ? 'Meeting Link (Zoom/Google Meet)' : 'Physical Address / Room No.'}
               value={(formData.location as any) || ''}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
@@ -1151,7 +1154,7 @@ const EventsAdmin: React.FC = () => {
                   type="button"
                   onClick={() => setFormData({ ...formData, audience: a, targetEmployeeIds: [], targetDepartment: '' })}
                   className={`flex-1 py-3 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all shadow-sm ${
-                    formData.audience === a ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-transparent text-white shadow-lg' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'
+                    formData.audience === a ? 'bg-gradient-to-r from-amber-700 to-amber-600 border-transparent text-white shadow-lg' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'
                   }`}
                 >
                   {a}
@@ -1185,8 +1188,8 @@ const EventsAdmin: React.FC = () => {
                       <div
                         className={`w-4 h-4 rounded-md border-2 transition-all flex items-center justify-center shadow-sm ${
                           (formData.targetEmployeeIds as any[])?.includes(emp.employeeId)
-                            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-transparent text-white'
-                            : 'bg-white border-slate-200 text-transparent group-hover:border-indigo-200'
+                            ? 'bg-gradient-to-r from-amber-700 to-amber-600 border-transparent text-white'
+                            : 'bg-white border-slate-200 text-transparent group-hover:border-amber-200'
                         }`}
                       >
                         <Icon name="Check" className="w-2.5 h-2.5" />
@@ -1200,7 +1203,7 @@ const EventsAdmin: React.FC = () => {
             {formData.audience === 'department' && (
               <select
                 aria-label="Select target unit"
-                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-600 shadow-inner"
+                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-amber-600 outline-none text-xs font-bold text-slate-600 shadow-inner"
                 value={(formData.targetDepartment as any) || ''}
                 onChange={(e) => setFormData({ ...formData, targetDepartment: e.target.value })}
               >
@@ -1220,7 +1223,8 @@ const EventsAdmin: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="flex-1 py-4 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-purple-100 hover:opacity-90 transition-all active:scale-95"
+              className="flex-1 py-4 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all active:scale-95"
+              style={{backgroundColor: '#c97a4c', boxShadow: 'rgba(201, 122, 76, 0.2) 0px 20px 25px -5px'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
             >
               📅 Commit To Calendar
             </button>

@@ -320,7 +320,7 @@ const AttendanceMonitor: React.FC = () => {
 
           <button
             onClick={() => setSelectedDate(new Date())}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
+            className="px-4 py-2 text-white rounded-lg text-xs font-bold uppercase tracking-widest shadow-lg transition-all active:scale-95" style={{backgroundColor: '#c97a4c', boxShadow: '0 20px 25px -5px rgba(201, 122, 76, 0.2)'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
           >
             Today
           </button>
@@ -384,7 +384,7 @@ const AttendanceMonitor: React.FC = () => {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50">
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{backgroundColor: '#c97a4c'}}></div>
             <div>
               <h2 className="text-lg font-black text-black uppercase tracking-tighter">Live Attendance Feed</h2>
               <p className="text-xs text-black font-medium">
@@ -398,8 +398,8 @@ const AttendanceMonitor: React.FC = () => {
               <button
                 key={f}
                 onClick={() => setStatusFilter(f)}
-                className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === f ? 'bg-indigo-600 text-white shadow-md' : 'text-black hover:text-indigo-600 hover:bg-gray-50'
-                  }`}
+                className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === f ? 'text-white shadow-md' : 'text-black hover:text-[#c97a4c] hover:bg-gray-50'}`}
+                style={{backgroundColor: statusFilter === f ? '#c97a4c' : ''}}
               >
                 {f}
               </button>
@@ -423,7 +423,7 @@ const AttendanceMonitor: React.FC = () => {
             <tbody className="divide-y divide-gray-50">
               {filteredFeed.length > 0 ? (
                 filteredFeed.map((record: any) => (
-                  <tr key={record.employeeId} className="hover:bg-indigo-50/30 transition-colors group">
+                  <tr key={record.employeeId} className="hover:bg-[#f0e6dc]/30 transition-colors group">
                     <td className="py-5 px-8">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center text-xs font-black text-black border border-gray-200 group-hover:bg-white group-hover:text-indigo-600 transition-colors">
