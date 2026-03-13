@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext.tsx';
 
@@ -14,14 +14,38 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const auth = useAuth();
 
+  const validateEmail = (emailValue: string): string | null => {
+    if (!emailValue.includes('@')) {
+      return 'Email must contain @ symbol';
+    }
+    if (!emailValue.includes('.')) {
+      return 'Email must contain a domain extension (e.g., .com)';
+    }
+    const afterAtSymbol = emailValue.split('@')[1];
+    if (!afterAtSymbol || !afterAtSymbol.includes('.')) {
+      return 'Email must contain a valid domain extension (e.g., .com)';
+    }
+    return null;
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
 
     try {
+      // Validate email format
+      const emailError = validateEmail(email);
+      if (emailError) {
+        setError(emailError);
+        setIsLoading(false);
+        return;
+      }
+
       // Use AuthContext login method which handles both token persistence and session verification
       const loggedInUser = await auth?.login(email, password);
 
@@ -29,10 +53,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       if (loggedInUser && loggedInUser.role && loggedInUser.role !== 'employee') {
         // Clear session and notify user to use the correct login
         try { await auth?.logout(); } catch { }
-        toast.error('This account is not an employee. Please use the Admin login page.', {
-          position: 'top-right',
-          autoClose: 4000,
-        });
+        setError('This account is not an employee. Please use the Admin login page.');
         setIsLoading(false);
         return;
       }
@@ -58,10 +79,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       navigate('/employee/dashboard');
     } catch (err: any) {
-      toast.error(err?.message || 'Login failed. Please check your credentials and try again.', {
-        position: 'top-right',
-        autoClose: 4000,
-      });
+      setError('Invalid email or password. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -96,6 +114,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back!</h1>
             <p className="text-slate-500 mt-2 text-sm">Please enter your credentials to access your portal</p>
           </div>
+
+          {error && (
+            <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 animate-in shake duration-300 mb-6">
+              <AlertCircle size={20} />
+              <p className="text-sm font-bold">{error}</p>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>

@@ -378,6 +378,12 @@ export const EventsView = () => {
   const [departments, setDepartments] = useState<any[]>([]);
   const [empSearch, setEmpSearch] = useState('');
 
+  // Form Validation State
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({
+    employees: '',
+    department: ''
+  });
+
   const todayISO = toLocalISODate(new Date());
 
   const [formData, setFormData] = useState<Partial<AppEvent>>({
@@ -397,6 +403,25 @@ export const EventsView = () => {
     priority: 'normal',
     isPublished: true,
   });
+
+  // Validation functions
+  const validateSelectedEmployees = (): boolean => {
+    if (formData.audience === 'selected' && (!formData.targetEmployeeIds || (formData.targetEmployeeIds as any[]).length === 0)) {
+      setValidationErrors(prev => ({ ...prev, employees: 'Please select at least one employee' }));
+      return false;
+    }
+    setValidationErrors(prev => ({ ...prev, employees: '' }));
+    return true;
+  };
+
+  const validateSelectedDepartment = (): boolean => {
+    if (formData.audience === 'department' && !formData.targetDepartment) {
+      setValidationErrors(prev => ({ ...prev, department: 'Please select a department' }));
+      return false;
+    }
+    setValidationErrors(prev => ({ ...prev, department: '' }));
+    return true;
+  };
 
   const filteredEmployees = employees.filter((e: any) => {
     const n = (e.fullName || '').toLowerCase();
@@ -516,6 +541,10 @@ export const EventsView = () => {
       const next = current.includes(employeeId) ? current.filter((cid) => cid !== employeeId) : [...current, employeeId];
       return { ...prev, targetEmployeeIds: next };
     });
+    // Clear error when employee is selected/deselected
+    if (validationErrors.employees) {
+      setValidationErrors(prev => ({ ...prev, employees: '' }));
+    }
   };
 
   const handleAddNew = () => {
@@ -539,6 +568,7 @@ export const EventsView = () => {
       isPublished: true,
     });
     setEmpSearch('');
+    setValidationErrors({ employees: '', department: '' });
     setIsModalOpen(true);
   };
 
@@ -563,6 +593,7 @@ export const EventsView = () => {
       isPublished: true,
     });
     setEmpSearch('');
+    setValidationErrors({ employees: '', department: '' });
     setIsModalOpen(true);
   };
 
@@ -587,6 +618,7 @@ export const EventsView = () => {
       isPublished: true,
     });
     setEmpSearch('');
+    setValidationErrors({ employees: '', department: '' });
   };
 
   const handleStartDateChange = (dateStr: string) => {
@@ -642,11 +674,13 @@ export const EventsView = () => {
       }
 
       if (formData.audience === 'selected' && (!formData.targetEmployeeIds || (formData.targetEmployeeIds as any[]).length === 0)) {
+        setValidationErrors(prev => ({ ...prev, employees: 'Please select at least one employee for targeted events.' }));
         setError('Please select at least one employee for targeted events.');
         return;
       }
 
       if (formData.audience === 'department' && !formData.targetDepartment) {
+        setValidationErrors(prev => ({ ...prev, department: 'Please select a department for department-based events.' }));
         setError('Please select a department for department-based events.');
         return;
       }
@@ -912,7 +946,10 @@ export const EventsView = () => {
                 <button
                   key={a}
                   type="button"
-                  onClick={() => setFormData({ ...formData, audience: a, targetEmployeeIds: [], targetDepartment: '' })}
+                  onClick={() => {
+                    setFormData({ ...formData, audience: a, targetEmployeeIds: [], targetDepartment: '' });
+                    setValidationErrors({ employees: '', department: '' });
+                  }}
                   className={`flex-1 py-3 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all shadow-sm ${
                     formData.audience === a ? 'bg-gradient-to-r from-amber-700 to-orange-600 border-transparent text-white shadow-lg' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'
                   }`}
@@ -957,23 +994,42 @@ export const EventsView = () => {
                     </div>
                   ))}
                 </div>
+
+                {validationErrors.employees && (
+                  <p className="text-xs text-red-600 font-semibold flex items-center gap-1 p-2 bg-red-50 rounded-lg border border-red-200">
+                    <span>⚠️</span> {validationErrors.employees}
+                  </p>
+                )}
               </div>
             )}
 
             {formData.audience === 'department' && (
-              <select
-                aria-label="Select target department"
-                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-amber-600 outline-none text-xs font-bold text-slate-600 shadow-inner"
-                value={(formData.targetDepartment as any) || ''}
-                onChange={(e) => setFormData({ ...formData, targetDepartment: e.target.value })}
-              >
-                <option value="">🎯 Select Target Department</option>
-                {departments.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-3">
+                <select
+                  aria-label="Select target department"
+                  className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-600 shadow-inner"
+                  value={(formData.targetDepartment as any) || ''}
+                  onChange={(e) => {
+                    setFormData({ ...formData, targetDepartment: e.target.value });
+                    if (validationErrors.department) {
+                      setValidationErrors(prev => ({ ...prev, department: '' }));
+                    }
+                  }}
+                >
+                  <option value="">🎯 Select Target Department</option>
+                  {departments.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+
+                {validationErrors.department && (
+                  <p className="text-xs text-red-600 font-semibold flex items-center gap-1 p-2 bg-red-50 rounded-lg border border-red-200">
+                    <span>⚠️</span> {validationErrors.department}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 

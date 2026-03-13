@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Star, Calendar, Loader, TrendingUp, BarChart3, Filter, Sparkles, Zap, Clock, CheckCircle2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { getEmployeeReviews } from '../../api/performance.ts';
+import { getMyReviews } from '../../api/performance.ts';
 import { getUserData } from '../../utils/storage.ts';
 
 // Types
@@ -149,33 +149,24 @@ const AdminPerformanceReviews: React.FC = () => {
             try {
                 // Get current admin user
                 const userData = getUserData();
-                const adminEmployeeId = userData?.id || userData?.employeeId;
 
-                if (!adminEmployeeId) {
-                    console.warn('No employee ID found for admin');
-                    setAllReviews([]);
-                    return;
-                }
+                // Fetch reviews for authenticated user using /my endpoint
+                const apiReviews = await getMyReviews();
 
-                // Fetch all reviews from API
-                const apiReviews = await getEmployeeReviews();
-
-                // Map API reviews to our Review interface and filter by admin (as employee receiving reviews)
-                const mappedReviews: Review[] = apiReviews
-                    .filter((review: any) => review.employeeId === adminEmployeeId)
-                    .map((review: any) => ({
-                        id: review.id,
-                        employeeId: review.employeeId,
-                        employeeName: userData?.name || 'You',
-                        feedback: review.feedback,
-                        strengths: review.strengths,
-                        areasOfImprovement: review.areasOfImprovement,
-                        periodType: review.periodType,
-                        rating: review.rating,
-                        period: review.period,
-                        createdAt: review.createdAt,
-                        reviewedBy: review.reviewedBy
-                    }));
+                // Map API reviews to our Review interface
+                const mappedReviews: Review[] = apiReviews.map((review: any) => ({
+                    id: review.id,
+                    employeeId: review.employeeId,
+                    employeeName: userData?.name || 'You',
+                    feedback: review.feedback,
+                    strengths: review.strengths,
+                    areasOfImprovement: review.areasOfImprovement || review.improvements,
+                    periodType: review.periodType,
+                    rating: review.rating,
+                    period: review.period,
+                    createdAt: review.createdAt,
+                    reviewedBy: review.reviewedBy || 'Admin'
+                }));
 
                 // Sort by creation date (newest first)
                 const sortedReviews = mappedReviews.sort((a: Review, b: Review) => 
@@ -191,6 +182,7 @@ const AdminPerformanceReviews: React.FC = () => {
             }
         };
 
+        fetchReviews();
     }, []);
 
     // Get current period value based on selected period

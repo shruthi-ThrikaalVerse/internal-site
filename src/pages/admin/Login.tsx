@@ -44,16 +44,37 @@ const Login: React.FC = () => {
     }
   }, [isAuthenticated, user, authLoading, navigate, logout]);
 
+  const validateEmail = (emailValue: string): string | null => {
+    if (!emailValue.includes('@')) {
+      return 'Email must contain @ symbol';
+    }
+    if (!emailValue.includes('.')) {
+      return 'Email must contain a domain extension (e.g., .com)';
+    }
+    const afterAtSymbol = emailValue.split('@')[1];
+    if (!afterAtSymbol || !afterAtSymbol.includes('.')) {
+      return 'Email must contain a valid domain extension (e.g., .com)';
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
 
     try {
+      const emailError = validateEmail(email);
+      if (emailError) {
+        setError(emailError);
+        setIsSubmitting(false);
+        return;
+      }
+
       await login(email, password);
       // Navigation will happen via useEffect when user state updates
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      setError('Invalid email or password. Please try again.');
       setIsSubmitting(false);
     }
   };

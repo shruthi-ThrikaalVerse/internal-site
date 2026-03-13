@@ -33,6 +33,15 @@ export const ProjectsView = () => {
   const [description, setDescription] = useState('');
   const [isNew, setIsNew] = useState(true);
 
+  // Form Validation State
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({
+    name: '',
+    client: '',
+    startDate: '',
+    dueDate: '',
+    description: ''
+  });
+
   const fetchProjects = async () => {
     try {
       const data = await projectsApi.getAllProjects();
@@ -89,6 +98,7 @@ export const ProjectsView = () => {
   const handleAddNew = () => {
     setEditingProject(EMPTY_PROJECT);
     setDescription('');
+    setValidationErrors({ name: '', client: '', startDate: '', dueDate: '', description: '' });
     setIsNew(true);
     setIsModalOpen(true);
     // refetch managers when modal opens to ensure fresh data
@@ -98,13 +108,71 @@ export const ProjectsView = () => {
   const handleEdit = (project: Project) => {
     setEditingProject({ ...project });
     setDescription(project.description || '');
+    setValidationErrors({ name: '', client: '', startDate: '', dueDate: '', description: '' });
     setIsNew(false);
     setIsModalOpen(true);
     // refetch managers when modal opens
     fetchManagers();
   };
 
+  // Validation Functions
+  const validateProjectName = (name: string): string => {
+    if (!name?.trim()) {
+      return 'Project name is required';
+    }
+    return '';
+  };
+
+  const validateClientId = (clientId: string): string => {
+    if (!clientId?.trim()) {
+      return 'Stakeholder/Client ID is required';
+    }
+    if (!/^\d+$/.test(clientId)) {
+      return 'Client ID must contain only numbers';
+    }
+    return '';
+  };
+
+  const validateStartDate = (startDate: string): string => {
+    if (!startDate?.trim()) {
+      return 'Start date is required';
+    }
+    return '';
+  };
+
+  const validateDueDate = (dueDate: string): string => {
+    if (!dueDate?.trim()) {
+      return 'Target completion date is required';
+    }
+    return '';
+  };
+
+  const validateDescription = (desc: string): string => {
+    if (!desc?.trim()) {
+      return 'Project description/scope is required';
+    }
+    return '';
+  };
+
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    errors.name = validateProjectName(editingProject.name || '');
+    errors.client = validateClientId(editingProject.client || '');
+    errors.startDate = validateStartDate(editingProject.startDate || '');
+    errors.dueDate = validateDueDate(editingProject.dueDate || '');
+    errors.description = validateDescription(description);
+
+    setValidationErrors(errors);
+    return !Object.values(errors).some(error => error !== '');
+  };
+
   const handleSave = async () => {
+    // Validate form before submission
+    if (!validateForm()) {
+      alert('Please fix the validation errors before submitting');
+      return;
+    }
+
     // build minimal payload for the backend. most fields are optional in the
     // UI so we supply reasonable defaults.
     const payload: any = {
@@ -338,33 +406,83 @@ export const ProjectsView = () => {
               </h5>
             </div>
 
-            <FormInput
-              label="Project Designation"
-              value={editingProject.name || ''}
-              onChange={(val) => setEditingProject({ ...editingProject, name: val })}
-              placeholder="e.g. NextGen Mobile Core"
-            />
+            <div className="space-y-2 w-full">
+              <FormInput
+                label="Project Designation"
+                value={editingProject.name || ''}
+                onChange={(val) => {
+                  setEditingProject({ ...editingProject, name: val });
+                  if (validationErrors.name) {
+                    setValidationErrors(prev => ({ ...prev, name: '' }));
+                  }
+                }}
+                placeholder="e.g. NextGen Mobile Core"
+              />
+              {validationErrors.name && (
+                <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
+                  <span>⚠️</span> {validationErrors.name}
+                </p>
+              )}
+            </div>
 
-            <FormInput
+            <div className="space-y-2 w-full">
+              <FormInput
                 label="Stakeholder / Client (ID)"
                 value={editingProject.client || ''}
-                onChange={(val) => setEditingProject({ ...editingProject, client: val })}
+                onChange={(val) => {
+                  const cleanedValue = val.replace(/\D/g, '');
+                  setEditingProject({ ...editingProject, client: cleanedValue });
+                  if (validationErrors.client) {
+                    setValidationErrors(prev => ({ ...prev, client: '' }));
+                  }
+                }}
                 placeholder="e.g. 10"
               />
+              <p className="text-xs text-gray-500 font-medium">Numbers only</p>
+              {validationErrors.client && (
+                <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
+                  <span>⚠️</span> {validationErrors.client}
+                </p>
+              )}
+            </div>
 
+            <div className="space-y-2 w-full">
               <FormInput
                 label="Start Date"
                 type="date"
                 value={editingProject.startDate || ''}
-                onChange={(val) => setEditingProject({ ...editingProject, startDate: val })}
+                onChange={(val) => {
+                  setEditingProject({ ...editingProject, startDate: val });
+                  if (validationErrors.startDate) {
+                    setValidationErrors(prev => ({ ...prev, startDate: '' }));
+                  }
+                }}
               />
+              {validationErrors.startDate && (
+                <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
+                  <span>⚠️</span> {validationErrors.startDate}
+                </p>
+              )}
+            </div>
 
+            <div className="space-y-2 w-full">
               <FormInput
                 label="Target Completion Date"
                 type="date"
                 value={editingProject.dueDate || ''}
-                onChange={(val) => setEditingProject({ ...editingProject, dueDate: val })}
+                onChange={(val) => {
+                  setEditingProject({ ...editingProject, dueDate: val });
+                  if (validationErrors.dueDate) {
+                    setValidationErrors(prev => ({ ...prev, dueDate: '' }));
+                  }
+                }}
               />
+              {validationErrors.dueDate && (
+                <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
+                  <span>⚠️</span> {validationErrors.dueDate}
+                </p>
+              )}
+            </div>
 
               <FormSelect
                 label="Current Roadmap Status"
@@ -382,9 +500,13 @@ export const ProjectsView = () => {
 
               <FormInput
                 label="Budget"
-                type="number"
+                type="text"
                 value={editingProject.budget || ''}
-                onChange={(val) => setEditingProject({ ...editingProject, budget: parseFloat(val) })}
+                onChange={(val) => {
+                  const cleanedValue = val.replace(/[^0-9.]/g, '');
+                  const numValue = cleanedValue ? parseFloat(cleanedValue) : '';
+                  setEditingProject({ ...editingProject, budget: numValue as any });
+                }}
                 placeholder="e.g. 500000"
               />
 
@@ -445,17 +567,27 @@ export const ProjectsView = () => {
               value=""
               onChange={() => { }}
             />
-            <div className="md:col-span-2 mt-4">
-              <h5 className="text-[10px] font-black text-amber-700 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
-                <span className="w-8 h-px bg-amber-200"></span>
+            <div className="md:col-span-2 mt-4 space-y-2">
+              <h5 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
+                <span className="w-8 h-px bg-blue-200"></span>
                 Core Objectives & Scope
               </h5>
               <FormTextArea
                 label=""
                 value={description}
-                onChange={setDescription}
+                onChange={(val) => {
+                  setDescription(val);
+                  if (validationErrors.description) {
+                    setValidationErrors(prev => ({ ...prev, description: '' }));
+                  }
+                }}
                 placeholder="Detail the technical requirements, strategic objectives, and operational milestones defining this project..."
               />
+              {validationErrors.description && (
+                <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
+                  <span>⚠️</span> {validationErrors.description}
+                </p>
+              )}
             </div>
           </div>
 

@@ -302,7 +302,7 @@ const DocumentManagement: React.FC = () => {
     (async () => {
       try {
         if (doc.id && selectedEmployee) {
-          const full = await getDocument(selectedEmployee.employeeId, doc.id);
+          const full = await getDocument(selectedEmployee.employeeId, doc.id as number);
           if (full && full.fileDataBase64) {
             const byteChars = atob(full.fileDataBase64);
             const byteNumbers = new Array(byteChars.length).fill(0).map((_, i) => byteChars.charCodeAt(i));
@@ -712,7 +712,7 @@ const DocumentManagement: React.FC = () => {
                               <button
                                 onClick={async () => {
                                   try {
-                                    await verifyDocument(selectedEmployee.employeeId, doc.id);
+                                    await verifyDocument(selectedEmployee.employeeId, doc.id as number);
                                     // Fetch latest docs from backend after verification
                                     const docs = await getDocumentsByEmployee(selectedEmployee.employeeId);
                                     const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({

@@ -464,6 +464,12 @@ const EmployeeHub: React.FC = () => {
     password: 'defaultPassword123'
   });
 
+  const [formErrors, setFormErrors] = useState({
+    email: '',
+    employeeId: '',
+    phone: ''
+  });
+
   // Fetch employees from backend API (idempotent). Reusable for mount/refresh.
   const fetchEmployees = async () => {
     try {
@@ -577,22 +583,54 @@ const EmployeeHub: React.FC = () => {
   };
 
   const validateEmployeeData = () => {
+    const errors = { email: '', employeeId: '', phone: '' };
+    let isValid = true;
+
     // Validate required fields
     if (!newEmp.firstName.trim() || !newEmp.lastName.trim()) {
       notify('First name and last name are required', 'error');
-      return false;
+      isValid = false;
     }
 
     if (!newEmp.email.trim()) {
-      notify('Email is required', 'error');
-      return false;
+      errors.email = 'Email is required';
+      isValid = false;
+    } else {
+      // Email validation - check for @ symbol and domain extension
+      if (!newEmp.email.includes('@')) {
+        errors.email = 'Email must contain @ symbol';
+        isValid = false;
+      } else if (!newEmp.email.includes('.')) {
+        errors.email = 'Email must contain a domain extension';
+        isValid = false;
+      } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(newEmp.email)) {
+          errors.email = 'Please enter a valid email format';
+          isValid = false;
+        }
+      }
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(newEmp.email)) {
-      notify('Please enter a valid email address', 'error');
-      return false;
+    // Validate Employee ID - exactly 6 numbers if provided
+    if (newEmp.employeeId.trim()) {
+      const empIdDigits = newEmp.employeeId.replace(/\D/g, '');
+      if (empIdDigits.length !== 6) {
+        errors.employeeId = 'Employee ID must be exactly 6 numbers';
+        isValid = false;
+      }
+    }
+
+    // Validate phone number - Indian format with exactly 10 digits if provided
+    if (newEmp.phone.trim()) {
+      const phoneDigits = newEmp.phone.replace(/\D/g, '');
+      if (phoneDigits.length !== 10) {
+        errors.phone = 'Phone number must be exactly 10 digits';
+        isValid = false;
+      } else if (!/^[6-9]\d{9}$/.test(phoneDigits)) {
+        errors.phone = 'Must start with 6-9 (Indian mobile format)';
+        isValid = false;
+      }
     }
 
     // Validate date of birth is not in the future
@@ -601,15 +639,15 @@ const EmployeeHub: React.FC = () => {
       const today = new Date();
       if (dob > today) {
         notify('Date of birth cannot be in the future', 'error');
-        return false;
-      }
-
-      // Validate age is reasonable (at least 16 years old)
-      const minAgeDate = new Date();
-      minAgeDate.setFullYear(minAgeDate.getFullYear() - 16);
-      if (dob > minAgeDate) {
-        notify('Employee must be at least 16 years old', 'error');
-        return false;
+        isValid = false;
+      } else {
+        // Validate age is reasonable (at least 16 years old)
+        const minAgeDate = new Date();
+        minAgeDate.setFullYear(minAgeDate.getFullYear() - 16);
+        if (dob > minAgeDate) {
+          notify('Employee must be at least 16 years old', 'error');
+          isValid = false;
+        }
       }
     }
 
@@ -621,11 +659,12 @@ const EmployeeHub: React.FC = () => {
       tomorrow.setDate(tomorrow.getDate() + 1);
       if (doj > tomorrow) {
         notify('Date of joining cannot be in the future', 'error');
-        return false;
+        isValid = false;
       }
     }
 
-    return true;
+    setFormErrors(errors);
+    return isValid;
   };
 
   const handleAddSubmit = async (e: React.FormEvent) => {
@@ -893,6 +932,7 @@ const EmployeeHub: React.FC = () => {
     });
     setProfileImage(null);
     setProfileImagePreview(null);
+    setFormErrors({ email: '', employeeId: '', phone: '' });
   };
 
   // Function to handle modal close with form reset
@@ -914,9 +954,12 @@ const EmployeeHub: React.FC = () => {
             <Icon name="Share2" className="w-4 h-4 text-black" /> Export
           </button>
           <button
-            onClick={() => setAddModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-3.5 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
-            style={{backgroundColor: '#c97a4c', boxShadow: 'rgba(201, 122, 76, 0.2) 0px 20px 25px -5px'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}  >
+            onClick={() => {
+              setAddModalOpen(true);
+              setFormErrors({ email: '', employeeId: '', phone: '' });
+            }}
+            className="flex items-center gap-2 px-6 py-3.5 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 transition-all active:scale-95"
+          >
             <Icon name="Plus" className="w-5 h-5 text-white" />New Staff Enrollment
           </button>
         </div>
@@ -1232,14 +1275,17 @@ const EmployeeHub: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="newEmpEmployeeId" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Employee ID (optional)</label>
+            <label htmlFor="newEmpEmployeeId" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Employee ID - 6 Numbers (optional)</label>
             <input
               id="newEmpEmployeeId"
-              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400"
-              placeholder="EMP123456 or custom ID"
+              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-black placeholder:text-slate-400"
+              placeholder="123456"
+              maxLength={6}
+              inputMode="numeric"
               value={newEmp.employeeId}
-              onChange={e => setNewEmp({ ...newEmp, employeeId: e.target.value })}
+              onChange={e => setNewEmp({ ...newEmp, employeeId: e.target.value.replace(/\D/g, '').slice(0, 6) })}
             />
+            {formErrors.employeeId && <p className="text-xs text-red-500 font-medium">{formErrors.employeeId}</p>}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1254,17 +1300,21 @@ const EmployeeHub: React.FC = () => {
                 value={newEmp.email}
                 onChange={e => setNewEmp({ ...newEmp, email: e.target.value })}
               />
+              {formErrors.email && <p className="text-xs text-red-500 font-medium">{formErrors.email}</p>}
             </div>
             <div className="space-y-2">
-              <label htmlFor="newEmpPhone" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Phone Number</label>
+              <label htmlFor="newEmpPhone" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Phone Number - 10 Digits</label>
               <input
                 id="newEmpPhone"
                 type="tel"
-                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400"
-                placeholder="+91 9876543210"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-black placeholder:text-slate-400"
+                placeholder="9876543210"
+                maxLength={10}
+                inputMode="numeric"
                 value={newEmp.phone}
-                onChange={e => setNewEmp({ ...newEmp, phone: e.target.value })}
+                onChange={e => setNewEmp({ ...newEmp, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
               />
+              {formErrors.phone && <p className="text-xs text-red-500 font-medium">{formErrors.phone}</p>}
             </div>
           </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getTasks as apiGetTasks, getMyTasks as apiGetMyTasks, getSelfTasks as apiGetSelfTasks, createSelfTask, deleteSelfTask, updateTask as apiUpdateTask } from '../../api/tasks.ts';
+import { getTasks as apiGetTasks, getMyTasks as apiGetMyTasks, getSelfTasks as apiGetSelfTasks, createSelfTask, deleteSelfTask, updateTask as apiUpdateTask, updateTaskStatus as apiUpdateTaskStatus, updateTimeLogged as apiUpdateTimeLogged } from '../../api/tasks.ts';
 import {
   CheckCircle, Clock, MoreVertical, Plus, Filter, Grid, List,
   X, Trash2, Loader2, AlertCircle, User, Tag,
@@ -27,7 +27,7 @@ interface Task {
   id: string;
   title: string;
   project: string;
-  status: 'todo' | 'in_progress' | 'review' | 'completed';
+  status: 'assigned' | 'in_progress' | 'completed';
   priority: 'urgent' | 'high' | 'medium' | 'low';
   dueDate: string;
   estimatedHours: number;
@@ -69,12 +69,12 @@ const Tasks: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showBreachedSection, setShowBreachedSection] = useState(true);
   const [showStatusSections, setShowStatusSections] = useState({
-    todo: true,
+    assigned: true,
     in_progress: true,
-    review: true,
     completed: true
   });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   // Track whether the tasks scroll container has a vertical scrollbar
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -127,9 +127,8 @@ const Tasks: React.FC = () => {
 
 
   const statuses = [
-    { id: 'todo', label: 'To Do', color: 'bg-gray-100 text-gray-800', icon: Circle, iconColor: 'text-gray-600' },
+    { id: 'assigned', label: 'Assigned', color: 'bg-gray-100 text-gray-800', icon: Circle, iconColor: 'text-gray-600' },
     { id: 'in_progress', label: 'In Progress', color: 'bg-blue-100 text-blue-800', icon: Clock, iconColor: 'text-blue-600' },
-    { id: 'review', label: 'On Review', color: 'bg-yellow-100 text-yellow-800', icon: AlertCircle, iconColor: 'text-yellow-600' },
     { id: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800', icon: CheckCircle, iconColor: 'text-green-600' }
   ];
 
@@ -144,6 +143,41 @@ const Tasks: React.FC = () => {
     loadTasks();
   }, []);
 
+  // Reset elapsed seconds when a new task is selected
+  useEffect(() => {
+    setElapsedSeconds(0);
+  }, [selectedTask?.id]);
+
+  // Timer effect - starts when task is in_progress, stops otherwise
+  useEffect(() => {
+    if (!selectedTask || selectedTask.status !== 'in_progress') {
+      // Save accumulated time to backend when stopping timer
+      if (elapsedSeconds > 0 && selectedTask) {
+        const totalTime = selectedTask.timeLogged + elapsedSeconds;
+        apiUpdateTimeLogged(selectedTask.id, totalTime).catch(err =>
+          console.error('Failed to save time logged:', err)
+        );
+      }
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setElapsedSeconds(prev => {
+        const newElapsed = prev + 1;
+        // Save to backend every 30 seconds
+        if (newElapsed % 30 === 0) {
+          const totalTime = selectedTask.timeLogged + newElapsed;
+          apiUpdateTimeLogged(selectedTask.id, totalTime).catch(err =>
+            console.error('Failed to save time logged:', err)
+          );
+        }
+        return newElapsed;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [selectedTask?.id, selectedTask?.status]);
+
   const mapTaskData = (item: any): Task => {
     const priorityMap: { [key: string]: Task['priority'] } = {
       'P1': 'urgent',
@@ -157,10 +191,12 @@ const Tasks: React.FC = () => {
     };
 
     const statusMap: { [key: string]: Task['status'] } = {
-      'PENDING': 'todo',
-      'TODO': 'todo',
+      'PENDING': 'assigned',
+      'TODO': 'assigned',
+      'ASSIGNED': 'assigned',
       'IN_PROGRESS': 'in_progress',
-      'REVIEW': 'review',
+      'INPROGRESS': 'in_progress',
+      'REVIEW': 'in_progress',
       'COMPLETED': 'completed',
       'DONE': 'completed',
     };
@@ -181,7 +217,7 @@ const Tasks: React.FC = () => {
       id: item.taskId || String(Math.random()),
       title: item.title || 'Task',
       project: item.department || item.project || 'General',
-      status: statusMap[(item.status || 'PENDING').toUpperCase()] || 'todo',
+      status: statusMap[(item.status || 'PENDING').toUpperCase()] || 'assigned',
       priority: priorityMap[(item.priority || 'P3').toUpperCase()] || 'medium',
       dueDate: item.deadlineAt ? new Date(item.deadlineAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       estimatedHours: item.estimatedHours || 0,
@@ -238,170 +274,17 @@ const Tasks: React.FC = () => {
         setTasks(myTasks);
         return;
       } catch (err) {
-        console.warn('Failed to load tasks from API, falling back to mock tasks.', err);
+        console.error('Failed to load tasks from API:', err);
+        // Set empty tasks on API failure
+        setAllTasks({
+          my: [],
+          self: [],
+          team: [],
+          individual: [],
+          department: [],
+        });
+        setTasks([]);
       }
-
-      const mockTasks: Task[] = [
-        {
-          id: '1',
-          title: 'Update Design System Components',
-          project: 'Design System',
-          status: 'in_progress',
-          priority: 'high',
-          dueDate: '2024-03-25',
-          estimatedHours: 8,
-          timeLogged: 14400,
-          description: 'Update button components with new variants and add documentation for developers.',
-          tags: ['design', 'components', 'documentation'],
-          assignee: 'Alex Chen',
-          assignedBy: 'Project Manager',
-          createdAt: '2024-03-10',
-          comments: [
-            { id: 'c1', text: 'Please add hover states to all variants', author: 'Design Lead', date: '2024-03-15', avatar: 'DC' }
-          ],
-          attachments: [],
-          logs: [{ id: 'l1', duration: 7200, date: '2024-03-18', note: 'Initial component updates' }]
-        },
-        {
-          id: '2',
-          title: 'Fix Authentication Bug',
-          project: 'Platform',
-          status: 'review',
-          priority: 'urgent',
-          dueDate: '2024-03-20',
-          estimatedHours: 4,
-          timeLogged: 14400,
-          description: 'Fix OAuth token expiration issue affecting user sessions.',
-          tags: ['backend', 'security', 'bug'],
-          assignee: 'Sam Wilson',
-          assignedBy: 'Tech Lead',
-          createdAt: '2024-03-12',
-          comments: [],
-          attachments: [],
-          logs: [{ id: 'l2', duration: 14400, date: '2024-03-17', note: 'Debug session' }]
-        },
-        {
-          id: '3',
-          title: 'Write API Documentation',
-          project: 'Developer Platform',
-          status: 'todo',
-          priority: 'medium',
-          dueDate: '2024-04-01',
-          estimatedHours: 12,
-          timeLogged: 0,
-          description: 'Create comprehensive API documentation for new endpoints.',
-          tags: ['documentation', 'api', 'backend'],
-          assignee: 'Taylor Reed',
-          assignedBy: 'Project Manager',
-          createdAt: '2024-03-15',
-          comments: [],
-          attachments: [],
-          logs: []
-        },
-        {
-          id: '4',
-          title: 'Mobile App UI Redesign',
-          project: 'Mobile App',
-          status: 'in_progress',
-          priority: 'low',
-          dueDate: '2024-04-10',
-          estimatedHours: 20,
-          timeLogged: 18000,
-          description: 'Redesign the mobile app UI for better user experience.',
-          tags: ['mobile', 'ui', 'design'],
-          assignee: 'Jordan Lee',
-          assignedBy: 'UX Lead',
-          createdAt: '2024-03-01',
-          comments: [],
-          attachments: [],
-          logs: []
-        },
-        {
-          id: '5',
-          title: 'Fix Payment Gateway Issue',
-          project: 'E-commerce',
-          status: 'todo',
-          priority: 'urgent',
-          dueDate: '2024-03-15',
-          estimatedHours: 6,
-          timeLogged: 0,
-          description: 'Payment gateway integration is failing for certain cards.',
-          tags: ['payment', 'bug', 'critical'],
-          assignee: 'Chris Brown',
-          assignedBy: 'Operations',
-          createdAt: '2024-03-05',
-          comments: [],
-          attachments: [],
-          logs: []
-        },
-        {
-          id: '6',
-          title: 'Update User Dashboard',
-          project: 'Web Platform',
-          status: 'completed',
-          priority: 'low',
-          dueDate: '2024-03-30',
-          estimatedHours: 10,
-          timeLogged: 36000,
-          description: 'Add new widgets to user dashboard.',
-          tags: ['frontend', 'dashboard', 'ui'],
-          assignee: 'Morgan Taylor',
-          assignedBy: 'Product Manager',
-          createdAt: '2024-02-28',
-          comments: [],
-          attachments: [],
-          logs: []
-        },
-        {
-          id: '7',
-          title: 'Security Audit Report',
-          project: 'Platform',
-          status: 'todo',
-          priority: 'high',
-          dueDate: '2024-03-18',
-          estimatedHours: 16,
-          timeLogged: 7200,
-          description: 'Complete security audit and generate report.',
-          tags: ['security', 'audit', 'report'],
-          assignee: 'Security Team',
-          assignedBy: 'CISO',
-          createdAt: '2024-03-01',
-          comments: [],
-          attachments: [],
-          logs: []
-        },
-        {
-          id: '8',
-          title: 'Database Migration',
-          project: 'Backend',
-          status: 'in_progress',
-          priority: 'medium',
-          dueDate: '2024-03-22',
-          estimatedHours: 24,
-          timeLogged: 43200,
-          description: 'Migrate database to new version with zero downtime.',
-          tags: ['database', 'migration', 'backend'],
-          assignee: 'Database Team',
-          assignedBy: 'Tech Lead',
-          createdAt: '2024-02-20',
-          comments: [],
-          attachments: [],
-          logs: []
-        }
-      ];
-
-      const teamTasks = mockTasks.filter((t) => t.taskType === 'team' || t.assignee?.includes('Team'));
-      const selfTasks = mockTasks.filter((t) => t.id.startsWith('self-'));
-      const individualTasks = mockTasks.filter((t) => !t.assignee?.includes('Team'));
-
-      setAllTasks({
-        my: mockTasks,
-        self: selfTasks,
-        team: teamTasks,
-        individual: individualTasks,
-      });
-
-      setTasks(mockTasks);
     })();
   };
 
@@ -444,7 +327,7 @@ const Tasks: React.FC = () => {
           id: response?.taskId || response?.id || String(Math.random()),
           title: title,
           project: 'Self-Assigned',
-          status: 'todo',
+          status: 'assigned',
           priority: 'medium',
           dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           estimatedHours: 0,
@@ -480,22 +363,53 @@ const Tasks: React.FC = () => {
     try {
       // Map local status to backend status
       const statusMap: { [key: string]: string } = {
-        'todo': 'PENDING',
-        'in_progress': 'IN_PROGRESS',
-        'review': 'REVIEW',
+        'assigned': 'ASSIGNED',
+        'in_progress': 'INPROGRESS',
         'completed': 'COMPLETED'
       };
       
       const backendStatus = statusMap[newStatus] || 'PENDING';
       
-      // Call API to update status
-      const response = await apiUpdateTask(taskId, { status: backendStatus });
+      // Map priority to backend format
+      const priorityMap: { [key: string]: string } = {
+        'urgent': 'P1',
+        'high': 'P2',
+        'medium': 'P3',
+        'low': 'P4'
+      };
+      
+      const priority = priorityMap[selectedTask?.priority || 'medium'] || 'P3';
+      
+      // Determine assigneeType based on taskType
+      const assigneeTypeMap: { [key: string]: string } = {
+        'team': 'TEAM',
+        'individual': 'EMPLOYEE',
+        'work': 'EMPLOYEE',
+        'self': 'SELF',
+        'department': 'DEPARTMENT'
+      };
+      
+      const assigneeType = assigneeTypeMap[selectedTask?.taskType || 'individual'] || 'EMPLOYEE';
+      
+      // Call API to update status using the new endpoint with additional fields
+      const response = await apiUpdateTaskStatus(taskId, backendStatus, priority, assigneeType);
       
       if (response) {
-        // Update local state
+        // Update local state in both tasks and allTasks
         setTasks(prev => prev.map(task =>
           task.id === taskId ? { ...task, status: newStatus } : task
         ));
+        
+        // Update allTasks to keep it in sync
+        setAllTasks(prev => ({
+          ...prev,
+          my: prev.my.map(task => task.id === taskId ? { ...task, status: newStatus } : task),
+          team: prev.team.map(task => task.id === taskId ? { ...task, status: newStatus } : task),
+          individual: prev.individual.map(task => task.id === taskId ? { ...task, status: newStatus } : task),
+          self: prev.self.map(task => task.id === taskId ? { ...task, status: newStatus } : task),
+          department: prev.department.map(task => task.id === taskId ? { ...task, status: newStatus } : task),
+        }));
+        
         if (selectedTask?.id === taskId) {
           setSelectedTask(prev => prev ? { ...prev, status: newStatus } : null);
         }
@@ -510,9 +424,9 @@ const Tasks: React.FC = () => {
   const getEnabledStatusButtons = (currentStatus: Task['status']) => {
     const status = currentStatus.toUpperCase();
     return {
-      assigned: status === 'TODO',
-      inProgress: status === 'TODO' || status === 'ASSIGNED',
-      completed: status === 'IN_PROGRESS' || status === 'REVIEW',
+      assigned: status === 'ASSIGNED',
+      inProgress: status === 'ASSIGNED',
+      completed: status === 'IN_PROGRESS',
       breached: false // Breached is not clickable
     };
   };
@@ -520,12 +434,11 @@ const Tasks: React.FC = () => {
   // Helper function to determine active (current) status
   const getActiveStatus = (status: Task['status']) => {
     const statusMap: { [key: string]: string } = {
-      'todo': 'ASSIGNED',
+      'assigned': 'ASSIGNED',
       'in_progress': 'IN_PROGRESS',
-      'review': 'REVIEW',
       'completed': 'COMPLETED'
     };
-    return statusMap[status] || 'PENDING';
+    return statusMap[status] || 'ASSIGNED';
   };
 
   const isTaskBreached = (task: Task) => {
@@ -574,6 +487,17 @@ const Tasks: React.FC = () => {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const formatTimer = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const clearAllFilters = () => {
@@ -687,10 +611,10 @@ const Tasks: React.FC = () => {
             <div>
               {(() => {
                 let displayLabel = status.label;
-                if (status.id === 'todo') {
+                if (status.id === 'assigned') {
                   if (selectedCategory === 'individual') displayLabel = 'Individual Tasks';
                   else if (selectedCategory === 'self') displayLabel = 'Self Assign Tasks';
-                  else displayLabel = 'To Do';
+                  else displayLabel = 'Assigned';
                 }
                 return (
                   <>
@@ -1091,20 +1015,6 @@ const Tasks: React.FC = () => {
             </div>
           </div>
 
-          {/* Self-assign Tasks */}
-          <div
-            onClick={() => handleCardClick('status', 'todo')}
-            className={`bg-white rounded-lg border border-gray-200 p-3 md:p-4 cursor-pointer transition-all hover:shadow-md min-w-[120px] ${getCardFilterStyle('status', 'todo')}`}
-          >
-            <div className="text-lg md:text-2xl font-bold text-gray-600">
-              {tasks.filter(t => t.status === 'todo').length}
-            </div>
-            <div className="text-xs md:text-sm text-gray-600 flex items-center gap-1">
-              <Circle size={14} className="text-gray-500" />
-              To Do
-            </div>
-          </div>
-
           {/* In Progress */}
           <div
             onClick={() => handleCardClick('status', 'in_progress')}
@@ -1119,34 +1029,7 @@ const Tasks: React.FC = () => {
             </div>
           </div>
 
-          {/* On Review */}
-          <div
-            onClick={() => handleCardClick('status', 'review')}
-            className={`bg-white rounded-lg border border-gray-200 p-3 md:p-4 cursor-pointer transition-all hover:shadow-md min-w-[120px] ${getCardFilterStyle('status', 'review')}`}
-          >
-            <div className="text-lg md:text-2xl font-bold text-yellow-600">
-              {tasks.filter(t => t.status === 'review').length}
-            </div>
-            <div className="text-xs md:text-sm text-gray-600 flex items-center gap-1">
-              <AlertCircle size={14} className="text-yellow-500" />
-              On Review
-            </div>
-          </div>
-
           {/* Breached */}
-          <div
-            onClick={() => handleCardClick('breached', 'true')}
-            className={`bg-white rounded-lg border border-red-200 p-3 md:p-4 cursor-pointer transition-all hover:shadow-md min-w-[120px] ${getCardFilterStyle('breached', 'true')}`}
-          >
-            <div className="text-lg md:text-2xl font-bold text-red-600">
-              {tasks.filter(isTaskBreached).length}
-            </div>
-            <div className="text-xs md:text-sm text-red-600 flex items-center gap-1">
-              <AlertTriangle size={14} className="text-red-500" />
-              Breached
-            </div>
-          </div>
-
           {/* Low Priority */}
           <div
             onClick={() => handleCardClick('priority', 'low')}
@@ -1538,7 +1421,7 @@ const Tasks: React.FC = () => {
                             <div className="flex flex-wrap gap-2">
                               {/* Assigned Button */}
                               <button
-                                onClick={() => updateTaskStatus(selectedTask.id, 'todo')}
+                                onClick={() => updateTaskStatus(selectedTask.id, 'assigned')}
                                 disabled={!getEnabledStatusButtons(selectedTask.status).assigned && getActiveStatus(selectedTask.status) !== 'ASSIGNED'}
                                 className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
                                   getActiveStatus(selectedTask.status) === 'ASSIGNED'
@@ -1784,13 +1667,19 @@ const Tasks: React.FC = () => {
                               <Clock size={14} className="text-gray-400" />
                               Time Logged
                             </span>
-                            <span className="font-medium">{formatDuration(selectedTask.timeLogged)}</span>
+                            <span className="font-medium">{formatDuration(selectedTask.timeLogged + elapsedSeconds)}</span>
                           </div>
                           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                             <div
-                              className={`h-full ${selectedTask.status === 'completed' ? 'bg-green-500' : selectedTask.status === 'review' ? 'bg-amber-500' : 'bg-blue-500'}`}
+                              className={`h-full transition-all duration-300 ${
+                                selectedTask.status === 'completed' 
+                                  ? 'bg-green-500' 
+                                  : (selectedTask.timeLogged + elapsedSeconds) / (selectedTask.estimatedHours * 3600 || 1) > 0.5
+                                    ? 'bg-green-500'
+                                    : 'bg-blue-500'
+                              }`}
                               style={{
-                                width: `${Math.min(100, Math.max(0, (selectedTask.timeLogged / (selectedTask.estimatedHours * 3600 || 1)) * 100))}%`
+                                width: `${Math.min(100, Math.max(0, ((selectedTask.timeLogged + elapsedSeconds) / (selectedTask.estimatedHours * 3600 || 1)) * 100))}%`
                               }}
                             />
                           </div>
@@ -1798,13 +1687,34 @@ const Tasks: React.FC = () => {
                         <div className="text-sm text-gray-600">
                           {selectedTask.estimatedHours > 0 && (
                             <>
-                              {Math.min(100, Math.max(0, (selectedTask.timeLogged / (selectedTask.estimatedHours * 3600)) * 100)).toFixed(1)}%
+                              {Math.min(100, Math.max(0, ((selectedTask.timeLogged + elapsedSeconds) / (selectedTask.estimatedHours * 3600)) * 100)).toFixed(1)}%
                               of {selectedTask.estimatedHours}h estimated
                             </>
                           )}
                         </div>
                       </div>
                     </div>
+
+                    {selectedTask.status === 'in_progress' && (
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 md:p-6 border border-blue-200">
+                        <h3 className="font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
+                          <Zap size={18} className="text-blue-600" />
+                          Task Timer
+                        </h3>
+                        <div className="bg-white rounded-lg p-4 border border-blue-200 text-center">
+                          <div className="text-4xl md:text-5xl font-bold text-blue-600 font-mono">
+                            {formatTimer(selectedTask.timeLogged + elapsedSeconds)}
+                          </div>
+                          <div className="text-sm text-gray-600 mt-3 flex items-center justify-center gap-1">
+                            <Clock size={14} className="text-blue-500 animate-pulse" />
+                            Time in progress
+                          </div>
+                        </div>
+                        <div className="mt-3 text-xs text-gray-700 bg-white rounded p-2 border border-blue-100">
+                          <span className="font-semibold">Priority:</span> {getSlaLabel(selectedTask.priority)}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="pt-4 md:pt-6 border-t border-gray-200">
                       <div className="text-sm text-gray-600 mb-2 flex items-center gap-1">
@@ -1814,11 +1724,15 @@ const Tasks: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-gray-500 text-sm">ID:</span>
-                          <span className="font-medium text-sm">{selectedTask.id}</span>
+                          <span className="font-medium text-sm text-gray-900">{selectedTask.id}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500 text-sm">Created:</span>
-                          <span className="font-medium text-sm">{formatDate(selectedTask.createdAt)}</span>
+                          <span className="font-medium text-sm text-gray-900">{formatDate(selectedTask.createdAt)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 text-sm">Due Date:</span>
+                          <span className="font-medium text-sm text-gray-900">{formatDate(selectedTask.dueDate)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500 text-sm">Breached:</span>

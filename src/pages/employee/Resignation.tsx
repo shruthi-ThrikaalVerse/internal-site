@@ -109,12 +109,21 @@ const Resignation: React.FC = () => {
         if (!formData.detailedReason.trim()) newErrors.detailedReason = 'Please provide detailed reason';
         if (!formData.personalEmail.trim()) newErrors.personalEmail = 'Personal email is required';
         if (!formData.contactNumber.trim()) newErrors.contactNumber = 'Contact number is required';
+        if (!formData.document) newErrors.document = 'Document upload is required';
         if (!formData.declarationAccepted) newErrors.declaration = 'You must accept the declaration';
 
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (formData.personalEmail && !emailRegex.test(formData.personalEmail)) {
-            newErrors.personalEmail = 'Please enter a valid email';
+        // Validate email format - must contain @ and domain extension
+        if (formData.personalEmail && formData.personalEmail.trim()) {
+            if (!formData.personalEmail.includes('@')) {
+                newErrors.personalEmail = 'Email must contain @ symbol';
+            } else if (!formData.personalEmail.includes('.')) {
+                newErrors.personalEmail = 'Email must contain a domain extension';
+            } else {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(formData.personalEmail)) {
+                    newErrors.personalEmail = 'Please enter a valid email format';
+                }
+            }
         }
 
         // Validate last working date is after resignation date
@@ -124,9 +133,13 @@ const Resignation: React.FC = () => {
             }
         }
 
-        // Validate contact number (basic)
-        if (formData.contactNumber && !/^\d{10,}$/.test(formData.contactNumber.replace(/\D/g, ''))) {
-            newErrors.contactNumber = 'Please enter a valid contact number';
+        // Validate Indian phone number format
+        if (formData.contactNumber && formData.contactNumber.trim()) {
+            const phoneDigits = formData.contactNumber.replace(/\D/g, '');
+            // Must be exactly 10 digits starting with 6-9
+            if (phoneDigits.length !== 10 || !/^[6-9]\d{9}$/.test(phoneDigits)) {
+                newErrors.contactNumber = 'Please enter a valid 10-digit Indian mobile number';
+            }
         }
 
         setErrors(newErrors);
@@ -135,9 +148,16 @@ const Resignation: React.FC = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+        
+        // For contact number: only allow numbers and limit to 10 digits
+        let finalValue = value;
+        if (name === 'contactNumber') {
+            finalValue = value.replace(/\D/g, '').slice(0, 10);
+        }
+        
         setFormData(prev => ({
             ...prev,
-            [name]: value
+            [name]: finalValue
         }));
         // Clear error for this field when user starts typing
         if (errors[name]) {
@@ -529,7 +549,9 @@ const Resignation: React.FC = () => {
                                         name="contactNumber"
                                         value={formData.contactNumber}
                                         onChange={handleInputChange}
-                                        placeholder="+1 (555) 000-0000"
+                                        placeholder="9876543210"
+                                        maxLength={10}
+                                        inputMode="numeric"
                                         title="Contact Number"
                                         className={`w-full px-4 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'
                                             }`}
@@ -546,11 +568,11 @@ const Resignation: React.FC = () => {
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
                             <h2 className="text-lg font-semibold text-black">Supporting Documents</h2>
-                            <p className="text-sm text-black mt-1">Optional - Upload any supporting documents (PDF or Word)</p>
+                            <p className="text-sm text-black mt-1">Required - Upload supporting documents (PDF or Word) <span className="text-red-500">*</span></p>
                         </div>
 
                         <div className="p-6">
-                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition cursor-pointer">
+                            <div className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition cursor-pointer ${errors.document ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}>
                                 <input
                                     type="file"
                                     onChange={handleFileChange}
@@ -567,6 +589,9 @@ const Resignation: React.FC = () => {
                                     )}
                                 </label>
                             </div>
+                            {errors.document && (
+                                <p className="text-red-500 text-xs mt-2">{errors.document}</p>
+                            )}
                         </div>
                     </div>
 

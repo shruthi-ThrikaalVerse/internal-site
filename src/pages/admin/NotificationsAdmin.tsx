@@ -36,7 +36,7 @@ const NotificationsAdmin: React.FC = () => {
     id: number;
     title: string;
     message: string;
-    targetSelection: 'GLOBAL' | 'TARGET';
+    targetSelection: 'ALL' | 'EMPLOYEE' | 'DEPARTMENT';
     priority: 'NORMAL' | 'HIGH' | 'URGENT';
     active: boolean;
     createdAt: string;
@@ -54,6 +54,7 @@ const NotificationsAdmin: React.FC = () => {
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [departments, setDepartments] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [empSearch, setEmpSearch] = useState('');
@@ -63,9 +64,15 @@ const NotificationsAdmin: React.FC = () => {
   const [formData, setFormData] = useState<any>({
     title: '',
     message: '',
-    targetSelection: 'GLOBAL',
+    targetSelection: 'ALL',
     employeeIds: [],
+    departmentIds: [],
     priority: 'NORMAL',
+  });
+
+  const [formErrors, setFormErrors] = useState({
+    employeeSelection: '',
+    departmentSelection: ''
   });
 
   const notify = (msg: string, type: 'success' | 'error' | 'warning' = 'success') => {
@@ -75,6 +82,7 @@ const NotificationsAdmin: React.FC = () => {
   useEffect(() => {
     fetchNotifications();
     fetchEmployees();
+    fetchDepartments();
   }, []);
 
   const fetchNotifications = async () => {
@@ -94,6 +102,22 @@ const NotificationsAdmin: React.FC = () => {
     } catch (err: any) {
       notify(err?.message || 'Failed to fetch employees', 'error');
       setEmployees([]);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const resp = await fetch('http://localhost:8085/api/users/departments', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (!resp.ok) throw new Error('Failed to fetch departments');
+      const data = await resp.json();
+      setDepartments(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      notify(err?.message || 'Failed to fetch departments', 'error');
+      setDepartments([]);
     }
   };
 
@@ -118,9 +142,14 @@ const NotificationsAdmin: React.FC = () => {
       return;
     }
 
-    if (formData.targetSelection === 'TARGET' && (!formData.employeeIds || formData.employeeIds.length === 0)) {
-      notify('Please select at least one employee.', 'warning');
+    if (formData.targetSelection === 'EMPLOYEE' && (!formData.employeeIds || formData.employeeIds.length === 0)) {
+      setFormErrors({ employeeSelection: 'Please select at least one employee.', departmentSelection: '' });
       return;
+    } else if (formData.targetSelection === 'DEPARTMENT' && (!formData.departmentIds || formData.departmentIds.length === 0)) {
+      setFormErrors({ employeeSelection: '', departmentSelection: 'Please select at least one department.' });
+      return;
+    } else {
+      setFormErrors({ employeeSelection: '', departmentSelection: '' });
     }
 
     setIsLoading(true);
@@ -132,8 +161,10 @@ const NotificationsAdmin: React.FC = () => {
         targetSelection: formData.targetSelection,
       };
 
-      if (formData.targetSelection === 'TARGET') {
+      if (formData.targetSelection === 'EMPLOYEE') {
         payload.employeeIds = formData.employeeIds;
+      } else if (formData.targetSelection === 'DEPARTMENT') {
+        payload.departmentIds = formData.departmentIds;
       }
 
       if (editingId) {
@@ -157,11 +188,13 @@ const NotificationsAdmin: React.FC = () => {
     setFormData({
       title: '',
       message: '',
-      targetSelection: 'GLOBAL',
+      targetSelection: 'ALL',
       employeeIds: [],
+      departmentIds: [],
       priority: 'NORMAL',
     });
     setEmpSearch('');
+    setFormErrors({ employeeSelection: '', departmentSelection: '' });
   };
 
   const handleEdit = (n: Notification) => {
@@ -194,6 +227,24 @@ const NotificationsAdmin: React.FC = () => {
         : [...current, id];
       return { ...prev, employeeIds: next };
     });
+    // Clear error when user makes a selection
+    if (formErrors.employeeSelection) {
+      setFormErrors(prev => ({ ...prev, employeeSelection: '' }));
+    }
+  };
+
+  const toggleDepartmentSelection = (dept: string) => {
+    setFormData(prev => {
+      const current = prev.departmentIds || [];
+      const next = current.includes(dept)
+        ? current.filter(d => d !== dept)
+        : [...current, dept];
+      return { ...prev, departmentIds: next };
+    });
+    // Clear error when user makes a selection
+    if (formErrors.departmentSelection) {
+      setFormErrors(prev => ({ ...prev, departmentSelection: '' }));
+    }
   };
 
   return (
@@ -256,9 +307,9 @@ const NotificationsAdmin: React.FC = () => {
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${n.targetSelection === 'GLOBAL' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${n.targetSelection === 'ALL' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-blue-50 text-blue-600 border-blue-100'
                           }`}>
-                          {n.targetSelection === 'GLOBAL' ? 'Global' : 'Selected'}
+                          {n.targetSelection === 'ALL' ? 'Global' : 'Selected'}
                         </span>
                       </div>
                     </td>
@@ -272,7 +323,7 @@ const NotificationsAdmin: React.FC = () => {
                     </td>
                     <td className="px-8 py-6 text-center">
                       <div className="flex flex-col items-center">
-                        <span className="text-xs font-black text-black">{n.targetSelection === 'GLOBAL' ? 'All Staff' : `${n.employeeCount} Targeted`}</span>
+                        <span className="text-xs font-black text-black">{n.targetSelection === 'ALL' ? 'All Staff' : `${n.employeeCount} Targeted`}</span>
                         <span className="text-[9px] font-bold text-black uppercase tracking-tighter">{n.active ? 'Active' : 'Inactive'}</span>
                       </div>
                     </td>
@@ -327,16 +378,18 @@ const NotificationsAdmin: React.FC = () => {
             <div className="space-y-4">
               <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Deployment Scope</label>
               <div className="flex gap-2">
-                {(['GLOBAL', 'TARGET'] as const).map(type => (
+                {(['ALL', 'EMPLOYEE', 'DEPARTMENT'] as const).map(type => (
                   <button
                     key={type}
                     type="button"
-                    onClick={() => setFormData({ ...formData, targetSelection: type, employeeIds: [] })}
-                    className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.targetSelection === type ? 'text-white shadow-lg' : 'bg-white border-slate-100 text-black hover:bg-slate-50'}`}
-                    style={formData.targetSelection === type ? { backgroundColor: '#c97a4c', borderColor: '#c97a4c' } : {}}
-                    
+                    onClick={() => {
+                      setFormData({ ...formData, targetSelection: type, employeeIds: [], departmentIds: [] });
+                      setFormErrors({ employeeSelection: '', departmentSelection: '' });
+                    }}
+                    className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.targetSelection === type ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-100 text-black hover:bg-slate-50'
+                      }`}
                   >
-                    {type === 'GLOBAL' ? 'Global Staff' : 'Target Selection'}
+                    {type}
                   </button>
                 ))}
               </div>
@@ -360,7 +413,7 @@ const NotificationsAdmin: React.FC = () => {
             </div>
           </div>
 
-          {formData.targetSelection === 'TARGET' && (
+          {formData.targetSelection === 'EMPLOYEE' && (
             <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Audience Targeting</label>
@@ -399,6 +452,39 @@ const NotificationsAdmin: React.FC = () => {
                   );
                 })}
               </div>
+              {formErrors.employeeSelection && (
+                <p className="text-xs text-red-500 font-medium">{formErrors.employeeSelection}</p>
+              )}
+            </div>
+          )}
+
+          {formData.targetSelection === 'DEPARTMENT' && (
+            <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+              <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Select Departments</label>
+              <div className="bg-slate-50 rounded-2xl border border-slate-100 max-h-[180px] overflow-y-auto custom-scrollbar divide-y divide-slate-100">
+                {departments.length > 0 ? (
+                  departments.map(dept => {
+                    const isSelected = formData.departmentIds?.includes(dept);
+                    return (
+                      <div
+                        key={dept}
+                        onClick={() => toggleDepartmentSelection(dept)}
+                        className="p-3 flex items-center justify-between cursor-pointer hover:bg-indigo-50 transition-colors group"
+                      >
+                        <span className="text-xs font-black text-black">{dept}</span>
+                        <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-transparent group-hover:border-indigo-200'}`}>
+                          <Icon name="Check" className="w-3 h-3 text-white" />
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="p-4 text-center text-slate-400 font-bold text-xs">No departments available</div>
+                )}
+              </div>
+              {formErrors.departmentSelection && (
+                <p className="text-xs text-red-500 font-medium">{formErrors.departmentSelection}</p>
+              )}
             </div>
           )}
 

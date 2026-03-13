@@ -497,6 +497,11 @@ const EventsAdmin: React.FC = () => {
     isPublished: true,
   });
 
+  const [formErrors, setFormErrors] = useState({
+    employeeSelection: '',
+    department: ''
+  });
+
   const formatDisplayDate = (dateString: string) => {
     const d = parseLocalISODate(dateString);
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -577,6 +582,7 @@ const EventsAdmin: React.FC = () => {
       priority: 'normal',
       isPublished: true,
     });
+    setFormErrors({ employeeSelection: '', department: '' });
   };
 
   const handleEdit = (evt: AppEvent) => {
@@ -704,11 +710,15 @@ const EventsAdmin: React.FC = () => {
       if (startOfDay(selectedEndDate) < startOfDay(selectedStartDate)) return notify('End date cannot be before start date.', 'warning');
     }
 
-    if (formData.audience === 'selected' && (!formData.targetEmployeeIds || (formData.targetEmployeeIds as any[]).length === 0))
-      return notify('Please select at least one employee for targeted events.', 'warning');
-
-    if (formData.audience === 'department' && !formData.targetDepartment)
-      return notify('Please select a department for department-based events.', 'warning');
+    if (formData.audience === 'selected' && (!formData.targetEmployeeIds || (formData.targetEmployeeIds as any[]).length === 0)) {
+      setFormErrors({ employeeSelection: 'Please select at least one employee for targeted events.', department: '' });
+      return;
+    } else if (formData.audience === 'department' && !formData.targetDepartment) {
+      setFormErrors({ employeeSelection: '', department: 'Please select a department for department-based events.' });
+      return;
+    } else {
+      setFormErrors({ employeeSelection: '', department: '' });
+    }
 
     // ✅ if isOnline is disabled (physical event), location is required
     const hasLocation = !!formData.location?.trim();
@@ -1152,7 +1162,10 @@ const EventsAdmin: React.FC = () => {
                 <button
                   key={a}
                   type="button"
-                  onClick={() => setFormData({ ...formData, audience: a, targetEmployeeIds: [], targetDepartment: '' })}
+                  onClick={() => {
+                    setFormData({ ...formData, audience: a, targetEmployeeIds: [], targetDepartment: '' });
+                    setFormErrors({ employeeSelection: '', department: '' });
+                  }}
                   className={`flex-1 py-3 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all shadow-sm ${
                     formData.audience === a ? 'bg-gradient-to-r from-amber-700 to-amber-600 border-transparent text-white shadow-lg' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'
                   }`}
@@ -1197,23 +1210,31 @@ const EventsAdmin: React.FC = () => {
                     </div>
                   ))}
                 </div>
+                {formErrors.employeeSelection && (
+                  <p className="text-xs text-red-500 font-medium mt-2">{formErrors.employeeSelection}</p>
+                )}
               </div>
             )}
 
             {formData.audience === 'department' && (
-              <select
-                aria-label="Select target unit"
-                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-amber-600 outline-none text-xs font-bold text-slate-600 shadow-inner"
-                value={(formData.targetDepartment as any) || ''}
-                onChange={(e) => setFormData({ ...formData, targetDepartment: e.target.value })}
-              >
-                <option value="">🎯 Select Target Unit</option>
-                {departments.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-2">
+                <select
+                  aria-label="Select target unit"
+                  className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-600 shadow-inner"
+                  value={(formData.targetDepartment as any) || ''}
+                  onChange={(e) => setFormData({ ...formData, targetDepartment: e.target.value })}
+                >
+                  <option value="">🎯 Select Target Unit</option>
+                  {departments.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+                {formErrors.department && (
+                  <p className="text-xs text-red-500 font-medium">{formErrors.department}</p>
+                )}
+              </div>
             )}
           </div>
 
