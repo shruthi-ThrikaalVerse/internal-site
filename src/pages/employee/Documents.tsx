@@ -12,7 +12,6 @@ import {
   Star, TrendingUp, PieChart, ArrowUpRight, ArrowDownLeft, Bell, Settings,
   Grid3x3, PanelLeft, PanelRight, PanelTop, SearchX, Plus, Menu, AlertTriangle
 } from 'lucide-react';
-import { getUserSpecificKey } from '../../utils/storage.ts';
 import { getMyDocuments, uploadDocument } from '../../api/documents.js';
 import { useAuth } from '../../context/AuthContext.tsx';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -48,7 +47,6 @@ const Documents: React.FC = () => {
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -129,29 +127,14 @@ const Documents: React.FC = () => {
             } as DocumentRecord;
           });
           setDocuments(mapped);
-          localStorage.setItem(getUserSpecificKey('user_documents_v8'), JSON.stringify(mapped));
           return;
         }
       } catch (err) {
-        console.warn('Failed to load documents from API, falling back to local data', err);
-      }
-
-      // Fallback to existing local mock if API returns nothing or fails
-      const saved = JSON.parse(localStorage.getItem(getUserSpecificKey('user_documents_v8')) || '[]');
-      if (saved.length) {
-        setDocuments(saved.map((doc: DocumentRecord, index: number) => ({
-          ...doc,
-          starred: index % 3 === 0
-        })));
+        console.warn('Failed to load documents from backend:', err);
       }
     };
 
     loadData();
-
-    const handleStorage = () => loadData();
-    window.addEventListener('storage', handleStorage);
-
-    return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
   const getColorForCategory = (category: string): string => {
@@ -234,8 +217,6 @@ const Documents: React.FC = () => {
       };
 
       setDocuments(prev => [newDoc, ...prev]);
-      const updated = [newDoc, ...documents];
-      localStorage.setItem(getUserSpecificKey('user_documents_v8'), JSON.stringify(updated));
 
       setUploadSuccess(true);
       setTimeout(() => {
@@ -256,7 +237,6 @@ const Documents: React.FC = () => {
   const handleDocumentClick = (doc: DocumentRecord) => {
     setSelectedDoc(doc);
     setShowDocModal(true);
-    setRecentlyViewed(prev => [doc.id, ...prev.filter(id => id !== doc.id)].slice(0, 5));
   };
 
   const handleDownload = (doc: DocumentRecord, e?: React.MouseEvent) => {
@@ -314,7 +294,6 @@ const Documents: React.FC = () => {
       const updated = documents.map(d => d.id === doc.id ? { ...d, aiSummary: summary } : d);
       setDocuments(updated);
       setSelectedDoc({ ...doc, aiSummary: summary });
-      localStorage.setItem(getUserSpecificKey('user_documents_v7'), JSON.stringify(updated));
     } catch (error) {
       console.error("AI Summarization failed:", error);
     } finally {
@@ -385,7 +364,7 @@ const Documents: React.FC = () => {
             </button>
             <h1 className="text-lg font-semibold text-slate-900 truncate">Documents</h1>
           </div>
-          
+
         </div>
 
         {/* Sidebar - Hidden on mobile, shown on desktop */}
@@ -404,7 +383,7 @@ const Documents: React.FC = () => {
                 </button>
               )}
 
-              
+
 
               <nav className="space-y-1">
                 <button
@@ -456,7 +435,7 @@ const Documents: React.FC = () => {
                 ))}
               </nav>
 
-              
+
             </div>
           </div>
         </aside>

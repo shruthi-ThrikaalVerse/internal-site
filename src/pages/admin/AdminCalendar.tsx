@@ -6,7 +6,6 @@ import {
   CalendarDays, MapPin, Users, MoreHorizontal
 } from 'lucide-react';
 import { CalendarAttendanceRecord } from '../../types.ts';
-import { getUserSpecificKey } from '../../utils/storage.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
 
 const SYSTEM_HOLIDAYS = [
@@ -103,16 +102,9 @@ const AdminCalendar: React.FC = () => {
     return WORKING_SATURDAYS.includes(dateStr);
   };
 
-  // Use admin-specific key for calendar events
+  // Calendar events, attendance, and leaves should be fetched from backend API
   const loadCalendarEvents = (): CalendarEvent[] => {
-    try {
-      const savedCalendarEvents = localStorage.getItem(getUserSpecificKey('admin_calendarEvents', user?.id));
-      if (savedCalendarEvents) {
-        return JSON.parse(savedCalendarEvents);
-      }
-    } catch (error) {
-      console.error('Error loading admin calendar events:', error);
-    }
+    // TODO: Replace with backend API call for admin calendar events
     return [];
   };
 
@@ -201,79 +193,41 @@ const AdminCalendar: React.FC = () => {
     });
   };
 
-  const refreshData = () => {
-    // Use admin-specific keys for attendance and leaves
-    const storedAttendance = JSON.parse(localStorage.getItem(getUserSpecificKey('admin_attendance_records', user?.id)) || '[]');
-    const storedLeaves = JSON.parse(localStorage.getItem(getUserSpecificKey('admin_leave_requests', user?.id)) || '[]');
-    const mergedMap = new Map<string, CalendarAttendanceRecord>();
-    WORKING_SATURDAYS.forEach(date => {
-      mergedMap.set(date, {
-        id: `working-sat-${date}`,
-        date,
-        status: 'Working Saturday',
-        timeIn: null,
-        timeOut: null,
-        workingHours: 0,
-        locationName: 'Working Saturday',
-        isLate: false
-      });
-    });
-    SYSTEM_HOLIDAYS.forEach(h => {
-      mergedMap.set(h.date, {
-        id: `holiday-${h.date}`,
-        date: h.date,
-        status: 'Holiday',
-        timeIn: null,
-        timeOut: null,
-        workingHours: 0,
-        locationName: h.name,
-        isLate: false
-      });
-    });
-    storedLeaves.forEach((leave: any) => {
-      const status = (leave.status || 'pending').toLowerCase();
-      if (status === 'approved') {
-        let current = new Date(leave.startDate);
-        const end = new Date(leave.endDate);
-        while (current <= end) {
-          const dStr = formatDateString(current);
-          const existingRecord = mergedMap.get(dStr);
-          if (!existingRecord || (existingRecord.status !== 'Holiday' && existingRecord.status !== 'Working Saturday')) {
-            mergedMap.set(dStr, {
-              id: `leave-${dStr}`,
-              date: dStr,
-              status: 'On Leave',
-              timeIn: null,
-              timeOut: null,
-              workingHours: 0,
-              locationName: `On Leave (${leave.type})`,
-              isLate: false
-            });
-          }
-          current.setDate(current.getDate() + 1);
-        }
+  const refreshData = async () => {
+    // Fetch admin attendance records from backend
+    let recordsArray: CalendarAttendanceRecord[] = [];
+    try {
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth() + 1;
+      const from = `${year}-${String(month).padStart(2, '0')}-01`;
+      const to = `${year}-${String(month).padStart(2, '0')}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`;
+      const params = new URLSearchParams();
+      params.set('from', from);
+      params.set('to', to);
+      const url = `http://localhost:8085/api/employee_attend/admin/attendance?${params.toString()}`;
+      const resp = await fetch(url, { method: 'GET', credentials: 'include' });
+      if (resp.ok) {
+        const data = await resp.json().catch(() => []);
+        // Flatten backend response: employees[] -> each has attendance[]
+        const arr = Array.isArray(data) ? data : (data?.data ?? []);
+        recordsArray = arr.flatMap((emp: any) => {
+          const attendanceArr = Array.isArray(emp?.attendance) ? emp.attendance : [];
+          return attendanceArr.map((a: any) => ({
+            ...a,
+            id: a.id || `${emp.employeeId}-${a.date}`,
+            date: a.date,
+            status: a.status || 'Absent',
+            timeIn: a.timeIn || null,
+            timeOut: a.timeOut || null,
+            workingHours: a.workingHours || 0,
+            isLate: a.isLate || false
+          }));
+        });
       }
-    });
-    storedAttendance.forEach((rec: any) => {
-      if (SYSTEM_HOLIDAYS.some(h => h.date === rec.date)) return;
-      const derived = deriveFromAttendance(rec);
-      const isWorkingSat = isWorkingSaturday(rec.date);
-      mergedMap.set(rec.date, {
-        ...rec,
-        timeIn: derived.timeIn,
-        timeOut: derived.timeOut,
-        workingHours: derived.workingHours,
-        totalHours: derived.totalHours,
-        isLate: derived.isLate,
-        status: isWorkingSat ? 'Working Saturday' : (derived.isLate ? 'Late' : (rec.status || 'Present')),
-      });
-    });
-    const todayStr = formatDateString(new Date());
-    const todayRec: any = Array.from(mergedMap.values()).find((r: any) => r.date === todayStr);
-    const todayActive = todayRec ? deriveFromAttendance(todayRec).activeSession : false;
-    setIsTodayPresent(todayActive);
-    const recordsArray = Array.from(mergedMap.values());
-    const calendarEvents = loadCalendarEvents();
+    } catch (err) {
+      console.warn('Failed to fetch admin attendance:', err);
+    }
+    const calendarEvents: CalendarEvent[] = loadCalendarEvents();
     setAttendanceRecords(recordsArray);
     calculateMonthlyStats(recordsArray, calendarEvents);
   };

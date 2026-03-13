@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMyNotifications, markAllNotificationsRead, markNotificationAsRead } from '../../api/notifications.ts';
-import { getUserSpecificKey } from '../../utils/storage.ts';
 import {
   Bell, Check, Clock, User, Shield, Info, CheckCircle2, AlertCircle,
   Inbox, X, Search, Filter, Volume2, VolumeX,
@@ -46,7 +45,7 @@ interface Notification {
 
 type NotificationTab = 'all' | 'unread' | 'read';
 
-// Static mock notifications removed — notifications should come from localStorage or the API
+// Static mock notifications removed — notifications should come from backend API only
 
 // ========== CONSTANTS ==========
 const priorityColors = {
@@ -233,31 +232,31 @@ const formatTime = (iso: string) => {
 const getFriendlyMessage = (msg: string) => {
   if (!msg) return '';
   const trimmed = msg.trim();
-  
+
   // Try to parse HTML content
   try {
     // Check if it looks like HTML
     if (trimmed.startsWith('<') || trimmed.includes('</')) {
       const div = document.createElement('div');
       div.innerHTML = msg;
-      
+
       // Get text content and clean it up
       let text = div.innerText || div.textContent || '';
-      
+
       // Decode HTML entities
       const textarea = document.createElement('textarea');
       textarea.innerHTML = text;
       text = textarea.value;
-      
+
       // Clean up extra whitespace and line breaks
       text = text.replace(/\n\n+/g, '\n').trim();
-      
+
       return text;
     }
   } catch (e) {
     // If parsing fails, continue with raw message
   }
-  
+
   // Return as-is if not HTML or plain text already
   return trimmed;
 };
@@ -323,15 +322,13 @@ const NotificationItem: React.FC<{
     };
 
     return (
-      <div onClick={handleClick} className={`notification-card bg-white rounded-xl border ${
-        !notification.read && activeTab === 'unread' 
-          ? 'border-blue-200 unread-glow' 
-          : notification.read 
-            ? 'border-slate-200' 
+      <div onClick={handleClick} className={`notification-card bg-white rounded-xl border ${!notification.read && activeTab === 'unread'
+          ? 'border-blue-200 unread-glow'
+          : notification.read
+            ? 'border-slate-200'
             : 'border-slate-200'
-      } ${isSelected ? 'ring-2 ring-blue-500 ring-inset' : ''} ${
-        !notification.read && activeTab === 'unread' ? 'unread' : ''
-      } ${highlight && !notification.read ? 'bg-yellow-50' : ''} hover:shadow-lg transition-all duration-200`}>
+        } ${isSelected ? 'ring-2 ring-blue-500 ring-inset' : ''} ${!notification.read && activeTab === 'unread' ? 'unread' : ''
+        } ${highlight && !notification.read ? 'bg-yellow-50' : ''} hover:shadow-lg transition-all duration-200`}>
         <div className="p-4">
           <div className="flex gap-4">
             {/* Selection checkbox */}
@@ -432,7 +429,7 @@ const NotificationItem: React.FC<{
                   <div className="flex items-center gap-1">
                     {!notification.read && (
                       <button
-                        onClick={async (e) => { 
+                        onClick={async (e) => {
                           e.stopPropagation();
                           try {
                             const response = await fetch(
@@ -528,16 +525,8 @@ const NotificationItem: React.FC<{
 const EmployeeNotifications: React.FC = () => {
   // State
   const navigate = useNavigate();
-  const storageKey = getUserSpecificKey('user_notifications_v1');
 
-  const [notifications, setNotifications] = useState<Notification[]>(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      return [];
-    }
-  });
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'read'>('all');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -565,7 +554,7 @@ const EmployeeNotifications: React.FC = () => {
     })();
   }, []); // Run on mount
 
-  
+
 
   // Filter notifications
   const getFilteredNotifications = useCallback(() => {
@@ -695,27 +684,7 @@ const EmployeeNotifications: React.FC = () => {
             metadata: undefined,
           }));
 
-          // merge with any saved state to preserve archived/snoozed flags
-          try {
-            const saved = localStorage.getItem(storageKey);
-            if (saved) {
-              const savedArr: Notification[] = JSON.parse(saved);
-              const savedMap = savedArr.reduce<Record<string, Notification>>((acc, n) => {
-                acc[n.id] = n;
-                return acc;
-              }, {} as any);
-              const merged = mapped.map(n => {
-                const savedN = savedMap[n.id];
-                return savedN ? { ...n, archived: savedN.archived, snoozedUntil: savedN.snoozedUntil } : n;
-              });
-              setNotifications(merged);
-            } else {
-              setNotifications(mapped);
-            }
-          } catch (e) {
-            // parsing failed; just use mapped
-            setNotifications(mapped);
-          }
+          setNotifications(mapped);
         } else {
           // No data, set empty
           setNotifications([]);
@@ -724,7 +693,7 @@ const EmployeeNotifications: React.FC = () => {
         console.warn(`getMyNotifications for ${activeTab} failed, keeping local notifications.`, err);
       }
     })();
-  }, [activeTab, storageKey, refetchTrigger]);
+  }, [activeTab, refetchTrigger]);
 
   const selectAllOnPage = () => {
     const pageIds = getFilteredNotifications().map(n => n.id);
@@ -765,11 +734,7 @@ const EmployeeNotifications: React.FC = () => {
 
   const clearAll = () => {
     setNotifications([]);
-    try {
-      localStorage.removeItem(getUserSpecificKey('user_notifications_v1'));
-    } catch (e) {
-      // ignore
-    }
+    // No localStorage removal needed
   };
 
 
@@ -807,14 +772,7 @@ const EmployeeNotifications: React.FC = () => {
     setNotifications(prev => [newNotification, ...prev]);
   };
 
-  // Persist notifications to localStorage when changed
-  useEffect(() => {
-    try {
-      localStorage.setItem(getUserSpecificKey('user_notifications_v1'), JSON.stringify(notifications));
-    } catch (e) {
-      // ignore
-    }
-  }, [notifications]);
+  // Removed localStorage persistence for notifications
 
   // Statistics
   // const archivedCount = notifications.filter(n => n.archived).length; // archive removed
@@ -903,7 +861,7 @@ const EmployeeNotifications: React.FC = () => {
                   <Filter className="w-5 h-5" />
                   Filters
                 </button>
-                
+
               </div>
             </div>
           </div>
@@ -946,17 +904,17 @@ const EmployeeNotifications: React.FC = () => {
                 </div>
                 <div className="p-3 space-y-2">
                   {Object.entries(categoryIcons).map(([category, IconComp]) => (
-                        <div key={category} className="flex items-center justify-between px-3 py-2 hover:bg-slate-50 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <IconComp className="w-5 h-5 text-slate-500" />
-                            <span className="text-sm text-slate-700 capitalize">
-                              {category === 'login_activity' ? 'Login Activity' : category}
-                            </span>
-                          </div>
-                          <span className="text-base font-semibold text-slate-900">
-                            {notifications.filter(n => n.category === category).length}
-                          </span>
-                        </div>
+                    <div key={category} className="flex items-center justify-between px-3 py-2 hover:bg-slate-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <IconComp className="w-5 h-5 text-slate-500" />
+                        <span className="text-sm text-slate-700 capitalize">
+                          {category === 'login_activity' ? 'Login Activity' : category}
+                        </span>
+                      </div>
+                      <span className="text-base font-semibold text-slate-900">
+                        {notifications.filter(n => n.category === category).length}
+                      </span>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -1153,7 +1111,7 @@ const EmployeeNotifications: React.FC = () => {
           </div>
         </div>
 
-        
+
       </div>
     </>
   );
