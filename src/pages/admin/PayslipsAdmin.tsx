@@ -383,7 +383,7 @@ const PayslipsAdmin: React.FC = () => {
 
           <div className="pt-6 border-t border-slate-100 flex gap-4">
             <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all">Discard</button>
-            <button type="submit" className="flex-1 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95">
+            <button type="submit" className="flex-1 py-4 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all active:scale-95" style={{backgroundColor: '#c97a4c', boxShadow: 'rgba(201, 122, 76, 0.2) 0px 20px 25px -5px'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}>
               {editingId ? "Confirm Modifications" : "Commit to Ledgers"}
             </button>
           </div>

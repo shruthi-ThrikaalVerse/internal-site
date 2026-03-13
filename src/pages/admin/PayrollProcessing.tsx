@@ -123,8 +123,8 @@ const PayrollProcessing: React.FC = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
-              className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === tab ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
-                }`}
+              className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === tab ? 'text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
+              style={{backgroundColor: activeTab === tab ? '#c97a4c' : ''}}
             >
               {tab}
             </button>
@@ -160,7 +160,7 @@ const PayrollProcessing: React.FC = () => {
               </div>
               <div className="mt-4 flex items-center justify-between">
                 <span className="px-3 py-1 bg-amber-50 text-amber-600 border border-amber-100 rounded-full text-[9px] font-black uppercase tracking-widest">Awaiting Run</span>
-                <button type="button" aria-label="Run payroll now" onClick={handleRunPayroll} disabled={isRunning} className="px-4 py-2 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 transition-all shadow-lg active:scale-95 disabled:opacity-50">
+              <button type="button" aria-label="Run payroll now" onClick={handleRunPayroll} disabled={isRunning} className="px-4 py-2 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50" style={{backgroundColor: '#c97a4c', boxShadow: 'rgba(201, 122, 76, 0.2) 0px 20px 25px -5px'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}>
                   {isRunning ? 'Processing...' : 'Run Now'}
                 </button>
               </div>
@@ -543,7 +543,7 @@ const PayrollProcessing: React.FC = () => {
 
             <div className="pt-4 flex gap-4">
               <button type="button" onClick={() => setSelectedEmpForSalary(null)} className="flex-1 py-4 text-slate-400 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-all">Discard</button>
-              <button type="submit" className="flex-1 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all">Commit Financial Record</button>
+              <button type="submit" className="flex-1 py-4 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all" style={{backgroundColor: '#c97a4c', boxShadow: 'rgba(201, 122, 76, 0.2) 0px 20px 25px -5px'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}>Commit Financial Record</button>
             </div>
           </form>
         )}

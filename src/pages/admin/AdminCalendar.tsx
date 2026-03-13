@@ -259,7 +259,7 @@ const AdminCalendar: React.FC = () => {
     switch (record.status) {
       case 'Present': return 'bg-emerald-500';
       case 'Absent': return 'bg-red-500';
-      case 'On Leave': return 'bg-blue-500';
+      case 'On Leave': return 'bg-[#f5ede3]';
       case 'Holiday': return 'bg-purple-500';
       case 'Weekend': return 'bg-slate-400';
       case 'Working Saturday': return 'bg-orange-500';
@@ -291,7 +291,7 @@ const AdminCalendar: React.FC = () => {
       case 'party': return 'bg-red-100 text-red-700 border-red-200';
       case 'health_checkup': return 'bg-teal-100 text-teal-700 border-teal-200';
       case 'awards': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'webinar': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+      case 'webinar': return 'bg-[#f5ede3] text-[#8b5a3c] border-[2px]' + ' border-[#c97a4c]';
       case 'social': return 'bg-cyan-100 text-cyan-700 border-cyan-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
@@ -305,7 +305,7 @@ const AdminCalendar: React.FC = () => {
       if (day.record.status === 'Working Saturday') return 'bg-orange-50';
       if (day.record.isLate || day.record.status === 'Present') return 'bg-emerald-50';
       if (day.record.status === 'Absent') return 'bg-red-50';
-      if (day.record.status === 'On Leave') return 'bg-blue-50';
+      if (day.record.status === 'On Leave') return 'bg-[#f0e6dc]';
       if (day.record.status === 'Holiday') return 'bg-purple-50';
       if (day.record.status === 'Weekend') return 'bg-slate-50';
     } else if (day.isWeekend && !isWorkingSaturday(formatDateString(day.date))) {
@@ -519,7 +519,8 @@ const AdminCalendar: React.FC = () => {
           </div>
           <button
             onClick={() => setCurrentMonth(new Date())}
-            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white text-xs font-black rounded-xl sm:rounded-2xl uppercase tracking-wider hover:bg-blue-700 shadow active:scale-95 transition-all w-full sm:w-auto"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 text-white text-xs font-black rounded-xl sm:rounded-2xl uppercase tracking-wider shadow active:scale-95 transition-all w-full sm:w-auto"
+            style={{backgroundColor: '#c97a4c'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
           >
             Today
           </button>
@@ -538,13 +539,13 @@ const AdminCalendar: React.FC = () => {
             {monthlyStats.workDays} work day{monthlyStats.workDays !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl sm:rounded-2xl lg:rounded-[2rem] p-3 sm:p-4 lg:p-6 shadow-sm">
+        <div className="bg-[#f5ede3] border-2 rounded-xl sm:rounded-2xl lg:rounded-[2rem] p-3 sm:p-4 lg:p-6 shadow-sm" style={{borderColor: '#c97a4c'}}>
           <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
-            <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-blue-600" />
-            <span className="text-[8px] sm:text-[9px] lg:text-[10px] font-black uppercase tracking-wider text-blue-500">Work Days</span>
+            <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8" style={{color: '#c97a4c'}} />
+            <span className="text-[8px] sm:text-[9px] lg:text-[10px] font-black uppercase tracking-wider" style={{color: '#c97a4c'}}>Work Days</span>
           </div>
-          <p className="text-base sm:text-lg lg:text-xl xl:text-2xl font-black text-blue-900">{monthlyStats.workDays}</p>
-          <p className="text-[9px] sm:text-xs text-blue-600 mt-1 font-medium truncate">Days recorded</p>
+          <p className="text-base sm:text-lg lg:text-xl xl:text-2xl font-black" style={{color: '#8b5a3c'}}>{monthlyStats.workDays}</p>
+          <p className="text-[9px] sm:text-xs mt-1 font-medium truncate" style={{color: '#c97a4c'}}>Days recorded</p>
         </div>
         <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 rounded-xl sm:rounded-2xl lg:rounded-[2rem] p-3 sm:p-4 lg:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
@@ -740,11 +741,11 @@ const AdminCalendar: React.FC = () => {
         <LegendItem label="Present" dotColor="#10b981" screenSize={screenSize} />
         <LegendItem label="Late" dotColor="#fbbf24" screenSize={screenSize} />
         <LegendItem label="Absent" dotColor="#ef4444" screenSize={screenSize} />
-        <LegendItem label="Leave" dotColor="#3b82f6" screenSize={screenSize} />
+        <LegendItem label="Leave" dotColor="#c97a4c" screenSize={screenSize} />
         <LegendItem label="Holiday" dotColor="#8b5cf6" screenSize={screenSize} />
         <LegendItem label="Weekend" dotColor="#94a3b8" screenSize={screenSize} />
         <LegendItem label="Work Sat" dotColor="#f97316" screenSize={screenSize} />
-        <LegendItem label="Event" dotColor="#3b82f6" screenSize={screenSize} />
+        <LegendItem label="Event" dotColor="#c97a4c" screenSize={screenSize} />
       </div>
 
       {/* Modal */}

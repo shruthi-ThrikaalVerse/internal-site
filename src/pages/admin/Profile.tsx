@@ -49,7 +49,7 @@ const Avatar = ({ src, name, size = 'lg', onClick }: {
 
   return (
     <div
-      className={`${sizes[size]} bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg cursor-pointer hover:opacity-90 transition-opacity`}
+      className={`${sizes[size]} bg-gradient-to-br from-amber-700 to-orange-600 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg cursor-pointer hover:opacity-90 transition-opacity`}
       onClick={onClick}
     >
       {initials}
@@ -128,7 +128,7 @@ const ProfilePictureModal = ({ isOpen, onClose, onUpload, onRemove, currentImage
         </div>
 
         <div
-          className={`border-2 border-dashed rounded-2xl p-8 text-center mb-6 transition-all ${isDragging ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200'
+          className={`border-2 border-dashed rounded-2xl p-8 text-center mb-6 transition-all ${isDragging ? 'border-amber-600 bg-amber-50' : 'border-slate-200'
             }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -174,7 +174,7 @@ const ProfilePictureModal = ({ isOpen, onClose, onUpload, onRemove, currentImage
           <button
             onClick={handleUpload}
             disabled={!preview || preview === currentImage}
-            className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-6 py-3 bg-amber-700 text-white rounded-xl font-bold text-sm hover:bg-amber-800 disabled:opacity-50 disabled:cursor-not-allowed"
             title="Upload profile picture"
             aria-label="Upload profile picture"
           >
@@ -600,7 +600,7 @@ const Profile: React.FC = () => {
 
             {uploadProgress > 0 && uploadProgress < 100 && (
               <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center">
-                <div className="w-16 h-16 border-4 border-t-indigo-500 border-white/30 rounded-full animate-spin"></div>
+                <div className="w-16 h-16 border-4 border-t-amber-600 border-white/30 rounded-full animate-spin"></div>
               </div>
             )}
 
@@ -641,7 +641,7 @@ const Profile: React.FC = () => {
 
             <div className="flex flex-wrap gap-2">
               <div className="flex items-center gap-2 text-xs text-slate-500">
-                <LucideIcons.BadgeCheck className="w-4 h-4 text-indigo-500" />
+                <LucideIcons.BadgeCheck className="w-4 h-4 text-amber-600" />
                 <span className="font-bold">
                   {isLoadingUserData ? (
                     <span className="text-slate-400">Loading...</span>
@@ -681,7 +681,7 @@ const Profile: React.FC = () => {
         </button>
         <button
           onClick={handleExportProfile}
-          className="px-6 py-3 bg-indigo-50 text-indigo-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-100 transition-all flex items-center gap-2"
+          className="px-6 py-3 bg-amber-50 text-amber-700 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-amber-100 transition-all flex items-center gap-2"
           title="Export profile data"
           aria-label="Export profile data"
         >
@@ -695,7 +695,7 @@ const Profile: React.FC = () => {
   const renderDetails = () => (
     <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-8 animate-in fade-in slide-in-from-left-4 duration-300">
       <div className="flex items-center gap-4 mb-2">
-        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
+        <div className="p-3 bg-amber-50 text-amber-700 rounded-2xl">
           <Icon name="Info" className="w-6 h-6" />
         </div>
         <div>
@@ -715,7 +715,7 @@ const Profile: React.FC = () => {
                 className="w-full h-full object-cover rounded-2xl border-4 border-white shadow-lg"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center border-4 border-white shadow-lg">
+              <div className="w-full h-full bg-gradient-to-br from-amber-600 to-orange-600 rounded-2xl flex items-center justify-center border-4 border-white shadow-lg">
                 <span className="text-4xl font-black text-white">
                   {user?.fullName?.charAt(0) || 'A'}
                 </span>
@@ -723,7 +723,7 @@ const Profile: React.FC = () => {
             )}
             {isUploading && (
               <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-full border-4 border-slate-50 flex items-center justify-center shadow-lg">
-                <Icon name="Loader2" className="w-5 h-5 text-indigo-600 animate-spin" />
+                <Icon name="Loader2" className="w-5 h-5 text-amber-700 animate-spin" />
               </div>
             )}
           </div>
@@ -741,7 +741,7 @@ const Profile: React.FC = () => {
             <button
               onClick={handleUploadClick}
               disabled={isUploading}
-              className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+              className="px-5 py-2.5 bg-amber-700 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-amber-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
               title="Upload profile photo"
               aria-label="Upload profile photo"
             >
@@ -786,7 +786,7 @@ const Profile: React.FC = () => {
               <span className="text-xs font-medium text-slate-600">Secure upload</span>
             </div>
             <div className="flex items-center gap-2">
-              <Icon name="Lock" className="w-4 h-4 text-indigo-500" />
+              <Icon name="Lock" className="w-4 h-4 text-amber-600" />
               <span className="text-xs font-medium text-slate-600">Encrypted storage</span>
             </div>
           </div>
@@ -943,7 +943,7 @@ const Profile: React.FC = () => {
     <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-10 animate-in fade-in slide-in-from-left-4 duration-300">
       <div>
         <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-3">
-          <Icon name="ShieldCheck" className="text-indigo-600" />
+          <Icon name="ShieldCheck" className="text-amber-700" />
           Security Hardening
         </h2>
         <p className="text-xs text-slate-400 font-medium tracking-wide mt-1">Manage credentials and administrative access protocols.</p>
@@ -961,7 +961,7 @@ const Profile: React.FC = () => {
             <input
               id="current-password"
               type="password"
-              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700"
+              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-slate-700"
               placeholder="Enter your current password"
               title="Enter your current password"
               aria-label="Current password"
@@ -974,14 +974,14 @@ const Profile: React.FC = () => {
             <input
               id="new-password"
               type="password"
-              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700"
+              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-slate-700"
               placeholder="Enter your new secure password"
               title="Enter your new secure password"
               aria-label="New secure password"
             />
           </div>
         </div>
-        <button type="submit" className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95" title="Update password" aria-label="Update password">
+        <button type="submit" className="px-8 py-4 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95" style={{backgroundColor: '#92592d', boxShadow: 'rgba(146, 89, 45, 0.2) 0px 20px 25px -5px'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'} title="Update password" aria-label="Update password">
           Commit Password Change
         </button>
       </form>
@@ -1016,7 +1016,7 @@ const Profile: React.FC = () => {
     <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-8 animate-in fade-in slide-in-from-left-4 duration-300">
       <div>
         <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-3">
-          <Icon name="History" className="text-indigo-600" />
+          <Icon name="History" className="text-amber-700" />
           Your Audit Timeline
         </h2>
         <p className="text-xs text-slate-400 font-medium tracking-wide mt-1">Chronological history of your administrative operations.</p>
@@ -1027,11 +1027,11 @@ const Profile: React.FC = () => {
           <div key={log.id} className="relative pl-16 group">
             <div className={`absolute left-4 top-1 w-4 h-4 rounded-full border-4 border-white shadow-sm ring-4 ring-slate-50 transition-all group-hover:scale-125 z-10 ${log.action === 'Delete' ? 'bg-rose-500' :
               log.action === 'Update' ? 'bg-amber-500' :
-                log.action === 'Create' ? 'bg-emerald-500' : 'bg-indigo-500'
+                log.action === 'Create' ? 'bg-emerald-500' : 'bg-amber-600'
               }`}></div>
-            <div className="bg-slate-50/50 p-6 rounded-[32px] border border-slate-100 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all group-hover:-translate-y-1">
+            <div className="bg-slate-50/50 p-6 rounded-[32px] border border-slate-100 hover:bg-white hover:shadow-xl hover:shadow-amber-600/5 transition-all group-hover:-translate-y-1">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{log.module} Audit</span>
+                <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">{log.module} Audit</span>
                 <span className="text-[10px] font-bold text-slate-400 text-black">{log.timestamp}</span>
               </div>
               <p className="text-sm font-black text-slate-800">{log.action}</p>
@@ -1052,7 +1052,7 @@ const Profile: React.FC = () => {
       </div>
       <button
         onClick={() => setActiveTab('activity')}
-        className="w-full mt-8 py-3 text-indigo-600 bg-indigo-50 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-100 transition-all"
+        className="w-full mt-8 py-3 text-amber-700 bg-amber-50 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-amber-100 transition-all"
         title="View complete audit log"
         aria-label="View complete audit log"
       >
@@ -1067,9 +1067,9 @@ const Profile: React.FC = () => {
       <div>
         <div className="mb-6">
           <div className="flex items-center gap-3">
-            <button onClick={() => setActiveTab('details')} className={`px-4 py-2 rounded-xl text-sm font-black ${activeTab === 'details' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-700'}`} title="View profile details" aria-label="View profile details">Details</button>
-            <button onClick={() => setActiveTab('security')} className={`px-4 py-2 rounded-xl text-sm font-black ${activeTab === 'security' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-700'}`} title="View security settings" aria-label="View security settings">Security</button>
-            <button onClick={() => setActiveTab('activity')} className={`px-4 py-2 rounded-xl text-sm font-black ${activeTab === 'activity' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-700'}`} title="View activity log" aria-label="View activity log">Activity</button>
+            <button onClick={() => setActiveTab('details')} className={`px-4 py-2 rounded-xl text-sm font-black ${activeTab === 'details' ? 'bg-amber-700 text-white' : 'text-slate-500 hover:text-slate-700'}`} title="View profile details" aria-label="View profile details">Details</button>
+            <button onClick={() => setActiveTab('security')} className={`px-4 py-2 rounded-xl text-sm font-black ${activeTab === 'security' ? 'bg-amber-700 text-white' : 'text-slate-500 hover:text-slate-700'}`} title="View security settings" aria-label="View security settings">Security</button>
+            <button onClick={() => setActiveTab('activity')} className={`px-4 py-2 rounded-xl text-sm font-black ${activeTab === 'activity' ? 'bg-amber-700 text-white' : 'text-slate-500 hover:text-slate-700'}`} title="View activity log" aria-label="View activity log">Activity</button>
           </div>
         </div>
 

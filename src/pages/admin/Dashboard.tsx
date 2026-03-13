@@ -324,10 +324,11 @@ const Dashboard: React.FC = () => {
                   onClick={() => setShowActivityFilter(!showActivityFilter)}
                   title="Filter activities"
                   aria-label="Filter activities"
-                  className={`p-3 rounded-2xl transition-all flex items-center gap-2 font-bold shadow-sm ${showActivityFilter || activityFilter !== 'all'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'
-                    }`}
+                  className="p-3 rounded-2xl transition-all flex items-center gap-2 font-bold shadow-sm text-white"
+                  style={showActivityFilter || activityFilter !== 'all' 
+                    ? {backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'}
+                    : {backgroundColor: '#c97a4c', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'}
+                  }
                 >
                   <Icon name="Filter" className="w-5 h-5" />
                   {activityFilter !== 'all' && (
@@ -420,7 +421,7 @@ const Dashboard: React.FC = () => {
                     <div className={`p-4 rounded-2xl transition-all group-hover:scale-110 group-hover:shadow-lg ${activity.type === 'checkin' || activity.type === 'checkout' ? 'bg-emerald-50 text-emerald-600' :
                       activity.type === 'leave' ? 'bg-amber-50 text-amber-600' :
                         activity.type === 'document' ? 'bg-blue-50 text-blue-600' :
-                          'bg-indigo-50 text-indigo-600'
+                          'bg-[#f5ede3] text-[#8b5a3c]'
                       }`}>
                       <Icon name={
                         activity.type === 'checkin' ? 'Zap' :
@@ -466,7 +467,7 @@ const Dashboard: React.FC = () => {
                     {activityFilter !== 'all' && (
                       <button
                         onClick={clearActivityFilter}
-                        className="mt-4 px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-colors"
+                        className="mt-4 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors" style={{backgroundColor: '#f5ede3', color: '#8b5a3c'}} onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#e8d4c1';}} onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#f5ede3';}}
                       >
                         Show All Activities
                       </button>
@@ -505,7 +506,7 @@ const Dashboard: React.FC = () => {
                 return (
                   <div key={evt.id} className="p-5 bg-white border border-slate-100 rounded-2xl hover:border-indigo-200 transition-all group">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex flex-col items-center justify-center text-indigo-600 border border-slate-100 group-hover:bg-indigo-50 transition-colors">
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex flex-col items-center justify-center border border-slate-100 group-hover:bg-[#f5ede3] transition-colors" style={{color: '#c97a4c'}}>
                         <span className="text-[8px] font-black uppercase leading-none text-black">{evt.startDate.split('-')[1]}</span>
                         <span className="text-sm font-black leading-tight text-black">{evt.startDate.split('-')[2]}</span>
                       </div>
@@ -536,7 +537,7 @@ const Dashboard: React.FC = () => {
               )}
               <button
                 onClick={() => navigate('/admin/events')}
-                className="w-full py-3 bg-indigo-50 text-indigo-600 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-100 transition-all"
+                className="w-full py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all" style={{backgroundColor: '#f5ede3', color: '#8b5a3c'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e8d4c1'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f5ede3'}
               >View Events Hub</button>
             </div>
           </div>
@@ -582,7 +583,7 @@ const Dashboard: React.FC = () => {
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-black">Request Queue</h2>
-              <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">{pendingLeaves.length} NEW</span>
+              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style={{backgroundColor: '#f5ede3', color: '#8b5a3c'}}>{pendingLeaves.length} NEW</span>
             </div>
             <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
               {pendingLeaves.length > 0 ? pendingLeaves.map((item) => (
@@ -602,7 +603,7 @@ const Dashboard: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleUpdateLeaveStatus(item.leaveId || item.id, 'approved')}
-                      className="flex-1 py-2 bg-indigo-600 text-white text-[10px] font-black rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all uppercase tracking-widest"
+                      className="flex-1 py-2 text-white text-[10px] font-black rounded-xl shadow-lg transition-all uppercase tracking-widest" style={{backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(201, 122, 76, 0.2)'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
                     >
                       Approve
                     </button>

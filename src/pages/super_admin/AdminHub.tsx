@@ -194,18 +194,19 @@ export const AdminHub = () => {
         const loadAdminEmployees = async () => {
             try {
                 console.log('Loading admin employees...');
-                const employees = await usersApi.getAdminEmployees();
-                console.log('Admin employees loaded:', employees);
+                // Use getAllEmployees() and filter for admin tiers instead of getAdminEmployees()
+                const employees = await usersApi.getAllEmployees();
+                console.log('All employees loaded:', employees);
 
                 // Transform API response to User objects and set state
                 if (Array.isArray(employees)) {
                     const formattedAdmins: User[] = employees
                         .filter((emp: any) => {
-                            const roleVal = String(emp.role || emp.userType || '').toUpperCase();
+                            const roleVal = String((emp.role?.name || emp.role) || emp.userType || '').toUpperCase();
                             return ADMIN_TIERS.includes(roleVal);
                         })
                         .map((emp: any) => {
-                            const roleVal = String(emp.role || emp.userType || 'ADMIN').toUpperCase();
+                            const roleVal = String((emp.role?.name || emp.role) || emp.userType || 'ADMIN').toUpperCase();
                             const statusValue = String(emp.status || 'active') as 'active' | 'inactive' | 'probation' | 'resigned';
                             return {
                                 id: String(emp.employeeId || emp.id || `adm-${Date.now()}`),
@@ -227,6 +228,8 @@ export const AdminHub = () => {
                 }
             } catch (err) {
                 console.error('Failed to load admin employees:', err);
+                // Set empty array instead of letting error prevent rendering
+                setAdmins([]);
             }
         };
         loadAdminEmployees();
@@ -347,15 +350,7 @@ export const AdminHub = () => {
 
                     // Refetch admins to get the real ID and all backend-generated data
                     try {
-                        const refetchResponse = await fetch('http://localhost:8085/api/users/admin/employees', {
-                            method: 'GET',
-                            credentials: 'include',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                        });
-
-                        const refetchData = await refetchResponse.json();
+                        const refetchData = await usersApi.getAllEmployees();
 
                         if (refetchData) {
                             const rawAdminsData = Array.isArray(refetchData) ? refetchData : refetchData.data || [];
@@ -947,7 +942,10 @@ export const AdminHub = () => {
                 actions={
                     <button
                         onClick={handleAddNew}
-                        className="flex items-center justify-center gap-2 bg-blue-600 px-5 py-3 rounded-xl text-sm font-bold shadow-2xl shadow-blue-200 hover:bg-blue-700 transition-all transform hover:scale-[1.05] active:scale-[0.95] w-full sm:w-auto text-white"
+                        className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all transform active:scale-[0.95] w-full sm:w-auto text-white"
+                        style={{backgroundColor: '#c97a4c', boxShadow: '0 25px 50px -12px rgba(201, 122, 76, 0.2)'}}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     >
                         <UserPlus size={18} />
                         <span>New Admin</span>
@@ -1012,7 +1010,7 @@ export const AdminHub = () => {
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {filteredAdmins.map((a) => (
-                                <tr key={a.id} className={`hover:bg-gray-50 transition-all group border-l-2 border-transparent hover:border-blue-500 ${a.status === 'inactive' ? 'opacity-50 grayscale' : ''}`}>
+                                <tr key={a.id} className={`hover:bg-gray-50 transition-all group border-l-2 border-transparent` + (a.status === 'inactive' ? 'opacity-50 grayscale' : '')} style={{borderColor: editingId === a.id ? '#c97a4c' : ''}}>
                                     <td className="px-8 py-5 cursor-pointer" onClick={() => setViewingUser(a)}>
                                         <div className="flex items-center gap-4">
                                             <div className="relative shrink-0">
@@ -1029,12 +1027,12 @@ export const AdminHub = () => {
                                                                 target.style.display = 'none';
                                                             }}
                                                         />
-                                                        <Shield className={`absolute -bottom-1 -right-1 w-4 h-4 p-0.5 rounded-full border border-white ${a.role.includes('SUPER') ? 'bg-blue-600 text-white' : 'bg-emerald-500 text-white'}`} />
+                                                        <Shield className={`absolute -bottom-1 -right-1 w-4 h-4 p-0.5 rounded-full border border-white ${a.role.includes('SUPER') ? 'text-white' : 'bg-emerald-500 text-white'}`} style={{backgroundColor: a.role.includes('SUPER') ? '#c97a4c' : ''}} />
                                                     </>
                                                 )}
                                             </div>
                                             <div className="min-w-0">
-                                                <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
+                                                <div className="font-bold text-gray-900 transition-colors truncate" style={{color: editingId === a.id ? '#c97a4c' : ''}}>
                                                     {a.firstName ? `${a.firstName} ${a.lastName}` : a.name}
                                                 </div>
                                                 <div className="flex items-center gap-2 mt-0.5">
@@ -1050,13 +1048,13 @@ export const AdminHub = () => {
                                         <Badge color={a.status === 'active' ? 'green' : 'red'}>{a.status.toUpperCase()}</Badge>
                                     </td>
                                     <td className="px-8 py-5">
-                                        <div className="flex items-center gap-2 text-[11px] text-gray-900 font-mono bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 w-fit group-hover:text-blue-600 group-hover:border-blue-300 transition-all">
-                                            <Mail size={12} className="text-blue-600" /> {a.email}
+                                        <div className="flex items-center gap-2 text-[11px] text-gray-900 font-mono bg-gray-100 px-3 py-1.5 rounded-lg text-center w-fit transition-all" style={{borderColor: editingId === a.id ? '#c97a4c' : '', color: editingId === a.id ? '#c97a4c' : '', borderWidth: editingId === a.id ? '2px' : '1px'}}>
+                                            <Mail size={12} style={{color: editingId === a.id ? '#c97a4c' : ''}} /> {a.email}
                                         </div>
                                     </td>
                                     <td className="px-8 py-5">
                                         <div className="flex items-center gap-2 text-[11px] text-gray-900 font-bold">
-                                            <Calendar size={12} className="text-blue-600" />
+                                            <Calendar size={12} style={{color: editingId === a.id ? '#c97a4c' : ''}} />
                                             {a.dateOfJoining || a.joiningDate || '2024-01-01'}
                                         </div>
                                     </td>
@@ -1077,7 +1075,8 @@ export const AdminHub = () => {
                                             <button
                                                 onClick={() => handleEdit(a)}
                                                 title="Manage Security Tiers"
-                                                className="p-2.5 bg-gray-100 hover:bg-blue-600 text-gray-500 hover:text-white rounded-xl transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                                className="p-2.5 bg-gray-100 text-gray-500 rounded-xl transition-all active:scale-90 focus:outline-none" style={{}
+                                                } onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#c97a4c'; e.currentTarget.style.color = 'white';}} onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = 'rgb(243, 244, 246)'; e.currentTarget.style.color = 'rgb(107, 114, 128)';}}
                                             >
                                                 <ShieldCheck size={18} />
                                             </button>
@@ -1122,7 +1121,7 @@ export const AdminHub = () => {
                         <button
                             onClick={() => setActiveTab('personal')}
                             className={`flex-1 px-6 py-4 font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeTab === 'personal'
-                                ? 'bg-blue-600 text-white'
+                                ? 'text-white'
                                 : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                                 }`}
                         >
@@ -1147,7 +1146,7 @@ export const AdminHub = () => {
                         {activeTab === 'personal' && (
                             <div className="space-y-8">
                                 <div className="relative p-8 rounded-[2rem] bg-gradient-to-br from-gray-100 to-white border border-gray-200 overflow-hidden shadow-2xl">
-                                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -mr-32 -mt-32 blur-[100px]"></div>
+                                    <div className="absolute top-0 right-0 w-64 h-64 rounded-full -mr-32 -mt-32 blur-[100px]" style={{backgroundColor: '#f0e6dc'}}></div>
                                     <div className="flex flex-col items-center text-center">
                                         <div className="relative mb-6">
                                             {viewingUser.avatar ? (
@@ -1181,9 +1180,9 @@ export const AdminHub = () => {
                                 {/* Demote & Terminate Action Boxes (Only for Super Admin, cannot target self) */}
                                 {isSuperAdmin && viewingUser.id !== currentUser?.id && viewingUser.status === 'active' && (
                                     <div className="space-y-4">
-                                        <div className="p-6 rounded-[1.5rem] bg-blue-50 border border-blue-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                        <div className="p-6 rounded-[1.5rem] flex flex-col sm:flex-row items-center justify-between gap-4" style={{backgroundColor: '#f5ede3', borderColor: '#c97a4c', borderWidth: '2px'}}>
                                             <div className="flex items-center gap-4">
-                                                <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
+                                                <div className="p-3 rounded-xl" style={{backgroundColor: '#f5ede3', color: '#c97a4c'}}>
                                                     <TrendingDown size={24} />
                                                 </div>
                                                 <div>
@@ -1193,7 +1192,10 @@ export const AdminHub = () => {
                                             </div>
                                             <button
                                                 onClick={() => handleDemoteFromModal(viewingUser.id)}
-                                                className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-200 active:scale-95"
+                                                className="w-full sm:w-auto px-6 py-3 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95"
+                                                style={{backgroundColor: '#c97a4c', boxShadow: '0 20px 25px -5px rgba(201, 122, 76, 0.2)'}}
+                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'}
+                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
                                             >
                                                 Demote <ChevronRight size={14} />
                                             </button>
@@ -1262,9 +1264,9 @@ export const AdminHub = () => {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-4 p-6 rounded-2xl bg-blue-50 border border-blue-100">
-                                        <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 flex items-center gap-2">
-                                            <UserPlus size={14} className="text-blue-600" /> Created By Information
+                                    <div className="space-y-4 p-6 rounded-2xl border-2" style={{backgroundColor: '#f5ede3', borderColor: '#c97a4c'}}>
+                                        <h4 className="text-[10px] font-black uppercase tracking-widest mb-2 flex items-center gap-2" style={{color: '#c97a4c'}}>
+                                            <UserPlus size={14} style={{color: '#c97a4c'}} /> Created By Information
                                         </h4>
                                         <div className="space-y-3 text-xs">
                                             <div className="flex justify-between items-center">
@@ -1273,7 +1275,7 @@ export const AdminHub = () => {
                                             </div>
                                             <div className="flex justify-between items-center">
                                                 <span className="text-gray-500">Creator Role</span>
-                                                <span className="text-blue-600 font-bold">{(viewingUser as any).createdByRole || 'N/A'}</span>
+                                                <span style={{color: '#c97a4c'}} >{(viewingUser as any).createdByRole || 'N/A'}</span>
                                             </div>
                                             <div className="flex justify-between items-center">
                                                 <span className="text-gray-500">Creator ID</span>
@@ -1373,11 +1375,11 @@ export const AdminHub = () => {
                                     {/* 3 Charts Section - Stacked Vertically */}
                                     <div className="col-span-1 space-y-8">
                                         {/* Attendance Chart */}
-                                        <div className="bg-white rounded-3xl shadow-md border border-blue-200 overflow-hidden hover:shadow-lg transition-shadow">
-                                            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 border-b border-blue-200">
+                                        <div className="bg-white rounded-3xl shadow-md border-2 overflow-hidden hover:shadow-lg transition-shadow" style={{borderColor: '#c97a4c'}}>
+                                            <div className="bg-gradient-to-r p-6 border-b" style={{backgroundImage: 'linear-gradient(90deg, #f5ede3 0%, #f0e6dc 100%)', borderColor: '#c97a4c'}}>
                                                 <h3 className="text-lg font-black text-black flex items-center gap-3">
-                                                    <div className="p-2 bg-blue-100 rounded-xl">
-                                                        <CheckCircle className="w-6 h-6 text-blue-600" />
+                                                    <div className="p-2 rounded-xl" style={{backgroundColor: '#f5ede3', color: '#c97a4c'}}>
+                                                        <CheckCircle className="w-6 h-6" style={{color: '#c97a4c'}} />
                                                     </div>
                                                     Attendance Record
                                                 </h3>
@@ -1667,7 +1669,7 @@ export const AdminHub = () => {
                                             {reviewHistory.length > 0 && (
                                                 <div className="space-y-4 overflow-y-auto custom-scrollbar">
                                                     {/* Summary Stats */}
-                                                    <div className="grid grid-cols-2 gap-3 bg-gradient-to-br from-purple-50 to-blue-50 p-4 rounded-xl border border-purple-100 flex-shrink-0">
+                                                    <div className="grid grid-cols-2 gap-3 p-4 rounded-xl flex-shrink-0" style={{backgroundColor: 'rgb(243, 232, 255)', borderColor: '#c97a4c', borderWidth: '1px'}}>
                                                         <div className="text-center">
                                                             <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Total Reviews</p>
                                                             <p className="text-2xl font-black text-purple-600 mt-1">{reviewHistory.length}</p>
@@ -1721,7 +1723,7 @@ export const AdminHub = () => {
                                                             <button
                                                                 onClick={() => setReviewHistoryPeriodFilter('monthly')}
                                                                 className={`px-2 py-1 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${reviewHistoryPeriodFilter === 'monthly'
-                                                                    ? 'bg-blue-600 text-white shadow-lg'
+                                                                    ? 'text-white'
                                                                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                                                     }`}
                                                             >
@@ -1832,8 +1834,8 @@ export const AdminHub = () => {
             {confirmDemoteId && (
                 <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-[#020617]/95 backdrop-blur-md" onClick={() => setConfirmDemoteId(null)} />
-                    <div className="relative bg-white border border-blue-100 p-8 rounded-[2.5rem] max-w-md w-full text-center shadow-2xl animate-in zoom-in-95 duration-300">
-                        <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-blue-100">
+                    <div className="relative bg-white border-2 p-8 rounded-[2.5rem] max-w-md w-full text-center shadow-2xl animate-in zoom-in-95 duration-300" style={{borderColor: '#c97a4c'}}>
+                        <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 border-2" style={{backgroundColor: '#f5ede3', color: '#c97a4c', borderColor: '#c97a4c'}}>
                             <TrendingDown size={40} />
                         </div>
                         <h3 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">Revoke Admin Tiers?</h3>
@@ -1844,7 +1846,7 @@ export const AdminHub = () => {
                             <button onClick={() => setConfirmDemoteId(null)} className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-bold hover:text-white transition-all active:scale-95">Cancel</button>
                             <button
                                 onClick={() => { demoteToEmployee(confirmDemoteId); setConfirmDemoteId(null); }}
-                                className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-95"
+                                className="flex-1 py-4 text-white rounded-2xl font-bold transition-all active:scale-95" style={{backgroundColor: '#c97a4c', boxShadow: '0 20px 25px -5px rgba(201, 122, 76, 0.2)'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
                             >
                                 Confirm Demote
                             </button>

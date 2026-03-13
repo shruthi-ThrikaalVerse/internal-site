@@ -302,7 +302,7 @@ const DocumentManagement: React.FC = () => {
     (async () => {
       try {
         if (doc.id && selectedEmployee) {
-          const full = await getDocument(selectedEmployee.employeeId, doc.id);
+          const full = await getDocument(selectedEmployee.employeeId, doc.id as number);
           if (full && full.fileDataBase64) {
             const byteChars = atob(full.fileDataBase64);
             const byteNumbers = new Array(byteChars.length).fill(0).map((_, i) => byteChars.charCodeAt(i));
@@ -487,7 +487,7 @@ const DocumentManagement: React.FC = () => {
           <button
             onClick={handleBulkExport}
             className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-sm transition-all ${selectedIds.size > 0
-              ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-100'
+              ? 'text-white'
               : 'bg-white border border-slate-200 text-black hover:bg-slate-50'
               }`}
           >
@@ -580,7 +580,7 @@ const DocumentManagement: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-50 bg-white">
               {filteredEmployees.map((emp: any) => (
-                <tr key={emp.id} className={`hover:bg-slate-50/50 transition-colors group ${selectedIds.has(emp.id) ? 'bg-indigo-50/20' : ''}`}>
+                <tr key={emp.id} className={`hover:bg-slate-50/50 transition-colors group ${selectedIds.has(emp.id) ? 'bg-[#f0e6dc]/20' : ''}`}>
                   <td className="py-6 pl-8 pr-4">
                     <input
                       aria-label={`Select ${emp.fullName}`}
@@ -607,7 +607,7 @@ const DocumentManagement: React.FC = () => {
                           aria-label={`Manage ${type} document for ${emp.fullName}`}
                           onClick={() => setSelectedEmployee(emp)}
                           className={`p-2 rounded-xl transition-all mx-auto ${status === 'verified' ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' :
-                            status === 'uploaded' ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' :
+                            status === 'uploaded' ? 'bg-[#f5ede3] text-[#8b5a3c]' : 
                               'bg-slate-50 text-slate-400 hover:bg-slate-100'
                             }`}
                           title={`${type}: ${status}`}
@@ -620,7 +620,7 @@ const DocumentManagement: React.FC = () => {
                   <td className="py-6 pr-8 pl-4 text-right">
                     <button
                       onClick={() => setSelectedEmployee(emp)}
-                      className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm whitespace-nowrap"
+                      className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm whitespace-nowrap" style={{backgroundColor: '#f5ede3', color: '#8b5a3c'}} onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#c97a4c'; e.currentTarget.style.color = 'white';}} onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#f5ede3'; e.currentTarget.style.color = '#8b5a3c';}}
                     >
                       Manage
                     </button>
@@ -668,7 +668,7 @@ const DocumentManagement: React.FC = () => {
                     <div key={type} className="bg-white border border-slate-100 p-5 rounded-3xl flex items-center justify-between group hover:shadow-lg hover:shadow-indigo-500/5 transition-all">
                       <div className="flex items-center gap-4 min-w-0 flex-1">
                         <div className={`p-3 rounded-2xl transition-colors flex-shrink-0 ${status === 'verified' ? 'bg-emerald-50 text-emerald-600' :
-                          status === 'uploaded' ? 'bg-blue-50 text-blue-600' :
+                          status === 'uploaded' ? 'bg-[#f5ede3] text-[#8b5a3c]' : 
                             'bg-slate-50 text-slate-400'
                           }`}>
                           <Icon name={type === 'Educational Certificate' ? 'GraduationCap' : 'FileText'} className="w-6 h-6" />
@@ -679,7 +679,7 @@ const DocumentManagement: React.FC = () => {
                             <p className="text-[9px] font-bold text-indigo-600 truncate max-w-[200px]">{doc.fileName}</p>
                           ) : (
                             <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${status === 'verified' ? 'text-emerald-600' :
-                              status === 'uploaded' ? 'text-blue-600' :
+                              status === 'uploaded' ? 'text-[#8b5a3c]' : 
                                 'text-slate-400'
                               }`}>
                               {status.toUpperCase()}
@@ -694,7 +694,7 @@ const DocumentManagement: React.FC = () => {
                             <button
                               aria-label="View document"
                               onClick={() => viewDocument(doc!)}
-                              className="px-3 py-2 text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors border-none flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-md shadow-indigo-100 whitespace-nowrap"
+                              className="px-3 py-2 text-white rounded-lg transition-colors border-none flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-md whitespace-nowrap" style={{backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(201, 122, 76, 0.2)'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
                               title="View Document"
                             >
                               <Icon name="Eye" className="w-4 h-4" />
@@ -712,7 +712,7 @@ const DocumentManagement: React.FC = () => {
                               <button
                                 onClick={async () => {
                                   try {
-                                    await verifyDocument(selectedEmployee.employeeId, doc.id);
+                                    await verifyDocument(selectedEmployee.employeeId, doc.id as number);
                                     // Fetch latest docs from backend after verification
                                     const docs = await getDocumentsByEmployee(selectedEmployee.employeeId);
                                     const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({
@@ -818,7 +818,7 @@ const DocumentManagement: React.FC = () => {
           </div>
 
           <div className="flex gap-2 justify-end">
-            <button onClick={handleUploadSubmit} className="px-4 py-2 bg-indigo-600 text-white rounded-xl">Upload</button>
+            <button onClick={handleUploadSubmit} className="px-4 py-2 text-white rounded-xl" style={{backgroundColor: '#c97a4c'}}>Upload</button>
             <button onClick={closeUploadModal} className="px-4 py-2 bg-white border rounded-xl text-black">Cancel</button>
           </div>
         </div>
@@ -833,7 +833,7 @@ const DocumentManagement: React.FC = () => {
       >
         {viewingDoc && (
           <div className="space-y-6">
-            <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-between">
+            <div className="p-4 border rounded-2xl flex items-center justify-between" style={{backgroundColor: '#f5ede3', borderColor: '#c97a4c', borderWidth: '2px'}}>
               <div className="flex items-center gap-3 min-w-0">
                 <Icon name="FileText" className="w-5 h-5 text-indigo-600 flex-shrink-0" />
                 <span className="text-sm font-black text-indigo-900 truncate">{viewingDoc.fileName || 'document.pdf'}</span>
@@ -873,12 +873,12 @@ const DocumentManagement: React.FC = () => {
 
               <div className="absolute bottom-10 right-10">
                 <div className="p-5 bg-white/90 backdrop-blur-xl rounded-[24px] border border-slate-100 shadow-2xl flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${viewingDoc.status === 'verified' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${viewingDoc.status === 'verified' ? 'bg-emerald-50 text-emerald-600' : 'bg-[#f5ede3] text-[#8b5a3c]'}`}>
                     <Icon name={viewingDoc.status === 'verified' ? 'CheckCircle2' : 'FileCheck'} className="w-6 h-6" />
                   </div>
                   <div className="text-left">
                     <p className="text-[10px] font-black text-black uppercase leading-none mb-1">Audit Status</p>
-                    <p className={`text-sm font-black uppercase tracking-widest ${viewingDoc.status === 'verified' ? 'text-emerald-600' : 'text-blue-600'}`}>{viewingDoc.status}</p>
+                    <p className={`text-sm font-black uppercase tracking-widest ${viewingDoc.status === 'verified' ? 'text-emerald-600' : 'text-[#8b5a3c]'}`}>{viewingDoc.status}</p>
                   </div>
                 </div>
               </div>
@@ -887,7 +887,7 @@ const DocumentManagement: React.FC = () => {
             <div className="flex gap-4">
               <button
                 onClick={() => handleDownloadSingle(viewingDoc)}
-                className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-100 active:scale-95 whitespace-nowrap"
+                className="flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95 whitespace-nowrap" style={{backgroundColor: '#c97a4c', boxShadow: '0 20px 25px -5px rgba(201, 122, 76, 0.2)'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
               >
                 <Icon name="Download" className="w-4 h-4 text-white" /> Download Original File
               </button>

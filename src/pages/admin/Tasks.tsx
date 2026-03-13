@@ -772,13 +772,14 @@ const Tasks: React.FC = () => {
           <p className="text-slate-500 text-sm font-medium">Delegate operational objectives to Personnel, teams and units.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex bg-gradient-to-r from-indigo-100/50 to-purple-100/50 p-1 rounded-2xl border border-indigo-100/30 shadow-sm mr-2">
+          <div className="flex p-1 rounded-2xl border shadow-sm mr-2" style={{background: 'linear-gradient(to right, rgba(201, 122, 76, 0.1), rgba(201, 122, 76, 0.1))', borderColor: 'rgba(201, 122, 76, 0.2)'}}>
             {['tasks', 'teams'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
-                className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === tab ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg' : 'text-slate-500 hover:text-indigo-600'
+                className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === tab ? 'text-white shadow-lg' : 'text-slate-500 hover:text-amber-700'
                   }`}
+                style={activeTab === tab ? {background: 'linear-gradient(to right, #c97a4c, #a56137)'} : {}}
               >
                 {tab === 'tasks' ? 'Objectives' : 'Team Builder'}
               </button>
@@ -798,14 +799,14 @@ const Tasks: React.FC = () => {
                 });
                 setIsModalOpen(true);
               }}
-              className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-white rounded-2xl hover:opacity-90 hover:shadow-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-purple-200 transition-all active:scale-95"
+              className="flex items-center gap-2 px-6 py-3.5 text-white rounded-2xl hover:opacity-90 hover:shadow-xl font-black text-xs uppercase tracking-widest transition-all active:scale-95" style={{backgroundColor: '#c97a4c', boxShadow: 'rgba(201, 122, 76, 0.2) 0px 20px 25px -5px'}}
             >
               <Icon name="Plus" className="w-5 h-5" /> Create Task
             </button>
           ) : (
             <button
               onClick={handleOpenTeamModal}
-              className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white rounded-2xl hover:opacity-90 hover:shadow-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-teal-200 transition-all active:scale-95"
+              className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white rounded-2xl hover:opacity-90 hover:shadow-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-200 transition-all active:scale-95"
             >
               <Icon name="Users" className="w-5 h-5" /> New Team
             </button>
@@ -915,7 +916,7 @@ const Tasks: React.FC = () => {
                         value={task.status}
                         onChange={(e) => updateTaskStatus(task.id, e.target.value as any)}
                         className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border backdrop-blur-sm transition-all shadow-sm ${task.status === 'completed' ? 'bg-gradient-to-r from-emerald-500/30 to-green-400/30 text-emerald-800 border-emerald-400/40' :
-                          task.status === 'in-progress' ? 'bg-gradient-to-r from-blue-500/30 to-cyan-400/30 text-blue-800 border-blue-400/40' :
+                          task.status === 'in-progress' ? 'bg-gradient-to-r from-amber-500/30 to-orange-400/30 text-amber-800 border-amber-400/40' :
                             'bg-white/60 text-slate-600 border-slate-300/50'
                           }`}>
                         <option value="pending">⏳ Pending</option>
@@ -1007,7 +1008,7 @@ const Tasks: React.FC = () => {
               <p className="text-slate-300 text-[10px] font-medium mt-2">Start by creating your first team!</p>
               <button
                 onClick={handleOpenTeamModal}
-                className="mt-6 px-8 py-3.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 hover:shadow-xl transition-all shadow-lg shadow-teal-200"
+                className="mt-6 px-8 py-3.5 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 hover:shadow-xl transition-all shadow-lg shadow-emerald-200"
               >
                 🛠️ Build First Team
               </button>
@@ -1198,7 +1199,7 @@ const Tasks: React.FC = () => {
 
           <div className="pt-6 border-t border-slate-100 flex gap-4">
             <button type="button" onClick={() => { setIsTeamModalOpen(false); setEditingTeamId(null); }} className="flex-1 py-4 text-slate-400 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all text-black">Abort</button>
-            <button type="submit" className="flex-1 py-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-teal-100 hover:opacity-90 transition-all active:scale-95">
+            <button type="submit" className="flex-1 py-4 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all active:scale-95" style={{backgroundColor: '#c97a4c', boxShadow: 'rgba(201, 122, 76, 0.2) 0px 20px 25px -5px'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}>
               {editingTeamId ? "Update Team" : "🚀 Commit Prepared Team"}
             </button>
           </div>
