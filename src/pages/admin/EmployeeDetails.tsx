@@ -327,7 +327,7 @@ const EmployeeDetails: React.FC = () => {
         <p className="text-slate-600 mb-6">The employee you're looking for doesn't exist.</p>
         <button
           onClick={() => navigate('/admin/employee-hub')}
-          className="px-6 py-3 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 transition-colors"
+          className="px-6 py-3 text-white font-black rounded-xl transition-colors" style={{backgroundColor: '#c97a4c'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
         >
           Back to Employee Hub
         </button>
@@ -354,9 +354,10 @@ const EmployeeDetails: React.FC = () => {
               onClick={() => setActiveTab('personal')}
               className={`flex-1 px-6 py-5 font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
                 activeTab === 'personal'
-                  ? 'bg-indigo-600 text-white'
+                  ? 'text-white'
                   : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
               }`}
+              style={{backgroundColor: activeTab === 'personal' ? '#c97a4c' : ''}}
             >
               <Icon name="User" className="w-5 h-5" />
               Personal Details
@@ -365,9 +366,10 @@ const EmployeeDetails: React.FC = () => {
               onClick={() => setActiveTab('performance')}
               className={`flex-1 px-6 py-5 font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
                 activeTab === 'performance'
-                  ? 'bg-indigo-600 text-white'
+                  ? 'text-white'
                   : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
               }`}
+              style={{backgroundColor: activeTab === 'performance' ? '#c97a4c' : ''}}
             >
               <Icon name="BarChart3" className="w-5 h-5" />
               Performance Metrics
@@ -391,9 +393,8 @@ const EmployeeDetails: React.FC = () => {
                     {selectedEmployee.employeeId} • {selectedEmployee.designation}
                   </p>
 
-                  {/* Badges */}
                   <div className="mt-6 flex flex-wrap gap-2 justify-center">
-                    <span className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full text-xs font-black uppercase tracking-widest border border-indigo-100">
+                    <span className="px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest border" style={{backgroundColor: '#f5ede3', color: '#8b5a3c', borderColor: '#c97a4c'}}>
                       {selectedEmployee.department}
                     </span>
                     <span className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-xs font-black uppercase tracking-widest border border-emerald-100">
@@ -402,16 +403,17 @@ const EmployeeDetails: React.FC = () => {
                     <span
                       className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest border ${
                         selectedEmployee.employmentType === 'Full-time'
-                          ? 'bg-blue-50 text-blue-600 border-blue-100'
+                          ? 'bg-[#f5ede3] text-[#8b5a3c] border-[2px]'
                           : selectedEmployee.employmentType === 'Part-time'
                             ? 'bg-purple-50 text-purple-600 border-purple-100'
                             : 'bg-amber-50 text-amber-600 border-amber-100'
                       }`}
+                      style={selectedEmployee.employmentType === 'Full-time' ? {borderColor: '#c97a4c'} : {}}
                     >
                       {selectedEmployee.employmentType}
                     </span>
                     {(selectedEmployee as any).role && (
-                      <span className="px-4 py-2 bg-indigo-600 text-white rounded-full text-xs font-black uppercase tracking-widest border border-indigo-600">
+                  <span className="px-4 py-2 text-white rounded-full text-xs font-black uppercase tracking-widest border" style={{backgroundColor: '#c97a4c', borderColor: '#c97a4c'}}>
                         {(selectedEmployee as any).role}
                       </span>
                     )}
@@ -434,7 +436,7 @@ const EmployeeDetails: React.FC = () => {
                 </div>
 
                 {/* Credentials Section */}
-                <div className="bg-indigo-600 p-6 rounded-[32px] text-white shadow-xl shadow-indigo-100 relative overflow-hidden group">
+                <div className="p-6 rounded-[32px] text-white relative overflow-hidden group" style={{backgroundColor: '#c97a4c', boxShadow: '0 20px 25px -5px rgba(201, 122, 76, 0.2)'}}>
                   <div className="absolute right-0 bottom-0 opacity-10 group-hover:scale-110 transition-transform">
                     <Icon name="ShieldCheck" className="w-32 h-32" />
                   </div>
@@ -765,9 +767,10 @@ const EmployeeDetails: React.FC = () => {
                               onClick={() => setPerformanceFormPeriod(period)}
                               className={`flex-1 px-3 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
                                 performanceFormPeriod === period
-                                  ? 'bg-indigo-600 text-white shadow-lg'
+                                  ? 'text-white rounded-lg'
                                   : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
                               }`}
+                              style={performanceFormPeriod === period ? {backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'} : undefined}
                             >
                               {period === 'monthly' ? 'Monthly' : period === 'quarterly' ? 'Quarterly' : 'Yearly'}
                             </button>
@@ -883,9 +886,10 @@ const EmployeeDetails: React.FC = () => {
                           onClick={() => setReviewHistoryPeriodFilter('monthly')}
                           className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
                             reviewHistoryPeriodFilter === 'monthly'
-                              ? 'bg-blue-600 text-white shadow-lg'
+                              ? 'text-white rounded-lg'
                               : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                           }`}
+                          style={reviewHistoryPeriodFilter === 'monthly' ? {backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'} : undefined}
                         >
                           Monthly
                         </button>

@@ -9,7 +9,10 @@ const AdminDocuments: React.FC = () => {
     <div className="min-h-screen bg-slate-50">
       <div className="flex justify-end p-4">
         <button
-          className="px-6 py-3 rounded-2xl bg-blue-600 text-white font-black text-xs uppercase tracking-widest shadow hover:bg-blue-700 transition-all"
+          className="px-6 py-3 rounded-2xl text-white font-black text-xs uppercase tracking-widest shadow transition-all"
+          style={{backgroundColor: '#c97a4c'}}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
           onClick={() => setShowMyDocs(true)}
         >
           My Documents

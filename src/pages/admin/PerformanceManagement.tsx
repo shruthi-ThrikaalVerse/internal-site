@@ -66,7 +66,7 @@ interface ProgressBarProps {
 
 const ProgressBar: React.FC<ProgressBarProps> = ({
   value,
-  fillClassName = 'h-2 rounded-full bg-blue-500 [width:var(--width)]'
+  fillClassName = 'h-2 rounded-full bg-amber-700 [width:var(--width)]'
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   useStyleProperty(ref, '--width', `${value}%`);
@@ -110,7 +110,7 @@ const EmployeePerformanceModal: React.FC<{
 
   const getPerformanceColor = (score: number) => {
     if (score >= 4.5) return 'text-emerald-600 bg-emerald-50 border-emerald-100';
-    if (score >= 3.5) return 'text-blue-600 bg-blue-50 border-blue-100';
+    if (score >= 3.5) return 'text-amber-700 bg-amber-50 border-amber-100';
     if (score >= 2.5) return 'text-amber-600 bg-amber-50 border-amber-100';
     return 'text-rose-600 bg-rose-50 border-rose-100';
   };
@@ -129,7 +129,7 @@ const EmployeePerformanceModal: React.FC<{
         {/* Modal Header */}
         <div className="p-4 md:p-6 border-b flex items-center justify-between bg-white sticky top-0 z-10">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
+            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-amber-700 to-orange-600 flex items-center justify-center text-white text-2xl font-bold">
               {(employee.name || 'U').charAt(0)}
             </div>
             <div>
@@ -151,7 +151,7 @@ const EmployeePerformanceModal: React.FC<{
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Performance Score */}
             <div className="md:col-span-2 space-y-6">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-100">
                 <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-4 mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Performance Score</h3>
                   <div className="flex items-center gap-2">
@@ -203,7 +203,7 @@ const EmployeePerformanceModal: React.FC<{
                       <p className="text-sm text-gray-600">Task Completion</p>
                       <div className="flex items-center gap-2">
                         <div className="w-32 bg-gray-200 rounded-full h-2">
-                          <ProgressBar value={employee.taskCompletion} fillClassName="h-2 rounded-full bg-blue-500 [width:var(--width)]" />
+                          <ProgressBar value={employee.taskCompletion} fillClassName="h-2 rounded-full bg-amber-700 [width:var(--width)]" />
                         </div>
                         <span className="text-lg font-bold text-gray-900">{employee.taskCompletion}%</span>
                       </div>
@@ -225,14 +225,14 @@ const EmployeePerformanceModal: React.FC<{
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-900">Current Goals</h3>
-                  <span className="text-sm text-blue-600 font-medium">{employee.goals.length} Active</span>
+                  <span className="text-sm text-amber-700 font-medium">{employee.goals.length} Active</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {employee.goals.map((goal, index) => (
-                    <div key={index} className="p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50/30 transition-colors">
+                    <div key={index} className="p-4 border border-gray-200 rounded-xl hover:border-amber-300 hover:bg-amber-50/30 transition-colors">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                          <TargetIcon className="w-4 h-4 text-blue-600" />
+                          <TargetIcon className="w-4 h-4 text-amber-700" />
                           <h4 className="font-medium text-gray-900">{goal.title}</h4>
                         </div>
                         <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
@@ -247,7 +247,7 @@ const EmployeePerformanceModal: React.FC<{
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <ProgressBar
                             value={goal.progress}
-                            fillClassName={`h-2 rounded-full [width:var(--width)] ${goal.progress >= 70 ? 'bg-emerald-500' : goal.progress >= 40 ? 'bg-blue-500' : 'bg-amber-500'}`}
+                            fillClassName={`h-2 rounded-full [width:var(--width)] ${goal.progress >= 70 ? 'bg-emerald-500' : goal.progress >= 40 ? 'bg-amber-700' : 'bg-amber-500'}`}
                           />
                         </div>
                       </div>
@@ -276,8 +276,8 @@ const EmployeePerformanceModal: React.FC<{
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 uppercase tracking-wide mb-1">Manager</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                        <User className="w-3 h-3 text-blue-600" />
+                      <div className="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center">
+                        <User className="w-3 h-3 text-amber-700" />
                       </div>
                       <p className="font-medium text-gray-900">{employee.manager}</p>
                     </div>
@@ -285,7 +285,7 @@ const EmployeePerformanceModal: React.FC<{
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 uppercase tracking-wide mb-1">Active Projects</span>
                     <div className="flex items-center gap-2">
-                      <FolderCheck className="w-4 h-4 text-blue-600" />
+                      <FolderCheck className="w-4 h-4 text-amber-700" />
                       <p className="font-medium text-gray-900">{employee.projects} Projects</p>
                     </div>
                   </div>
@@ -368,7 +368,7 @@ const EmployeePerformanceModal: React.FC<{
               onScheduleReview(employee.name);
               onClose();
             }}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm hover:shadow"
+            className="px-6 py-3 bg-gradient-to-r from-amber-700 to-orange-600 text-white font-medium rounded-lg hover:from-amber-800 hover:to-orange-700 transition-all shadow-sm hover:shadow"
           >
             Schedule Review
           </button>
@@ -703,9 +703,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
   // Fetch remote performance APIs once on mount
   useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+    // Removed all localStorage usage, only HTTP-only cookies are used
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
     const fetchTop = async () => {
       try {
@@ -972,7 +971,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
   const getPerformanceColor = (score: number) => {
     if (score >= 4.5) return 'text-emerald-600 bg-emerald-50 border-emerald-100';
-    if (score >= 3.5) return 'text-blue-600 bg-blue-50 border-blue-100';
+    if (score >= 3.5) return 'text-amber-700 bg-amber-50 border-amber-100';
     if (score >= 2.5) return 'text-amber-600 bg-amber-50 border-amber-100';
     return 'text-rose-600 bg-rose-50 border-rose-100';
   };
@@ -1066,7 +1065,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
     const statusLower = status?.toLowerCase() || '';
     switch (statusLower) {
       case 'completed': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'in progress': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'in progress': return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'on review': return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'pending': return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'overdue': return 'bg-rose-50 text-rose-700 border-rose-200';
@@ -1137,8 +1136,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
     // Map numeric rating to enum expected by backend
     const ratingEnum = reviewRating === 5 ? 'FIVE' : reviewRating === 4 ? 'FOUR' : reviewRating === 3 ? 'THREE' : reviewRating === 2 ? 'TWO' : 'ONE';
 
-    const token = localStorage.getItem('token');
-    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+    // Removed all localStorage usage, only HTTP-only cookies are used
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
     (async () => {
       try {
@@ -1169,8 +1168,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
     loadPerformanceData();
 
     // Refresh dashboard API data
-    const token = localStorage.getItem('token');
-    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+    // Removed all localStorage usage, only HTTP-only cookies are used
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
     const fetchDashboard = async () => {
       try {
@@ -1297,22 +1296,22 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
           <div className="flex items-center gap-3 flex-wrap">
             <div className="relative flex-1 md:flex-none">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-400 w-5 h-5" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-amber-600 w-5 h-5" />
               <input
                 type="text"
                 placeholder="Search employees..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 pr-5 py-3 border-2 border-indigo-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm w-full md:w-72 shadow-lg font-semibold hover:border-indigo-400 transition-colors text-black"
+                className="pl-12 pr-5 py-3 border-2 border-amber-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-amber-600 bg-white text-sm w-full md:w-72 shadow-lg font-semibold hover:border-amber-400 transition-colors text-black"
               />
             </div>
 
             <button
               onClick={handleRefreshData}
-              className="p-3 border-2 border-blue-300 rounded-xl hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl bg-gradient-to-br from-blue-50 to-blue-100"
+              className="p-3 border-2 border-amber-300 rounded-xl hover:bg-amber-50 transition-all shadow-lg hover:shadow-xl bg-gradient-to-br from-amber-50 to-amber-100"
               title="Refresh data"
             >
-              <Activity className="w-5 h-5 text-blue-600 font-bold" />
+              <Activity className="w-5 h-5 text-amber-700 font-bold" />
             </button>
 
             <button
@@ -1328,7 +1327,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
         {/* Live Updates */}
         {liveUpdates.length > 0 && (
-          <div className="mb-6 p-6 bg-gradient-to-br from-cyan-50 to-blue-50 border-2 border-cyan-300 rounded-2xl shadow-xl">
+          <div className="mb-6 p-6 bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-amber-300 rounded-2xl shadow-xl">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-3 h-3 bg-cyan-500 rounded-full animate-pulse shadow-lg shadow-cyan-400"></div>
               <span className="text-sm font-black text-cyan-900 uppercase tracking-widest">🔔 Live Activity Feed</span>
@@ -1351,15 +1350,15 @@ const EmployeePerformanceDashboard: React.FC = () => {
       {/* Main Content */}
       <div className="space-y-8">
         {/* Tasks Overview & Reviews (moved to top) */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border-2 border-blue-300 shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 border-b-2 border-blue-700">
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300 shadow-xl overflow-hidden">
+          <div className="bg-gradient-to-r from-amber-700 to-orange-600 p-6 border-b-2 border-amber-800">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <BarChart2 className="w-6 h-6 text-white font-bold" />
                   <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">📊 Tasks Overview</h2>
                 </div>
-                <p className="text-sm font-semibold text-blue-100">Monitor and review all tasks with comprehensive analytics</p>
+                <p className="text-sm font-semibold text-amber-100">Monitor and review all tasks with comprehensive analytics</p>
               </div>
 
               <div className="flex items-center gap-3 flex-wrap">
@@ -1368,14 +1367,14 @@ const EmployeePerformanceDashboard: React.FC = () => {
                     <button
                       key={tab}
                       onClick={() => setTaskTab(tab as any)}
-                      className={`px-5 py-3 text-xs font-black rounded-xl transition-all uppercase tracking-widest ${taskTab === tab ? 'bg-white text-blue-700 shadow-lg' : 'text-white hover:bg-white/20'}`}
+                      className={`px-5 py-3 text-xs font-black rounded-xl transition-all uppercase tracking-widest ${taskTab === tab ? 'bg-white text-amber-700 shadow-lg' : 'text-white hover:bg-white/20'}`}
                     >{tab === 'all' ? '📋 All Tasks' : tab === 'team' ? '👥 Team Tasks' : '👤 Individual Tasks'}</button>
                   ))}
                 </div>
                 <button
                   onClick={handleRefreshTasks}
                   disabled={apiTasksLoading}
-                  className="px-5 py-3 bg-white text-blue-700 border-none rounded-xl text-xs font-black hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-5 py-3 bg-white text-amber-700 border-none rounded-xl text-xs font-black hover:bg-amber-50 transition-all shadow-lg hover:shadow-xl uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
                   title={apiTasksLoading ? 'Loading tasks...' : 'Refresh tasks'}
                 >
                   {apiTasksLoading ? '⏳ Loading...' : '🔄 Refresh Tasks'}
@@ -1389,16 +1388,16 @@ const EmployeePerformanceDashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
               {/* All Tasks Card */}
               <div
-                className="p-6 rounded-2xl border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center cursor-pointer hover:border-blue-400 hover:shadow-xl transition-all duration-200 shadow-lg"
+                className="p-6 rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center cursor-pointer hover:border-amber-400 hover:shadow-xl transition-all duration-200 shadow-lg"
                 onClick={() => setTaskTab('all')}
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-200 to-cyan-200 flex items-center justify-center shadow-md">
-                    <CheckSquare className="w-8 h-8 text-blue-700 font-bold" />
+                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-amber-200 to-orange-200 flex items-center justify-center shadow-md">
+                    <CheckSquare className="w-8 h-8 text-amber-700 font-bold" />
                   </div>
                   <div>
-                    <p className="text-xs text-blue-600 font-black uppercase tracking-widest">All Tasks</p>
-                    <p className="text-3xl font-black text-blue-900">{totalTasksCount}</p>
+                    <p className="text-xs text-amber-700 font-black uppercase tracking-widest">All Tasks</p>
+                    <p className="text-3xl font-black text-amber-900">{totalTasksCount}</p>
                   </div>
                 </div>
               </div>
@@ -1438,8 +1437,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
           </div>
 
           {/* Task Filters */}
-          <div className="mb-6 mt-6 bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl border-2 border-purple-200 shadow-lg overflow-hidden">
-            <div className="p-5 md:p-6 bg-gradient-to-r from-purple-600 to-blue-600 border-b-2 border-purple-700">
+          <div className="mb-6 mt-6 bg-gradient-to-br from-purple-50 to-orange-50 rounded-2xl border-2 border-purple-200 shadow-lg overflow-hidden">
+            <div className="p-5 md:p-6 bg-gradient-to-r from-purple-600 to-orange-600 border-b-2 border-purple-700">
               <h3 className="text-xl md:text-2xl font-black text-white tracking-tight">🎯 Task Filters</h3>
             </div>
 
@@ -1543,15 +1542,15 @@ const EmployeePerformanceDashboard: React.FC = () => {
             {apiTasksLoading ? (
               <div className="col-span-full flex items-center justify-center py-12">
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4 animate-pulse">
-                    <CheckSquare className="w-8 h-8 text-blue-600" />
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 mb-4 animate-pulse">
+                    <CheckSquare className="w-8 h-8 text-amber-700" />
                   </div>
                   <p className="text-gray-600 font-semibold">Loading tasks from API...</p>
                 </div>
               </div>
             ) : visibleTasks.length > 0 ? (
               visibleTasks.map(task => (
-                <div key={task.id} className="group p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all duration-200 bg-white">
+                <div key={task.id} className="group p-4 border border-gray-200 rounded-xl hover:border-amber-300 hover:shadow-md transition-all duration-200 bg-white">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
@@ -1569,8 +1568,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                        <User className="w-3 h-3 text-blue-600" />
+                      <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                        <User className="w-3 h-3 text-amber-700" />
                       </div>
                       <span className="text-xs font-medium text-gray-700">{task.assigneeName}</span>
                     </div>
@@ -1588,7 +1587,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                     </div>
                     <button
                       onClick={() => openReviewModal(task)}
-                      className="px-3 py-1.5 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 text-xs font-medium rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all duration-200 shadow-sm"
+                      className="px-3 py-1.5 bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700 text-xs font-medium rounded-lg hover:from-amber-100 hover:to-amber-200 transition-all duration-200 shadow-sm"
                     >
                       Add Review
                     </button>
@@ -1613,7 +1612,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
         <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm">
+              <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-sm">
                 <Users className="w-7 h-7 text-white" />
               </div>
               <div>
@@ -1666,14 +1665,14 @@ const EmployeePerformanceDashboard: React.FC = () => {
           <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-lg p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-blue-600" />
+                <BarChart3 className="w-5 h-5 text-amber-700" />
                 <h2 className="text-lg font-semibold text-gray-900">Department-wise Performance</h2>
               </div>
               <div className="relative w-full sm:w-56">
                 <select
                   value={selectedDepartment}
                   onChange={(e) => setSelectedDepartment(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm appearance-none shadow-sm text-black"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600 bg-white text-sm appearance-none shadow-sm text-black"
                   title="Select department"
                 >
                   <option value="All">All Departments</option>
@@ -1702,7 +1701,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                     <tr key={dept.name} className="hover:bg-gray-50 transition-colors">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-sm ${dept.name === 'Sales' ? 'bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600' :
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-sm ${dept.name === 'Sales' ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-700' :
                             dept.name === 'Development' ? 'bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600' :
                               dept.name === 'Support' ? 'bg-gradient-to-br from-amber-100 to-amber-200 text-amber-600' :
                                 dept.name === 'Marketing' ? 'bg-gradient-to-br from-pink-100 to-pink-200 text-pink-600' :
@@ -1724,7 +1723,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                           <div className="w-24 bg-gray-200 rounded-full h-2">
                             <ProgressBar
                               value={dept.avgKPIScore}
-                              fillClassName="h-2 rounded-full bg-blue-500 [width:var(--width)]"
+                              fillClassName="h-2 rounded-full bg-amber-500 [width:var(--width)]"
                             />
                           </div>
                           <span className="text-sm font-medium text-gray-900 min-w-[40px]">{dept.avgKPIScore}%</span>
@@ -1760,12 +1759,12 @@ const EmployeePerformanceDashboard: React.FC = () => {
           {/* KPI Categories */}
           <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-lg p-6">
             <div className="flex items-center gap-2 mb-6">
-              <Target className="w-5 h-5 text-blue-600" />
+              <Target className="w-5 h-5 text-amber-700" />
               <h2 className="text-lg font-semibold text-gray-900">KPI Categories</h2>
             </div>
             <div className="space-y-6">
               {[
-                { label: 'KPI Score', value: 80, color: 'bg-gradient-to-r from-blue-500 to-blue-600' },
+                { label: 'KPI Score', value: 80, color: 'bg-gradient-to-r from-amber-500 to-orange-600' },
                 { label: 'Task Completion', value: 92, color: 'bg-gradient-to-r from-emerald-500 to-emerald-600' },
                 { label: 'Quality', value: 88, color: 'bg-gradient-to-r from-amber-500 to-amber-600' },
                 { label: 'Attendance', value: 95, color: 'bg-gradient-to-r from-purple-500 to-purple-600' },
@@ -1890,10 +1889,10 @@ const EmployeePerformanceDashboard: React.FC = () => {
         <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-blue-600" />
+              <Users className="w-5 h-5 text-amber-700" />
               <h2 className="text-lg font-semibold text-gray-900">Employee Performance List</h2>
             </div>
-            <span className="text-sm font-medium px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+            <span className="text-sm font-medium px-3 py-1 bg-amber-100 text-amber-900 rounded-full">
               {filteredByDepartment.length} employees
             </span>
           </div>
@@ -1924,8 +1923,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
                     <tr key={emp.id} className="hover:bg-gray-50 transition-colors group">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center shadow-sm">
-                            <span className="text-sm font-bold text-blue-600">{(emp.name || 'U').charAt(0)}</span>
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center shadow-sm">
+                            <span className="text-sm font-bold text-amber-700">{(emp.name || 'U').charAt(0)}</span>
                           </div>
                           <div>
                             <p className="font-semibold text-gray-900 text-sm">{emp.name}</p>
@@ -1949,7 +1948,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                           <div className="w-16 bg-gray-200 rounded-full h-1.5">
                             <ProgressBar
                               value={emp.kpiScore}
-                              fillClassName={`h-1.5 rounded-full [width:var(--width)] ${emp.kpiScore >= 80 ? 'bg-emerald-500' : emp.kpiScore >= 60 ? 'bg-blue-500' : 'bg-amber-500'}`}
+                              fillClassName={`h-1.5 rounded-full [width:var(--width)] ${emp.kpiScore >= 80 ? 'bg-emerald-500' : emp.kpiScore >= 60 ? 'bg-amber-500' : 'bg-amber-500'}`}
                             />
                           </div>
                           <span className="text-sm font-medium text-gray-900">{emp.kpiScore}%</span>
@@ -1969,7 +1968,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                       <td className="p-4">
                         <button
                           onClick={() => handleViewEmployee(emp)}
-                          className="px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 text-sm font-medium rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all duration-200 shadow-sm"
+                          className="px-4 py-2 bg-gradient-to-r from-amber-50 to-orange-100 text-amber-700 text-sm font-medium rounded-lg hover:from-amber-100 hover:to-orange-200 transition-all duration-200 shadow-sm"
                         >
                           View Details
                         </button>
@@ -2000,8 +1999,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
             {/* Scrollable Content Area - All text is now black */}
             <div className="flex-1 overflow-y-auto p-6 space-y-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                <p className="text-sm font-semibold text-blue-900 mb-2">Task Details</p>
+              <div className="p-4 bg-amber-50 rounded-lg border border-amber-100">
+                <p className="text-sm font-semibold text-amber-900 mb-2">Task Details</p>
                 <p className="font-bold text-gray-900 text-sm md:text-base">{selectedTaskForReview.title}</p>
                 <p className="text-sm text-gray-900 mt-2 line-clamp-2">{selectedTaskForReview.description}</p>
               </div>
@@ -2106,7 +2105,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                       <select
                         disabled
                         title="Team members selection"
-                        className="text-blackw-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900 opacity-50"
+                        className="text-blackw-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600 bg-white text-sm text-gray-900 opacity-50"
                       >
                         <option className="text-gray-900">Error: No team ID found</option>
                       </select>
@@ -2133,7 +2132,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                       title="Select employee for review"
                       value={reviewEmployeeId}
                       onChange={(e) => setReviewEmployeeId(e.target.value)}
-                      className="text-black w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
+                      className="text-black w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600 bg-white text-sm text-gray-900"
                     >
                       <option value="" className="text-gray-900">Select employee</option>
                       {memberIds.length === 0 ? (
@@ -2175,7 +2174,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                       title="Select employee for review"
                       value={reviewEmployeeId}
                       onChange={(e) => setReviewEmployeeId(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600 bg-white text-sm text-gray-900"
                     >
                       <option value="" className="text-gray-900">Select employee</option>
                       {(apiEmployees.length > 0 ? apiEmployees : employees)
@@ -2196,7 +2195,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                   title="Select review rating"
                   value={reviewRating}
                   onChange={e => setReviewRating(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600 bg-white text-sm text-gray-900"
                 >
                   {[5, 4, 3, 2, 1].map(n => (
                     <option key={n} value={n} className="text-gray-900">
@@ -2211,7 +2210,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
                 <textarea
                   value={reviewComment}
                   onChange={e => setReviewComment(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-900 resize-none"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600 bg-white text-sm text-gray-900 resize-none"
                   placeholder="Provide constructive feedback about task execution, quality, and areas for improvement..."
                   rows={4}
                 />
@@ -2228,7 +2227,7 @@ const EmployeePerformanceDashboard: React.FC = () => {
               </button>
               <button
                 onClick={submitReview}
-                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm hover:shadow text-sm"
+                className="px-5 py-2.5 bg-gradient-to-r from-amber-700 to-amber-800 text-white font-medium rounded-lg hover:from-amber-800 hover:to-amber-900 transition-all shadow-sm hover:shadow text-sm"
               >
                 Submit Review
               </button>

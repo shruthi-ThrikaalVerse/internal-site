@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { AttendanceRecord } from '../../types.ts';
 import { GoogleGenAI } from "@google/genai";
-import { getUserSpecificKey } from '../../utils/storage.ts';
+
 import { useAuth } from '../../context/AuthContext.tsx';
 
 // Add this SYSTEM_HOLIDAYS array to the attendance component
@@ -75,15 +75,8 @@ const AdminAttendance: React.FC = () => {
   // Confirmation dialog state
   const [showCheckoutConfirm, setShowCheckoutConfirm] = useState(false);
 
-  // Create admin-specific storage key (scoped by admin.id)
-  const attendanceStorageKey = useMemo(() =>
-    getUserSpecificKey('admin_attendance_records', auth?.user?.id),
-    [auth?.user?.id]
-  );
-  const notificationsStorageKey = useMemo(() =>
-    getUserSpecificKey('admin_notifications_v1', auth?.user?.id),
-    [auth?.user?.id]
-  );
+  // Notifications can remain local, but attendance is backend-only
+
   const getTodayDateString = useCallback(() => {
     const today = new Date();
     return today.toISOString().split('T')[0];
@@ -175,21 +168,10 @@ const AdminAttendance: React.FC = () => {
     return records;
   }, [isHoliday, isWeekend, isWorkingSaturday]);
 
+  // Notification logic is now session-only (in-memory) or handled by backend
   const triggerNotification = useCallback((title: string, msg: string, icon: string, color: string) => {
-    const saved = JSON.parse(localStorage.getItem(notificationsStorageKey) || '[]');
-    const newNotif = {
-      id: `notif-${Date.now()}`,
-      title,
-      msg,
-      time: new Date().toISOString(),
-      icon,
-      color,
-      read: false,
-      type: 'info'
-    };
-    localStorage.setItem(notificationsStorageKey, JSON.stringify([newNotif, ...saved]));
-    window.dispatchEvent(new Event('storage'));
-  }, [notificationsStorageKey]);
+    // No-op: Integrate a UI toast system if needed.
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -212,107 +194,59 @@ const AdminAttendance: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       const today = getTodayString();
-
-      // Load local records first
-      const recordsStr = localStorage.getItem(getUserSpecificKey('admin_attendance_records'));
-      let records: AdminAttendanceRecord[] = recordsStr ? JSON.parse(recordsStr) : [];
-
-      // Attempt to sync today's record from the backend when user is authenticated
       if (auth?.isAuthenticated) {
         try {
           // Try likely endpoints - backend may expose one of these
           const endpoints = [
-            `/api/admin_attend/attendance?date=${encodeURIComponent(today)}`,
-            `/api/admin_attend/today`,
-            `/api/admin_attend/get-today`,
-            `/api/admin_attend/record?date=${encodeURIComponent(today)}`
+            `/api/employee_attend/attendance?date=${encodeURIComponent(today)}`,
+            `/api/employee_attend/today`,
+            `/api/employee_attend/get-today`,
+            `/api/employee_attend/record?date=${encodeURIComponent(today)}`
           ];
-
+          let rec = null;
           for (const ep of endpoints) {
             try {
               const resp = await fetch(`http://localhost:8085${ep}`, { credentials: 'include' });
               if (!resp.ok) continue;
               const data = await resp.json().catch(() => null);
               if (!data) continue;
-
-              // Normalize server response into a record object
-              let serverRecord: any = null;
-              if (Array.isArray(data) && data.length > 0) serverRecord = data[0];
-              else if (data.record) serverRecord = data.record;
-              else if (data.date || data.timeIn || data.id) serverRecord = data;
-
-              if (serverRecord && serverRecord.date === today) {
-                const idx = records.findIndex(r => r.date === today);
-                if (idx > -1) {
-                  records[idx] = { ...records[idx], ...serverRecord } as AdminAttendanceRecord;
-                } else {
-                  records.push(serverRecord as AdminAttendanceRecord);
-                }
-
-                // we merged today's server record; no need to try other endpoints
-                break;
-              }
-            } catch (err) {
-              // ignore and try next endpoint
-            }
+              if (Array.isArray(data) && data.length > 0) rec = data[0];
+              else if (data.record) rec = data.record;
+              else if (data.date || data.timeIn || data.id) rec = data;
+              if (rec && rec.date === today) break;
+            } catch { }
+          }
+          if (rec) {
+            setTodayRecord(rec);
+            setIsPunchedIn(!!rec.timeIn && !rec.timeOut);
+            setWorkDuration(rec.timeIn ? calculateDuration(rec.timeIn, rec.timeOut) : '00:00:00');
+            setCustomLocationName(rec.locationName || '');
+            setAttendanceRecords([rec]);
+          } else {
+            setTodayRecord(null);
+            setIsPunchedIn(false);
+            setWorkDuration('00:00:00');
+            setCustomLocationName('');
+            setAttendanceRecords([]);
           }
         } catch (err) {
-          console.warn('Failed to sync admin attendance from server:', err);
+          setAttendanceRecords([]);
+          setTodayRecord(null);
+          setIsPunchedIn(false);
+          setWorkDuration('00:00:00');
+          setCustomLocationName('');
         }
       }
-
-      // Generate absent records for missing working days
-      records = generateAbsentRecords(records);
-
-      // Sort by date (newest first)
-      records.sort((a, b) => b.date.localeCompare(a.date));
-
-      // Persist merged records and update state
-      localStorage.setItem(getUserSpecificKey('admin_attendance_records'), JSON.stringify(records));
-      setAttendanceRecords(records);
-
-      const rec = records.find((r: AdminAttendanceRecord) => r.date === today);
-
-      if (rec) {
-        const hasTimeIn = !!rec.timeIn;
-        const hasTimeOut = !!rec.timeOut;
-        const isActive = hasTimeIn && !hasTimeOut;
-
-        setTodayRecord(rec);
-        setIsPunchedIn(isActive);
-
-        if (hasTimeIn) {
-          const duration = calculateDuration(rec.timeIn, rec.timeOut);
-          setWorkDuration(duration);
-        } else {
-          setWorkDuration('00:00:00');
-        }
-
-        setCustomLocationName(rec.locationName || '');
-      } else {
-        setTodayRecord(null);
-        setIsPunchedIn(false);
-        setWorkDuration('00:00:00');
-        setCustomLocationName('');
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          (err) => console.warn('Geolocation error:', err.message),
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
       }
     };
-
-    // run loader
     loadData();
-
-    const handleStorage = () => { void loadData(); };
-    window.addEventListener('storage', handleStorage);
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        (err) => console.warn('Geolocation error:', err.message),
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-      );
-    }
-
-    return () => window.removeEventListener('storage', handleStorage);
-  }, [getTodayString, calculateDuration, generateAbsentRecords, auth?.user?.id, auth?.isAuthenticated]);
+  }, [getTodayString, calculateDuration, auth?.user?.id, auth?.isAuthenticated]);
 
   // Update work duration in real-time when checked in
   useEffect(() => {
@@ -366,20 +300,7 @@ const AdminAttendance: React.FC = () => {
       return;
     }
 
-    const recordsStr = localStorage.getItem(attendanceStorageKey);
-    const updated: AdminAttendanceRecord[] = recordsStr ? JSON.parse(recordsStr) : [];
-    const idx = updated.findIndex((r: AdminAttendanceRecord) => r.date === today);
-
-    // Check if already checked in today
-    if (idx > -1 && updated[idx].timeIn) {
-      triggerNotification(
-        'Already Checked In',
-        'You are already checked in for today.',
-        'Clock',
-        'text-amber-500 bg-amber-50'
-      );
-      return;
-    }
+    // No local check, rely on backend for status
 
     setIsResolvingLocation(true);
 
@@ -402,79 +323,32 @@ const AdminAttendance: React.FC = () => {
       locationName: locName
     };
 
-    // Try to persist to backend first. On failure, fall back to localStorage so app remains functional offline.
     try {
       const resp = await fetch('http://localhost:8085/api/employee_attend/check-in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ date: today, timeIn: newRecord.timeIn, location: locStr, locationName: locName })
+        body: JSON.stringify({ date: today, timeIn: now.toISOString(), location: locStr, locationName: locName })
       });
-
       if (resp.ok) {
-        const data = await resp.json().catch(() => null);
-        const serverRecord = data?.record || data || newRecord;
-
-        // Merge server-provided values into local record
-        if (idx > -1) {
-          updated[idx] = { ...updated[idx], ...serverRecord } as AdminAttendanceRecord;
-        } else {
-          updated.push(serverRecord as AdminAttendanceRecord);
-        }
-
-        const finalRecords = generateAbsentRecords(updated);
-        localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
-        setAttendanceRecords(finalRecords);
-
-        const todayRec = finalRecords.find(r => r.date === today) || null;
-        setTodayRecord(todayRec);
-        setIsPunchedIn(true);
-
-        setCustomLocationName(serverRecord.locationName || locName);
-
         triggerNotification(
           'Check-In Successful',
           `Checked in at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
           'Clock',
           'text-emerald-500 bg-emerald-50'
         );
-
         setIsResolvingLocation(false);
+        // Refresh attendance data from backend
+        await new Promise(r => setTimeout(r, 500));
+        window.location.reload();
         return;
+      } else {
+        triggerNotification('Check-In Failed', 'Could not check in. Please try again.', 'X', 'text-rose-500 bg-rose-50');
       }
-
-      // If resp not ok, fall through to local fallback
-      console.warn('Check-in failed on server:', resp.status);
     } catch (err) {
-      console.warn('Network error during check-in:', err);
+      triggerNotification('Check-In Failed', 'Network error. Please try again.', 'X', 'text-rose-500 bg-rose-50');
     }
-
-    // Local fallback (offline or server failed)
-    if (idx > -1) {
-      updated[idx] = { ...updated[idx], ...newRecord };
-    } else {
-      updated.push(newRecord);
-    }
-
-    setCustomLocationName(locName);
     setIsResolvingLocation(false);
-
-    // Regenerate absent records to ensure they're included
-    const finalRecords = generateAbsentRecords(updated);
-
-    localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
-    setAttendanceRecords(finalRecords);
-
-    const todayRec = finalRecords.find(r => r.date === today) || null;
-    setTodayRecord(todayRec);
-    setIsPunchedIn(true);
-
-    triggerNotification(
-      'Check-In Successful',
-      `Checked in at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
-      'Clock',
-      'text-emerald-500 bg-emerald-50'
-    );
   };
 
   // Handle check-out with confirmation
@@ -488,91 +362,32 @@ const AdminAttendance: React.FC = () => {
     const now = new Date();
     const today = getTodayString();
 
-    const recordsStr = localStorage.getItem(attendanceStorageKey);
-    const updated: AdminAttendanceRecord[] = recordsStr ? JSON.parse(recordsStr) : [];
-    const idx = updated.findIndex((r: AdminAttendanceRecord) => r.date === today);
-
-    if (idx > -1 && updated[idx].timeIn) {
-      const timeIn = updated[idx].timeIn;
-
-      // Try to call server checkout endpoint first
-      try {
-        const resp = await fetch('http://localhost:8085/api/employee_attend/check-out', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ date: today, timeOut: now.toISOString(), recordId: updated[idx].id })
-        });
-
-        if (resp.ok) {
-          const data = await resp.json().catch(() => null);
-          const serverRecord = data?.record || data || {
-            ...updated[idx],
-            timeOut: now.toISOString()
-          };
-
-          updated[idx] = { ...updated[idx], ...serverRecord } as AdminAttendanceRecord;
-
-          const finalRecords = generateAbsentRecords(updated);
-          localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
-          setAttendanceRecords(finalRecords);
-
-          const todayRec = finalRecords.find(r => r.date === today) || null;
-          setTodayRecord(todayRec);
-          setIsPunchedIn(false);
-
-          const duration = calculateDuration(updated[idx].timeIn, serverRecord.timeOut || now.toISOString());
-          setWorkDuration(duration);
-
-          triggerNotification(
-            'Check-Out Successful',
-            `Checked out at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
-            'Clock',
-            'text-blue-500 bg-blue-50'
-          );
-
-          setIsProcessingCheckout(false);
-          setShowCheckoutConfirm(false);
-          return;
-        }
-
-        console.warn('Checkout failed on server:', resp.status);
-      } catch (err) {
-        console.warn('Network error during checkout:', err);
+    try {
+      const resp = await fetch('http://localhost:8085/api/employee_attend/check-out', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ date: today, timeOut: now.toISOString() })
+      });
+      if (resp.ok) {
+        triggerNotification(
+          'Check-Out Successful',
+          `Checked out at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
+          'Clock',
+          'text-blue-500 bg-blue-50'
+        );
+        setIsProcessingCheckout(false);
+        setShowCheckoutConfirm(false);
+        // Refresh attendance data from backend
+        await new Promise(r => setTimeout(r, 500));
+        window.location.reload();
+        return;
+      } else {
+        triggerNotification('Check-Out Failed', 'Could not check out. Please try again.', 'X', 'text-rose-500 bg-rose-50');
       }
-
-      // Fallback local update if server call fails
-      const checkInTime = new Date(timeIn);
-      const checkOutTime = now;
-      const durationMs = checkOutTime.getTime() - checkInTime.getTime();
-      const workingHours = durationMs / (1000 * 60 * 60);
-
-      updated[idx] = {
-        ...updated[idx],
-        timeOut: now.toISOString(),
-        workingHours: parseFloat(workingHours.toFixed(2))
-      };
-
-      const finalRecords = generateAbsentRecords(updated);
-
-      localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
-      setAttendanceRecords(finalRecords);
-
-      const todayRec = finalRecords.find(r => r.date === today) || null;
-      setTodayRecord(todayRec);
-      setIsPunchedIn(false);
-
-      const duration = calculateDuration(timeIn, now.toISOString());
-      setWorkDuration(duration);
-
-      triggerNotification(
-        'Check-Out Successful',
-        `Checked out at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
-        'Clock',
-        'text-blue-500 bg-blue-50'
-      );
+    } catch (err) {
+      triggerNotification('Check-Out Failed', 'Network error. Please try again.', 'X', 'text-rose-500 bg-rose-50');
     }
-
     setIsProcessingCheckout(false);
     setShowCheckoutConfirm(false);
   };
@@ -583,22 +398,7 @@ const AdminAttendance: React.FC = () => {
   };
 
   const updateLocationName = () => {
-    if (!todayRecord) return;
-
-    const recordsStr = localStorage.getItem(attendanceStorageKey);
-    const records: AdminAttendanceRecord[] = recordsStr ? JSON.parse(recordsStr) : [];
-    const idx = records.findIndex((r: any) => r.id === todayRecord.id);
-
-    if (idx > -1) {
-      records[idx].locationName = customLocationName;
-
-      const finalRecords = generateAbsentRecords(records);
-      localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
-      setAttendanceRecords(finalRecords);
-
-      setTodayRecord(records[idx]);
-    }
-
+    // No-op: location name is now backend-only
     setIsEditingLocation(false);
   };
 
@@ -712,8 +512,9 @@ const AdminAttendance: React.FC = () => {
                     ? 'bg-gradient-to-r from-slate-300 to-slate-400 text-black cursor-not-allowed shadow-slate-200'
                     : todayRecord?.timeOut
                       ? 'bg-gradient-to-r from-green-300 to-green-400 text-black cursor-not-allowed shadow-green-200'
-                      : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-blue-200'
-                  } disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none`}
+                      : 'text-white rounded-lg text-sm px-4 py-2 font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none'
+                }`}
+                style={!isPunchedIn && !isHoliday(getTodayString()) && !(isWeekend(new Date()) && !isWorkingSaturday(new Date())) && !todayRecord?.timeOut ? { background: 'linear-gradient(90deg, #c97a4c 0%, #a56137 100%)', ...(isResolvingLocation && { opacity: 0.5 }) } : undefined}
               >
                 {isResolvingLocation ? (
                   <Loader2 className="animate-spin" size={24} />
@@ -767,7 +568,7 @@ const AdminAttendance: React.FC = () => {
               {(isPunchedIn || todayRecord?.timeOut) && (
                 <div className="bg-slate-50 border border-slate-100 p-4 rounded-xl flex items-center justify-between">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-blue-600">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-[#c97a4c]">
                       <MapPin size={16} />
                     </div>
                     {isEditingLocation ? (
@@ -776,7 +577,7 @@ const AdminAttendance: React.FC = () => {
                         title="Edit location name"
                         value={customLocationName}
                         onChange={(e) => setCustomLocationName(e.target.value)}
-                        className="bg-white border border-blue-200 rounded px-2 py-1 text-xs font-bold w-full focus:ring-2 focus:ring-blue-100 outline-none text-black"
+                        className="bg-white border-2 rounded px-2 py-1 text-xs font-bold w-full outline-none text-black" style={{borderColor: '#c97a4c'}} onFocus={(e) => (e.target.style.boxShadow = '0 0 0 3px rgba(201, 122, 76, 0.1)')} onBlur={(e) => (e.target.style.boxShadow = '')}
                         autoFocus
                       />
                     ) : (
@@ -795,7 +596,7 @@ const AdminAttendance: React.FC = () => {
           <div className="grid grid-cols-2 gap-6">
             <div className="bg-white p-6 border border-slate-200 rounded-xl shadow-sm">
               <div className="flex items-center gap-3 mb-4">
-                <Navigation size={18} className="text-blue-500" />
+                <Navigation size={18} className="text-[#c97a4c]" />
                 <h3 className="text-[10px] font-black text-black uppercase tracking-widest">GPS Coordinates</h3>
               </div>
               <p className="text-sm font-bold text-black">
@@ -807,7 +608,7 @@ const AdminAttendance: React.FC = () => {
             </div>
             <div className="bg-white p-6 border border-slate-200 rounded-xl shadow-sm">
               <div className="flex items-center gap-3 mb-4">
-                <Timer size={18} className="text-blue-500" />
+                <Timer size={18} className="text-[#c97a4c]" />
                 <h3 className="text-[10px] font-black text-black uppercase tracking-widest">Logged Work Hours</h3>
               </div>
               <p className="text-3xl font-black text-black tabular-nums tracking-tight">{workDuration}</p>
@@ -818,7 +619,7 @@ const AdminAttendance: React.FC = () => {
         {/* Sidebar Logs */}
         <div className="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-8 shadow-sm">
           <h3 className="font-bold text-black mb-8 flex items-center gap-3">
-            <Activity size={20} className="text-blue-600" /> Today's Timeline
+            <Activity size={20} className="text-[#c97a4c]" /> Today's Timeline
           </h3>
           <div className="space-y-8 relative">
             <div className="absolute left-5 top-2 bottom-2 w-px bg-slate-100"></div>
@@ -911,7 +712,7 @@ const AdminAttendance: React.FC = () => {
               <h2 className="font-bold text-black text-lg md:text-xl">Admin Historical Registry</h2>
               <button
                 onClick={clearFilters}
-                className="flex items-center gap-2 text-[10px] font-black text-black hover:text-blue-600 uppercase tracking-widest transition-colors md:hidden"
+                className="flex items-center gap-2 text-[10px] font-black text-black uppercase tracking-widest transition-colors md:hidden hover:text-[#c97a4c]"
               >
                 <RotateCcw size={12} /> Clear
               </button>
@@ -925,7 +726,7 @@ const AdminAttendance: React.FC = () => {
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                   title="Filter by attendance status"
-                  className="text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 px-3 py-2 rounded-lg outline-none focus:ring-4 focus:ring-blue-100 transition-all w-full text-black"
+                  className="text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 px-3 py-2 rounded-lg outline-none focus:ring-4 transition-all w-full text-black" style={{outlineColor: '#c97a4c'}}
                 >
                   <option className="text-black">All</option>
                   <option className="text-black">Present</option>
@@ -971,7 +772,7 @@ const AdminAttendance: React.FC = () => {
               <div className="flex items-end">
                 <button
                   onClick={clearFilters}
-                  className="hidden md:flex items-center gap-2 text-[10px] font-black text-black hover:text-blue-600 uppercase tracking-widest transition-colors h-10"
+                  className="hidden md:flex items-center gap-2 text-[10px] font-black text-black uppercase tracking-widest transition-colors h-10 hover:text-[#c97a4c]"
                 >
                   <RotateCcw size={12} /> Clear Filters
                 </button>
@@ -1026,7 +827,7 @@ const AdminAttendance: React.FC = () => {
                     {/* Location */}
                     <div className="px-2">
                       <div className="flex items-center gap-2">
-                        <MapPin size={12} className="text-blue-500 flex-shrink-0" />
+                        <MapPin size={12} className="text-[#c97a4c] flex-shrink-0" />
                         <span
                           className="text-xs font-semibold text-black truncate"
                           title={displayLocation}

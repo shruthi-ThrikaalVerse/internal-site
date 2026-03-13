@@ -256,7 +256,8 @@ const NotificationsAdmin: React.FC = () => {
         </div>
         <button
           onClick={() => { resetForm(); setIsModalOpen(true); }}
-          className="flex items-center gap-2 px-6 py-3.5 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 transition-all active:scale-95"
+          className="flex items-center gap-2 px-6 py-3.5 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
+          style={{backgroundColor: '#c97a4c', boxShadow: 'rgba(201, 122, 76, 0.2) 0px 20px 25px -5px'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
         >
           <Icon name="Plus" className="w-5 h-5 text-white" /> Post Announcement
         </button>
@@ -402,7 +403,8 @@ const NotificationsAdmin: React.FC = () => {
                     key={p}
                     type="button"
                     onClick={() => setFormData({ ...formData, priority: p })}
-                    className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.priority === p ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-100 text-black hover:bg-slate-50'}`}
+                    className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.priority === p ? 'text-white shadow-lg' : 'bg-white border-slate-100 text-black hover:bg-slate-50'}`}
+                    style={formData.priority === p ? { backgroundColor: '#c97a4c', borderColor: '#c97a4c' } : {}}
                   >
                     {p}
                   </button>
@@ -488,7 +490,7 @@ const NotificationsAdmin: React.FC = () => {
 
           <div className="pt-6 border-t border-slate-100 flex gap-4">
             <button type="button" onClick={() => setIsModalOpen(false)} disabled={isLoading} className="flex-1 py-4 text-black font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all disabled:opacity-50">Discard</button>
-            <button type="submit" disabled={isLoading} className="flex-1 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50">
+            <button type="submit" disabled={isLoading} className="flex-1 py-4 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all active:scale-95 disabled:opacity-50" style={{backgroundColor: '#c97a4c', boxShadow: 'rgba(201, 122, 76, 0.2) 0px 20px 25px -5px'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}>
               {isLoading ? 'Saving...' : editingId ? "Update System Alert" : "Commit Announcement"}
             </button>
           </div>

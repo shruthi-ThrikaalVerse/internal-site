@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Event, EventType } from '../../types.ts';
 import { getAllEvents } from '../../api/events.ts';
+import { useAuth } from '../../context/AuthContext.tsx';
 
 const EVENTS_PER_PAGE = 6;
 
@@ -27,6 +28,7 @@ interface CalendarEvent {
 
 const Events: React.FC = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [events, setEvents] = useState<Event[]>([]);
     const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -36,25 +38,7 @@ const Events: React.FC = () => {
     const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
     const [showCalendarSection, setShowCalendarSection] = useState(false);
 
-    // Get current user from localStorage
-    const [user, setUser] = useState<any>(null);
-
     useEffect(() => {
-        const userData = JSON.parse(localStorage.getItem('user') || '{}');
-        setUser(userData);
-
-        // Load calendar events from localStorage
-        const savedCalendarEvents = localStorage.getItem('calendarEvents');
-        if (savedCalendarEvents) {
-            try {
-                const parsedEvents = JSON.parse(savedCalendarEvents);
-                setCalendarEvents(Array.isArray(parsedEvents) ? parsedEvents : []);
-            } catch (error) {
-                console.error('Error loading calendar events:', error);
-                setCalendarEvents([]);
-            }
-        }
-
         // Fetch all events created by admin from API
         (async () => {
             try {
@@ -92,47 +76,8 @@ const Events: React.FC = () => {
         })();
     }, []);
 
-    // Listen for calendar events updates from other components
-    useEffect(() => {
-        const handleCalendarUpdate = () => {
-            const savedCalendarEvents = localStorage.getItem('calendarEvents');
-            if (savedCalendarEvents) {
-                try {
-                    const parsedEvents = JSON.parse(savedCalendarEvents);
-                    setCalendarEvents(Array.isArray(parsedEvents) ? parsedEvents : []);
-                } catch (error) {
-                    console.error('Error loading calendar events:', error);
-                    setCalendarEvents([]);
-                }
-            }
-        };
-
-        // Listen for custom events
-        window.addEventListener('calendarEventsUpdated', handleCalendarUpdate);
-        
-        // Also check localStorage periodically for changes from other tabs
-        const interval = setInterval(() => {
-            const savedCalendarEvents = localStorage.getItem('calendarEvents');
-            if (savedCalendarEvents) {
-                const parsedEvents = JSON.parse(savedCalendarEvents);
-                if (JSON.stringify(parsedEvents) !== JSON.stringify(calendarEvents)) {
-                    setCalendarEvents(Array.isArray(parsedEvents) ? parsedEvents : []);
-                }
-            }
-        }, 1000); // Check every second
-
-        return () => {
-            window.removeEventListener('calendarEventsUpdated', handleCalendarUpdate);
-            clearInterval(interval);
-        };
-    }, [calendarEvents]);
-
-    // Save calendar events to localStorage whenever they change
-    useEffect(() => {
-        if (calendarEvents.length > 0) {
-            localStorage.setItem('calendarEvents', JSON.stringify(calendarEvents));
-        }
-    }, [calendarEvents]);
+    // Calendar events are session-only (not persisted to localStorage)
+    // If backend endpoint becomes available, integrate it here
 
     // Get icon for event type
     const getEventTypeIcon = (type: EventType) => {
@@ -244,19 +189,10 @@ const Events: React.FC = () => {
 
     // Check if event is in calendar - Accept string or number ids
     const isEventInCalendar = (eventId: string | number) => {
-        try {
-            const savedCalendarEvents = localStorage.getItem('calendarEvents');
-            if (savedCalendarEvents) {
-                const parsedEvents = JSON.parse(savedCalendarEvents);
-                return Array.isArray(parsedEvents) && parsedEvents.some((calEvent: CalendarEvent) => String(calEvent.eventId) === String(eventId));
-            }
-        } catch (error) {
-            console.error('Error checking calendar events:', error);
-        }
-        return false;
+        return calendarEvents.some((calEvent: CalendarEvent) => String(calEvent.eventId) === String(eventId));
     };
 
-    // Add event to calendar - FIXED: Sync with localStorage
+    // Add event to calendar - Session-only (not persisted)
     const addToCalendar = (event: Event) => {
         if (isEventInCalendar(event.id)) return;
 
@@ -272,44 +208,21 @@ const Events: React.FC = () => {
             addedAt: new Date().toISOString()
         };
 
-        // Get existing events from localStorage
-        const savedCalendarEvents = localStorage.getItem('calendarEvents');
-        const existingEvents = savedCalendarEvents ? JSON.parse(savedCalendarEvents) : [];
-        
-        // Add new event
-        const updatedEvents = [...existingEvents, calendarEvent];
-        
-        // Update both state and localStorage
+        // Update state only (session-only)
+        const updatedEvents = [...calendarEvents, calendarEvent];
         setCalendarEvents(updatedEvents);
-        localStorage.setItem('calendarEvents', JSON.stringify(updatedEvents));
         setShowCalendarSection(true);
-        
-        // Trigger custom event to notify Calendar component and other instances
-        window.dispatchEvent(new CustomEvent('calendarEventsUpdated'));
     };
 
     // Remove event from calendar - Accept string or number ids
     const removeFromCalendar = (eventId: string | number) => {
-        // Get existing events from localStorage
-        const savedCalendarEvents = localStorage.getItem('calendarEvents');
-        if (!savedCalendarEvents) return;
-        
-        const existingEvents = JSON.parse(savedCalendarEvents);
-        const updatedEvents = existingEvents.filter((event: CalendarEvent) => String(event.eventId) !== String(eventId));
-        
-        // Update both state and localStorage
+        const updatedEvents = calendarEvents.filter((event: CalendarEvent) => String(event.eventId) !== String(eventId));
         setCalendarEvents(updatedEvents);
-        localStorage.setItem('calendarEvents', JSON.stringify(updatedEvents));
-        
-        // Trigger custom event to notify Calendar component and other instances
-        window.dispatchEvent(new CustomEvent('calendarEventsUpdated'));
     };
 
     // Clear all calendar events
     const clearAllCalendarEvents = () => {
         setCalendarEvents([]);
-        localStorage.removeItem('calendarEvents');
-        window.dispatchEvent(new CustomEvent('calendarEventsUpdated'));
     };
 
     // Filter events
@@ -522,7 +435,7 @@ const Events: React.FC = () => {
                                 {selectedType === 'all' ? 'All Events' : eventTypes.find(t => t.value === selectedType)?.label}
                                 <span className="text-gray-600 ml-2 text-xs md:text-sm">({filteredEvents.length} events)</span>
                             </h2>
-                            
+
                             {/* Pagination Info */}
                             {filteredEvents.length > EVENTS_PER_PAGE && (
                                 <div className="text-sm text-gray-600">

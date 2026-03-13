@@ -6,7 +6,6 @@ import {
   CalendarDays, MapPin, Users, MoreHorizontal
 } from 'lucide-react';
 import { CalendarAttendanceRecord } from '../../types.ts';
-import { getUserSpecificKey } from '../../utils/storage.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
 
 const SYSTEM_HOLIDAYS = [
@@ -103,16 +102,9 @@ const AdminCalendar: React.FC = () => {
     return WORKING_SATURDAYS.includes(dateStr);
   };
 
-  // Use admin-specific key for calendar events
+  // Calendar events, attendance, and leaves should be fetched from backend API
   const loadCalendarEvents = (): CalendarEvent[] => {
-    try {
-      const savedCalendarEvents = localStorage.getItem(getUserSpecificKey('admin_calendarEvents', user?.id));
-      if (savedCalendarEvents) {
-        return JSON.parse(savedCalendarEvents);
-      }
-    } catch (error) {
-      console.error('Error loading admin calendar events:', error);
-    }
+    // TODO: Replace with backend API call for admin calendar events
     return [];
   };
 
@@ -201,79 +193,41 @@ const AdminCalendar: React.FC = () => {
     });
   };
 
-  const refreshData = () => {
-    // Use admin-specific keys for attendance and leaves
-    const storedAttendance = JSON.parse(localStorage.getItem(getUserSpecificKey('admin_attendance_records', user?.id)) || '[]');
-    const storedLeaves = JSON.parse(localStorage.getItem(getUserSpecificKey('admin_leave_requests', user?.id)) || '[]');
-    const mergedMap = new Map<string, CalendarAttendanceRecord>();
-    WORKING_SATURDAYS.forEach(date => {
-      mergedMap.set(date, {
-        id: `working-sat-${date}`,
-        date,
-        status: 'Working Saturday',
-        timeIn: null,
-        timeOut: null,
-        workingHours: 0,
-        locationName: 'Working Saturday',
-        isLate: false
-      });
-    });
-    SYSTEM_HOLIDAYS.forEach(h => {
-      mergedMap.set(h.date, {
-        id: `holiday-${h.date}`,
-        date: h.date,
-        status: 'Holiday',
-        timeIn: null,
-        timeOut: null,
-        workingHours: 0,
-        locationName: h.name,
-        isLate: false
-      });
-    });
-    storedLeaves.forEach((leave: any) => {
-      const status = (leave.status || 'pending').toLowerCase();
-      if (status === 'approved') {
-        let current = new Date(leave.startDate);
-        const end = new Date(leave.endDate);
-        while (current <= end) {
-          const dStr = formatDateString(current);
-          const existingRecord = mergedMap.get(dStr);
-          if (!existingRecord || (existingRecord.status !== 'Holiday' && existingRecord.status !== 'Working Saturday')) {
-            mergedMap.set(dStr, {
-              id: `leave-${dStr}`,
-              date: dStr,
-              status: 'On Leave',
-              timeIn: null,
-              timeOut: null,
-              workingHours: 0,
-              locationName: `On Leave (${leave.type})`,
-              isLate: false
-            });
-          }
-          current.setDate(current.getDate() + 1);
-        }
+  const refreshData = async () => {
+    // Fetch admin attendance records from backend
+    let recordsArray: CalendarAttendanceRecord[] = [];
+    try {
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth() + 1;
+      const from = `${year}-${String(month).padStart(2, '0')}-01`;
+      const to = `${year}-${String(month).padStart(2, '0')}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`;
+      const params = new URLSearchParams();
+      params.set('from', from);
+      params.set('to', to);
+      const url = `http://localhost:8085/api/employee_attend/admin/attendance?${params.toString()}`;
+      const resp = await fetch(url, { method: 'GET', credentials: 'include' });
+      if (resp.ok) {
+        const data = await resp.json().catch(() => []);
+        // Flatten backend response: employees[] -> each has attendance[]
+        const arr = Array.isArray(data) ? data : (data?.data ?? []);
+        recordsArray = arr.flatMap((emp: any) => {
+          const attendanceArr = Array.isArray(emp?.attendance) ? emp.attendance : [];
+          return attendanceArr.map((a: any) => ({
+            ...a,
+            id: a.id || `${emp.employeeId}-${a.date}`,
+            date: a.date,
+            status: a.status || 'Absent',
+            timeIn: a.timeIn || null,
+            timeOut: a.timeOut || null,
+            workingHours: a.workingHours || 0,
+            isLate: a.isLate || false
+          }));
+        });
       }
-    });
-    storedAttendance.forEach((rec: any) => {
-      if (SYSTEM_HOLIDAYS.some(h => h.date === rec.date)) return;
-      const derived = deriveFromAttendance(rec);
-      const isWorkingSat = isWorkingSaturday(rec.date);
-      mergedMap.set(rec.date, {
-        ...rec,
-        timeIn: derived.timeIn,
-        timeOut: derived.timeOut,
-        workingHours: derived.workingHours,
-        totalHours: derived.totalHours,
-        isLate: derived.isLate,
-        status: isWorkingSat ? 'Working Saturday' : (derived.isLate ? 'Late' : (rec.status || 'Present')),
-      });
-    });
-    const todayStr = formatDateString(new Date());
-    const todayRec: any = Array.from(mergedMap.values()).find((r: any) => r.date === todayStr);
-    const todayActive = todayRec ? deriveFromAttendance(todayRec).activeSession : false;
-    setIsTodayPresent(todayActive);
-    const recordsArray = Array.from(mergedMap.values());
-    const calendarEvents = loadCalendarEvents();
+    } catch (err) {
+      console.warn('Failed to fetch admin attendance:', err);
+    }
+    const calendarEvents: CalendarEvent[] = loadCalendarEvents();
     setAttendanceRecords(recordsArray);
     calculateMonthlyStats(recordsArray, calendarEvents);
   };
@@ -305,7 +259,7 @@ const AdminCalendar: React.FC = () => {
     switch (record.status) {
       case 'Present': return 'bg-emerald-500';
       case 'Absent': return 'bg-red-500';
-      case 'On Leave': return 'bg-blue-500';
+      case 'On Leave': return 'bg-[#f5ede3]';
       case 'Holiday': return 'bg-purple-500';
       case 'Weekend': return 'bg-slate-400';
       case 'Working Saturday': return 'bg-orange-500';
@@ -337,7 +291,7 @@ const AdminCalendar: React.FC = () => {
       case 'party': return 'bg-red-100 text-red-700 border-red-200';
       case 'health_checkup': return 'bg-teal-100 text-teal-700 border-teal-200';
       case 'awards': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'webinar': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+      case 'webinar': return 'bg-[#f5ede3] text-[#8b5a3c] border-[2px]' + ' border-[#c97a4c]';
       case 'social': return 'bg-cyan-100 text-cyan-700 border-cyan-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
@@ -351,7 +305,7 @@ const AdminCalendar: React.FC = () => {
       if (day.record.status === 'Working Saturday') return 'bg-orange-50';
       if (day.record.isLate || day.record.status === 'Present') return 'bg-emerald-50';
       if (day.record.status === 'Absent') return 'bg-red-50';
-      if (day.record.status === 'On Leave') return 'bg-blue-50';
+      if (day.record.status === 'On Leave') return 'bg-[#f0e6dc]';
       if (day.record.status === 'Holiday') return 'bg-purple-50';
       if (day.record.status === 'Weekend') return 'bg-slate-50';
     } else if (day.isWeekend && !isWorkingSaturday(formatDateString(day.date))) {
@@ -565,7 +519,8 @@ const AdminCalendar: React.FC = () => {
           </div>
           <button
             onClick={() => setCurrentMonth(new Date())}
-            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white text-xs font-black rounded-xl sm:rounded-2xl uppercase tracking-wider hover:bg-blue-700 shadow active:scale-95 transition-all w-full sm:w-auto"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 text-white text-xs font-black rounded-xl sm:rounded-2xl uppercase tracking-wider shadow active:scale-95 transition-all w-full sm:w-auto"
+            style={{backgroundColor: '#c97a4c'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
           >
             Today
           </button>
@@ -584,13 +539,13 @@ const AdminCalendar: React.FC = () => {
             {monthlyStats.workDays} work day{monthlyStats.workDays !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl sm:rounded-2xl lg:rounded-[2rem] p-3 sm:p-4 lg:p-6 shadow-sm">
+        <div className="bg-[#f5ede3] border-2 rounded-xl sm:rounded-2xl lg:rounded-[2rem] p-3 sm:p-4 lg:p-6 shadow-sm" style={{borderColor: '#c97a4c'}}>
           <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
-            <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-blue-600" />
-            <span className="text-[8px] sm:text-[9px] lg:text-[10px] font-black uppercase tracking-wider text-blue-500">Work Days</span>
+            <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8" style={{color: '#c97a4c'}} />
+            <span className="text-[8px] sm:text-[9px] lg:text-[10px] font-black uppercase tracking-wider" style={{color: '#c97a4c'}}>Work Days</span>
           </div>
-          <p className="text-base sm:text-lg lg:text-xl xl:text-2xl font-black text-blue-900">{monthlyStats.workDays}</p>
-          <p className="text-[9px] sm:text-xs text-blue-600 mt-1 font-medium truncate">Days recorded</p>
+          <p className="text-base sm:text-lg lg:text-xl xl:text-2xl font-black" style={{color: '#8b5a3c'}}>{monthlyStats.workDays}</p>
+          <p className="text-[9px] sm:text-xs mt-1 font-medium truncate" style={{color: '#c97a4c'}}>Days recorded</p>
         </div>
         <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 rounded-xl sm:rounded-2xl lg:rounded-[2rem] p-3 sm:p-4 lg:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
@@ -786,11 +741,11 @@ const AdminCalendar: React.FC = () => {
         <LegendItem label="Present" dotColor="#10b981" screenSize={screenSize} />
         <LegendItem label="Late" dotColor="#fbbf24" screenSize={screenSize} />
         <LegendItem label="Absent" dotColor="#ef4444" screenSize={screenSize} />
-        <LegendItem label="Leave" dotColor="#3b82f6" screenSize={screenSize} />
+        <LegendItem label="Leave" dotColor="#c97a4c" screenSize={screenSize} />
         <LegendItem label="Holiday" dotColor="#8b5cf6" screenSize={screenSize} />
         <LegendItem label="Weekend" dotColor="#94a3b8" screenSize={screenSize} />
         <LegendItem label="Work Sat" dotColor="#f97316" screenSize={screenSize} />
-        <LegendItem label="Event" dotColor="#3b82f6" screenSize={screenSize} />
+        <LegendItem label="Event" dotColor="#c97a4c" screenSize={screenSize} />
       </div>
 
       {/* Modal */}

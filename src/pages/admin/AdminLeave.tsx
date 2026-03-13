@@ -67,7 +67,7 @@ const AdminLeave: React.FC = () => {
     {
       label: 'Total Leaves',
       value: leaveStats.totalLeaves,
-      color: 'bg-blue-100 text-blue-600',
+      color: 'bg-[#f5ede3] text-[#8b5a3c]',
       icon: <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
     },
     {
@@ -79,7 +79,7 @@ const AdminLeave: React.FC = () => {
     {
       label: 'Leaves Used',
       value: leaveStats.leavesUsed,
-      color: 'bg-indigo-100 text-indigo-600',
+      color: 'bg-[#f5ede3] text-[#8b5a3c]',
       icon: <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
     },
     {
@@ -417,25 +417,25 @@ const AdminLeave: React.FC = () => {
           method: 'POST',
           body: formDataObj,
           headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}` // Include token if required
+            'Accept': 'application/json'
           },
           credentials: 'include',
         });
 
-        console.log('Authorization Token:', localStorage.getItem('authToken'));
-        console.log('Payload:', payload);
+        // Removed all localStorage usage, only HTTP-only cookies are used
+        // console.log('Authorization Token:', localStorage.getItem('authToken'));
+        // console.log('Payload:', payload);
 
-        console.log('Response Status:', response.status);
-        console.log('Response Headers:', response.headers);
+        // console.log('Response Status:', response.status);
+        // console.log('Response Headers:', response.headers);
         if (!response.ok) {
           let errorMessage = 'Failed to submit leave request';
           try {
             const errorData = await response.json();
-            console.log('Error Data:', errorData);
+            // console.log('Error Data:', errorData);
             errorMessage = errorData.message || errorMessage;
           } catch (err) {
-            console.error('Error parsing response JSON:', err);
+            // console.error('Error parsing response JSON:', err);
           }
           toast.error(`${errorMessage} (Status: ${response.status})`);
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -527,7 +527,8 @@ const AdminLeave: React.FC = () => {
               setFormData({ type: 'Casual Leave', startDate: '', endDate: '', reason: '' });
               setShowApplyModal(true);
             }}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-white rounded-lg transition-colors shadow-sm w-full sm:w-auto"
+            style={{backgroundColor: '#c97a4c'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="font-medium text-sm sm:text-base">Apply for Leave</span>
@@ -589,10 +590,10 @@ const AdminLeave: React.FC = () => {
                 <button
                   key={status}
                   onClick={() => setFilter(status)}
-                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${filter === status
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-100'
-                    : 'bg-gray-100 text-black hover:bg-gray-200'
-                    }`}
+                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${
+                    filter === status ? 'text-white shadow-md' : 'bg-gray-100 text-black hover:bg-gray-200'
+                  }`}
+                  style={filter === status ? {backgroundColor: '#c97a4c', boxShadow: '0 0 0 0.25rem rgba(201, 122, 76, 0.1)'} : undefined}
                 >
                   {status === 'all' ? 'All' : status}
                 </button>
@@ -600,7 +601,7 @@ const AdminLeave: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-end">
-            <button className="p-2 sm:p-2.5 bg-gray-50 text-black hover:text-blue-600 rounded-lg border border-gray-200 transition-colors" title="Export data" aria-label="Export leave data">
+            <button className="p-2 sm:p-2.5 bg-gray-50 text-black hover:text-[#c97a4c] rounded-lg border border-gray-200 transition-colors" title="Export data" aria-label="Export leave data">
               <Download className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
@@ -648,7 +649,7 @@ const AdminLeave: React.FC = () => {
                   "{request.reason}"
                 </div>
                 {request.type === 'Sick Leave' && request.medicalCertificate && (
-                  <div className="text-[10px] sm:text-xs text-blue-600 mt-1 flex items-center gap-1">
+                  <div className="flex items-center gap-1 text-[10px] sm:text-xs" style={{color: '#c97a4c'}}>
                     <FileText className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                     Medical certificate attached
                   </div>
@@ -700,7 +701,8 @@ const AdminLeave: React.FC = () => {
                       });
                       setActiveActionMenu(activeActionMenu === request.id ? null : request.id);
                     }}
-                    className={`p-1.5 sm:p-2 rounded-lg transition-all ${activeActionMenu === request.id ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-black'}`}
+                    className={`p-1.5 sm:p-2 rounded-lg transition-all ${activeActionMenu === request.id ? 'text-white' : 'hover:bg-gray-100 text-black'}`}
+                    style={{backgroundColor: activeActionMenu === request.id ? '#c97a4c' : ''}}
                     title="More actions"
                     aria-label="More actions for this leave request"
                   >
@@ -762,7 +764,10 @@ const AdminLeave: React.FC = () => {
                       <div className="border-t my-1"></div>
                       <button
                         onClick={() => handleEditRequest(request)}
-                        className="w-full text-left px-4 py-2 text-blue-600 hover:bg-blue-50 flex items-center gap-2"
+                        className="w-full text-left px-4 py-2 flex items-center gap-2 transition-all"
+                        style={{color: '#c97a4c'}}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5ede3'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
                         <Edit size={14} /> Edit
                       </button>
@@ -812,11 +817,11 @@ const AdminLeave: React.FC = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl sm:rounded-2xl">
+                  <div className="p-4 border rounded-xl sm:rounded-2xl" style={{backgroundColor: '#f5ede3', borderColor: '#c97a4c'}} >
                     <p className="text-[10px] font-black text-black uppercase tracking-widest">Category</p>
                     <p className="text-sm font-bold text-black">{viewingRequest.type}</p>
                   </div>
-                  <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl sm:rounded-2xl">
+                  <div className="p-4 border rounded-xl sm:rounded-2xl" style={{backgroundColor: '#f5ede3', borderColor: '#c97a4c'}} >
                     <p className="text-[10px] font-black text-black uppercase tracking-widest">Days Consumed</p>
                     <p className="text-sm font-bold text-black">{viewingRequest.days} Business Days</p>
                   </div>
@@ -892,10 +897,12 @@ const AdminLeave: React.FC = () => {
                         key={type.id}
                         type="button"
                         onClick={() => handleLeaveTypeChange(type.label)}
-                        className={`px-3 py-2 sm:px-4 sm:py-3 border rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${formData.type === type.label
-                          ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm'
-                          : 'border-gray-200 bg-gray-50 text-black hover:border-gray-300'
-                          }`}
+                        className={`px-3 py-2 sm:px-4 sm:py-3 border rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${
+                          formData.type === type.label
+                            ? 'border-2 bg-[#f5ede3] text-[#8b5a3c] shadow-sm'
+                            : 'border-gray-200 bg-gray-50 text-black hover:border-gray-300'
+                        }`}
+                        style={formData.type === type.label ? {borderColor: '#c97a4c'} : undefined}
                       >
                         {type.label}
                       </button>
@@ -994,25 +1001,25 @@ const AdminLeave: React.FC = () => {
 
                 {/* Days Calculation */}
                 {formData.startDate && formData.endDate && !dateError && (
-                  <div className="bg-blue-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-lg shadow-blue-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" style={{backgroundColor: '#c97a4c', boxShadow: '0 0 0 0.25rem rgba(201, 122, 76, 0.1)'}}>
                     <div className="flex items-center gap-3 sm:gap-4">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md flex-shrink-0">
                         <Calculator className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                       </div>
                       <div>
-                        <div className="text-[10px] font-black text-blue-100 uppercase tracking-widest">Duration</div>
+                        <div className="text-[10px] font-black uppercase tracking-widest" style={{color: '#f0e6dc'}}>Duration</div>
                         <div className="text-xl sm:text-2xl font-black text-white tabular-nums">
                           {calculateDays(formData.startDate, formData.endDate)} Days
                         </div>
                         {formData.type === 'Sick Leave' && new Date(formData.startDate) < new Date() && (
-                          <div className="text-xs text-blue-200 font-bold mt-1">
+                          <div className="text-xs font-bold mt-1" style={{color: '#f0e6dc'}}>
                             • Retroactive application allowed for sick leave
                           </div>
                         )}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[10px] font-black text-blue-100 uppercase tracking-widest">Impact</div>
+                      <div className="text-[10px] font-black uppercase tracking-widest" style={{color: '#f0e6dc'}}>Impact</div>
                       <div className="text-sm font-bold text-white opacity-80">
                         {leaveBalance.available} → {Math.max(0, leaveBalance.available - calculateDays(formData.startDate, formData.endDate))}
                       </div>
@@ -1066,7 +1073,8 @@ const AdminLeave: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting || !!dateError}
-                    className="px-6 py-2.5 sm:px-8 sm:py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-700 shadow-xl shadow-blue-100 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all flex items-center justify-center gap-2"
+                    className="px-6 py-2.5 sm:px-8 sm:py-3 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all flex items-center justify-center gap-2"
+                    style={{backgroundColor: '#c97a4c', boxShadow: '0 20px 25px -5px rgba(201, 122, 76, 0.2)'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
                   >
                     {isSubmitting ? (
                       <>
@@ -1094,9 +1102,9 @@ const AdminLeave: React.FC = () => {
           {upcomingLeaves.map(request => (
             <div
               key={request.id}
-              className="bg-white border border-gray-200 rounded-xl sm:rounded-[2rem] p-4 sm:p-6 lg:p-8 hover:border-blue-300 hover:shadow-xl transition-all group relative overflow-hidden text-left"
+              className="bg-white border border-gray-200 rounded-xl sm:rounded-[2rem] p-4 sm:p-6 lg:p-8 hover:border-[#c97a4c] hover:shadow-xl transition-all group relative overflow-hidden text-left"
             >
-              <div className="absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 bg-blue-50 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12 group-hover:scale-110 transition-transform duration-500"></div>
+              <div className="absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12 group-hover:scale-110 transition-transform duration-500" style={{backgroundColor: '#f0e6dc'}}></div>
               <div className="flex items-center justify-between mb-4 sm:mb-6 relative z-10">
                 <span className="text-[10px] font-black text-black uppercase tracking-widest">{request.type}</span>
                 <span className="text-[9px] font-black text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 uppercase tracking-widest">
@@ -1108,7 +1116,7 @@ const AdminLeave: React.FC = () => {
                 {formatDate(request.startDate)} — {formatDate(request.endDate)}
               </div>
               <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-50 flex items-center gap-2">
-                <ArrowRight size={12} className="text-blue-500" />
+                <ArrowRight size={12} style={{color: '#c97a4c'}} />
                 <div className="text-[9px] font-bold text-black uppercase truncate" title={request.reason}>
                   {request.reason}
                 </div>

@@ -152,13 +152,13 @@ const AdminRequestsPage: React.FC = () => {
             <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
               {/* Search */}
               <div className="relative flex-1 w-full group">
-                <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-amber-600 transition-colors" />
                 <input
                   type="text"
                   placeholder="Search by subject, message, employee, or ticket ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-6 py-3 bg-slate-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-sm text-black placeholder:text-slate-400 transition-all"
+                  className="w-full pl-12 pr-6 py-3 bg-slate-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-sm text-black placeholder:text-slate-400 transition-all"
                 />
               </div>
 
@@ -171,7 +171,7 @@ const AdminRequestsPage: React.FC = () => {
                       key={status}
                       onClick={() => setStatusFilter(status)}
                       className={`px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${statusFilter === status
-                          ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
+                          ? 'bg-amber-700 text-white shadow-lg shadow-amber-100'
                           : 'bg-slate-50 text-black border border-slate-200 hover:bg-slate-100'
                         }`}
                     >
@@ -242,7 +242,7 @@ const AdminRequestsPage: React.FC = () => {
                     {/* Category and Timestamp */}
                     <div className="text-xs text-slate-500 space-y-1">
                       <div>
-                        <span className="font-black text-indigo-600">{req.employeeName}</span>
+                        <span className="font-black text-amber-700">{req.employeeName}</span>
                       </div>
                       <div className="font-medium">{req.createdAt}</div>
                     </div>
@@ -309,7 +309,7 @@ const AdminRequestsPage: React.FC = () => {
                   await setStatus(confirmTarget.id, confirmTarget.action);
                   setConfirmTarget(null);
                 }}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-xl"
+                className="px-4 py-2 bg-amber-700 text-white rounded-xl"
               >
                 Confirm
               </button>

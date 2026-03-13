@@ -208,14 +208,14 @@ const DatePicker = ({
           readOnly
           value={value ? formatDisplayDate(value) : ''}
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700 cursor-pointer caret-transparent shadow-inner"
+        className="w-full px-6 py-4 bg-amber-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-slate-700 cursor-pointer caret-transparent shadow-inner"
           placeholder="Select date"
           required={required}
         />
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-amber-700 transition-colors"
         >
           <Icon name="Calendar" className="w-4 h-4" />
         </button>
@@ -283,10 +283,10 @@ const DatePicker = ({
                       onClick={() => handleDateSelect(dayObj.date)}
                       className={`p-2 text-xs font-bold rounded-lg transition-all ${
                         isSelected
-                          ? 'bg-indigo-600 text-white shadow-lg'
+                          ? 'bg-amber-700 text-white shadow-lg'
                           : dayObj.isCurrentMonth
                           ? dayObj.isToday
-                            ? 'bg-indigo-100 text-indigo-700 font-bold'
+                            ? 'bg-amber-100 text-amber-700 font-bold'
                             : 'text-slate-700 hover:bg-slate-100'
                           : 'text-slate-300'
                       }`}
@@ -296,12 +296,12 @@ const DatePicker = ({
                   );
                 })}
               </div>
-
+ 
               <div className="mt-4 pt-4 border-t border-slate-100 flex justify-center">
                 <button
                   type="button"
                   onClick={() => handleDateSelect(new Date())}
-                  className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
+                  className="text-xs font-bold text-amber-700 hover:text-amber-800"
                 >
                   Today
                 </button>
@@ -322,7 +322,7 @@ const DatePicker = ({
                     onClick={() => handleMonthSelect(monthIndex)}
                     className={`p-3 text-xs font-bold rounded-lg transition-all ${
                       isSelected
-                        ? 'bg-indigo-600 text-white'
+                        ? 'bg-amber-700 text-white shadow-lg'
                         : 'text-slate-700 hover:bg-slate-100'
                     }`}
                   >
@@ -344,7 +344,7 @@ const DatePicker = ({
                     onClick={() => handleYearSelect(year)}
                     className={`p-3 text-xs font-bold rounded-lg transition-all ${
                       isSelected
-                        ? 'bg-indigo-600 text-white'
+                        ? 'bg-amber-700 text-white'
                         : 'text-slate-700 hover:bg-slate-100'
                     }`}
                   >
@@ -728,7 +728,7 @@ export const EventsView = () => {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'meeting': return <Video size={18} className="text-blue-400" />;
+      case 'meeting': return <Video size={18} className="text-amber-700" />;
       case 'holiday': return <PartyPopper size={18} className="text-rose-400" />;
       case 'training': return <Coffee size={18} className="text-amber-400" />;
       default: return <CalendarIcon size={18} />;
@@ -743,7 +743,7 @@ export const EventsView = () => {
         actions={
           <button
             onClick={handleAddNew}
-            className="flex items-center justify-center gap-2 bg-blue-600 px-5 py-3 rounded-xl text-sm font-bold shadow-2xl shadow-blue-200 hover:bg-blue-700 transition-all transform hover:scale-[1.05] active:scale-[0.95] w-full sm:w-auto text-white"
+            className="flex items-center justify-center gap-2 bg-amber-700 px-5 py-3 rounded-xl text-sm font-bold shadow-2xl shadow-amber-200 hover:bg-amber-800 transition-all transform hover:scale-[1.05] active:scale-[0.95] w-full sm:w-auto text-white"
           >
             <Plus size={18} />
             <span>New Event</span>
@@ -759,18 +759,18 @@ export const EventsView = () => {
 
       {loading && !events.length ? (
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700"></div>
           <p className="text-gray-500 mt-2">Loading events...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event) => (
-            <div key={event.id} className="bg-white border border-gray-200 rounded-2xl p-6 hover:border-blue-200 transition-all shadow-xl group">
+            <div key={event.id} className="bg-white border border-gray-200 rounded-2xl p-6 hover:border-amber-200 transition-all shadow-xl group">
               <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-xl bg-gray-100 border border-gray-200 group-hover:bg-blue-50 group-hover:border-blue-100 transition-all`}>
+                <div className={`p-3 rounded-xl bg-gray-100 border border-gray-200 group-hover:bg-amber-50 group-hover:border-amber-100 transition-all`}>
                   {getIcon(event.type)}
                 </div>
-                <Badge color={event.type === 'holiday' ? 'red' : event.type === 'training' ? 'yellow' : 'blue'}>
+                <Badge color={event.type === 'holiday' ? 'red' : event.type === 'training' ? 'yellow' : 'amber'}>
                   {event.type.toUpperCase()}
                 </Badge>
               </div>
@@ -779,15 +779,15 @@ export const EventsView = () => {
 
               <div className="space-y-2 mb-6">
                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <CalendarIcon size={14} className="text-blue-600" />
+                  <CalendarIcon size={14} className="text-amber-700" />
                   {formatDisplayDate(event.startDate)}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Clock size={14} className="text-blue-600" />
+                  <Clock size={14} className="text-amber-700" />
                   {event.startTime}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Users size={14} className="text-blue-600" />
+                  <Users size={14} className="text-amber-700" />
                   {event.attendees} Registered Attendees
                 </div>
               </div>
@@ -795,7 +795,7 @@ export const EventsView = () => {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleEdit(event)}
-                  className="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-900 hover:bg-blue-50 hover:border-blue-200 transition-all uppercase tracking-wider focus:ring-4 focus:ring-blue-500/50 flex items-center justify-center gap-1"
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-900 hover:bg-amber-50 hover:border-amber-200 transition-all uppercase tracking-wider focus:ring-4 focus:ring-amber-600/50 flex items-center justify-center gap-1"
                 >
                   <Edit2 size={14} /> Edit
                 </button>
@@ -818,7 +818,7 @@ export const EventsView = () => {
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">🎯 Event Title</label>
             <input
               required
-              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-slate-700 shadow-inner"
+              className="w-full px-6 py-4 bg-amber-50 border-none rounded-2xl focus:ring-2 focus:ring-amber-600 outline-none font-medium text-slate-700 shadow-inner"
               placeholder="e.g. Q4 Townhall Meeting"
               value={formData.title || ''}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -829,7 +829,7 @@ export const EventsView = () => {
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">📝 Description</label>
             <textarea
               required
-              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-slate-700 min-h-[100px] shadow-inner"
+              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-amber-600 outline-none font-medium text-slate-700 min-h-[100px] shadow-inner"
               placeholder="Details about the agenda, speakers, or objective..."
               value={formData.description || ''}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -840,7 +840,7 @@ export const EventsView = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">🏷️ Category</label>
               <select
-                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-600 shadow-inner"
+                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-amber-600 outline-none text-xs font-bold text-slate-600 shadow-inner"
                 value={formData.type as any}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
                 title="Select event category"
@@ -883,7 +883,7 @@ export const EventsView = () => {
                 type="text"
                 required
                 placeholder="09:00 AM"
-                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-600 shadow-inner"
+                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-amber-600 outline-none text-xs font-bold text-slate-600 shadow-inner"
                 value={(formData.startTime as any) || ''}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
               />
@@ -907,14 +907,14 @@ export const EventsView = () => {
               <input
                 type="text"
                 placeholder="10:00 AM"
-                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-600 shadow-inner"
+                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-amber-600 outline-none text-xs font-bold text-slate-600 shadow-inner"
                 value={(formData.endTime as any) || ''}
                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
               />
             </div>
           </div>
 
-          <div className="p-6 bg-gradient-to-br from-slate-50 to-indigo-50/30 rounded-[28px] border border-slate-100 space-y-4">
+          <div className="p-6 bg-gradient-to-br from-slate-50 to-amber-50/30 rounded-[28px] border border-slate-100 space-y-4">
             <div className="flex items-center justify-between">
               <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">📍 Mode & Location</label>
               <div className="flex items-center gap-2">
@@ -922,7 +922,7 @@ export const EventsView = () => {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, isOnline: !formData.isOnline })}
-                  className={`w-10 h-5 rounded-full relative transition-colors shadow-sm ${formData.isOnline ? 'bg-gradient-to-r from-blue-500 to-cyan-500' : 'bg-slate-300'}`}
+                  className={`w-10 h-5 rounded-full relative transition-colors shadow-sm ${formData.isOnline ? 'bg-gradient-to-r from-amber-700 to-orange-600' : 'bg-slate-300'}`}
                   aria-label="Toggle virtual event mode"
                 >
                   <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all shadow-sm ${formData.isOnline ? 'left-6' : 'left-1'}`}></div>
@@ -932,7 +932,7 @@ export const EventsView = () => {
 
             <input
               required
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold text-slate-700 shadow-inner"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-600 outline-none text-xs font-bold text-slate-700 shadow-inner"
               placeholder={formData.isOnline ? 'Meeting Link (Zoom/Google Meet)' : 'Physical Address / Room No.'}
               value={(formData.location as any) || ''}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
@@ -951,7 +951,7 @@ export const EventsView = () => {
                     setValidationErrors({ employees: '', department: '' });
                   }}
                   className={`flex-1 py-3 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all shadow-sm ${
-                    formData.audience === a ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-transparent text-white shadow-lg' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'
+                    formData.audience === a ? 'bg-gradient-to-r from-amber-700 to-orange-600 border-transparent text-white shadow-lg' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'
                   }`}
                 >
                   {a}
@@ -985,8 +985,8 @@ export const EventsView = () => {
                       <div
                         className={`w-4 h-4 rounded-md border-2 transition-all flex items-center justify-center shadow-sm ${
                           (formData.targetEmployeeIds as any[])?.includes(emp.employeeId)
-                            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-transparent text-white'
-                            : 'bg-white border-slate-200 text-transparent group-hover:border-indigo-200'
+                            ? 'bg-gradient-to-r from-amber-700 to-orange-600 border-transparent text-white'
+                            : 'bg-white border-slate-200 text-transparent group-hover:border-amber-200'
                         }`}
                       >
                         <Icon name="Check" className="w-2.5 h-2.5" />
@@ -1039,7 +1039,7 @@ export const EventsView = () => {
             </button>
             <button
               type="submit"
-              className="flex-1 py-4 bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-purple-100 hover:opacity-90 transition-all active:scale-95"
+              className="flex-1 py-4 bg-gradient-to-r from-amber-700 via-orange-600 to-amber-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-amber-100 hover:opacity-90 transition-all active:scale-95"
             >
               📅 Commit To Calendar
             </button>

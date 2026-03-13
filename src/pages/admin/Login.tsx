@@ -14,8 +14,7 @@ const Login: React.FC = () => {
 
   // On mount, clear any existing token/user so arriving at login (e.g. via back) forces re-authentication
   useEffect(() => {
-    try { localStorage.removeItem('authToken'); } catch { }
-    try { localStorage.removeItem('user'); } catch { }
+    // Removed all localStorage usage, only HTTP-only cookies are used
     if (logout) {
       logout().catch(() => { });
     }
@@ -26,8 +25,8 @@ const Login: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated && user && !authLoading) {
       // Validate that the user has the correct role for this login page
-      if (user.role !== 'admin') {
-        // Reject non-admin users
+      // Accept both 'admin' and 'manager' roles (update if your actual role string is different)
+      if (user.role !== 'admin' && user.role !== 'manager') {
         setError(`Invalid role for this login page. ${user.role === 'super_admin' ? 'Super Admins must use the Super Admin login.' : 'Please use the appropriate login portal for your role.'}`);
         logout().catch(() => { });
         return;
@@ -36,6 +35,7 @@ const Login: React.FC = () => {
       // Redirect based on role
       switch (user.role) {
         case 'admin':
+        case 'manager':
           navigate('/admin/dashboard');
           break;
         default:

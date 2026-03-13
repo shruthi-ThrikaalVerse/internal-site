@@ -1,19 +1,95 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import NotificationToast from './NotificationToast';
 import ErrorBoundary from './ErrorBoundary';
 
 const LayoutWrapper: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Detect screen size and set initial sidebar state
+  useEffect(() => {
+    const checkIfMobile = () => {
+      const mobile = window.innerWidth < 1024; // lg breakpoint
+      setIsMobile(mobile);
+
+      if (mobile) {
+        // On mobile, sidebar is closed by default
+        setIsSidebarOpen(false);
+        setIsCollapsed(false);
+      } else {
+        // On desktop, sidebar is open by default
+        setIsSidebarOpen(true);
+      }
+    };
+
+    // Initial check
+    checkIfMobile();
+
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
+  // Handle sidebar toggle based on device
+  const toggleSidebar = () => {
+    if (isMobile) {
+      // On mobile, toggle full sidebar open/close
+      setIsSidebarOpen(!isSidebarOpen);
+    } else {
+      // On desktop, toggle between collapsed and expanded
+      setIsCollapsed(!isCollapsed);
+    }
+  };
+
+  // Close sidebar when route changes on mobile
+  const handleRouteChange = () => {
+    if (isMobile && isSidebarOpen) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   return (
-    <div className="w-full flex flex-col min-h-screen bg-[#f8fafc]">
-      <Sidebar isOpen={sidebarOpen} setOpen={setSidebarOpen} />
-      {sidebarOpen && <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
-      <div className="lg:ml-64 flex flex-col flex-1">
-        <Header setOpen={setSidebarOpen} />
-        <main className="flex-1 w-full overflow-y-auto p-4 lg:p-8 bg-[#f8fafc]">
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f5ede3' }}>
+
+      {/* Sidebar */}
+      <div className={`${isMobile ? 'fixed inset-y-0 left-0 z-40' : 'relative'}`}>
+        <Sidebar
+          isOpen={isMobile ? isSidebarOpen : true}
+          isCollapsed={isCollapsed}
+          isMobile={isMobile}
+          toggleSidebar={toggleSidebar}
+          onRouteChange={handleRouteChange}
+        />
+      </div>
+
+      {/* Main Content Area */}
+      <div
+        className={`
+          flex flex-col flex-1 min-w-0 overflow-hidden
+          transition-all duration-300 ease-in-out
+          w-full
+        `}
+      >
+        {/* Header */}
+        <Header
+          toggleSidebar={toggleSidebar}
+          isSidebarCollapsed={isCollapsed}
+          isMobile={isMobile}
+        />
+
+        <main
+          className={`
+            flex-1 relative overflow-y-auto focus:outline-none
+            ${isMobile ? 'p-4 sm:p-6' : 'p-4 md:p-6 lg:p-8'}
+            transition-all duration-300
+            w-full
+          `}
+        >
           <ErrorBoundary>
             {children}
           </ErrorBoundary>

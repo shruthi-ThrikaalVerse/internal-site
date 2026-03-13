@@ -428,6 +428,30 @@ const AdminResignationPage = () => (
   </AdminPageWithLogout>
 );
 
+const AdminLeaveRequestsPage = () => (
+  <AdminPageWithLogout>
+    <AdminLeaveCenter />
+  </AdminPageWithLogout>
+);
+
+const AdminPayrollPage = () => (
+  <AdminPageWithLogout>
+    <AdminPayrollProcessing />
+  </AdminPageWithLogout>
+);
+
+const AdminPerformancePage = () => (
+  <AdminPageWithLogout>
+    <AdminPerformanceManagement />
+  </AdminPageWithLogout>
+);
+
+const AdminAttendancePageDirect = () => (
+  <AdminPageWithLogout>
+    <AdminAttendanceMonitor />
+  </AdminPageWithLogout>
+);
+
 // Login Route Guards - prevent access if already authenticated
 const EmployeeLoginGuard = () => {
   const { isLoading } = useAuth();
@@ -541,7 +565,8 @@ root.render(
               {/* Admin routes */}
               <Route path="/admin/login" element={<AdminLoginGuard />} />
               <Route path="/admin/dashboard" element={<AdminDashboardWithContext />} />
-              <Route path="/attendance" element={<AdminAttendance />} />
+              <Route path="/admin/attendance" element={<AdminAttendancePageDirect />} />
+              <Route path="/admin/adminattendance" element={<AdminAttendance />} />
               <Route path="/admin/calendar" element={<AdminCalendarPage />} />
               <Route path="/admin/attendance-monitor" element={<AdminAttendanceMonitorPage />} />
               <Route path="/admin/audit-logs" element={<AdminAuditLogsPage />} />
@@ -554,10 +579,13 @@ root.render(
               <Route path="/admin/events" element={<AdminEventPage />} />
               <Route path="/admin/leave-center" element={<AdminLeaveCenterPage />} />
               <Route path="/admin/leave" element={<AdminPageWithLogout><LeaveProvider><AdminLeave /></LeaveProvider></AdminPageWithLogout>} />
+              <Route path="/admin/leave-requests" element={<AdminLeaveRequestsPage />} />
               <Route path="/admin/projects" element={<AdminPageWithLogout><AdminProjects /></AdminPageWithLogout>} />
               <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
+              <Route path="/admin/payroll" element={<AdminPayrollPage />} />
               <Route path="/admin/payroll-processing" element={<AdminPayrollProcessingPage />} />
               <Route path="/admin/payslips" element={<AdminPayslipsPage />} />
+              <Route path="/admin/performance" element={<AdminPerformancePage />} />
               <Route path="/admin/performance-management" element={<AdminPerformanceManagementPage />} />
               <Route path="/admin/performance-reviews" element={<AdminPerformanceReviewsPage />} />
               <Route path="/admin/profile" element={<AdminProfilePage />} />

@@ -189,7 +189,7 @@ const AuditLogsPage: React.FC = () => {
                                         onChange={(e) => setLiveTail(e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" style={{ringColor: '#c97a4c', backgroundColor: 'rgb(229, 231, 235)'}} onPeerChecked={{backgroundColor: '#c97a4c'}}></div>
                                 </label>
                             </div>
 
@@ -214,7 +214,7 @@ const AuditLogsPage: React.FC = () => {
                             {/* Mobile filter toggle */}
                             <button
                                 onClick={() => setShowMobileFilters(!showMobileFilters)}
-                                className="md:hidden px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                                className="md:hidden px-3 py-2 text-white rounded-lg text-sm font-medium transition-colors" style={{backgroundColor: '#c97a4c'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
                             >
                                 {showMobileFilters ? 'Hide Filters' : 'Show Filters'}
                             </button>
@@ -385,7 +385,7 @@ const AuditLogsPage: React.FC = () => {
                                     </button>
                                     <button
                                         onClick={() => { setPage(1); load(); }}
-                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm flex items-center gap-2"
+                                        className="px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors shadow-sm flex items-center gap-2" style={{backgroundColor: '#c97a4c'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
                                     >
                                         <LucideIcons.Filter className="w-4 h-4" />
                                         Apply Filters

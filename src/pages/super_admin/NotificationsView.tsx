@@ -152,7 +152,7 @@ export const NotificationsView = () => {
         actions={
           <button
             onClick={handleAddNew}
-            className="flex items-center gap-2 bg-blue-600 px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all focus:ring-4 focus:ring-blue-500/50"
+            className="flex items-center gap-2 bg-amber-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-amber-200 hover:bg-amber-800 transition-all focus:ring-4 focus:ring-amber-600/50 text-white"
           >
             <Plus size={18} />
             New Notification
@@ -168,24 +168,24 @@ export const NotificationsView = () => {
 
       {loading && !notifications.length ? (
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700"></div>
           <p className="text-gray-500 mt-2">Loading notifications...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {notifications.map((notif) => (
-            <div key={notif.id} className="bg-white border border-gray-200 rounded-2xl p-5 hover:border-blue-200 transition-all group">
+            <div key={notif.id} className="bg-white border border-gray-200 rounded-2xl p-5 hover:border-amber-200 transition-all group">
               <div className="flex items-start gap-4">
                 <div className={`p-3 rounded-xl border shrink-0 ${notif.priority === 'high' ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' :
                   notif.priority === 'medium' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
-                    'bg-blue-500/10 border-blue-500/20 text-blue-500'
+                    'bg-amber-500/10 border-amber-500/20 text-amber-500'
                   }`}>
                   {notif.priority === 'high' ? <ShieldAlert size={20} /> : <Info size={20} />}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
-                    <h3 className="font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">{notif.title}</h3>
+                    <h3 className="font-bold text-gray-900 truncate group-hover:text-amber-700 transition-colors">{notif.title}</h3>
                     <div className="flex items-center gap-2 shrink-0">
                       <Badge color={notif.status === 'sent' ? 'green' : notif.status === 'pending' ? 'yellow' : 'slate'}>
                         {notif.status.toUpperCase()}
@@ -205,7 +205,7 @@ export const NotificationsView = () => {
                     <div className="flex gap-2 shrink-0">
                       <button
                         onClick={() => handleEdit(notif)}
-                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        className="p-2 text-gray-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all"
                         title="Edit"
                       >
                         <Edit2 size={16} />
@@ -243,7 +243,7 @@ export const NotificationsView = () => {
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="Notification title"
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-600 focus:border-transparent"
                 />
               </div>
 
@@ -254,7 +254,7 @@ export const NotificationsView = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
                   placeholder="Notification message..."
                   rows={4}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-600 focus:border-transparent"
                 />
               </div>
 
@@ -264,7 +264,7 @@ export const NotificationsView = () => {
                   <select
                     value={formData.priority}
                     onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value as any }))}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-600 focus:border-transparent"
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -277,7 +277,7 @@ export const NotificationsView = () => {
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-600 focus:border-transparent"
                   >
                     <option value="draft">Draft</option>
                     <option value="pending">Pending</option>
@@ -291,7 +291,7 @@ export const NotificationsView = () => {
                 <select
                   value={formData.recipient}
                   onChange={(e) => setFormData(prev => ({ ...prev, recipient: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-600 focus:border-transparent"
                 >
                   <option value="All Employees">All Employees</option>
                   <option value="Admin Only">Admin Only</option>
@@ -311,7 +311,7 @@ export const NotificationsView = () => {
               <button
                 onClick={handleSave}
                 disabled={loading || !formData.title || !formData.message}
-                className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 bg-amber-700 text-white rounded-xl font-bold hover:bg-amber-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Saving...' : 'Save'}
               </button>
