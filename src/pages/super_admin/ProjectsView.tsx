@@ -196,7 +196,7 @@ export const ProjectsView = () => {
         actions={
           <button
             onClick={handleAddNew}
-            className="flex items-center justify-center gap-2 bg-blue-600 px-5 py-3 rounded-xl text-sm font-bold shadow-2xl shadow-blue-200 hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/50 transition-all transform hover:scale-[1.05] active:scale-[0.95] w-full sm:w-auto text-white"
+            className="flex items-center justify-center gap-2 bg-amber-700 px-5 py-3 rounded-xl text-sm font-bold shadow-2xl shadow-amber-200 hover:bg-amber-800 focus:ring-4 focus:ring-amber-600/50 transition-all transform hover:scale-[1.05] active:scale-[0.95] w-full sm:w-auto text-white"
           >
             <Plus size={18} />
             <span>Add Project</span>
@@ -206,23 +206,23 @@ export const ProjectsView = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((project) => (
-          <div key={project.id} className="bg-white border border-gray-200 rounded-2xl p-6 hover:border-blue-200 transition-all shadow-xl group relative overflow-hidden">
+          <div key={project.id} className="bg-white border border-gray-200 rounded-2xl p-6 hover:border-amber-200 transition-all shadow-xl group relative overflow-hidden">
             {/* Subtle Gradient Accent */}
-            <div className={`absolute top-0 left-0 w-1 h-full ${project.status === 'completed' ? 'bg-emerald-500' : project.status === 'delayed' ? 'bg-rose-500' : 'bg-blue-600'}`} />
+            <div className={`absolute top-0 left-0 w-1 h-full ${project.status === 'completed' ? 'bg-emerald-500' : project.status === 'delayed' ? 'bg-rose-500' : 'bg-amber-700'}`} />
 
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1 min-w-0 pr-4">
-                <h3 className="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors truncate">{project.name}</h3>
+                <h3 className="font-bold text-lg text-gray-900 group-hover:text-amber-700 transition-colors truncate">{project.name}</h3>
                 <p className="text-xs text-gray-500 font-medium truncate">{project.client}</p>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <Badge color={project.status === 'completed' ? 'green' : project.status === 'delayed' ? 'red' : 'blue'}>
+                <Badge color={project.status === 'completed' ? 'green' : project.status === 'delayed' ? 'red' : 'amber'}>
                   {project.status.toUpperCase()}
                 </Badge>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => handleEdit(project)}
-                    className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-blue-600 transition-all focus:ring-4 focus:ring-blue-500/50"
+                    className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-amber-700 transition-all focus:ring-4 focus:ring-amber-600/50"
                     title="Edit Project"
                   >
                     <Pencil size={14} />
@@ -251,11 +251,11 @@ export const ProjectsView = () => {
               <div>
                 <div className="flex justify-between text-xs font-bold mb-1.5">
                   <span className="text-gray-500">Progress</span>
-                  <span className="text-blue-600">{project.progress}%</span>
+                  <span className="text-amber-700">{project.progress}%</span>
                 </div>
                 <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
                   <div
-                    className="bg-blue-600 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(59,130,246,0.4)]"
+                    className="bg-amber-700 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(167,97,55,0.4)]"
                     style={{ width: `${project.progress}%` }}
                   />
                 </div>
@@ -299,7 +299,7 @@ export const ProjectsView = () => {
                 </div>
                 <button
                   onClick={() => handleEdit(project)}
-                  className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 hover:text-blue-600 transition-colors focus:ring-4 focus:ring-blue-500/50"
+                  className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 hover:text-amber-700 transition-colors focus:ring-4 focus:ring-amber-600/50"
                 >
                   Manage Details
                 </button>
@@ -317,23 +317,23 @@ export const ProjectsView = () => {
         onSave={handleSave}
       >
         <div className="space-y-8 pb-4">
-          <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-gradient-to-br from-blue-50 to-white rounded-[2rem] border border-gray-200 relative shadow-2xl overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full -mr-12 -mt-12 blur-2xl"></div>
-            <div className="p-5 bg-blue-50 text-blue-600 rounded-[1.5rem] border border-blue-100 shadow-inner">
+          <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-gradient-to-br from-amber-50 to-white rounded-[2rem] border border-gray-200 relative shadow-2xl overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+            <div className="p-5 bg-amber-50 text-amber-700 rounded-[1.5rem] border border-amber-100 shadow-inner">
               <Layout size={32} />
             </div>
             <div className="flex-1 text-center sm:text-left">
               <h4 className="text-xl font-black text-gray-900 tracking-tight mb-1">{editingProject.name || 'Project Untitled'}</h4>
               <p className="text-gray-500 text-xs font-bold uppercase tracking-widest flex items-center justify-center sm:justify-start gap-2">
-                <Target size={12} className="text-blue-600" /> Global Operations Pipeline
+                <Target size={12} className="text-amber-700" /> Global Operations Pipeline
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
             <div className="md:col-span-2">
-              <h5 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
-                <span className="w-8 h-px bg-blue-200"></span>
+              <h5 className="text-[10px] font-black text-amber-700 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
+                <span className="w-8 h-px bg-amber-200"></span>
                 Strategic Parameters
               </h5>
             </div>
@@ -402,8 +402,8 @@ export const ProjectsView = () => {
               )}
 
               {managersLoading && (
-                <div className="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-xs text-blue-700 font-medium">Loading project managers...</p>
+                <div className="md:col-span-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-xs text-amber-700 font-medium">Loading project managers...</p>
                 </div>
               )}
 
@@ -446,8 +446,8 @@ export const ProjectsView = () => {
               onChange={() => { }}
             />
             <div className="md:col-span-2 mt-4">
-              <h5 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
-                <span className="w-8 h-px bg-blue-200"></span>
+              <h5 className="text-[10px] font-black text-amber-700 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
+                <span className="w-8 h-px bg-amber-200"></span>
                 Core Objectives & Scope
               </h5>
               <FormTextArea
@@ -459,9 +459,9 @@ export const ProjectsView = () => {
             </div>
           </div>
 
-          <div className="p-4 bg-blue-50 border border-gray-200 rounded-xl flex gap-3 items-center">
+          <div className="p-4 bg-amber-50 border border-gray-200 rounded-xl flex gap-3 items-center">
             {/* Using Shield icon which is now correctly imported */}
-            <Shield size={18} className="text-blue-600 shrink-0" />
+            <Shield size={18} className="text-amber-700 shrink-0" />
             <p className="text-[10px] text-gray-500 font-medium leading-tight">
               Project status updates and team reallocations are synchronized across all department heads automatically.
             </p>

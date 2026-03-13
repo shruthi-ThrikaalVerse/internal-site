@@ -193,7 +193,7 @@ export const ProfileView = () => {
         <SectionHeader title="Profile Settings" description="Update your administrative identity and security preferences." />
         <div className="bg-white rounded-2xl border border-gray-200 p-12 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
-            <Loader size={32} className="text-blue-600 animate-spin" />
+            <Loader size={32} className="text-amber-700 animate-spin" />
             <p className="text-gray-500 font-medium">Loading profile...</p>
           </div>
         </div>
@@ -223,11 +223,11 @@ export const ProfileView = () => {
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white border border-gray-200 rounded-2xl p-6 text-center">
             <div className="relative inline-block mb-4">
-              <div className="w-24 h-24 rounded-2xl border-2 border-gray-200 bg-blue-100 overflow-hidden mx-auto flex items-center justify-center">
+              <div className="w-24 h-24 rounded-2xl border-2 border-gray-200 bg-amber-100 overflow-hidden mx-auto flex items-center justify-center">
                 {profile.profileImage ? (
                   <img src={formatBase64Image(profile.profileImage)} alt={fullName} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-3xl font-bold text-blue-600">{initials}</span>
+                  <span className="text-3xl font-bold text-amber-700">{initials}</span>
                 )}
               </div>
               <div className="flex items-center gap-1 absolute -bottom-2 -right-2">
@@ -235,7 +235,7 @@ export const ProfileView = () => {
                   onClick={handleCameraClick}
                   disabled={uploadingImage || deletingImage}
                   title="Change avatar"
-                  className="p-2 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-all focus:ring-4 focus:ring-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-2 bg-amber-700 text-white rounded-lg shadow-lg hover:bg-amber-800 transition-all focus:ring-4 focus:ring-amber-600/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {uploadingImage ? (
                     <Loader size={14} className="animate-spin" />
@@ -279,7 +279,7 @@ export const ProfileView = () => {
           </div>
 
           <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-1">
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-600 font-bold text-sm focus:ring-4 focus:ring-blue-500/50">
+            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-amber-50 text-amber-700 font-bold text-sm focus:ring-4 focus:ring-amber-600/50">
               <User size={18} /> Personal Info
             </button>
             <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-all font-medium text-sm">
@@ -297,7 +297,7 @@ export const ProfileView = () => {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8">
             <h4 className="font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <User size={18} className="text-blue-600" /> Account Details
+              <User size={18} className="text-amber-700" /> Account Details
             </h4>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
@@ -308,7 +308,7 @@ export const ProfileView = () => {
                     type="text"
                     value={editForm?.firstName || ''}
                     onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-amber-600 focus:border-amber-600"
                   />
                 ) : (
                   <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
@@ -323,7 +323,7 @@ export const ProfileView = () => {
                     type="text"
                     value={editForm?.lastName || ''}
                     onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-amber-600 focus:border-amber-600"
                   />
                 ) : (
                   <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
@@ -344,7 +344,7 @@ export const ProfileView = () => {
                     type="text"
                     value={editForm?.phoneNumber || ''}
                     onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-amber-600 focus:border-amber-600"
                   />
                 ) : (
                   <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
@@ -397,7 +397,7 @@ export const ProfileView = () => {
                   <textarea
                     value={editForm?.address || ''}
                     onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    className="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-amber-600 focus:border-amber-600 resize-none"
                     rows={3}
                   />
                 ) : (
@@ -442,7 +442,7 @@ export const ProfileView = () => {
               ) : (
                 <button
                   onClick={handleEditClick}
-                  className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all focus:ring-4 focus:ring-blue-500/50"
+                  className="px-8 py-3 bg-amber-700 text-white rounded-xl font-bold shadow-lg shadow-amber-200 hover:bg-amber-800 transition-all focus:ring-4 focus:ring-amber-600/50"
                 >
                   Edit Profile
                 </button>

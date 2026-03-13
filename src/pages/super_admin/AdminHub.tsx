@@ -188,18 +188,19 @@ export const AdminHub = () => {
         const loadAdminEmployees = async () => {
             try {
                 console.log('Loading admin employees...');
-                const employees = await usersApi.getAdminEmployees();
-                console.log('Admin employees loaded:', employees);
+                // Use getAllEmployees() and filter for admin tiers instead of getAdminEmployees()
+                const employees = await usersApi.getAllEmployees();
+                console.log('All employees loaded:', employees);
 
                 // Transform API response to User objects and set state
                 if (Array.isArray(employees)) {
                     const formattedAdmins: User[] = employees
                         .filter((emp: any) => {
-                            const roleVal = String(emp.role || emp.userType || '').toUpperCase();
+                            const roleVal = String((emp.role?.name || emp.role) || emp.userType || '').toUpperCase();
                             return ADMIN_TIERS.includes(roleVal);
                         })
                         .map((emp: any) => {
-                            const roleVal = String(emp.role || emp.userType || 'ADMIN').toUpperCase();
+                            const roleVal = String((emp.role?.name || emp.role) || emp.userType || 'ADMIN').toUpperCase();
                             const statusValue = String(emp.status || 'active') as 'active' | 'inactive' | 'probation' | 'resigned';
                             return {
                                 id: String(emp.employeeId || emp.id || `adm-${Date.now()}`),
@@ -221,6 +222,8 @@ export const AdminHub = () => {
                 }
             } catch (err) {
                 console.error('Failed to load admin employees:', err);
+                // Set empty array instead of letting error prevent rendering
+                setAdmins([]);
             }
         };
         loadAdminEmployees();
@@ -333,15 +336,7 @@ export const AdminHub = () => {
 
                     // Refetch admins to get the real ID and all backend-generated data
                     try {
-                        const refetchResponse = await fetch('http://localhost:8085/api/users/admin/employees', {
-                            method: 'GET',
-                            credentials: 'include',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                        });
-
-                        const refetchData = await refetchResponse.json();
+                        const refetchData = await usersApi.getAllEmployees();
 
                         if (refetchData) {
                             const rawAdminsData = Array.isArray(refetchData) ? refetchData : refetchData.data || [];
@@ -935,7 +930,7 @@ export const AdminHub = () => {
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {filteredAdmins.map((a) => (
-                                <tr key={a.id} className={`hover:bg-gray-50 transition-all group border-l-2 border-transparent` + (a.status === 'inactive' ? 'opacity-50 grayscale' : '')} style={{borderColor: activeAdminDetails === a.id ? '#c97a4c' : ''}}>
+                                <tr key={a.id} className={`hover:bg-gray-50 transition-all group border-l-2 border-transparent` + (a.status === 'inactive' ? 'opacity-50 grayscale' : '')} style={{borderColor: editingId === a.id ? '#c97a4c' : ''}}>
                                     <td className="px-8 py-5 cursor-pointer" onClick={() => setViewingUser(a)}>
                                         <div className="flex items-center gap-4">
                                             <div className="relative shrink-0">
@@ -957,7 +952,7 @@ export const AdminHub = () => {
                                                 )}
                                             </div>
                                             <div className="min-w-0">
-                                                <div className="font-bold text-gray-900 transition-colors truncate" style={{color: activeAdminDetails === a.id ? '#c97a4c' : ''}}>
+                                                <div className="font-bold text-gray-900 transition-colors truncate" style={{color: editingId === a.id ? '#c97a4c' : ''}}>
                                                     {a.firstName ? `${a.firstName} ${a.lastName}` : a.name}
                                                 </div>
                                                 <div className="flex items-center gap-2 mt-0.5">
@@ -973,13 +968,13 @@ export const AdminHub = () => {
                                         <Badge color={a.status === 'active' ? 'green' : 'red'}>{a.status.toUpperCase()}</Badge>
                                     </td>
                                     <td className="px-8 py-5">
-                                        <div className="flex items-center gap-2 text-[11px] text-gray-900 font-mono bg-gray-100 px-3 py-1.5 rounded-lg text-center w-fit transition-all" style={{borderColor: activeAdminDetails === a.id ? '#c97a4c' : '', color: activeAdminDetails === a.id ? '#c97a4c' : '', borderWidth: activeAdminDetails === a.id ? '2px' : '1px'}}>
-                                            <Mail size={12} style={{color: activeAdminDetails === a.id ? '#c97a4c' : ''}} /> {a.email}
+                                        <div className="flex items-center gap-2 text-[11px] text-gray-900 font-mono bg-gray-100 px-3 py-1.5 rounded-lg text-center w-fit transition-all" style={{borderColor: editingId === a.id ? '#c97a4c' : '', color: editingId === a.id ? '#c97a4c' : '', borderWidth: editingId === a.id ? '2px' : '1px'}}>
+                                            <Mail size={12} style={{color: editingId === a.id ? '#c97a4c' : ''}} /> {a.email}
                                         </div>
                                     </td>
                                     <td className="px-8 py-5">
                                         <div className="flex items-center gap-2 text-[11px] text-gray-900 font-bold">
-                                            <Calendar size={12} style={{color: activeAdminDetails === a.id ? '#c97a4c' : ''}} />
+                                            <Calendar size={12} style={{color: editingId === a.id ? '#c97a4c' : ''}} />
                                             {a.dateOfJoining || a.joiningDate || '2024-01-01'}
                                         </div>
                                     </td>
