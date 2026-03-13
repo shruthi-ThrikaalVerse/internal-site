@@ -6,7 +6,6 @@ import {
   CalendarDays, MapPin, Users, MoreHorizontal
 } from 'lucide-react';
 import { CalendarAttendanceRecord } from '../../types.ts';
-import { getUserItem } from '../../utils/storage.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
 
 const SYSTEM_HOLIDAYS = [
@@ -116,16 +115,10 @@ const Calendar: React.FC = () => {
     return WORKING_SATURDAYS.includes(dateStr);
   };
 
-  // Load calendar events from localStorage
+  // Load calendar events from backend
   const loadCalendarEvents = (): CalendarEvent[] => {
-    try {
-      const savedCalendarEvents = localStorage.getItem('calendarEvents');
-      if (savedCalendarEvents) {
-        return JSON.parse(savedCalendarEvents);
-      }
-    } catch (error) {
-      console.error('Error loading calendar events:', error);
-    }
+    // Calendar events can be fetched from backend if available
+    // For now, return empty to rely on backend or session state
     return [];
   };
 
@@ -227,9 +220,29 @@ const Calendar: React.FC = () => {
     });
   };
 
-  const refreshData = () => {
-    const storedAttendance = getUserItem('attendance_records', []);
-    const storedLeaves = getUserItem('leave_requests', []);
+  const refreshData = async () => {
+    let storedAttendance: any[] = [];
+    let storedLeaves: any[] = [];
+
+    try {
+      const attendResp = await fetch('http://localhost:8085/api/employee_attend/attendance', { credentials: 'include' });
+      if (attendResp.ok) {
+        const data = await attendResp.json().catch(() => []);
+        storedAttendance = Array.isArray(data) ? data : (data?.records || []);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch attendance:', err);
+    }
+
+    try {
+      const leaveResp = await fetch('http://localhost:8085/api/leave/requests', { credentials: 'include' });
+      if (leaveResp.ok) {
+        const data = await leaveResp.json().catch(() => []);
+        storedLeaves = Array.isArray(data) ? data : (data?.requests || []);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch leaves:', err);
+    }
 
     const mergedMap = new Map<string, CalendarAttendanceRecord>();
 
@@ -320,18 +333,6 @@ const Calendar: React.FC = () => {
 
   useEffect(() => {
     refreshData();
-
-    const handleStorage = () => refreshData();
-    window.addEventListener('storage', handleStorage);
-
-    // Add custom event listener for calendar updates
-    const handleCalendarUpdate = () => refreshData();
-    window.addEventListener('calendarEventsUpdated', handleCalendarUpdate);
-
-    return () => {
-      window.removeEventListener('storage', handleStorage);
-      window.removeEventListener('calendarEventsUpdated', handleCalendarUpdate);
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMonth]);
 
@@ -900,10 +901,10 @@ const Calendar: React.FC = () => {
                 {selectedRecord && selectedRecord.status !== 'Events' && (
                   <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-2 sm:mt-3">
                     <div className={`px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-white ${selectedRecord.status === 'Working Saturday' ? 'bg-orange-500' :
-                        selectedRecord.timeIn ? 'bg-emerald-500' :
-                          selectedRecord.status === 'Future' ? 'bg-gray-500' :
-                            selectedRecord.status === 'Weekend' ? 'bg-slate-400' :
-                              getBGColorClass(selectedRecord)
+                      selectedRecord.timeIn ? 'bg-emerald-500' :
+                        selectedRecord.status === 'Future' ? 'bg-gray-500' :
+                          selectedRecord.status === 'Weekend' ? 'bg-slate-400' :
+                            getBGColorClass(selectedRecord)
                       }`}>
                       {selectedRecord.status === 'Future' ? 'FUTURE' :
                         selectedRecord.status === 'Weekend' ? 'WEEKEND' :

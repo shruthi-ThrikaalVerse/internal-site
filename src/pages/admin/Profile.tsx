@@ -221,11 +221,6 @@ const Profile: React.FC = () => {
         setProfileImage(hrmsPhoto);
         return;
       }
-      const savedImage = localStorage.getItem(`profile_image_${user.id}`);
-      if (savedImage) {
-        setProfileImage(savedImage);
-        return;
-      }
       if (user.avatar) {
         setProfileImage(user.avatar);
       } else {
@@ -245,16 +240,10 @@ const Profile: React.FC = () => {
       setIsLoadingUserData(true);
       setUserDataError(null);
       try {
-        const token = localStorage.getItem('authToken');
-
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
         };
-
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-
+        // No Authorization header, rely on HTTP-only cookie
         const response = await fetch('http://localhost:8085/api/users/me', {
           method: 'GET',
           credentials: 'include',
@@ -353,14 +342,10 @@ const Profile: React.FC = () => {
       const form = new FormData();
       form.append('image', file);
 
-      const token = localStorage.getItem('authToken');
-      const headers: Record<string, string> = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
+      // No Authorization header, rely on HTTP-only cookie
       const resp = await fetch('http://localhost:8085/api/users/admin/profile-image', {
         method: 'PUT',
         credentials: 'include',
-        headers,
         body: form,
       });
 
@@ -379,7 +364,6 @@ const Profile: React.FC = () => {
       if (user?.id) {
         updateProfilePhoto(user.id, imageUrl);
         auth.updateAvatar?.(imageUrl);
-        localStorage.setItem(`profile_image_${user.id}`, imageUrl);
       }
 
       setProfileImage(imageUrl);
@@ -397,10 +381,8 @@ const Profile: React.FC = () => {
   const handleRemovePhoto = async () => {
     if (!user?.id) return;
     try {
-      const token = localStorage.getItem('authToken');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
+      // No Authorization header, rely on HTTP-only cookie
       const resp = await fetch('http://localhost:8085/api/users/admin/profile-image', {
         method: 'DELETE',
         credentials: 'include',
@@ -416,7 +398,6 @@ const Profile: React.FC = () => {
       setProfileImage(null);
       const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.fullName || 'admin')}`;
       auth.updateAvatar?.(defaultAvatar);
-      localStorage.removeItem(`profile_image_${user.id}`);
       notify('Profile photo removed', 'info');
     } catch (err: any) {
       console.error('Remove failed:', err);
@@ -448,18 +429,14 @@ const Profile: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('authToken');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
       const payload = {
         oldPassword,
         newPassword,
         currentPassword: oldPassword // Some APIs use different field names
       };
-
       console.log('Attempting password change with payload:', { ...payload, oldPassword: '***', newPassword: '***' });
-
+      // No Authorization header, rely on HTTP-only cookie
       const resp = await fetch('http://localhost:8085/api/users/change-password', {
         method: 'POST',
         credentials: 'include',
@@ -498,14 +475,10 @@ const Profile: React.FC = () => {
       const form = new FormData();
       form.append('image', file);
 
-      const token = localStorage.getItem('authToken');
-      const headers: Record<string, string> = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
+      // No Authorization header, rely on HTTP-only cookie
       const resp = await fetch('http://localhost:8085/api/users/admin/profile-image', {
         method: 'PUT',
         credentials: 'include',
-        headers,
         body: form,
       });
 
@@ -522,7 +495,6 @@ const Profile: React.FC = () => {
       setProfileImage(imageUrl);
       updateProfilePhoto(user.id, imageUrl);
       auth.updateAvatar?.(imageUrl);
-      localStorage.setItem(`profile_image_${user.id}`, imageUrl);
       setUploadProgress(100);
       notify('Profile picture updated successfully!', 'success');
       setUploadProgress(0);
@@ -536,10 +508,8 @@ const Profile: React.FC = () => {
   const handleRemoveProfilePicture = async () => {
     if (!user?.id) return;
     try {
-      const token = localStorage.getItem('authToken');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
+      // No Authorization header, rely on HTTP-only cookie
       const resp = await fetch('http://localhost:8085/api/users/admin/profile-image', {
         method: 'DELETE',
         credentials: 'include',

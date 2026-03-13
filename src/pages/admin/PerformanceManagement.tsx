@@ -703,9 +703,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
 
   // Fetch remote performance APIs once on mount
   useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+    // Removed all localStorage usage, only HTTP-only cookies are used
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
     const fetchTop = async () => {
       try {
@@ -1137,8 +1136,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
     // Map numeric rating to enum expected by backend
     const ratingEnum = reviewRating === 5 ? 'FIVE' : reviewRating === 4 ? 'FOUR' : reviewRating === 3 ? 'THREE' : reviewRating === 2 ? 'TWO' : 'ONE';
 
-    const token = localStorage.getItem('token');
-    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+    // Removed all localStorage usage, only HTTP-only cookies are used
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
     (async () => {
       try {
@@ -1169,8 +1168,8 @@ const EmployeePerformanceDashboard: React.FC = () => {
     loadPerformanceData();
 
     // Refresh dashboard API data
-    const token = localStorage.getItem('token');
-    const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+    // Removed all localStorage usage, only HTTP-only cookies are used
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
     const fetchDashboard = async () => {
       try {

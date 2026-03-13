@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { initializeUserData } from '../../utils/storage.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
 
 interface LoginProps {
@@ -59,15 +58,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         return;
       }
 
-      // Initialize per-user storage buckets
-      try {
-        const currentUser = localStorage.getItem('user');
-        if (currentUser) {
-          const user = JSON.parse(currentUser);
-          initializeUserData(user.id);
-        }
-      } catch (e) { /* ignore */ }
-
       toast.success("Login Successful! Welcome back.", {
         position: "top-right",
         autoClose: 3000
@@ -76,10 +66,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       // notify App that user has logged in so routes update
       onLogin?.();
 
-      // Wait briefly for AuthContext / localStorage to be populated so route guards allow navigation
+      // Wait briefly for AuthContext to be populated so route guards allow navigation
       const waitForAuth = async () => {
         for (let i = 0; i < 20; i++) {
-          if (auth?.isAuthenticated || localStorage.getItem('user')) return;
+          if (auth?.isAuthenticated) return;
           // wait 100ms
           // eslint-disable-next-line no-await-in-loop
           await new Promise((r) => setTimeout(r, 100));
@@ -95,10 +85,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }
   };
 
-  // Clear any existing token/user when showing the login page
+  // Clear any existing session when showing the login page
   useEffect(() => {
-    try { localStorage.removeItem('authToken'); } catch { }
-    try { localStorage.removeItem('user'); } catch { }
     // ensure auth state is cleared
     if (auth?.logout) {
       // call logout to clear context state without relying on server

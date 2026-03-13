@@ -85,7 +85,7 @@ const AttendanceMonitor: React.FC = () => {
         params.set('to', to);
         if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
 
-        const url = `http://localhost:8085 /api/employee_attend/admin/attendance${params.toString()}`;
+        const url = `http://localhost:8085/api/employee_attend/admin/attendance?${params.toString()}`;
         const res = await fetch(url, { method: 'GET', credentials: 'include' });
 
         if (!res.ok) {

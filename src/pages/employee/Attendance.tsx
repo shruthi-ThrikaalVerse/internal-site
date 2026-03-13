@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { AttendanceRecord as SharedAttendanceRecord } from '../../types.ts';
 import { GoogleGenAI } from "@google/genai";
-import { getUserSpecificKey } from '../../utils/storage.ts';
+
 import { useAuth } from '../../context/AuthContext.tsx';
 
 // Add this SYSTEM_HOLIDAYS array to the attendance component
@@ -74,15 +74,7 @@ const Attendance: React.FC = () => {
   // Confirmation dialog state
   const [showCheckoutConfirm, setShowCheckoutConfirm] = useState(false);
 
-  // Create user-specific storage key (scoped by user.id)
-  const attendanceStorageKey = useMemo(() =>
-    getUserSpecificKey('attendance_records', auth?.user?.id),
-    [auth?.user?.id]
-  );
-  const notificationsStorageKey = useMemo(() =>
-    getUserSpecificKey('user_notifications_v1', auth?.user?.id),
-    [auth?.user?.id]
-  );
+  // Local storage keys removed; backend and session state only
   const getTodayDateString = useCallback(() => {
     const today = new Date();
     return today.toISOString().split('T')[0];
@@ -174,21 +166,10 @@ const Attendance: React.FC = () => {
     return records;
   }, [isHoliday, isWeekend, isWorkingSaturday]);
 
+  // Notification logic is now session-only (in-memory) or handled by backend
   const triggerNotification = useCallback((title: string, msg: string, icon: string, color: string) => {
-    const saved = JSON.parse(localStorage.getItem(notificationsStorageKey) || '[]');
-    const newNotif = {
-      id: `notif-${Date.now()}`,
-      title,
-      msg,
-      time: new Date().toISOString(),
-      icon,
-      color,
-      read: false,
-      type: 'info'
-    };
-    localStorage.setItem(notificationsStorageKey, JSON.stringify([newNotif, ...saved]));
-    window.dispatchEvent(new Event('storage'));
-  }, [notificationsStorageKey]);
+    // No-op: Integrate a UI toast system if needed.
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -211,107 +192,58 @@ const Attendance: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       const today = getTodayString();
-
-      // Load local records first
-      const recordsStr = localStorage.getItem(getUserSpecificKey('attendance_records'));
-      let records: AttendanceRecord[] = recordsStr ? JSON.parse(recordsStr) : [];
-
-      // Attempt to sync today's record from the backend when user is authenticated
       if (auth?.isAuthenticated) {
         try {
-          // Try likely endpoints - backend may expose one of these
           const endpoints = [
             `/api/employee_attend/attendance?date=${encodeURIComponent(today)}`,
             `/api/employee_attend/today`,
             `/api/employee_attend/get-today`,
             `/api/employee_attend/record?date=${encodeURIComponent(today)}`
           ];
-
+          let rec = null;
           for (const ep of endpoints) {
             try {
               const resp = await fetch(`http://localhost:8085${ep}`, { credentials: 'include' });
               if (!resp.ok) continue;
               const data = await resp.json().catch(() => null);
               if (!data) continue;
-
-              // Normalize server response into a record object
-              let serverRecord: any = null;
-              if (Array.isArray(data) && data.length > 0) serverRecord = data[0];
-              else if (data.record) serverRecord = data.record;
-              else if (data.date || data.timeIn || data.id) serverRecord = data;
-
-              if (serverRecord && serverRecord.date === today) {
-                const idx = records.findIndex(r => r.date === today);
-                if (idx > -1) {
-                  records[idx] = { ...records[idx], ...serverRecord } as AttendanceRecord;
-                } else {
-                  records.push(serverRecord as AttendanceRecord);
-                }
-
-                // we merged today's server record; no need to try other endpoints
-                break;
-              }
-            } catch (err) {
-              // ignore and try next endpoint
-            }
+              if (Array.isArray(data) && data.length > 0) rec = data[0];
+              else if (data.record) rec = data.record;
+              else if (data.date || data.timeIn || data.id) rec = data;
+              if (rec && rec.date === today) break;
+            } catch { }
+          }
+          if (rec) {
+            setTodayRecord(rec);
+            setIsPunchedIn(!!rec.timeIn && !rec.timeOut);
+            setWorkDuration(rec.timeIn ? calculateDuration(rec.timeIn, rec.timeOut) : '00:00:00');
+            setCustomLocationName(rec.locationName || '');
+            setAttendanceRecords([rec]);
+          } else {
+            setTodayRecord(null);
+            setIsPunchedIn(false);
+            setWorkDuration('00:00:00');
+            setCustomLocationName('');
+            setAttendanceRecords([]);
           }
         } catch (err) {
-          console.warn('Failed to sync attendance from server:', err);
+          setAttendanceRecords([]);
+          setTodayRecord(null);
+          setIsPunchedIn(false);
+          setWorkDuration('00:00:00');
+          setCustomLocationName('');
         }
       }
-
-      // Generate absent records for missing working days (FROM OLD CODE)
-      records = generateAbsentRecords(records);
-
-      // Sort by date (newest first)
-      records.sort((a, b) => b.date.localeCompare(a.date));
-
-      // Persist merged records and update state
-      localStorage.setItem(getUserSpecificKey('attendance_records'), JSON.stringify(records));
-      setAttendanceRecords(records);
-
-      const rec = records.find((r: AttendanceRecord) => r.date === today);
-
-      if (rec) {
-        const hasTimeIn = !!rec.timeIn;
-        const hasTimeOut = !!rec.timeOut;
-        const isActive = hasTimeIn && !hasTimeOut;
-
-        setTodayRecord(rec);
-        setIsPunchedIn(isActive);
-
-        if (hasTimeIn) {
-          const duration = calculateDuration(rec.timeIn, rec.timeOut);
-          setWorkDuration(duration);
-        } else {
-          setWorkDuration('00:00:00');
-        }
-
-        setCustomLocationName(rec.locationName || '');
-      } else {
-        setTodayRecord(null);
-        setIsPunchedIn(false);
-        setWorkDuration('00:00:00');
-        setCustomLocationName('');
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          (err) => console.warn('Geolocation error:', err.message),
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
       }
     };
-
-    // run loader
     loadData();
-
-    const handleStorage = () => { void loadData(); };
-    window.addEventListener('storage', handleStorage);
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        (err) => console.warn('Geolocation error:', err.message),
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-      );
-    }
-
-    return () => window.removeEventListener('storage', handleStorage);
-  }, [getTodayString, calculateDuration, generateAbsentRecords, auth?.user?.id, auth?.isAuthenticated]);
+  }, [getTodayString, calculateDuration, auth?.user?.id, auth?.isAuthenticated]);
 
   // Update work duration in real-time when checked in
   useEffect(() => {
@@ -365,20 +297,7 @@ const Attendance: React.FC = () => {
       return;
     }
 
-    const recordsStr = localStorage.getItem(attendanceStorageKey);
-    const updated: AttendanceRecord[] = recordsStr ? JSON.parse(recordsStr) : [];
-    const idx = updated.findIndex((r: AttendanceRecord) => r.date === today);
 
-    // Check if already checked in today
-    if (idx > -1 && updated[idx].timeIn) {
-      triggerNotification(
-        'Already Checked In',
-        'You are already checked in for today.',
-        'Clock',
-        'text-amber-500 bg-amber-50'
-      );
-      return;
-    }
 
     setIsResolvingLocation(true);
 
@@ -390,90 +309,34 @@ const Attendance: React.FC = () => {
       locStr = `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`;
     }
 
-    const newRecord: AttendanceRecord = {
-      id: `att-${Date.now()}`,
-      date: today,
-      status: new Date().getHours() < 9 ? 'Present' : 'Late',
-      workingHours: 0,
-      timeIn: now.toISOString(),
-      timeOut: '',
-      location: locStr,
-      locationName: locName
-    };
 
-    // Try to persist to backend first. On failure, fall back to localStorage so app remains functional offline.
+
     try {
       const resp = await fetch('http://localhost:8085/api/employee_attend/check-in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ date: today, timeIn: newRecord.timeIn, location: locStr, locationName: locName })
+        body: JSON.stringify({ date: today, timeIn: now.toISOString(), location: locStr, locationName: locName })
       });
-
       if (resp.ok) {
-        const data = await resp.json().catch(() => null);
-        const serverRecord = data?.record || data || newRecord;
-
-        // Merge server-provided values into local record
-        if (idx > -1) {
-          updated[idx] = { ...updated[idx], ...serverRecord } as AttendanceRecord;
-        } else {
-          updated.push(serverRecord as AttendanceRecord);
-        }
-
-        const finalRecords = generateAbsentRecords(updated);
-        localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
-        setAttendanceRecords(finalRecords);
-
-        const todayRec = finalRecords.find(r => r.date === today) || null;
-        setTodayRecord(todayRec);
-        setIsPunchedIn(true);
-
-        setCustomLocationName(serverRecord.locationName || locName);
-
         triggerNotification(
           'Check-In Successful',
           `Checked in at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
           'Clock',
           'text-emerald-500 bg-emerald-50'
         );
-
         setIsResolvingLocation(false);
+        // Refresh attendance data from backend
+        await new Promise(r => setTimeout(r, 500));
+        window.location.reload();
         return;
+      } else {
+        triggerNotification('Check-In Failed', 'Could not check in. Please try again.', 'X', 'text-rose-500 bg-rose-50');
       }
-
-      // If resp not ok, fall through to local fallback
-      console.warn('Check-in failed on server:', resp.status);
     } catch (err) {
-      console.warn('Network error during check-in:', err);
+      triggerNotification('Check-In Failed', 'Network error. Please try again.', 'X', 'text-rose-500 bg-rose-50');
     }
-
-    // Local fallback (offline or server failed)
-    if (idx > -1) {
-      updated[idx] = { ...updated[idx], ...newRecord };
-    } else {
-      updated.push(newRecord);
-    }
-
-    setCustomLocationName(locName);
     setIsResolvingLocation(false);
-
-    // Regenerate absent records to ensure they're included (FROM OLD CODE)
-    const finalRecords = generateAbsentRecords(updated);
-
-    localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
-    setAttendanceRecords(finalRecords);
-
-    const todayRec = finalRecords.find(r => r.date === today) || null;
-    setTodayRecord(todayRec);
-    setIsPunchedIn(true);
-
-    triggerNotification(
-      'Check-In Successful',
-      `Checked in at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
-      'Clock',
-      'text-emerald-500 bg-emerald-50'
-    );
   };
 
   // Handle check-out with confirmation
@@ -487,91 +350,32 @@ const Attendance: React.FC = () => {
     const now = new Date();
     const today = getTodayString();
 
-    const recordsStr = localStorage.getItem(attendanceStorageKey);
-    const updated: AttendanceRecord[] = recordsStr ? JSON.parse(recordsStr) : [];
-    const idx = updated.findIndex((r: AttendanceRecord) => r.date === today);
-
-    if (idx > -1 && updated[idx].timeIn) {
-      const timeIn = updated[idx].timeIn;
-
-      // Try to call server checkout endpoint first
-      try {
-        const resp = await fetch('http://localhost:8085/api/employee_attend/check-out', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ date: today, timeOut: now.toISOString(), recordId: updated[idx].id })
-        });
-
-        if (resp.ok) {
-          const data = await resp.json().catch(() => null);
-          const serverRecord = data?.record || data || {
-            ...updated[idx],
-            timeOut: now.toISOString()
-          };
-
-          updated[idx] = { ...updated[idx], ...serverRecord } as AttendanceRecord;
-
-          const finalRecords = generateAbsentRecords(updated);
-          localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
-          setAttendanceRecords(finalRecords);
-
-          const todayRec = finalRecords.find(r => r.date === today) || null;
-          setTodayRecord(todayRec);
-          setIsPunchedIn(false);
-
-          const duration = calculateDuration(updated[idx].timeIn, serverRecord.timeOut || now.toISOString());
-          setWorkDuration(duration);
-
-          triggerNotification(
-            'Check-Out Successful',
-            `Checked out at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
-            'Clock',
-            'text-blue-500 bg-blue-50'
-          );
-
-          setIsProcessingCheckout(false);
-          setShowCheckoutConfirm(false);
-          return;
-        }
-
-        console.warn('Checkout failed on server:', resp.status);
-      } catch (err) {
-        console.warn('Network error during checkout:', err);
+    try {
+      const resp = await fetch('http://localhost:8085/api/employee_attend/check-out', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ date: today, timeOut: now.toISOString() })
+      });
+      if (resp.ok) {
+        triggerNotification(
+          'Check-Out Successful',
+          `Checked out at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
+          'Clock',
+          'text-blue-500 bg-blue-50'
+        );
+        setIsProcessingCheckout(false);
+        setShowCheckoutConfirm(false);
+        // Refresh attendance data from backend
+        await new Promise(r => setTimeout(r, 500));
+        window.location.reload();
+        return;
+      } else {
+        triggerNotification('Check-Out Failed', 'Could not check out. Please try again.', 'X', 'text-rose-500 bg-rose-50');
       }
-
-      // Fallback local update if server call fails
-      const checkInTime = new Date(timeIn);
-      const checkOutTime = now;
-      const durationMs = checkOutTime.getTime() - checkInTime.getTime();
-      const workingHours = durationMs / (1000 * 60 * 60);
-
-      updated[idx] = {
-        ...updated[idx],
-        timeOut: now.toISOString(),
-        workingHours: parseFloat(workingHours.toFixed(2))
-      };
-
-      const finalRecords = generateAbsentRecords(updated);
-
-      localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
-      setAttendanceRecords(finalRecords);
-
-      const todayRec = finalRecords.find(r => r.date === today) || null;
-      setTodayRecord(todayRec);
-      setIsPunchedIn(false);
-
-      const duration = calculateDuration(timeIn, now.toISOString());
-      setWorkDuration(duration);
-
-      triggerNotification(
-        'Check-Out Successful',
-        `Checked out at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
-        'Clock',
-        'text-blue-500 bg-blue-50'
-      );
+    } catch (err) {
+      triggerNotification('Check-Out Failed', 'Network error. Please try again.', 'X', 'text-rose-500 bg-rose-50');
     }
-
     setIsProcessingCheckout(false);
     setShowCheckoutConfirm(false);
   };
@@ -584,20 +388,7 @@ const Attendance: React.FC = () => {
   const updateLocationName = () => {
     if (!todayRecord) return;
 
-    const recordsStr = localStorage.getItem(attendanceStorageKey);
-    const records: AttendanceRecord[] = recordsStr ? JSON.parse(recordsStr) : [];
-    const idx = records.findIndex((r: any) => r.id === todayRecord.id);
-
-    if (idx > -1) {
-      records[idx].locationName = customLocationName;
-
-      const finalRecords = generateAbsentRecords(records);
-      localStorage.setItem(attendanceStorageKey, JSON.stringify(finalRecords));
-      setAttendanceRecords(finalRecords);
-
-      setTodayRecord(records[idx]);
-    }
-
+    // No-op: location name is now backend-only
     setIsEditingLocation(false);
   };
 
