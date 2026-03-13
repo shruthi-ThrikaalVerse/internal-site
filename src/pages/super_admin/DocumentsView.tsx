@@ -2,8 +2,9 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import * as LucideIcons from 'lucide-react';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { EmployeeSummary, EmployeeDocument } from '../../types.ts';
-import { uploadDocument, getDocumentsByEmployee, getDocument, downloadDocument, deleteDocument } from '../../api/documents.js';
-import { getAllEmployees, getDepartments } from '../../api/users.js';
+import { uploadDocument, getDocumentsByEmployee, getDocument, downloadDocument, deleteDocument, getSuperAdminDocuments } from '../../api/documents.js';
+import { verifyDocument } from '../../api/verifyDocument.ts';
+import { getDepartments } from '../../api/users.js';
 import { DEPARTMENTS } from '../../constants.ts';
 
 const Icon = ({ name, className }: { name: string; className?: string }) => {
@@ -72,18 +73,19 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-2xl" }: any
 };
 
 const DocumentsView: React.FC = () => {
-    const { employees, updateEmployee, notify, addLog } = useHRMS();
+    const { updateEmployee, notify, addLog } = useHRMS();
     const [searchTerm, setSearchTerm] = useState('');
     const [deptFilter, setDeptFilter] = useState('All');
     const [statusFilter, setStatusFilter] = useState('All');
     const [selectedEmployee, setSelectedEmployee] = useState<EmployeeSummary | null>(null);
     const [viewingDoc, setViewingDoc] = useState<EmployeeDocument | null>(null);
+    const [verifyingDocId, setVerifyingDocId] = useState<string | null>(null);
 
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [activeUpload, setActiveUpload] = useState<{ empId: string, type: string } | null>(null);
     const [selectedEmployeeDocs, setSelectedEmployeeDocs] = useState<any[]>([]);
-    const [employeesList, setEmployeesList] = useState<any[]>([]);
+    const [adminEmployees, setAdminEmployees] = useState<any[]>([]);
     const [departmentsList, setDepartmentsList] = useState<string[]>([]);
     const [uploadModalOpen, setUploadModalOpen] = useState(false);
     const [uploadForm, setUploadForm] = useState<{ employeeId: string; documentType: string; file: File | null }>({ employeeId: '', documentType: 'Aadhaar Card', file: null });
@@ -103,19 +105,51 @@ const DocumentsView: React.FC = () => {
         return map[api] || api;
     };
 
-    // Filter to show ONLY ADMIN employees
-    const adminEmployees = useMemo(() => {
-        return employees.filter(emp => {
-            const role = (emp as any).role?.toUpperCase() || emp.role?.toUpperCase() || '';
-            return role === 'ADMIN' || role === 'PROJECT_MANAGER';
-        });
-    }, [employees]);
+    // Fetch admins with their documents
+    const fetchAdminsWithDocuments = async () => {
+        try {
+            const admins = await getSuperAdminDocuments();
+
+            // Fetch documents for each admin
+            const adminsWithDocs = await Promise.all(
+                (Array.isArray(admins) ? admins : []).map(async (admin) => {
+                    try {
+                        const docs = await getDocumentsByEmployee(admin.employeeId);
+                        const mappedDocs = (Array.isArray(docs) ? docs : []).map((d: any) => ({
+                            ...d,
+                            id: d.id,
+                            type: apiToDisplayType(d.documentType),
+                            status: d.status || 'pending',
+                            uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0],
+                            fileName: d.fileName || 'document.pdf'
+                        }));
+                        return { ...admin, documents: mappedDocs };
+                    } catch (error) {
+                        console.error(`Failed to fetch docs for admin ${admin.employeeId}`, error);
+                        return { ...admin, documents: [] };
+                    }
+                })
+            );
+
+            setAdminEmployees(adminsWithDocs);
+
+            const depts = await getDepartments();
+            setDepartmentsList(Array.isArray(depts) ? depts : []);
+        } catch (err) {
+            console.error('Failed to load admins/departments', err);
+            notify('Failed to load admin data', 'error');
+        }
+    };
+
+    useEffect(() => {
+        fetchAdminsWithDocuments();
+    }, []);
 
     // Filter admins by search, department, and document status
     const filteredAdmins = useMemo(() => {
         return adminEmployees.filter(emp => {
-            const matchesSearch = emp.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                emp.employeeId.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesSearch = emp.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                emp.employeeId?.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesDept = deptFilter === 'All' || emp.department === deptFilter;
 
             let matchesStatus = true;
@@ -164,41 +198,38 @@ const DocumentsView: React.FC = () => {
         }
     };
 
-    const handleUpdateDocument = (empId: string, type: string, status: 'uploaded' | 'verified' | 'pending', fileName?: string) => {
-        const sourceEmp = (selectedEmployee && selectedEmployee.id === empId) ? selectedEmployee : employees.find(e => e.id === empId);
-        if (!sourceEmp) return;
-
-        const currentDocs = (sourceEmp as any).documents || [];
-        const existingDocIndex = currentDocs.findIndex((d: any) => d.type === type);
-
-        let newDocs = [...currentDocs];
-        if (existingDocIndex >= 0) {
-            newDocs[existingDocIndex] = {
-                ...newDocs[existingDocIndex],
-                status,
-                uploadedDate: new Date().toISOString().split('T')[0],
-                fileName: fileName || newDocs[existingDocIndex].fileName
-            };
-        } else {
-            newDocs.push({
-                type,
-                status,
-                uploadedDate: new Date().toISOString().split('T')[0],
-                fileName: fileName || 'document.pdf'
-            });
-        }
-
-        updateEmployee(empId, { documents: newDocs } as any);
-        addLog('Update', 'Document', `${status.toUpperCase()} ${type} for ${sourceEmp.fullName}`);
-
-        if (selectedEmployee && selectedEmployee.id === empId) {
-            setSelectedEmployee({ ...selectedEmployee, documents: newDocs } as any);
-            setSelectedEmployeeDocs(newDocs.map((d: any) => ({
+    // Refresh documents for a specific admin
+    const refreshAdminDocuments = async (employeeId: string) => {
+        try {
+            const docs = await getDocumentsByEmployee(employeeId);
+            const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({
                 ...d,
-                type: d.type,
-                status: d.status || 'uploaded',
-                uploadedDate: d.uploadedDate || new Date().toISOString().split('T')[0]
-            })));
+                id: d.id,
+                type: apiToDisplayType(d.documentType),
+                status: d.status || 'pending',
+                uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0],
+                fileName: d.fileName || 'document.pdf'
+            }));
+
+            // Update adminEmployees list
+            setAdminEmployees(prev => prev.map(admin =>
+                admin.employeeId === employeeId
+                    ? { ...admin, documents: mapped }
+                    : admin
+            ));
+
+            // Update selected employee if this is the current one
+            if (selectedEmployee && selectedEmployee.employeeId === employeeId) {
+                setSelectedEmployeeDocs(mapped);
+                const updatedEmployee = { ...selectedEmployee, documents: mapped };
+                updateEmployee(selectedEmployee.id, { documents: mapped } as any);
+                setSelectedEmployee(updatedEmployee as any);
+            }
+
+            return mapped;
+        } catch (err) {
+            console.error('Failed to refresh documents:', err);
+            throw err;
         }
     };
 
@@ -217,20 +248,11 @@ const DocumentsView: React.FC = () => {
                     const apiType = displayToApiType[activeUpload.type] || activeUpload.type;
                     await uploadDocument(file, { employeeId: activeUpload.empId, documentType: apiType });
 
-                    if (selectedEmployee && selectedEmployee.employeeId === activeUpload.empId) {
-                        const docs = await getDocumentsByEmployee(activeUpload.empId);
-                        const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({
-                            ...d,
-                            type: apiToDisplayType(d.documentType),
-                            status: d.status || 'uploaded',
-                            uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0]
-                        }));
-                        setSelectedEmployeeDocs(mapped);
-                        const updatedEmployee = { ...selectedEmployee, documents: mapped };
-                        updateEmployee(selectedEmployee.id, { documents: mapped } as any);
-                        setSelectedEmployee(updatedEmployee as any);
-                    }
+                    // Refresh documents for this admin
+                    await refreshAdminDocuments(activeUpload.empId);
+
                     notify('Document uploaded successfully', 'success');
+                    addLog('Upload', 'Document', `Uploaded ${activeUpload.type} for admin`);
                 } catch (err: any) {
                     notify(`Upload failed: ${err.message || err}`, 'error');
                 } finally {
@@ -240,18 +262,6 @@ const DocumentsView: React.FC = () => {
             })();
         }
     };
-
-    useEffect(() => {
-        (async () => {
-            try {
-                const [all, depts] = await Promise.all([getAllEmployees(), getDepartments()]);
-                setEmployeesList(Array.isArray(all) ? all : []);
-                setDepartmentsList(Array.isArray(depts) ? depts : []);
-            } catch (err) {
-                console.error('Failed to load employees/departments', err);
-            }
-        })();
-    }, []);
 
     const viewDocument = (doc: any) => {
         (async () => {
@@ -289,25 +299,42 @@ const DocumentsView: React.FC = () => {
         try {
             const doc = getDocData(selectedEmployee, type) as any;
             if (doc?.id) {
-                await deleteDocument(selectedEmployee.employeeId, doc.id as number);
+                await deleteDocument(selectedEmployee.employeeId, doc.id);
             }
 
-            const docs = await getDocumentsByEmployee(selectedEmployee.employeeId);
-            const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({
-                ...d,
-                type: apiToDisplayType(d.documentType),
-                status: d.status || 'uploaded',
-                uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0]
-            }));
-            setSelectedEmployeeDocs(mapped);
-            const updatedEmployee = { ...selectedEmployee, documents: mapped };
-            updateEmployee(selectedEmployee.id, { documents: mapped } as any);
-            setSelectedEmployee(updatedEmployee as any);
+            // Refresh documents for this admin
+            await refreshAdminDocuments(selectedEmployee.employeeId);
 
             notify(`${type} document deleted successfully`, 'success');
             addLog('Delete', 'Document', `Deleted ${type} for ${selectedEmployee.fullName}`);
         } catch (err: any) {
             notify(`Failed to delete document: ${err.message || err}`, 'error');
+        }
+    };
+
+    const handleVerifyDocument = async (type: string, doc: any) => {
+        if (!selectedEmployee || !doc) return;
+
+        setVerifyingDocId(doc.id);
+        try {
+            await verifyDocument(selectedEmployee.employeeId, doc.id);
+            // Refresh documents for this admin and get the latest docs
+            const updatedDocs = await refreshAdminDocuments(selectedEmployee.employeeId);
+            // Update selectedEmployee with the latest documents
+            setSelectedEmployee(prev => {
+                if (!prev) return null;
+                return { ...prev, documents: updatedDocs };
+            });
+            // Find the verified document
+            const verifiedDoc = updatedDocs.find((d: any) => d.type === type);
+            if (verifiedDoc?.status === 'verified') {
+                notify(`${type} verified successfully!`, 'success');
+                addLog('Verify', 'Document', `Verified ${type} for ${selectedEmployee.fullName}`);
+            }
+        } catch (err: any) {
+            notify(`Verification failed: ${err.message || err}`, 'error');
+        } finally {
+            setVerifyingDocId(null);
         }
     };
 
@@ -340,7 +367,7 @@ const DocumentsView: React.FC = () => {
                 return;
             }
             if (doc.id && selectedEmployee) {
-                const res = await downloadDocument(doc.id as number);
+                const res = await downloadDocument(doc.id);
                 const url = URL.createObjectURL(res.blob);
                 const link = document.createElement('a');
                 link.href = url;
@@ -362,25 +389,16 @@ const DocumentsView: React.FC = () => {
             setSelectedEmployeeDocs([]);
             return;
         }
-        (async () => {
-            try {
-                const docs = await getDocumentsByEmployee(selectedEmployee.employeeId);
-                const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({
-                    ...d,
-                    type: apiToDisplayType(d.documentType),
-                    status: d.status || 'uploaded',
-                    uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0]
-                }));
-                setSelectedEmployeeDocs(mapped);
-                updateEmployee(selectedEmployee.id, { documents: mapped } as any);
-            } catch (err: any) {
-                notify(`Failed to load documents: ${err.message || err}`, 'error');
-            }
-        })();
-    }, [selectedEmployee]);
+
+        // Find the admin in the current list
+        const admin = adminEmployees.find(a => a.id === selectedEmployee.id);
+        if (admin) {
+            setSelectedEmployeeDocs(admin.documents || []);
+        }
+    }, [selectedEmployee, adminEmployees]);
 
     const handleBulkExport = () => {
-        const selectedAdmins = adminEmployees.filter(e => selectedIds.has(e.id));
+        const selectedAdmins = adminEmployees.filter((e: any) => selectedIds.has(e.id));
         if (selectedAdmins.length === 0) {
             notify("Please select at least one admin for bulk export.", "warning");
             return;
@@ -642,7 +660,59 @@ const DocumentsView: React.FC = () => {
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2 ml-4 flex-shrink-0">
-                                                {status === 'pending' ? (
+                                                {doc ? (
+                                                    <>
+                                                        <button
+                                                            aria-label="View document"
+                                                            onClick={() => viewDocument(doc)}
+                                                            className="px-3 py-2 text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors border-none flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-md shadow-indigo-100 whitespace-nowrap"
+                                                            title="View Document"
+                                                        >
+                                                            <Icon name="Eye" className="w-4 h-4" />
+                                                            View
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteDocument(type)}
+                                                            className="px-3 py-2 text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors border-none flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-md shadow-rose-100 whitespace-nowrap"
+                                                            title="Delete Document"
+                                                        >
+                                                            <Icon name="Trash2" className="w-4 h-4" />
+                                                            Delete
+                                                        </button>
+                                                        {/* Inline verify button logic, like admin */}
+                                                        {!doc.verified && (
+                                                            <button
+                                                                onClick={async () => {
+                                                                    try {
+                                                                        await verifyDocument(selectedEmployee.employeeId, doc.id);
+                                                                        // Fetch latest docs from backend after verification
+                                                                        const docs = await getDocumentsByEmployee(selectedEmployee.employeeId);
+                                                                        const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({
+                                                                            ...d,
+                                                                            id: d.id,
+                                                                            type: apiToDisplayType(d.documentType),
+                                                                            status: d.status || 'uploaded',
+                                                                            uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0],
+                                                                            fileName: d.fileName || 'document.pdf'
+                                                                        }));
+                                                                        setSelectedEmployeeDocs(mapped);
+                                                                        const updatedEmployee = { ...selectedEmployee, documents: mapped };
+                                                                        updateEmployee(selectedEmployee.id, { documents: mapped } as any);
+                                                                        setSelectedEmployee(updatedEmployee as any);
+                                                                        notify('Document verified successfully', 'success');
+                                                                    } catch (err: any) {
+                                                                        notify(`Verification failed: ${err.message || err}`, 'error');
+                                                                    }
+                                                                }}
+                                                                className="px-3 py-2 text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors border-none flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-md shadow-emerald-100 whitespace-nowrap"
+                                                                title="Verify Document"
+                                                            >
+                                                                <Icon name="CheckCircle2" className="w-4 h-4" />
+                                                                Verify
+                                                            </button>
+                                                        )}
+                                                    </>
+                                                ) : (
                                                     <button
                                                         onClick={() => triggerFileUpload(selectedEmployee.employeeId, type)}
                                                         className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 flex items-center gap-2 whitespace-nowrap"
@@ -650,39 +720,6 @@ const DocumentsView: React.FC = () => {
                                                         <Icon name="Upload" className="w-3.5 h-3.5 text-white" />
                                                         Upload
                                                     </button>
-                                                ) : (
-                                                    <div className="flex items-center gap-2">
-                                                        <button
-                                                            aria-label="View document"
-                                                            onClick={() => viewDocument(doc!)}
-                                                            className="px-3 py-2 text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors border-none flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-md shadow-indigo-100 whitespace-nowrap"
-                                                            title="View Document"
-                                                        >
-                                                            <Icon name="Eye" className="w-4 h-4" />
-                                                            View
-                                                        </button>
-
-                                                        {status === 'uploaded' && (
-                                                            <button
-                                                                onClick={() => handleUpdateDocument(selectedEmployee.id, type, 'verified')}
-                                                                className="p-2 text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors border-none"
-                                                                title="Mark as Verified"
-                                                            >
-                                                                <Icon name="Check" className="w-5 h-5" />
-                                                            </button>
-                                                        )}
-
-                                                        {(status === 'uploaded' || status === 'verified') && (
-                                                            <button
-                                                                onClick={() => handleDeleteDocument(type)}
-                                                                className="px-3 py-2 text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors border-none flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-md shadow-rose-100 whitespace-nowrap"
-                                                                title="Delete Document"
-                                                            >
-                                                                <Icon name="Trash2" className="w-4 h-4" />
-                                                                Delete
-                                                            </button>
-                                                        )}
-                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -702,6 +739,12 @@ const DocumentsView: React.FC = () => {
                                 className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-2 whitespace-nowrap"
                             >
                                 <Icon name="Download" className="w-4 h-4 text-white" /> Download Archive
+                            </button>
+                            <button
+                                onClick={() => setSelectedEmployee(null)}
+                                className="flex-1 py-4 bg-white border border-slate-200 text-black rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all whitespace-nowrap"
+                            >
+                                Close
                             </button>
                         </div>
                     </div>
@@ -725,10 +768,22 @@ const DocumentsView: React.FC = () => {
                                 Download
                             </button>
                         </div>
-                        <div className="bg-slate-100 rounded-2xl p-8 text-center h-64">
+
+                        {/* Document preview with status */}
+                        <div className="bg-slate-100 rounded-2xl p-8 text-center h-64 flex flex-col items-center justify-center">
                             <Icon name="FileText" className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                            <p className="text-slate-600 font-bold">Document preview</p>
-                            <p className="text-sm text-slate-500 mt-2">Click Download to view the full document on your device</p>
+                            <p className="text-slate-600 font-bold">Document Preview</p>
+                            <p className="text-sm text-slate-500 mt-2">Click Download to view the full document</p>
+
+                            {/* Status badge */}
+                            {viewingDoc.status && (
+                                <span className={`mt-4 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${viewingDoc.status === 'verified' ? 'bg-emerald-100 text-emerald-700' :
+                                    viewingDoc.status === 'uploaded' ? 'bg-blue-100 text-blue-700' :
+                                        'bg-slate-200 text-slate-700'
+                                    }`}>
+                                    {viewingDoc.status}
+                                </span>
+                            )}
                         </div>
                     </div>
                 )}

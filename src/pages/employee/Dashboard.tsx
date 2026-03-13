@@ -9,7 +9,6 @@ import {
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { useLeave } from '../../context/LeaveContext.tsx';
-import { getUserSpecificKey } from '../../utils/storage.ts';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -148,12 +147,32 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
 
-    const loadData = () => {
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      setUser(userData);
+    const loadData = async () => {
+      // Fetch attendance and leaves from backend; user comes from context
+      const records: any[] = [];
+      const leaves: any[] = [];
 
-      const records = JSON.parse(localStorage.getItem(getUserSpecificKey('attendance_records')) || '[]');
-      const leaves = JSON.parse(localStorage.getItem(getUserSpecificKey('leave_requests')) || '[]');
+      try {
+        const attendResp = await fetch('http://localhost:8085/api/employee_attend/attendance', { credentials: 'include' });
+        if (attendResp.ok) {
+          const data = await attendResp.json().catch(() => []);
+          if (Array.isArray(data)) records.push(...data);
+          else if (data?.records && Array.isArray(data.records)) records.push(...data.records);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch attendance from backend:', err);
+      }
+
+      try {
+        const leaveResp = await fetch('http://localhost:8085/api/leave/requests', { credentials: 'include' });
+        if (leaveResp.ok) {
+          const data = await leaveResp.json().catch(() => []);
+          if (Array.isArray(data)) leaves.push(...data);
+          else if (data?.requests && Array.isArray(data.requests)) leaves.push(...data.requests);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch leaves from backend:', err);
+      }
 
       const todayStr = getLocalDStr(new Date());
 
@@ -283,12 +302,8 @@ const Dashboard: React.FC = () => {
 
     loadData();
 
-    const handleStorage = () => loadData();
-    window.addEventListener('storage', handleStorage);
-
     return () => {
       clearInterval(timer);
-      window.removeEventListener('storage', handleStorage);
     };
   }, [selectedMonth, onLeaveCount]);
 

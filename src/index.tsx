@@ -595,6 +595,7 @@ root.render(
 
               {/* Super Admin */}
               <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+              <Route path="/super-admin/attendance-monitor" element={<HRMSProvider><AppProvider><App /></AppProvider></HRMSProvider>} />
               <Route path="/super-admin/*" element={<HRMSProvider><App /></HRMSProvider>} />
 
               {/* Catch all - redirect to home */}

@@ -235,10 +235,12 @@ export interface Document {
 }
 
 export interface EmployeeDocument {
+  id: number;
   type: string;
   status: 'uploaded' | 'pending' | 'verified';
   uploadedDate?: string;
   fileName?: string;
+  verified?: boolean;
 }
 
 // ============= Payroll Management =============
@@ -501,7 +503,8 @@ export enum AppSection {
   Notifications = 'Notifications',
   SystemMaintenance = 'SystemMaintenance',
   Documents = 'Documents',
-  Profile = 'Profile'
+  Profile = 'Profile',
+  AttendanceMonitor = 'AttendanceMonitor', // Added for super admin attendance
 }
 
 export interface AdminRequest {

@@ -781,12 +781,9 @@ const EmployeeHub: React.FC = () => {
 
       try {
         // Use employeeId in the query parameters
+
         const targetId = employeeToDelete.employeeId || employeeToDelete.id;
-        const token = localStorage.getItem('accessToken');
-
-        console.log('Submitting termination request for:', targetId, 'Reason:', terminationReason);
-        console.log('Token present:', !!token);
-
+        // Removed localStorage usage, only HTTP-only cookies are used
         const url = `http://localhost:8085/api/admin-hub/termination-request?employeeId=${encodeURIComponent(targetId)}&reason=${encodeURIComponent(terminationReason)}`;
         console.log('Request URL:', url);
 
@@ -794,7 +791,6 @@ const EmployeeHub: React.FC = () => {
           method: 'POST',
           credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });

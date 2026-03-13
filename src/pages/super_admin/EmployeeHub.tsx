@@ -25,8 +25,7 @@ export const EmployeeHub = () => {
   const { globalSearch, employees, setEmployees, updateEmployee, removeEmployee, promoteToAdmin, currentUser, requestEmployeeTermination } = useApp();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Get token from localStorage
-  const token = localStorage.getItem('token');
+  // Removed localStorage token usage. Only HttpOnly cookies are used for authentication.
   const [localEmployees, setLocalEmployees] = useState<User[]>([]);
 
   // Filter States

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { verifyDocument } from '../../api/verifyDocument.ts';
 import * as LucideIcons from 'lucide-react';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { EmployeeSummary, EmployeeDocument } from '../../types.ts';
@@ -216,6 +217,7 @@ const DocumentManagement: React.FC = () => {
           const apiType = displayToApiType[activeUpload.type] || activeUpload.type;
           await uploadDocument(file, { employeeId: activeUpload.empId, documentType: apiType });
 
+          // Always fetch latest docs from backend after upload
           if (selectedEmployee && selectedEmployee.employeeId === activeUpload.empId) {
             const docs = await getDocumentsByEmployee(activeUpload.empId);
             const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({
@@ -686,16 +688,9 @@ const DocumentManagement: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 ml-4 flex-shrink-0">
-                        {status === 'pending' ? (
-                          <button
-                            onClick={() => triggerFileUpload(selectedEmployee.employeeId, type)}
-                            className="px-4 py-2 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md flex items-center gap-2 whitespace-nowrap" style={{backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(201, 122, 76, 0.2)'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
-                          >
-                            <Icon name="Upload" className="w-3.5 h-3.5 text-white" />
-                            Upload
-                          </button>
-                        ) : (
-                          <div className="flex items-center gap-2">
+                        {/* Document action buttons logic */}
+                        {doc ? (
+                          <>
                             <button
                               aria-label="View document"
                               onClick={() => viewDocument(doc!)}
@@ -705,30 +700,52 @@ const DocumentManagement: React.FC = () => {
                               <Icon name="Eye" className="w-4 h-4" />
                               View
                             </button>
-
-                            {/* Only show verify button for uploaded documents that are NOT verified */}
-                            {status === 'uploaded' && (
+                            <button
+                              onClick={() => handleDeleteDocument(type)}
+                              className="px-3 py-2 text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors border-none flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-md shadow-rose-100 whitespace-nowrap"
+                              title="Delete Document"
+                            >
+                              <Icon name="Trash2" className="w-4 h-4" />
+                              Delete
+                            </button>
+                            {!doc.verified && (
                               <button
-                                onClick={() => handleUpdateDocument(selectedEmployee.id, type, 'verified')}
-                                className="p-2 text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors border-none"
-                                title="Mark as Verified"
+                                onClick={async () => {
+                                  try {
+                                    await verifyDocument(selectedEmployee.employeeId, doc.id);
+                                    // Fetch latest docs from backend after verification
+                                    const docs = await getDocumentsByEmployee(selectedEmployee.employeeId);
+                                    const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({
+                                      ...d,
+                                      type: apiToDisplayType(d.documentType),
+                                      status: d.status || 'uploaded',
+                                      uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0]
+                                    }));
+                                    setSelectedEmployeeDocs(mapped);
+                                    const updatedEmployee = { ...selectedEmployee, documents: mapped };
+                                    updateEmployee(selectedEmployee.id, { documents: mapped } as any);
+                                    setSelectedEmployee(updatedEmployee as any);
+                                    notify('Document verified successfully', 'success');
+                                  } catch (err: any) {
+                                    notify(`Verification failed: ${err.message || err}`, 'error');
+                                  }
+                                }}
+                                className="px-3 py-2 text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors border-none flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-md shadow-emerald-100 whitespace-nowrap"
+                                title="Verify Document"
                               >
-                                <Icon name="Check" className="w-5 h-5" />
+                                <Icon name="CheckCircle2" className="w-4 h-4" />
+                                Verify
                               </button>
                             )}
-
-                            {/* Show delete button for all non-pending documents */}
-                            {(status === 'uploaded' || status === 'verified') && (
-                              <button
-                                onClick={() => handleDeleteDocument(type)}
-                                className="px-3 py-2 text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors border-none flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-md shadow-rose-100 whitespace-nowrap"
-                                title="Delete Document"
-                              >
-                                <Icon name="Trash2" className="w-4 h-4" />
-                                Delete
-                              </button>
-                            )}
-                          </div>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => triggerFileUpload(selectedEmployee.employeeId, type)}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 flex items-center gap-2 whitespace-nowrap"
+                          >
+                            <Icon name="Upload" className="w-3.5 h-3.5 text-white" />
+                            Upload
+                          </button>
                         )}
                       </div>
                     </div>

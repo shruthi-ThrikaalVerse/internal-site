@@ -117,3 +117,31 @@ export const getMyDocuments = async () => {
   await throwIfError(resp);
   return parseText(resp);
 };
+
+// Fetch super admin documents
+export const getSuperAdminDocuments = async () => {
+  const resp = await fetch('http://localhost:8085/api/users/admins', {
+    headers: { Accept: 'application/json' },
+    credentials: 'include',
+  });
+  await throwIfError(resp);
+  const data = await parseText(resp);
+  if (Array.isArray(data)) {
+    return data
+      .filter((user: any) => {
+        const roleName = user.role && typeof user.role === 'object' ? (user.role.name || '').toUpperCase() : (user.role || '').toUpperCase();
+        return roleName === 'ADMIN';
+      })
+      .map((user: any) => ({
+        id: user.employeeId,
+        fullName: `${user.firstName} ${user.lastName}`,
+        employeeId: user.employeeId,
+        department: user.department || '',
+        designation: user.designation || '',
+        avatar: user.profileImage || '',
+        documents: user.documents || [],
+        ...user
+      }));
+  }
+  return [];
+};

@@ -30,6 +30,7 @@ import { NotificationsView } from './pages/super_admin/NotificationsView.js';
 import { ProfileView } from './pages/super_admin/ProfileView.js';
 import DocumentsView from './pages/super_admin/DocumentsView.js';
 import AdminDetails from './pages/super_admin/AdminDetails.js';
+import AttendanceMonitor from './pages/super_admin/AttendanceMonitor.tsx';
 
 // Icon name to component mapper
 const iconMap: Record<string, React.ReactNode> = {
@@ -66,6 +67,7 @@ const sectionToUrlMap: Record<string, string> = {
   [AppSection.Documents]: '/super-admin/documents',
   [AppSection.Profile]: '/super-admin/profile',
   [AppSection.AdminDetails]: '/super-admin/admin-details',
+  [AppSection.AttendanceMonitor]: '/super-admin/attendance-monitor', // Added for super admin attendance
 };
 
 const AppContent: React.FC = () => {
@@ -142,6 +144,7 @@ const AppContent: React.FC = () => {
       '/super-admin/documents': AppSection.Documents,
       '/super-admin/profile': AppSection.Profile,
       '/super-admin/admin-details': AppSection.AdminDetails,
+      '/super-admin/attendance-monitor': AppSection.AttendanceMonitor, // Fix: add AttendanceMonitor mapping
     };
 
     const path = location.pathname.replace('/internal-site', '');
@@ -257,6 +260,8 @@ const AppContent: React.FC = () => {
         return <ProfileView />;
       case AppSection.AdminDetails:
         return <AdminDetails />;
+      case AppSection.AttendanceMonitor:
+        return <AttendanceMonitor />;
       default: return <div className="p-20 text-center text-[#9aa8bd] italic bg-[#0b1220] rounded-2xl border border-[#1f2937] flex flex-col items-center gap-4">
         <HelpCircle size={48} className="text-[#1f2937]" />
         <div>Module "{(activeSection as string).toUpperCase()}" content coming in the next release.</div>
