@@ -65,33 +65,15 @@ export const EmployeeHub = () => {
       return imageData;
     }
 
-    // If it's a file path starting with /, return it (could be relative path)
-    if (imageData.startsWith('/')) {
+    // Only treat as file path if it starts with '/' and is short (not base64)
+    if (imageData.startsWith('/') && imageData.length < 100) {
       return imageData;
     }
 
-    // Try to decode base64 to check if it's a file path or actual image data
-    if (imageData.match(/^[A-Za-z0-9+/=]+$/)) {
-      try {
-        const decoded = atob(imageData); // Decode base64
-        console.log(`Decoded base64: "${decoded}"`);
-
-        // Check if decoded string looks like a file path
-        if (decoded.includes('/') || decoded.includes('\\') || decoded.includes('.')) {
-          // It's likely a file path - this means backend returned encoded path, not encoded image
-          // Try to fetch image from backend using this path
-          console.log('Detected file path in base64, would need backend endpoint to serve it');
-          return ''; // Return empty to show fallback
-        }
-
-        // If it looks like raw binary/image data, treat as base64 image
-        return `data:image/jpeg;base64,${imageData}`;
-      } catch (e) {
-        console.warn('Failed to decode base64:', e);
-        return '';
-      }
+    // If it's a base64 string (not a data URL), prepend the prefix
+    if (imageData.match(/^[A-Za-z0-9+/=]+$/) && imageData.length > 100) {
+      return `data:image/jpeg;base64,${imageData}`;
     }
-
     return '';
   };
 
@@ -617,39 +599,42 @@ export const EmployeeHub = () => {
                   <td className="px-8 py-5 cursor-pointer" onClick={() => setViewingUser(e)}>
                     <div className="flex items-center gap-4">
                       <div className="relative shrink-0">
-                        {e.avatar ? (
-                          <>
-                            <img
-                              src={formatBase64Image(e.avatar)}
-                              alt={e.name}
-                              className="w-14 h-14 rounded-2xl border border-gray-200 shadow-xl group-hover:scale-105 transition-transform object-cover"
-                              onError={(evt) => {
-                                console.error('Image failed to load:', formatBase64Image(e.avatar));
-                                const target = evt.target as HTMLImageElement;
-                                target.style.display = 'none';
-                                // Show fallback circle
-                                const parent = target.parentElement;
-                                if (parent && !parent.querySelector('.fallback-avatar')) {
-                                  const fallback = document.createElement('div');
-                                  fallback.className = 'fallback-avatar w-14 h-14 rounded-2xl border border-gray-200 shadow-xl bg-gradient-to-br from-blue-300 to-blue-500 flex items-center justify-center';
-                                  fallback.style.position = 'absolute';
-                                  fallback.style.top = '0';
-                                  fallback.style.left = '0';
-                                  fallback.innerHTML = `<span class="text-white font-bold text-xs">${e.name.charAt(0).toUpperCase()}</span>`;
-                                  parent.appendChild(fallback);
-                                }
-                              }}
-                              onLoadStart={() => {
-                                console.log('Loading image for:', e.name, 'src:', formatBase64Image(e.avatar));
-                              }}
-                            />
-                            <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-[3px] border-white ${e.status === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'}`}></span>
-                          </>
-                        ) : (
-                          <div className="w-14 h-14 rounded-2xl border border-gray-200 shadow-xl bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
-                            <span className="text-white font-bold text-xs">{e.name.charAt(0).toUpperCase()}</span>
-                          </div>
-                        )}
+                        {(() => {
+                          const imgSrc = formatBase64Image(e.profileImage || e.avatar);
+                          console.log('Employee:', e.name, 'profileImage:', e.profileImage, 'avatar:', e.avatar, 'imgSrc:', imgSrc);
+                          if (imgSrc) {
+                            return (
+                              <>
+                                <img
+                                  src={imgSrc}
+                                  alt={e.name}
+                                  className="w-14 h-14 rounded-2xl border border-gray-200 shadow-xl group-hover:scale-105 transition-transform object-cover"
+                                  onError={(evt) => {
+                                    const target = evt.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    const parent = target.parentElement;
+                                    if (parent && !parent.querySelector('.fallback-avatar')) {
+                                      const fallback = document.createElement('div');
+                                      fallback.className = 'fallback-avatar w-14 h-14 rounded-2xl border border-gray-200 shadow-xl bg-gradient-to-br from-red-300 to-red-500 flex items-center justify-center';
+                                      fallback.style.position = 'absolute';
+                                      fallback.style.top = '0';
+                                      fallback.style.left = '0';
+                                      fallback.innerHTML = `<span class=\"text-white font-bold text-xs\">Image Error</span>`;
+                                      parent.appendChild(fallback);
+                                    }
+                                  }}
+                                />
+                                <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-[3px] border-white ${e.status === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'}`}></span>
+                              </>
+                            );
+                          } else {
+                            return (
+                              <div className="w-14 h-14 rounded-2xl border border-gray-200 shadow-xl bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                                <span className="text-white font-bold text-xs">{e.name.charAt(0).toUpperCase()}</span>
+                              </div>
+                            );
+                          }
+                        })()}
                       </div>
                       <div className="min-w-0">
                         <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors truncate text-base">{e.name}</div>
@@ -750,9 +735,9 @@ export const EmployeeHub = () => {
               <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -mr-32 -mt-32 blur-[100px]"></div>
               <div className="flex flex-col items-center text-center">
                 <div className="relative mb-6">
-                  {viewingUser.avatar ? (
+                  {(viewingUser.profileImage || viewingUser.avatar) ? (
                     <img
-                      src={formatBase64Image(viewingUser.avatar)}
+                      src={formatBase64Image(viewingUser.profileImage || viewingUser.avatar)}
                       className="w-32 h-32 rounded-[2.5rem] border-4 border-gray-200 shadow-2xl object-cover"
                       alt={viewingUser.name}
                       onError={(e) => {

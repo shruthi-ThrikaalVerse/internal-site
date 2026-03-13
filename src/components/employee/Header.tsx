@@ -24,47 +24,43 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     loadUserData();
     loadNotifications();
 
-    const handleStorage = () => {
-      loadUserData();
-      loadNotifications();
-    };
-
-    window.addEventListener('storage', handleStorage);
-
     // Close notifications dropdown when a navigation originates elsewhere
     const handleCloseDropdown = () => setShowNotifications(false);
     window.addEventListener('closeNotificationsDropdown', handleCloseDropdown as EventListener);
 
     return () => {
-      window.removeEventListener('storage', handleStorage);
       window.removeEventListener('closeNotificationsDropdown', handleCloseDropdown as EventListener);
     };
   }, []);
 
   const loadUserData = () => {
-    const userJson = localStorage.getItem('user');
-    if (userJson) {
-      try {
-        setUser(JSON.parse(userJson));
-      } catch (e) {
-        console.error("Failed to parse user data", e);
-      }
-    }
+    fetch('http://localhost:8085/api/users/me', { credentials: 'include' })
+      .then(res => res.json())
+      .then(profile => {
+        if (profile) {
+          setUser(profile);
+        } else {
+          setUser({ name: 'Employee', role: 'Staff' });
+        }
+      })
+      .catch(() => setUser({ name: 'Employee', role: 'Staff' }));
   };
 
   const loadNotifications = () => {
-    const saved = JSON.parse(localStorage.getItem(getUserSpecificKey('user_notifications_v1')) || '[]');
-    setNotifications(saved);
+    fetch('/api/notifications', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => setNotifications(Array.isArray(data) ? data : []))
+      .catch(() => setNotifications([]));
   };
 
   const navigate = useNavigate();
 
   const markAsRead = (id: string) => {
-    const updated = notifications.map(n => n.id === id ? { ...n, read: true } : n);
-    localStorage.setItem(getUserSpecificKey('user_notifications_v1'), JSON.stringify(updated));
-    setNotifications(updated);
-    // let other tabs/components know
-    window.dispatchEvent(new Event('storage'));
+    // Mark notification as read in backend
+    fetch(`/api/notifications/${id}/read`, { method: 'POST', credentials: 'include' })
+      .then(() => {
+        setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+      });
   };
 
   // Close menus when clicking outside
@@ -199,20 +195,18 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         <div className="relative" ref={notificationRef}>
           <button
             onClick={() => { setShowNotifications(!showNotifications); setShowProfileMenu(false); }}
-            className={`relative p-2 md:p-3 rounded-2xl transition-all active:scale-90 ${
-              showNotifications
-                ? 'bg-orange-600 text-white shadow-xl'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700'
-            }`}
+            className={`relative p-2 md:p-3 rounded-2xl transition-all active:scale-90 ${showNotifications
+              ? 'bg-orange-600 text-white shadow-xl'
+              : 'text-slate-300 hover:text-white hover:bg-slate-700'
+              }`}
             aria-label={unreadCount > 0 ? `Show ${unreadCount} unread notifications` : 'Show notifications'}
           >
             <Bell size={20} className="md:size-22" />
             {unreadCount > 0 && (
-              <span className={`absolute top-1.5 right-1.5 md:top-2.5 md:right-2.5 w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded-full border-2 border-white text-[8px] md:text-[9px] font-black ${
-                showNotifications
-                  ? 'bg-white text-orange-600'
-                  : 'bg-red-500 text-white animate-pulse'
-              }`}>
+              <span className={`absolute top-1.5 right-1.5 md:top-2.5 md:right-2.5 w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded-full border-2 border-white text-[8px] md:text-[9px] font-black ${showNotifications
+                ? 'bg-white text-orange-600'
+                : 'bg-red-500 text-white animate-pulse'
+                }`}>
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -232,14 +226,9 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => {
-                      try {
-                        setNotifications([]);
-                        localStorage.removeItem(getUserSpecificKey('user_notifications_v1'));
-                      } catch (e) {
-                        // ignore
-                      }
-                      // notify other tabs/components
-                      window.dispatchEvent(new Event('storage'));
+                      // Clear notifications via backend
+                      fetch('/api/notifications/clear', { method: 'POST', credentials: 'include' })
+                        .then(() => setNotifications([]));
                     }}
                     className="text-sm text-rose-600 hover:text-rose-700 font-medium px-2 py-1 rounded-md"
                     aria-label="Clear notifications"
@@ -321,16 +310,31 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => { setShowProfileMenu(!showProfileMenu); setShowNotifications(false); }}
-            className={`flex items-center gap-2 md:gap-3 pl-2 pr-3 md:pr-4 py-1.5 md:py-2 rounded-[1.5rem] transition-all border ${
-              showProfileMenu
-                ? 'bg-slate-700 border-slate-600 shadow-lg'
-                : 'hover:bg-slate-700 border-transparent'
-            }`}
+            className={`flex items-center gap-2 md:gap-3 pl-2 pr-3 md:pr-4 py-1.5 md:py-2 rounded-[1.5rem] transition-all border ${showProfileMenu
+              ? 'bg-slate-700 border-slate-600 shadow-lg'
+              : 'hover:bg-slate-700 border-transparent'
+              }`}
             aria-label="Open profile menu"
           >
             <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-black text-sm shadow-md overflow-hidden flex-shrink-0">
-              {user.avatar ? (
-                <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+              {user.profileImage ? (
+                (() => {
+                  // Handle byte array, base64, or URL
+                  let src = user.profileImage;
+                  if (Array.isArray(src)) {
+                    // Convert byte array to base64
+                    src = `data:image/jpeg;base64,${btoa(String.fromCharCode(...src))}`;
+                  } else if (typeof src === 'string') {
+                    if (/^[0-9A-Za-z+/=]+$/.test(src) && src.length > 100) {
+                      // Likely base64 string
+                      src = `data:image/jpeg;base64,${src}`;
+                    } else if (src.startsWith('data:image/')) {
+                      // Already a data URL
+                      src = src;
+                    } // else assume it's a URL
+                  }
+                  return <img src={src} alt="Profile" className="w-full h-full object-cover" />;
+                })()
               ) : (
                 getDisplayInitial()
               )}

@@ -342,7 +342,7 @@ const DatePicker = ({
                         ${!dayObj.isCurrentMonth ? 'cursor-default' : ''}
                         disabled:opacity-50 disabled:cursor-not-allowed
                       `}
-                      style={{backgroundColor: isSelected ? '#c97a4c' : ''}}
+                      style={{ backgroundColor: isSelected ? '#c97a4c' : '' }}
                     >
                       {dayObj.date.getDate()}
                     </button>
@@ -1037,7 +1037,11 @@ const EmployeeHub: React.FC = () => {
                     <tr key={emp.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => navigate(`/admin/employee-hub/${emp.id}`)}>
                       <td className="py-6 px-8">
                         <div className="flex items-center gap-4">
-                          <img src={emp.avatar} className="w-12 h-12 rounded-2xl border-4 border-white shadow-sm transition-transform group-hover:scale-110" alt="" />
+                          <img
+                            src={emp.profileImage && typeof emp.profileImage === 'string' && emp.profileImage.startsWith('/9j/')
+                              ? `data:image/jpeg;base64,${emp.profileImage}`
+                              : emp.avatar}
+                            className="w-12 h-12 rounded-2xl border-4 border-white shadow-sm transition-transform group-hover:scale-110" alt="" />
                           <div>
                             <p className="font-black text-black leading-none mb-1.5">{emp.fullName}</p>
                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{emp.employeeId} • {emp.designation}</p>
@@ -1045,7 +1049,7 @@ const EmployeeHub: React.FC = () => {
                         </div>
                       </td>
                       <td className="py-6 px-8">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${emp.employmentType === 'Full-time' ? 'bg-[#f5ede3] text-[#8b5a3c]' : 
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${emp.employmentType === 'Full-time' ? 'bg-[#f5ede3] text-[#8b5a3c]' :
                           emp.employmentType === 'Part-time' ? 'bg-purple-50 text-purple-600 border-purple-100' :
                             'bg-amber-50 text-amber-600 border-amber-100'
                           }`}>
@@ -1093,7 +1097,12 @@ const EmployeeHub: React.FC = () => {
                 >
                   <div className="flex items-start justify-between mb-6">
                     <div className="relative">
-                      <img src={emp.avatar} className="w-16 h-16 rounded-[20px] object-cover border-4 border-slate-50 shadow-md group-hover:scale-105 transition-transform" alt="" />
+                      <img
+                        src={emp.profileImage && typeof emp.profileImage === 'string' && emp.profileImage.startsWith('/9j/')
+                          ? `data:image/jpeg;base64,${emp.profileImage}`
+                          : emp.avatar}
+                        className="w-16 h-16 rounded-[20px] object-cover border-4 border-slate-50 shadow-md group-hover:scale-105 transition-transform"
+                        alt="" />
                       <div className={`absolute -top-2 -right-2 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm ${emp.leaveBalance < 5 ? 'bg-rose-500 text-white' : 'bg-white text-black border border-slate-100'}`}>
                         {emp.leaveBalance}d Bal
                       </div>
@@ -1112,7 +1121,7 @@ const EmployeeHub: React.FC = () => {
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">{emp.employeeId}</p>
 
                     <div className="flex flex-wrap gap-2 mb-4">
-                      <span className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${emp.employmentType === 'Full-time' ? 'bg-[#f5ede3] text-[#8b5a3c]' : 
+                      <span className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${emp.employmentType === 'Full-time' ? 'bg-[#f5ede3] text-[#8b5a3c]' :
                         emp.employmentType === 'Part-time' ? 'bg-purple-50 text-purple-600' :
                           'bg-amber-50 text-amber-600'
                         }`}>

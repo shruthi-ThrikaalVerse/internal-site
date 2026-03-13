@@ -133,7 +133,7 @@ const EmployeeDetails: React.FC = () => {
     }
   }, [selectedEmployee, performanceViewPeriod, performanceViewFilter, performanceViewYear]);
 
-  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   const availablePeriods = useMemo(() => {
     if (performanceViewPeriod === 'monthly') {
@@ -154,7 +154,7 @@ const EmployeeDetails: React.FC = () => {
     if (!analytics || !analytics.leaveAnalyticsResponse || !analytics.attendanceAnayticsResponse) {
       return { leaves: [], attendance: [], tasks: [] };
     }
-    
+
     // Handle task data if available
     let tasksData: any[] = [];
     if (analytics.taskAnalyticsResponse) {
@@ -164,7 +164,7 @@ const EmployeeDetails: React.FC = () => {
         { name: 'Pending', value: pendingTasks, fill: '#ef4444' }
       ];
     }
-    
+
     return {
       leaves: [
         { name: 'Leaves Taken', value: analytics.leaveAnalyticsResponse.leavesTaken, fill: '#ef4444' },
@@ -234,7 +234,7 @@ const EmployeeDetails: React.FC = () => {
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!performanceFormData.rating || !performanceFormData.feedback) {
       alert('Please fill in rating and feedback');
       return;
@@ -256,11 +256,11 @@ const EmployeeDetails: React.FC = () => {
         'yearly': 'YEARLY'
       };
 
-      const periodString = performanceFormPeriod === 'monthly' 
+      const periodString = performanceFormPeriod === 'monthly'
         ? monthNames[parseInt(performanceFormFilter) - 1] + ' ' + performanceViewYear
         : performanceFormPeriod === 'quarterly'
-        ? `Q${performanceFormFilter} ${performanceViewYear}`
-        : `Year ${performanceFormFilter}`;
+          ? `Q${performanceFormFilter} ${performanceViewYear}`
+          : `Year ${performanceFormFilter}`;
 
       // Try to submit via API (will use dummy data if API not available)
       try {
@@ -303,7 +303,7 @@ const EmployeeDetails: React.FC = () => {
       };
 
       setReviewHistory([newReview, ...reviewHistory]);
-      
+
       // Reset form
       setPerformanceFormData({
         rating: '',
@@ -311,7 +311,7 @@ const EmployeeDetails: React.FC = () => {
         strengths: '',
         improvements: ''
       });
-      
+
       alert('Review submitted successfully!');
     } catch (error) {
       console.error('Error submitting review:', error);
@@ -327,7 +327,7 @@ const EmployeeDetails: React.FC = () => {
         <p className="text-slate-600 mb-6">The employee you're looking for doesn't exist.</p>
         <button
           onClick={() => navigate('/admin/employee-hub')}
-          className="px-6 py-3 text-white font-black rounded-xl transition-colors" style={{backgroundColor: '#c97a4c'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
+          className="px-6 py-3 text-white font-black rounded-xl transition-colors" style={{ backgroundColor: '#c97a4c' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
         >
           Back to Employee Hub
         </button>
@@ -352,24 +352,22 @@ const EmployeeDetails: React.FC = () => {
           <div className="flex">
             <button
               onClick={() => setActiveTab('personal')}
-              className={`flex-1 px-6 py-5 font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                activeTab === 'personal'
-                  ? 'text-white'
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-              }`}
-              style={{backgroundColor: activeTab === 'personal' ? '#c97a4c' : ''}}
+              className={`flex-1 px-6 py-5 font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeTab === 'personal'
+                ? 'text-white'
+                : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                }`}
+              style={{ backgroundColor: activeTab === 'personal' ? '#c97a4c' : '' }}
             >
               <Icon name="User" className="w-5 h-5" />
               Personal Details
             </button>
             <button
               onClick={() => setActiveTab('performance')}
-              className={`flex-1 px-6 py-5 font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                activeTab === 'performance'
-                  ? 'text-white'
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-              }`}
-              style={{backgroundColor: activeTab === 'performance' ? '#c97a4c' : ''}}
+              className={`flex-1 px-6 py-5 font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeTab === 'performance'
+                ? 'text-white'
+                : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                }`}
+              style={{ backgroundColor: activeTab === 'performance' ? '#c97a4c' : '' }}
             >
               <Icon name="BarChart3" className="w-5 h-5" />
               Performance Metrics
@@ -394,27 +392,26 @@ const EmployeeDetails: React.FC = () => {
                   </p>
 
                   <div className="mt-6 flex flex-wrap gap-2 justify-center">
-                    <span className="px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest border" style={{backgroundColor: '#f5ede3', color: '#8b5a3c', borderColor: '#c97a4c'}}>
+                    <span className="px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest border" style={{ backgroundColor: '#f5ede3', color: '#8b5a3c', borderColor: '#c97a4c' }}>
                       {selectedEmployee.department}
                     </span>
                     <span className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-xs font-black uppercase tracking-widest border border-emerald-100">
                       {selectedEmployee.status}
                     </span>
                     <span
-                      className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest border ${
-                        selectedEmployee.employmentType === 'Full-time'
-                          ? 'bg-[#f5ede3] text-[#8b5a3c] border-[2px]'
-                          : selectedEmployee.employmentType === 'Part-time'
-                            ? 'bg-purple-50 text-purple-600 border-purple-100'
-                            : 'bg-amber-50 text-amber-600 border-amber-100'
-                      }`}
-                      style={selectedEmployee.employmentType === 'Full-time' ? {borderColor: '#c97a4c'} : {}}
+                      className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest border ${selectedEmployee.employmentType === 'Full-time'
+                        ? 'bg-[#f5ede3] text-[#8b5a3c] border-[2px]'
+                        : selectedEmployee.employmentType === 'Part-time'
+                          ? 'bg-purple-50 text-purple-600 border-purple-100'
+                          : 'bg-amber-50 text-amber-600 border-amber-100'
+                        }`}
+                      style={selectedEmployee.employmentType === 'Full-time' ? { borderColor: '#c97a4c' } : {}}
                     >
                       {selectedEmployee.employmentType}
                     </span>
                     {(selectedEmployee as any).role && (
-                  <span className="px-4 py-2 text-white rounded-full text-xs font-black uppercase tracking-widest border" style={{backgroundColor: '#c97a4c', borderColor: '#c97a4c'}}>
-                        {(selectedEmployee as any).role}
+                      <span className="px-4 py-2 text-white rounded-full text-xs font-black uppercase tracking-widest border" style={{ backgroundColor: '#c97a4c', borderColor: '#c97a4c' }}>
+                        {typeof (selectedEmployee as any).role === 'object' ? ((selectedEmployee as any).role.name || (selectedEmployee as any).role.id || JSON.stringify((selectedEmployee as any).role)) : (selectedEmployee as any).role}
                       </span>
                     )}
                   </div>
@@ -436,7 +433,7 @@ const EmployeeDetails: React.FC = () => {
                 </div>
 
                 {/* Credentials Section */}
-                <div className="p-6 rounded-[32px] text-white relative overflow-hidden group" style={{backgroundColor: '#c97a4c', boxShadow: '0 20px 25px -5px rgba(201, 122, 76, 0.2)'}}>
+                <div className="p-6 rounded-[32px] text-white relative overflow-hidden group" style={{ backgroundColor: '#c97a4c', boxShadow: '0 20px 25px -5px rgba(201, 122, 76, 0.2)' }}>
                   <div className="absolute right-0 bottom-0 opacity-10 group-hover:scale-110 transition-transform">
                     <Icon name="ShieldCheck" className="w-32 h-32" />
                   </div>
@@ -514,48 +511,47 @@ const EmployeeDetails: React.FC = () => {
                 {/* Filter Controls */}
                 <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm mb-8">
                   <div className="flex flex-wrap items-end gap-6">
-                  <div>
-                    <label className="text-xs font-black text-black uppercase tracking-widest mb-2 block">Period Type</label>
-                    <div className="flex gap-2 bg-slate-50 p-1 rounded-xl">
-                      {(['monthly', 'quarterly', 'yearly'] as const).map((period) => (
-                        <button
-                          key={period}
-                          onClick={() => setPerformanceViewPeriod(period)}
-                          className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
-                            performanceViewPeriod === period
+                    <div>
+                      <label className="text-xs font-black text-black uppercase tracking-widest mb-2 block">Period Type</label>
+                      <div className="flex gap-2 bg-slate-50 p-1 rounded-xl">
+                        {(['monthly', 'quarterly', 'yearly'] as const).map((period) => (
+                          <button
+                            key={period}
+                            onClick={() => setPerformanceViewPeriod(period)}
+                            className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${performanceViewPeriod === period
                               ? 'bg-indigo-600 text-white shadow-lg'
                               : 'bg-transparent text-slate-600 hover:text-black'
-                          }`}
-                        >
-                          {period === 'monthly' ? 'Monthly' : period === 'quarterly' ? 'Quarterly' : 'Yearly'}
-                        </button>
-                      ))}
+                              }`}
+                          >
+                            {period === 'monthly' ? 'Monthly' : period === 'quarterly' ? 'Quarterly' : 'Yearly'}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="text-xs font-black text-black uppercase tracking-widest mb-1 block">Year</label>
-                    <input
-                      type="number"
-                      value={performanceViewYear}
-                      onChange={(e) => setPerformanceViewYear(parseInt(e.target.value, 10))}
-                      className="w-24 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-sm text-black focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    />
-                  </div>
+                    <div>
+                      <label className="text-xs font-black text-black uppercase tracking-widest mb-1 block">Year</label>
+                      <input
+                        type="number"
+                        value={performanceViewYear}
+                        onChange={(e) => setPerformanceViewYear(parseInt(e.target.value, 10))}
+                        className="w-24 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-sm text-black focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                      />
+                    </div>
 
-                  <div className="flex-1 max-w-xs">
-                    <label className="text-xs font-black text-black uppercase tracking-widest mb-1 block">Select Period</label>
-                    <select
-                      value={performanceViewFilter}
-                      onChange={(e) => setPerformanceViewFilter(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-sm text-black focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    >
-                      {availablePeriods.map((p) => (
-                        <option key={p.value} value={p.value}>
-                          {p.label}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex-1 max-w-xs">
+                      <label className="text-xs font-black text-black uppercase tracking-widest mb-1 block">Select Period</label>
+                      <select
+                        value={performanceViewFilter}
+                        onChange={(e) => setPerformanceViewFilter(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-sm text-black focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                      >
+                        {availablePeriods.map((p) => (
+                          <option key={p.value} value={p.value}>
+                            {p.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -581,45 +577,45 @@ const EmployeeDetails: React.FC = () => {
                             leavesTaken: analytics.leaveAnalyticsResponse.leavesTaken
                           } : null;
                           return leaveData ? (
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-4 border border-red-200">
-                              <p className="text-2xl font-black text-red-600">{leaveData.workingDays}</p>
-                              <p className="text-xs font-bold text-red-700 uppercase tracking-widest mt-2">Working Days</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-4 border border-red-200">
+                                <p className="text-2xl font-black text-red-600">{leaveData.workingDays}</p>
+                                <p className="text-xs font-bold text-red-700 uppercase tracking-widest mt-2">Working Days</p>
+                              </div>
+                              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 border border-green-200">
+                                <p className="text-2xl font-black text-green-600">{leaveData.leavesTaken}</p>
+                                <p className="text-xs font-bold text-green-700 uppercase tracking-widest mt-2">Leaves Taken</p>
+                              </div>
                             </div>
-                            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 border border-green-200">
-                              <p className="text-2xl font-black text-green-600">{leaveData.leavesTaken}</p>
-                              <p className="text-xs font-bold text-green-700 uppercase tracking-widest mt-2">Leaves Taken</p>
-                            </div>
-                          </div>
-                        ) : null;
-                      })()}
-                      <div className="h-72">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={analytics ? [
-                                { name: 'Leaves Taken', value: analytics.leaveAnalyticsResponse.leavesTaken, fill: '#ef4444' },
-                                { name: 'Working Days', value: analytics.leaveAnalyticsResponse.workingDays - analytics.leaveAnalyticsResponse.leavesTaken, fill: '#10b981' }
-                              ] : []}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={({ name, value }) => `${name}: ${value}`}
-                              outerRadius={80}
-                              fill="#8884d8"
-                              dataKey="value"
-                            >
-                              {analytics && analytics.leaveAnalyticsResponse && analytics.leaveAnalyticsResponse.leavesTaken !== undefined
-                                ? [analytics.leaveAnalyticsResponse.leavesTaken, analytics.leaveAnalyticsResponse.workingDays - analytics.leaveAnalyticsResponse.leavesTaken].map((_, index) => (
-                                    <Cell key={`cell-${index}`} fill={[ '#ef4444', '#10b981' ][index]} />
+                          ) : null;
+                        })()}
+                        <div className="h-72">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={analytics ? [
+                                  { name: 'Leaves Taken', value: analytics.leaveAnalyticsResponse.leavesTaken, fill: '#ef4444' },
+                                  { name: 'Working Days', value: analytics.leaveAnalyticsResponse.workingDays - analytics.leaveAnalyticsResponse.leavesTaken, fill: '#10b981' }
+                                ] : []}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, value }) => `${name}: ${value}`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                              >
+                                {analytics && analytics.leaveAnalyticsResponse && analytics.leaveAnalyticsResponse.leavesTaken !== undefined
+                                  ? [analytics.leaveAnalyticsResponse.leavesTaken, analytics.leaveAnalyticsResponse.workingDays - analytics.leaveAnalyticsResponse.leavesTaken].map((_, index) => (
+                                    <Cell key={`cell-${index}`} fill={['#ef4444', '#10b981'][index]} />
                                   ))
-                                : null}
-                            </Pie>
-                            <Tooltip formatter={(value) => `${value} days`} />
-                            <Legend />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
+                                  : null}
+                              </Pie>
+                              <Tooltip formatter={(value) => `${value} days`} />
+                              <Legend />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
                       </div>
                     </div>
 
@@ -643,44 +639,44 @@ const EmployeeDetails: React.FC = () => {
                             ? Math.round((attendanceData.presentDays / (attendanceData.presentDays + attendanceData.absentDays)) * 100)
                             : 0;
                           return attendanceData ? (
-                          <div className="grid grid-cols-3 gap-3">
-                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4 border border-blue-200 text-center">
-                              <p className="text-2xl font-black text-blue-600">{attendanceData.presentDays}</p>
-                              <p className="text-xs font-bold text-blue-700 uppercase tracking-widest mt-2">Present</p>
+                            <div className="grid grid-cols-3 gap-3">
+                              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4 border border-blue-200 text-center">
+                                <p className="text-2xl font-black text-blue-600">{attendanceData.presentDays}</p>
+                                <p className="text-xs font-bold text-blue-700 uppercase tracking-widest mt-2">Present</p>
+                              </div>
+                              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-4 border border-yellow-200 text-center">
+                                <p className="text-2xl font-black text-yellow-600">{attendanceData.absentDays}</p>
+                                <p className="text-xs font-bold text-yellow-700 uppercase tracking-widest mt-2">Absent</p>
+                              </div>
+                              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 border border-green-200 text-center">
+                                <p className="text-2xl font-black text-green-600">{attendanceRate}%</p>
+                                <p className="text-xs font-bold text-green-700 uppercase tracking-widest mt-2">Rate</p>
+                              </div>
                             </div>
-                            <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-4 border border-yellow-200 text-center">
-                              <p className="text-2xl font-black text-yellow-600">{attendanceData.absentDays}</p>
-                              <p className="text-xs font-bold text-yellow-700 uppercase tracking-widest mt-2">Absent</p>
-                            </div>
-                            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 border border-green-200 text-center">
-                              <p className="text-2xl font-black text-green-600">{attendanceRate}%</p>
-                              <p className="text-xs font-bold text-green-700 uppercase tracking-widest mt-2">Rate</p>
-                            </div>
-                          </div>
-                        ) : null;
-                      })()}
-                      <div className="h-72">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={pieChartData.attendance}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={({ name, value }) => `${name}: ${value}`}
-                              outerRadius={80}
-                              fill="#8884d8"
-                              dataKey="value"
-                            >
-                              {pieChartData.attendance.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.fill} />
-                              ))}
-                            </Pie>
-                            <Tooltip formatter={(value) => `${value} days`} />
-                            <Legend />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
+                          ) : null;
+                        })()}
+                        <div className="h-72">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={pieChartData.attendance}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, value }) => `${name}: ${value}`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                              >
+                                {pieChartData.attendance.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                                ))}
+                              </Pie>
+                              <Tooltip formatter={(value) => `${value} days`} />
+                              <Legend />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
                       </div>
                     </div>
 
@@ -705,44 +701,44 @@ const EmployeeDetails: React.FC = () => {
                             ? Math.round((tasksData.tasksCompleted / (tasksData.tasksAssigned || 1)) * 100)
                             : 0;
                           return tasksData ? (
-                          <div className="grid grid-cols-3 gap-3">
-                            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-4 border border-purple-200 text-center">
-                              <p className="text-2xl font-black text-purple-600">{tasksData.tasksAssigned}</p>
-                              <p className="text-xs font-bold text-purple-700 uppercase tracking-widest mt-2">Assigned</p>
+                            <div className="grid grid-cols-3 gap-3">
+                              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-4 border border-purple-200 text-center">
+                                <p className="text-2xl font-black text-purple-600">{tasksData.tasksAssigned}</p>
+                                <p className="text-xs font-bold text-purple-700 uppercase tracking-widest mt-2">Assigned</p>
+                              </div>
+                              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 border border-green-200 text-center">
+                                <p className="text-2xl font-black text-green-600">{tasksData.tasksCompleted}</p>
+                                <p className="text-xs font-bold text-green-700 uppercase tracking-widest mt-2">Completed</p>
+                              </div>
+                              <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-4 border border-red-200 text-center">
+                                <p className="text-2xl font-black text-red-600">{completionRate}%</p>
+                                <p className="text-xs font-bold text-red-700 uppercase tracking-widest mt-2">Rate</p>
+                              </div>
                             </div>
-                            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 border border-green-200 text-center">
-                              <p className="text-2xl font-black text-green-600">{tasksData.tasksCompleted}</p>
-                              <p className="text-xs font-bold text-green-700 uppercase tracking-widest mt-2">Completed</p>
-                            </div>
-                            <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-4 border border-red-200 text-center">
-                              <p className="text-2xl font-black text-red-600">{completionRate}%</p>
-                              <p className="text-xs font-bold text-red-700 uppercase tracking-widest mt-2">Rate</p>
-                            </div>
-                          </div>
-                        ) : null;
-                      })()}
-                      <div className="h-72">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={pieChartData.tasks}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={({ name, value }) => `${name}: ${value}`}
-                              outerRadius={80}
-                              fill="#8884d8"
-                              dataKey="value"
-                            >
-                              {pieChartData.tasks.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.fill} />
-                              ))}
-                            </Pie>
-                            <Tooltip formatter={(value) => `${value} tasks`} />
-                            <Legend />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
+                          ) : null;
+                        })()}
+                        <div className="h-72">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={pieChartData.tasks}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, value }) => `${name}: ${value}`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                              >
+                                {pieChartData.tasks.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                                ))}
+                              </Pie>
+                              <Tooltip formatter={(value) => `${value} tasks`} />
+                              <Legend />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -765,12 +761,11 @@ const EmployeeDetails: React.FC = () => {
                               key={period}
                               type="button"
                               onClick={() => setPerformanceFormPeriod(period)}
-                              className={`flex-1 px-3 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
-                                performanceFormPeriod === period
-                                  ? 'text-white rounded-lg'
-                                  : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
-                              }`}
-                              style={performanceFormPeriod === period ? {backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'} : undefined}
+                              className={`flex-1 px-3 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${performanceFormPeriod === period
+                                ? 'text-white rounded-lg'
+                                : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+                                }`}
+                              style={performanceFormPeriod === period ? { backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' } : undefined}
                             >
                               {period === 'monthly' ? 'Monthly' : period === 'quarterly' ? 'Quarterly' : 'Yearly'}
                             </button>
@@ -874,42 +869,38 @@ const EmployeeDetails: React.FC = () => {
                       <div className="flex gap-2 mb-4 flex-wrap">
                         <button
                           onClick={() => setReviewHistoryPeriodFilter('all')}
-                          className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
-                            reviewHistoryPeriodFilter === 'all'
-                              ? 'bg-indigo-600 text-white shadow-lg'
-                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                          }`}
+                          className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${reviewHistoryPeriodFilter === 'all'
+                            ? 'bg-indigo-600 text-white shadow-lg'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                            }`}
                         >
                           All Reviews
                         </button>
                         <button
                           onClick={() => setReviewHistoryPeriodFilter('monthly')}
-                          className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
-                            reviewHistoryPeriodFilter === 'monthly'
-                              ? 'text-white rounded-lg'
-                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                          }`}
-                          style={reviewHistoryPeriodFilter === 'monthly' ? {backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'} : undefined}
+                          className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${reviewHistoryPeriodFilter === 'monthly'
+                            ? 'text-white rounded-lg'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                            }`}
+                          style={reviewHistoryPeriodFilter === 'monthly' ? { backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' } : undefined}
                         >
                           Monthly
                         </button>
                         <button
                           onClick={() => setReviewHistoryPeriodFilter('quarterly')}
-                          className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
-                            reviewHistoryPeriodFilter === 'quarterly'
-                              ? 'bg-purple-600 text-white shadow-lg'
-                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                          }`}
+                          className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${reviewHistoryPeriodFilter === 'quarterly'
+                            ? 'bg-purple-600 text-white shadow-lg'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                            }`}
                         >
                           Quarterly
                         </button>
                         <button
                           onClick={() => setReviewHistoryPeriodFilter('yearly')}
-                          className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
-                            reviewHistoryPeriodFilter === 'yearly'
-                              ? 'bg-orange-600 text-white shadow-lg'
-                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                          }`}
+                          className={`px-4 py-2 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${reviewHistoryPeriodFilter === 'yearly'
+                            ? 'bg-orange-600 text-white shadow-lg'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                            }`}
                         >
                           Yearly
                         </button>
@@ -940,18 +931,16 @@ const EmployeeDetails: React.FC = () => {
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
                                   <div className={`px-3 py-2 rounded-xl text-center`}>
-                                    <p className={`text-lg font-black ${
-                                      review.rating >= 4.5 ? 'text-emerald-600' :
+                                    <p className={`text-lg font-black ${review.rating >= 4.5 ? 'text-emerald-600' :
                                       review.rating >= 3.5 ? 'text-blue-600' :
-                                      'text-amber-600'
-                                    }`}>{review.rating}</p>
+                                        'text-amber-600'
+                                      }`}>{review.rating}</p>
                                     <p className="text-[10px] text-slate-500 font-bold">Rating</p>
                                   </div>
-                                  <div className={`px-2 py-1 rounded-lg ${
-                                    review.period === 'monthly' ? 'bg-blue-100 text-blue-700' :
+                                  <div className={`px-2 py-1 rounded-lg ${review.period === 'monthly' ? 'bg-blue-100 text-blue-700' :
                                     review.period === 'quarterly' ? 'bg-purple-100 text-purple-700' :
-                                    'bg-orange-100 text-orange-700'
-                                  } text-[10px] font-black uppercase tracking-widest`}>
+                                      'bg-orange-100 text-orange-700'
+                                    } text-[10px] font-black uppercase tracking-widest`}>
                                     {review.period === 'monthly' ? 'Monthly' : review.period === 'quarterly' ? 'Quarterly' : 'Yearly'}
                                   </div>
                                 </div>
@@ -964,11 +953,11 @@ const EmployeeDetails: React.FC = () => {
                           const matchesPeriod = reviewHistoryPeriodFilter === 'all' || review.period === reviewHistoryPeriodFilter;
                           return matchesSearch && matchesPeriod;
                         }).length === 0 && (
-                          <div className="text-center py-8">
-                            <Icon name="FileQuestion" className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-                            <p className="text-sm text-slate-500">No reviews found</p>
-                          </div>
-                        )}
+                            <div className="text-center py-8">
+                              <Icon name="FileQuestion" className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+                              <p className="text-sm text-slate-500">No reviews found</p>
+                            </div>
+                          )}
                       </div>
                     </div>
                   </div>
@@ -1008,17 +997,15 @@ const EmployeeDetails: React.FC = () => {
 
                         {/* Rating and Period */}
                         <div className="grid grid-cols-3 gap-4">
-                          <div className={`p-4 rounded-2xl ${
-                            selectedReview.rating >= 4.5 ? 'bg-emerald-50 border border-emerald-200' :
+                          <div className={`p-4 rounded-2xl ${selectedReview.rating >= 4.5 ? 'bg-emerald-50 border border-emerald-200' :
                             selectedReview.rating >= 3.5 ? 'bg-blue-50 border border-blue-200' :
-                            'bg-amber-50 border border-amber-200'
-                          }`}>
+                              'bg-amber-50 border border-amber-200'
+                            }`}>
                             <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Rating</p>
-                            <p className={`text-3xl font-black ${
-                              selectedReview.rating >= 4.5 ? 'text-emerald-600' :
+                            <p className={`text-3xl font-black ${selectedReview.rating >= 4.5 ? 'text-emerald-600' :
                               selectedReview.rating >= 3.5 ? 'text-blue-600' :
-                              'text-amber-600'
-                            }`}>{selectedReview.rating}</p>
+                                'text-amber-600'
+                              }`}>{selectedReview.rating}</p>
                           </div>
                           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
                             <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Period</p>
