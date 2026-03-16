@@ -11,7 +11,9 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
-  const [user, setUser] = useState<any>({ name: 'Admin', role: 'Administrator' });
+  const { user: authUser, logout } = useAuth();
+  const [user, setUser] = useState<any>(authUser || { name: 'Admin', role: 'Administrator' });
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
@@ -20,39 +22,48 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const notificationRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
-  const { logout } = useAuth();
+  // Removed duplicate logout declaration
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadUserData();
     loadNotifications();
 
-    const handleStorage = () => {
-      loadUserData();
-      loadNotifications();
-    };
+    // Sync user from AuthContext
+    setUser(authUser || { name: 'Admin', role: 'Administrator' });
 
-    window.addEventListener('storage', handleStorage);
+    // Fetch profile image from API if not present
+    const fetchProfileImage = async () => {
+      if (!authUser || !authUser.email) return;
+      try {
+        const response = await fetch('http://localhost:8085/api/users/me', {
+          method: 'GET',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const userData = data.data || data;
+          setUser(prev => ({ ...prev, ...userData }));
+          if (userData.profileImage) setProfileImage(userData.profileImage);
+          else if (userData.avatar) setProfileImage(userData.avatar);
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    fetchProfileImage();
 
     // Close notifications dropdown when a navigation originates elsewhere
     const handleCloseDropdown = () => setShowNotifications(false);
     window.addEventListener('closeNotificationsDropdown', handleCloseDropdown as EventListener);
 
     return () => {
-      window.removeEventListener('storage', handleStorage);
       window.removeEventListener('closeNotificationsDropdown', handleCloseDropdown as EventListener);
     };
-  }, []);
+  }, [authUser]);
 
   const loadUserData = () => {
-    const userJson = localStorage.getItem('user');
-    if (userJson) {
-      try {
-        setUser(JSON.parse(userJson));
-      } catch (e) {
-        console.error("Failed to parse user data", e);
-      }
-    }
+    // No longer needed, user comes from AuthContext and API
   };
 
   const loadNotifications = () => {
@@ -108,7 +119,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   };
 
   const getDisplayInitial = () => {
-    const firstName = user?.firstName || '';
+    const firstName = user?.firstName || user?.fullName || '';
     const name = user?.name || '';
     if (firstName && typeof firstName === 'string' && firstName.length > 0) return firstName.charAt(0).toUpperCase();
     if (name && typeof name === 'string' && name.length > 0) return name.charAt(0).toUpperCase();
@@ -118,6 +129,18 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const displayName = user?.firstName || user?.name || 'Admin';
   const displayRole = user?.role || user?.designation || 'Administrator';
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  // Helper to format base64 image
+  const formatBase64Image = (imageData: string | null | undefined): string => {
+    if (!imageData) return '';
+    if (imageData.startsWith('data:image')) return imageData;
+    if (imageData.startsWith('http://') || imageData.startsWith('https://')) return imageData;
+    if (imageData.startsWith('/') && imageData.length < 100) return imageData;
+    if (imageData.match(/^[A-Za-z0-9+/=]+$/) && imageData.length > 100) {
+      return `data:image/jpeg;base64,${imageData}`;
+    }
+    return '';
+  };
 
   return (
     <header className="h-16 md:h-20 flex items-center justify-between px-4 sm:px-6 lg:px-10 z-50 sticky top-0" style={{ backgroundColor: '#2c3e50', borderBottom: '1px solid #1a252f' }}>
@@ -200,20 +223,18 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         <div className="relative" ref={notificationRef}>
           <button
             onClick={() => { setShowNotifications(!showNotifications); setShowProfileMenu(false); }}
-            className={`relative p-2 md:p-3 rounded-2xl transition-all active:scale-90 ${
-              showNotifications
-                ? 'bg-orange-600 text-white shadow-xl'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700'
-            }`}
+            className={`relative p-2 md:p-3 rounded-2xl transition-all active:scale-90 ${showNotifications
+              ? 'bg-orange-600 text-white shadow-xl'
+              : 'text-slate-300 hover:text-white hover:bg-slate-700'
+              }`}
             aria-label={unreadCount > 0 ? `Show ${unreadCount} unread notifications` : 'Show notifications'}
           >
             <Bell size={20} className="md:size-22" />
             {unreadCount > 0 && (
-              <span className={`absolute top-1.5 right-1.5 md:top-2.5 md:right-2.5 w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded-full border-2 border-white text-[8px] md:text-[9px] font-black ${
-                showNotifications
-                  ? 'bg-white text-orange-600'
-                  : 'bg-red-500 text-white animate-pulse'
-              }`}>
+              <span className={`absolute top-1.5 right-1.5 md:top-2.5 md:right-2.5 w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded-full border-2 border-white text-[8px] md:text-[9px] font-black ${showNotifications
+                ? 'bg-white text-orange-600'
+                : 'bg-red-500 text-white animate-pulse'
+                }`}>
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -318,7 +339,16 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               <span className="text-[10px] text-slate-300 font-medium uppercase tracking-wider mt-0.5">{displayRole}</span>
             </div>
             <div className="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ backgroundColor: '#c97a4c' }}>
-              {getDisplayInitial()}
+              {profileImage ? (
+                <img
+                  src={formatBase64Image(profileImage)}
+                  alt={displayName}
+                  className="w-full h-full object-cover rounded-full"
+                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+              ) : (
+                getDisplayInitial()
+              )}
             </div>
           </button>
 

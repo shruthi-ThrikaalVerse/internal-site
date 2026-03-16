@@ -250,7 +250,7 @@ const Profile: React.FC = () => {
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   required
-                  className="w-full px-3 sm:px-4 py-2 mt-2 border border-gray-300 rounded-lg text-sm sm:text-base"
+                  className="w-full px-3 sm:px-4 py-2 mt-2 border border-gray-300 rounded-lg text-sm sm:text-base text-black"
                 />
               </div>
               <div>
@@ -261,7 +261,7 @@ const Profile: React.FC = () => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  className="w-full px-3 sm:px-4 py-2 mt-2 border border-gray-300 rounded-lg text-sm sm:text-base"
+                  className="w-full px-3 sm:px-4 py-2 mt-2 border border-gray-300 rounded-lg text-sm sm:text-base text-black"
                 />
               </div>
               <div>
@@ -272,7 +272,7 @@ const Profile: React.FC = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="w-full px-3 sm:px-4 py-2 mt-2 border border-gray-300 rounded-lg text-sm sm:text-base"
+                  className="w-full px-3 sm:px-4 py-2 mt-2 border border-gray-300 rounded-lg text-sm sm:text-base text-black"
                 />
               </div>
 
@@ -464,7 +464,7 @@ const Profile: React.FC = () => {
                           value={formData.firstName}
                           onChange={handleInputChange}
                           placeholder="Enter your first name"
-                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base text-black"
                         />
                       ) : (
                         <div className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-50 rounded-lg text-gray-900 text-sm sm:text-base">{user.firstName}</div>
@@ -482,7 +482,7 @@ const Profile: React.FC = () => {
                           value={formData.lastName}
                           onChange={handleInputChange}
                           placeholder="Enter your last name"
-                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base text-black"
                         />
                       ) : (
                         <div className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-50 rounded-lg text-gray-900 text-sm sm:text-base">{user.lastName}</div>
@@ -500,7 +500,7 @@ const Profile: React.FC = () => {
                           value={formData.email}
                           onChange={handleInputChange}
                           placeholder="Enter your email address"
-                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base text-black"
                         />
                       ) : (
                         <div className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-50 rounded-lg text-gray-900 flex items-center gap-2 text-sm sm:text-base">
@@ -521,7 +521,7 @@ const Profile: React.FC = () => {
                           value={(formData as any).phoneNumber}
                           onChange={handleInputChange}
                           placeholder="Enter your phone number"
-                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base text-black"
                         />
                       ) : (
                         <div className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-50 rounded-lg text-gray-900 flex items-center gap-2 text-sm sm:text-base">
@@ -542,7 +542,7 @@ const Profile: React.FC = () => {
                           onChange={handleInputChange}
                           rows={3}
                           placeholder="Enter your address"
-                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm sm:text-base"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm sm:text-base text-black"
                         />
                       ) : (
                         <div className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-50 rounded-lg text-gray-900 flex items-start gap-2 text-sm sm:text-base">
