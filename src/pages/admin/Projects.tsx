@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Calendar, 
-  DollarSign, 
-  FileText, 
+import {
+  Calendar,
+  DollarSign,
+  FileText,
   AlertCircle,
   Clock,
   Briefcase,
@@ -89,7 +89,7 @@ const Projects: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         const response = await fetch('http://localhost:8085/api/projects/manager', {
           method: 'GET',
           headers: {
@@ -168,7 +168,7 @@ const Projects: React.FC = () => {
             const statusColor = getStatusColor(project.status);
             const upcomingDate = new Date(project.endDate);
             const isOverdue = upcomingDate < new Date() && project.status !== 'COMPLETED';
-            
+
             return (
               <div
                 key={project.projectCode}

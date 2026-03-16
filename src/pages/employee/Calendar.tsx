@@ -222,7 +222,6 @@ const Calendar: React.FC = () => {
 
   const refreshData = async () => {
     let storedAttendance: any[] = [];
-    let storedLeaves: any[] = [];
 
     try {
       const attendResp = await fetch('http://localhost:8085/api/employee_attend/attendance', { credentials: 'include' });
@@ -232,16 +231,6 @@ const Calendar: React.FC = () => {
       }
     } catch (err) {
       console.warn('Failed to fetch attendance:', err);
-    }
-
-    try {
-      const leaveResp = await fetch('http://localhost:8085/api/leave/requests', { credentials: 'include' });
-      if (leaveResp.ok) {
-        const data = await leaveResp.json().catch(() => []);
-        storedLeaves = Array.isArray(data) ? data : (data?.requests || []);
-      }
-    } catch (err) {
-      console.warn('Failed to fetch leaves:', err);
     }
 
     const mergedMap = new Map<string, CalendarAttendanceRecord>();
@@ -272,33 +261,6 @@ const Calendar: React.FC = () => {
         locationName: h.name,
         isLate: false
       });
-    });
-
-    // Approved leaves (do not override holiday or working Saturday)
-    storedLeaves.forEach((leave: any) => {
-      const status = (leave.status || 'pending').toLowerCase();
-      if (status === 'approved') {
-        let current = new Date(leave.startDate);
-        const end = new Date(leave.endDate);
-        while (current <= end) {
-          const dStr = formatDateString(current);
-          const existingRecord = mergedMap.get(dStr);
-          // Only set leave if not already a holiday or working Saturday
-          if (!existingRecord || (existingRecord.status !== 'Holiday' && existingRecord.status !== 'Working Saturday')) {
-            mergedMap.set(dStr, {
-              id: `leave-${dStr}`,
-              date: dStr,
-              status: 'On Leave',
-              timeIn: null,
-              timeOut: null,
-              workingHours: 0,
-              locationName: `On Leave (${leave.type})`,
-              isLate: false
-            });
-          }
-          current.setDate(current.getDate() + 1);
-        }
-      }
     });
 
     // Attendance (sessions-aware)
@@ -699,9 +661,9 @@ const Calendar: React.FC = () => {
         {/* Fixed Day Headers */}
         <div className="sticky top-0 z-10 bg-white border-b border-slate-200">
           <div className="grid grid-cols-7 bg-slate-50">
-            {dayNames.map(d => (
+            {dayNames.map((d, idx) => (
               <div
-                key={d}
+                key={idx}
                 className="py-2 sm:py-3 lg:py-4 xl:py-5 text-center text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wider"
               >
                 {d}

@@ -148,9 +148,8 @@ const Dashboard: React.FC = () => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
 
     const loadData = async () => {
-      // Fetch attendance and leaves from backend; user comes from context
+      // Fetch attendance from backend; use context for leave data
       const records: any[] = [];
-      const leaves: any[] = [];
 
       try {
         const attendResp = await fetch('http://localhost:8085/api/employee_attend/attendance', { credentials: 'include' });
@@ -161,17 +160,6 @@ const Dashboard: React.FC = () => {
         }
       } catch (err) {
         console.warn('Failed to fetch attendance from backend:', err);
-      }
-
-      try {
-        const leaveResp = await fetch('http://localhost:8085/api/leave/requests', { credentials: 'include' });
-        if (leaveResp.ok) {
-          const data = await leaveResp.json().catch(() => []);
-          if (Array.isArray(data)) leaves.push(...data);
-          else if (data?.requests && Array.isArray(data.requests)) leaves.push(...data.requests);
-        }
-      } catch (err) {
-        console.warn('Failed to fetch leaves from backend:', err);
       }
 
       const todayStr = getLocalDStr(new Date());
@@ -234,24 +222,14 @@ const Dashboard: React.FC = () => {
         const holiday = SYSTEM_HOLIDAYS.find(h => h.date === dStr);
         const record = records.find((r: any) => r.date === dStr);
 
-        const onLeave = leaves.some((l: any) => {
-          const lStatus = (l.status || 'pending').toLowerCase();
-          if (lStatus !== 'approved') return false;
-          return dStr >= l.startDate && dStr <= l.endDate;
-        });
-
         if (record) {
           const derived = deriveFromAttendance(record);
           if (derived.firstIn) {
             presentCount++;
             if (derived.isLate) lateCount++;
-          } else if (onLeave) {
-            // leave handled by context
           } else if (!isWeekend && !holiday && iter < realToday) {
             absentCount++;
           }
-        } else if (onLeave) {
-          // leave handled by context
         } else if (!isWeekend && !holiday && iter < realToday) {
           absentCount++;
         }

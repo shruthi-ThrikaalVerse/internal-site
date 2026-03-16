@@ -196,9 +196,7 @@ const Attendance: React.FC = () => {
         try {
           const endpoints = [
             `/api/employee_attend/attendance?date=${encodeURIComponent(today)}`,
-            `/api/employee_attend/today`,
-            `/api/employee_attend/get-today`,
-            `/api/employee_attend/record?date=${encodeURIComponent(today)}`
+            `/api/employee_attend/attendance`
           ];
           let rec = null;
           for (const ep of endpoints) {
@@ -276,9 +274,7 @@ const Attendance: React.FC = () => {
     try {
       const endpoints = [
         `/api/employee_attend/attendance?date=${encodeURIComponent(today)}`,
-        `/api/employee_attend/today`,
-        `/api/employee_attend/get-today`,
-        `/api/employee_attend/record?date=${encodeURIComponent(today)}`
+        `/api/employee_attend/attendance`
       ];
       let rec = null;
       for (const ep of endpoints) {

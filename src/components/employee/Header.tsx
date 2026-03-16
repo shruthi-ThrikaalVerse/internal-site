@@ -47,7 +47,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   };
 
   const loadNotifications = () => {
-    fetch('/api/notifications', { credentials: 'include' })
+    fetch('http://localhost:8085/api/notifications/getMyNotifications', { credentials: 'include' })
       .then(res => res.json())
       .then(data => setNotifications(Array.isArray(data) ? data : []))
       .catch(() => setNotifications([]));
@@ -57,10 +57,11 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
   const markAsRead = (id: string) => {
     // Mark notification as read in backend
-    fetch(`/api/notifications/${id}/read`, { method: 'POST', credentials: 'include' })
+    fetch(`http://localhost:8085/api/notifications/markRead/${id}`, { method: 'PUT', credentials: 'include' })
       .then(() => {
         setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
-      });
+      })
+      .catch(err => console.warn('Failed to mark notification as read:', err));
   };
 
   // Close menus when clicking outside
@@ -226,9 +227,8 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => {
-                      // Clear notifications via backend
-                      fetch('/api/notifications/clear', { method: 'POST', credentials: 'include' })
-                        .then(() => setNotifications([]));
+                      // Clear notifications from view
+                      setNotifications([]);
                     }}
                     className="text-sm text-rose-600 hover:text-rose-700 font-medium px-2 py-1 rounded-md"
                     aria-label="Clear notifications"
