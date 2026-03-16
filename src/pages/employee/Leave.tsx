@@ -640,7 +640,7 @@ const Leave: React.FC = () => {
                   key={status}
                   onClick={() => setFilter(status)}
                   className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${filter === status
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-100'
+                    ? 'bg-[#c97a4c] text-white shadow-md shadow-amber-200'
                     : 'bg-gray-100 text-black hover:bg-gray-200'
                     }`}
                 >

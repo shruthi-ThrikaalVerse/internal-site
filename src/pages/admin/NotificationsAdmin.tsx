@@ -386,7 +386,7 @@ const NotificationsAdmin: React.FC = () => {
                       setFormData({ ...formData, targetSelection: type, employeeIds: [], departmentIds: [] });
                       setFormErrors({ employeeSelection: '', departmentSelection: '' });
                     }}
-                    className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.targetSelection === type ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-100 text-black hover:bg-slate-50'
+                    className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.targetSelection === type ? 'bg-[#c97a4c] border-[#c97a4c] text-white shadow-lg' : 'bg-white border-slate-100 text-black hover:bg-slate-50'
                       }`}
                   >
                     {type}

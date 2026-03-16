@@ -165,8 +165,12 @@ export const AdminRequests = () => {
     }
   };
 
-  // Fetch termination requests from backend
+  // Polling interval in ms
+  const POLL_INTERVAL = 7000;
+
+  // Fetch termination requests from backend (with polling)
   useEffect(() => {
+    let intervalId: NodeJS.Timeout;
     const fetchTerminationRequests = async () => {
       setIsLoadingTermination(true);
       try {
@@ -177,10 +181,7 @@ export const AdminRequests = () => {
           },
           credentials: 'include',
         });
-
         const data = await response.json();
-        console.log('Termination Requests Response:', data);
-
         if (response.ok) {
           let fetchedRequests: TerminationRequest[] = [];
           if (Array.isArray(data)) {
@@ -190,24 +191,26 @@ export const AdminRequests = () => {
           }
           setTerminationRequests(fetchedRequests);
         } else {
-          console.error('Failed to fetch termination requests:', data);
           setTerminationRequests([]);
         }
       } catch (err) {
-        console.error('Error fetching termination requests:', err);
         setTerminationRequests([]);
       } finally {
         setIsLoadingTermination(false);
       }
     };
-
     if (isSuperAdmin) {
       fetchTerminationRequests();
+      intervalId = setInterval(fetchTerminationRequests, POLL_INTERVAL);
     }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [isSuperAdmin]);
 
-  // Fetch pending employee requests from backend
+  // Fetch pending employee requests from backend (with polling)
   useEffect(() => {
+    let intervalId: NodeJS.Timeout;
     const fetchPendingEmployees = async () => {
       setIsLoadingPending(true);
       try {
@@ -218,66 +221,62 @@ export const AdminRequests = () => {
           },
           credentials: 'include',
         });
-
         const data = await response.json();
-        console.log('Pending Employees Response:', data);
-
         if (response.ok) {
-          // Handle both single object and array responses
           let employees: PendingEmployee[] = [];
           if (Array.isArray(data)) {
             employees = data;
           } else if (data && typeof data === 'object') {
             employees = [data];
           }
-
-          // Remove duplicates by employeeId
           const uniqueEmployees = Array.from(
             new Map(employees.map(emp => [emp.employeeId, emp])).values()
           );
-
           setPendingEmployees(uniqueEmployees);
         } else {
-          console.error('Failed to fetch pending employees:', data);
           setPendingEmployees([]);
         }
       } catch (err) {
-        console.error('Error fetching pending employees:', err);
         setPendingEmployees([]);
       } finally {
         setIsLoadingPending(false);
       }
     };
-
     if (isSuperAdmin) {
       fetchPendingEmployees();
-      // Load once on mount only
+      intervalId = setInterval(fetchPendingEmployees, POLL_INTERVAL);
     }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [isSuperAdmin]);
 
-  // Fetch resignation requests for Super Admin
+  // Fetch resignation requests for Super Admin (with polling)
   useEffect(() => {
+    let intervalId: NodeJS.Timeout;
     const fetchSuperAdminResignations = async () => {
       setIsLoadingResignation(true);
       try {
         const response = await getPendingResignations();
-        console.log('Super Admin Resignation Requests:', response);
         setResignationRequests(response);
       } catch (err) {
-        console.error('Error fetching super admin resignation requests:', err);
         setResignationRequests([]);
       } finally {
         setIsLoadingResignation(false);
       }
     };
-
     if (isSuperAdmin) {
       fetchSuperAdminResignations();
+      intervalId = setInterval(fetchSuperAdminResignations, POLL_INTERVAL);
     }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [isSuperAdmin]);
 
-  // Fetch leave requests from backend
+  // Fetch leave requests from backend (with polling)
   useEffect(() => {
+    let intervalId: NodeJS.Timeout;
     const fetchLeaveRequests = async () => {
       setIsLoadingLeave(true);
       try {
@@ -285,34 +284,30 @@ export const AdminRequests = () => {
           method: 'GET',
           credentials: 'include',
         });
-
         if (!response.ok) {
-          console.error(`Failed to fetch leave requests: ${response.status} ${response.statusText}`);
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
         const data = await response.json();
-        console.log('Leave Requests Data:', data);
-
         if (Array.isArray(data)) {
           setLeaveRequests(data);
         } else if (data && typeof data === 'object') {
           setLeaveRequests([data]);
         } else {
-          console.error('Unexpected response shape:', data);
           setLeaveRequests([]);
         }
       } catch (err) {
-        console.error('Error fetching leave requests:', err);
         setLeaveRequests([]);
       } finally {
         setIsLoadingLeave(false);
       }
     };
-
     if (isSuperAdmin) {
       fetchLeaveRequests();
+      intervalId = setInterval(fetchLeaveRequests, POLL_INTERVAL);
     }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [isSuperAdmin]);
 
   const handleApprovePendingEmployee = async (employee: PendingEmployee) => {

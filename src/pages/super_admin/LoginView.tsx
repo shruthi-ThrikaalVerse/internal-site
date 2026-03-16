@@ -79,7 +79,7 @@ export const LoginView = () => {
           </button>
 
           <div className="text-center mb-10">
-            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-200">
+            <div className="w-16 h-16 bg-[#c97a4c] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-200">
               <span className="text-white text-2xl font-bold">SA</span>
             </div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back!</h1>
@@ -97,7 +97,7 @@ export const LoginView = () => {
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Admin Email</label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#c97a4c] transition-colors">
                   <Mail size={18} />
                 </div>
                 <input
@@ -107,7 +107,7 @@ export const LoginView = () => {
                   autoComplete="off"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all sm:text-sm"
+                  className="block w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-amber-100 focus:border-[#c97a4c] transition-all sm:text-sm"
                   placeholder="admin@company.com"
                 />
               </div>
@@ -116,10 +116,10 @@ export const LoginView = () => {
             <div>
               <div className="flex items-center justify-between mb-1.5 ml-1">
                 <label htmlFor="password" className="block text-sm font-semibold text-slate-700">Password</label>
-                <button type="button" className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline">Forgot?</button>
+                <button type="button" className="text-xs font-bold text-[#c97a4c] hover:text-[#a56137] hover:underline">Forgot?</button>
               </div>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#c97a4c] transition-colors">
                   <Lock size={18} />
                 </div>
                 <input
@@ -129,7 +129,7 @@ export const LoginView = () => {
                   autoComplete="off"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-11 pr-11 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all sm:text-sm"
+                  className="block w-full pl-11 pr-11 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-amber-100 focus:border-[#c97a4c] transition-all sm:text-sm"
                   placeholder="••••••••"
                 />
                 <button
@@ -148,7 +148,7 @@ export const LoginView = () => {
               <input
                 id="remember"
                 type="checkbox"
-                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                className="w-4 h-4 rounded border-slate-300 text-[#c97a4c] focus:ring-[#c97a4c] cursor-pointer"
               />
               <label htmlFor="remember" className="text-sm text-slate-600 cursor-pointer select-none">Remember for 30 days</label>
             </div>
@@ -156,7 +156,7 @@ export const LoginView = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-3.5 rounded-2xl font-bold text-sm hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full bg-[#c97a4c] text-white py-3.5 rounded-2xl font-bold text-sm hover:bg-[#a56137] focus:outline-none focus:ring-4 focus:ring-amber-200 transition-all shadow-lg shadow-amber-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isLoading ? <Loader2 size={18} className="animate-spin" /> : null}
               {isLoading ? 'Signing in...' : 'Sign In'}

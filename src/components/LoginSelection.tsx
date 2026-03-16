@@ -105,7 +105,7 @@ const LoginSelection: React.FC = () => {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4 }}
         onClick={handleBack}
-        className="absolute top-6 left-6 p-3 rounded-full bg-[var(--bg-secondary)]/80 backdrop-blur-sm border border-[var(--border-color)] hover:bg-[var(--border-color)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] z-50 shadow-lg"
+        className="absolute top-6 left-6 p-3 rounded-full bg-white border-2 border-[#c97a4c] hover:bg-[#c97a4c] transition-colors text-[#c97a4c] hover:text-white z-50 shadow-lg"
         title="Back to Home"
       >
         <ArrowLeft className="w-5 h-5" />
@@ -154,14 +154,14 @@ const LoginSelection: React.FC = () => {
               className="relative cursor-pointer h-full w-full"
             >
               <motion.div
-                className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/20 to-blue-600/20 blur-2xl"
+                className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#c97a4c]/20 to-[#a56137]/20 blur-2xl"
                 animate={{
                   opacity: hoveredCard === 'employee' ? 0.8 : 0.3,
                   scale: hoveredCard === 'employee' ? 1.1 : 1,
                 }}
                 transition={{ duration: 0.2 }}
               />
-              <div className="relative bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-2xl p-8 transition-all duration-300 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 h-full flex flex-col w-full">
+              <div className="relative bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-2xl p-8 transition-all duration-300 hover:border-[#c97a4c]/50 hover:shadow-xl hover:shadow-amber-500/10 h-full flex flex-col w-full">
                 {/* Icon */}
                 <motion.div
                   className="mb-6"
@@ -170,7 +170,7 @@ const LoginSelection: React.FC = () => {
                   }}
                   transition={{ duration: 0.2 }}
                 >
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mx-auto shadow-lg shadow-blue-500/30">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#d4895c] to-[#c97a4c] flex items-center justify-center mx-auto shadow-lg shadow-amber-500/30">
                     <svg
                       className="w-8 h-8 text-white"
                       fill="none"
@@ -198,15 +198,15 @@ const LoginSelection: React.FC = () => {
                 {/* Features List */}
                 <ul className="space-y-2 mb-6 flex-1">
                   <li className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#c97a4c]" />
                     Dashboard & Analytics
                   </li>
                   <li className="flex items-center gap-2 text-xs sm:text-sm text-[var(--text-secondary)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#c97a4c] flex-shrink-0" />
                     <span>Leave Management</span>
                   </li>
                   <li className="flex items-center gap-2 text-xs sm:text-sm text-[var(--text-secondary)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#c97a4c] flex-shrink-0" />
                     <span>Performance Tracking</span>
                   </li>
                 </ul>
@@ -216,7 +216,7 @@ const LoginSelection: React.FC = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={(e) => handleEmployeeLogin(e)}
-                  className="w-full py-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300"
+                  className="w-full py-3 rounded-lg bg-gradient-to-r from-[#c97a4c] to-[#a56137] text-white font-semibold hover:shadow-lg hover:shadow-amber-500/30 transition-all duration-300"
                 >
                   Login as Employee
                 </motion.button>
@@ -233,14 +233,14 @@ const LoginSelection: React.FC = () => {
               className="relative cursor-pointer h-full w-full"
             >
               <motion.div
-                className="absolute inset-0 rounded-2xl bg-gradient-to-r from-red-500/20 to-red-600/20 blur-2xl"
+                className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#c97a4c]/20 to-[#a56137]/20 blur-2xl"
                 animate={{
                   opacity: hoveredCard === 'admin' ? 0.8 : 0.3,
                   scale: hoveredCard === 'admin' ? 1.1 : 1,
                 }}
                 transition={{ duration: 0.2 }}
               />
-              <div className="relative bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-2xl p-8 transition-all duration-300 hover:border-red-500/50 hover:shadow-xl hover:shadow-red-500/10 h-full flex flex-col w-full">
+              <div className="relative bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-2xl p-8 transition-all duration-300 hover:border-[#c97a4c]/50 hover:shadow-xl hover:shadow-amber-500/10 h-full flex flex-col w-full">
                 {/* Icon */}
                 <motion.div
                   className="mb-6"
@@ -249,7 +249,7 @@ const LoginSelection: React.FC = () => {
                   }}
                   transition={{ duration: 0.2 }}
                 >
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center mx-auto shadow-lg shadow-red-500/30">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#d4895c] to-[#c97a4c] flex items-center justify-center mx-auto shadow-lg shadow-amber-500/30">
                     <svg
                       className="w-8 h-8 text-white"
                       fill="none"
@@ -277,15 +277,15 @@ const LoginSelection: React.FC = () => {
                 {/* Features List */}
                 <ul className="space-y-2 mb-6 flex-1">
                   <li className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#c97a4c]" />
                     Employee Management
                   </li>
                   <li className="flex items-center gap-2 text-xs sm:text-sm text-[var(--text-secondary)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#c97a4c] flex-shrink-0" />
                     <span>Payroll & Finance</span>
                   </li>
                   <li className="flex items-center gap-2 text-xs sm:text-sm text-[var(--text-secondary)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#c97a4c] flex-shrink-0" />
                     <span>System Administration</span>
                   </li>
                 </ul>
@@ -295,7 +295,7 @@ const LoginSelection: React.FC = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={(e) => handleAdminLogin(e)}
-                  className="w-full py-3 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold hover:shadow-lg hover:shadow-red-500/30 transition-all duration-300"
+                  className="w-full py-3 rounded-lg bg-gradient-to-r from-[#c97a4c] to-[#a56137] text-white font-semibold hover:shadow-lg hover:shadow-amber-500/30 transition-all duration-300"
                 >
                   Login as Admin
                 </motion.button>
@@ -312,14 +312,14 @@ const LoginSelection: React.FC = () => {
               className="relative cursor-pointer h-full w-full"
             >
               <motion.div
-                className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/20 to-purple-600/20 blur-2xl"
+                className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#c97a4c]/20 to-[#a56137]/20 blur-2xl"
                 animate={{
                   opacity: hoveredCard === 'super_admin' ? 0.8 : 0.3,
                   scale: hoveredCard === 'super_admin' ? 1.1 : 1,
                 }}
                 transition={{ duration: 0.2 }}
               />
-              <div className="relative bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-2xl p-8 transition-all duration-300 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 h-full flex flex-col w-full">
+              <div className="relative bg-[var(--bg-primary)] border-2 border-[var(--border-color)] rounded-2xl p-8 transition-all duration-300 hover:border-[#c97a4c]/50 hover:shadow-xl hover:shadow-amber-500/10 h-full flex flex-col w-full">
                 {/* Icon */}
                 <motion.div
                   className="mb-6"
@@ -328,7 +328,7 @@ const LoginSelection: React.FC = () => {
                   }}
                   transition={{ duration: 0.2 }}
                 >
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center mx-auto shadow-lg shadow-purple-500/30">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#d4895c] to-[#c97a4c] flex items-center justify-center mx-auto shadow-lg shadow-amber-500/30">
                     <svg
                       className="w-8 h-8 text-white"
                       fill="none"
@@ -356,15 +356,15 @@ const LoginSelection: React.FC = () => {
                 {/* Features List */}
                 <ul className="space-y-2 mb-6 flex-1">
                   <li className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#c97a4c]" />
                     System Maintenance
                   </li>
                   <li className="flex items-center gap-2 text-xs sm:text-sm text-[var(--text-secondary)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#c97a4c] flex-shrink-0" />
                     <span>Audit Management</span>
                   </li>
                   <li className="flex items-center gap-2 text-xs sm:text-sm text-[var(--text-secondary)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#c97a4c] flex-shrink-0" />
                     <span>Enterprise Control</span>
                   </li>
                 </ul>
@@ -374,7 +374,7 @@ const LoginSelection: React.FC = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={(e) => handleSuperAdminLogin(e)}
-                  className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-300"
+                  className="w-full py-3 rounded-lg bg-gradient-to-r from-[#c97a4c] to-[#a56137] text-white font-semibold hover:shadow-lg hover:shadow-amber-500/30 transition-all duration-300"
                 >
                   Login as Super Admin
                 </motion.button>
