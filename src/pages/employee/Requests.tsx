@@ -1103,14 +1103,14 @@ ${latest.attachments.length > 0 ? latest.attachments.join(', ') : 'None'}
                       <button
                         type="button"
                         onClick={() => setShowNewRequestModal(false)}
-                        className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-gray-200 transition-all active:scale-95"
+                        className="px-6 py-3 bg-white border-2 border-[#c97a4c] text-[#c97a4c] rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-[#c97a4c] hover:text-white transition-all active:scale-95"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-blue-100 active:scale-95 transition-all"
+                        className="px-8 py-3 bg-[#c97a4c] text-white rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-[#a56137] disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-amber-200 active:scale-95 transition-all"
                       >
                         {isSubmitting ? (
                           <>

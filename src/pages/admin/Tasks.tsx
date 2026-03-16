@@ -1052,7 +1052,7 @@ const Tasks: React.FC = () => {
                   key={type}
                   type="button"
                   onClick={() => setNewTask({ ...newTask, assigneeType: type, assignedTo: '' })}
-                  className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${newTask.assigneeType === type ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-transparent text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'
+                  className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${newTask.assigneeType === type ? 'bg-gradient-to-r from-[#c97a4c] to-[#a56137] border-transparent text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'
                     }`}
                 >
                   {type}

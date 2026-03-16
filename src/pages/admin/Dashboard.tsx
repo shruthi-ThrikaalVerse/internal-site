@@ -4,9 +4,13 @@ import * as LucideIcons from 'lucide-react';
 import { useHRMS } from '../../context/HRMSContext.tsx';
 import { useAuth } from '../../context/AuthContext.tsx';
 import { mockDepartmentHeadcount } from '../../mockData.ts';
+import { getPerformanceDashboard } from '../../api/performance.ts';
+// (Removed duplicate Dashboard definition and moved hooks inside the main function below)
 import { getPendingLeaveRequests, updateLeaveStatus as updateLeaveStatusAPI } from '../../api/leave.ts';
 import { getNotifications } from '../../api/notifications.ts';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { getEmployeeTickets, updateTicketStatus } from '../../api/tickets.ts';
+import { getEvents } from '../../api/events.ts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { ParticipationStatus, PayslipData } from '../../types.ts';
 
 const Icon = ({ name, className }: { name: string; className?: string }) => {
@@ -38,7 +42,68 @@ const StatsCard = ({ title, value, icon, color, subValue, trend }: any) => (
 );
 
 const Dashboard: React.FC = () => {
-  const { employees, activities, leaves, attendance, updateLeaveStatus, events, toggleEventParticipation, payslips, notify } = useHRMS();
+  // Department headcount state for department chart
+  const [departmentHeadcount, setDepartmentHeadcount] = useState<any[]>([]);
+  const [isLoadingDept, setIsLoadingDept] = useState(false);
+
+  // Fetch department headcount from backend
+  const fetchDepartmentHeadcount = useCallback(async () => {
+    try {
+      setIsLoadingDept(true);
+      const data = await getPerformanceDashboard();
+      if (data && Array.isArray(data.departmentPerformance)) {
+        // Optionally add color if not present
+        const colors = ["#6366f1", "#22d3ee", "#f59e42", "#10b981", "#f43f5e", "#a78bfa", "#fbbf24", "#34d399", "#f87171", "#818cf8"];
+        const deptData = data.departmentPerformance.map((d, i) => ({
+          ...d,
+          color: d.color || colors[i % colors.length],
+        }));
+        setDepartmentHeadcount(deptData);
+      } else {
+        setDepartmentHeadcount([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch department headcount', err);
+      setDepartmentHeadcount([]);
+    } finally {
+      setIsLoadingDept(false);
+    }
+  }, []);
+
+  // Backend events state
+  const [backendEvents, setBackendEvents] = useState<any[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+
+  // Fetch events from backend
+  const fetchBackendEvents = useCallback(async () => {
+    try {
+      setIsLoadingEvents(true);
+      const data = await getEvents();
+      if (Array.isArray(data)) {
+        // Sort by startDate descending, then startTime
+        const sorted = data.sort((a, b) => {
+          const dateA = new Date(a.startDate + 'T' + (a.startTime || '00:00:00'));
+          const dateB = new Date(b.startDate + 'T' + (b.startTime || '00:00:00'));
+          return dateB.getTime() - dateA.getTime();
+        });
+        setBackendEvents(sorted);
+      } else {
+        setBackendEvents([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch backend events', err);
+      setBackendEvents([]);
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  }, []);
+
+  // SAFEGUARD: Ensure HRMS context is available
+  const hrms = useHRMS();
+  if (!hrms) {
+    return <div style={{color: 'red', fontWeight: 'bold', padding: 32}}>HRMS context not found. Please ensure Dashboard is rendered inside HRMSProvider.</div>;
+  }
+  const { employees, activities, leaves, attendance, updateLeaveStatus, events, toggleEventParticipation, payslips, notify } = hrms;
   const { user } = useAuth();
   const navigate = useNavigate();
   const [eventFilter, setEventFilter] = useState<'all' | 'mine'>('all');
@@ -46,6 +111,37 @@ const Dashboard: React.FC = () => {
   const [showActivityFilter, setShowActivityFilter] = useState(false);
   const [backendPendingLeaves, setBackendPendingLeaves] = useState<any[]>([]);
   const [isLoadingLeaves, setIsLoadingLeaves] = useState(false);
+  const [backendTickets, setBackendTickets] = useState<any[]>([]);
+  const [isLoadingTickets, setIsLoadingTickets] = useState(false);
+    // Fetch support tickets from backend
+    const fetchTickets = useCallback(async () => {
+      try {
+        setIsLoadingTickets(true);
+        const data = await getEmployeeTickets();
+        if (Array.isArray(data)) {
+          // Normalize ticket fields for display
+          const mapped = data.map((item: any) => ({
+            id: String(item.id || item.ticketId),
+            ticketId: item.id || item.ticketId,
+            employeeId: item.employeeId,
+            employeeName: item.employeeName || item.requestedBy || item.employeeId,
+            type: item.type || 'Support',
+            subject: item.subject || item.title || 'Support Ticket',
+            reason: item.description || item.details || '',
+            status: (item.status || 'pending').toString().toLowerCase(),
+            createdAt: item.createdAt || item.date || '',
+          }));
+          setBackendTickets(mapped.filter(t => t.status === 'pending'));
+        } else {
+          setBackendTickets([]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch tickets', err);
+        setBackendTickets([]);
+      } finally {
+        setIsLoadingTickets(false);
+      }
+    }, []);
   const [backendActivities, setBackendActivities] = useState<any[]>([]);
   const [isLoadingActivities, setIsLoadingActivities] = useState(false);
 
@@ -112,13 +208,21 @@ const Dashboard: React.FC = () => {
     }
   }, []);
 
-  // Fetch pending leaves on component mount
+  // Fetch pending leaves, tickets, and events on component mount
   useEffect(() => {
     fetchPendingLeaves();
+    fetchTickets();
+    fetchBackendEvents();
+    fetchDepartmentHeadcount();
     // Set up polling to refresh every 30 seconds
-    const intervalId = setInterval(fetchPendingLeaves, 30000);
+    const intervalId = setInterval(() => {
+      fetchPendingLeaves();
+      fetchTickets();
+      fetchBackendEvents();
+      fetchDepartmentHeadcount();
+    }, 30000);
     return () => clearInterval(intervalId);
-  }, [fetchPendingLeaves]);
+  }, [fetchPendingLeaves, fetchTickets, fetchBackendEvents, fetchDepartmentHeadcount]);
 
   // Fetch activities on component mount
   useEffect(() => {
@@ -142,28 +246,46 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Merge pending leaves and tickets for the request queue
   const pendingLeaves = backendPendingLeaves.length > 0 ? backendPendingLeaves : leaves.filter(l => l.status === 'pending');
+  const pendingTickets = backendTickets;
+  const requestQueue = [
+    ...pendingLeaves.map(l => ({
+      ...l,
+      requestType: 'Leave',
+      displayType: l.leaveType || 'Leave',
+      displayReason: l.reason,
+      displayId: l.leaveId || l.id,
+    })),
+    ...pendingTickets.map(t => ({
+      ...t,
+      requestType: 'Support',
+      displayType: t.type || 'Support',
+      displayReason: t.reason,
+      displayId: t.ticketId || t.id,
+    })),
+  ];
   const displayActivities = backendActivities.length > 0 ? backendActivities : activities;
-  const activeCount = employees.filter(e => e.status === 'active').length;
-  const inactiveCount = employees.length - activeCount;
+
+  const safeEmployees = Array.isArray(employees) ? employees : [];
+  const activeCount = safeEmployees.filter(e => e.status === 'active').length;
+  const inactiveCount = safeEmployees.length - activeCount;
 
   const today = '2024-05-15';
   const presentCount = attendance.filter(a => a.date === today && (a.status === 'present' || a.status === 'late')).length;
-  const presenceRate = employees.length > 0 ? Math.round((presentCount / employees.length) * 100) : 0;
+  const presenceRate = safeEmployees.length > 0 ? Math.round((presentCount / safeEmployees.length) * 100) : 0;
 
-  const currentEmployee = employees.find(e => e.email === user?.email);
+  const currentEmployee = safeEmployees.find(e => e.email === user?.email);
 
+  // Use backend events for Events Hub
   const displayEvents = useMemo(() => {
-    let list = events.filter(e => e.isPublished && e.status === 'upcoming');
-    if (eventFilter === 'mine' && currentEmployee) {
-      list = list.filter(e =>
-        e.audience === 'all' ||
-        (e.audience === 'selected' && e.targetEmployeeIds.includes(currentEmployee.id)) ||
-        (e.audience === 'department' && e.targetDepartment === currentEmployee.department)
-      );
+    let list = backendEvents;
+    if (eventFilter === 'mine' && user) {
+      // Only show events where the current user's id (employeeId) is in event.employeeIds
+      list = list.filter(evt => Array.isArray(evt.employeeIds) && evt.employeeIds.includes(user.id));
     }
-    return list.slice(0, 4);
-  }, [events, eventFilter, currentEmployee]);
+    return list.slice(0, 2);
+  }, [backendEvents, eventFilter, user]);
 
   const userPayslips = useMemo(() => {
     if (!currentEmployee) return [];
@@ -292,23 +414,38 @@ const Dashboard: React.FC = () => {
                 <p className="text-xs text-black font-medium mb-4">Staffing density across key modules.</p>
               </div>
             </div>
-            <div className="h-72 w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <BarChart data={mockDepartmentHeadcount}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="department" axisLine={false} tickLine={false} tick={{ fill: '#000000', fontSize: 10, fontWeight: 700 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#000000', fontSize: 10, fontWeight: 700 }} />
-                  <Tooltip
-                    cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Bar dataKey="count" radius={[10, 10, 0, 0]} barSize={40}>
-                    {mockDepartmentHeadcount.map((entry, index) => (
+            <div className="h-72 w-full flex flex-col items-center justify-center">
+              <ResponsiveContainer width="60%" height="100%" minWidth={0}>
+                <PieChart>
+                  <Pie
+                    data={departmentHeadcount}
+                    dataKey="count"
+                    nameKey="department"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    innerRadius={60}
+                    paddingAngle={2}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {departmentHeadcount.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
-                  </Bar>
-                </BarChart>
+                  </Pie>
+                  <Tooltip
+                    formatter={(value, name, props) => [`${value}`, 'Employees']}
+                    contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.1)' }}
+                  />
+                </PieChart>
               </ResponsiveContainer>
+              <div className="flex flex-wrap justify-center gap-4 mt-4">
+                {departmentHeadcount.map((entry, idx) => (
+                  <div key={entry.department} className="flex items-center gap-2 text-xs font-bold">
+                    <span style={{ backgroundColor: entry.color, width: 14, height: 14, display: 'inline-block', borderRadius: '50%' }}></span>
+                    <span>{entry.department}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -501,38 +638,32 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
             <div className="space-y-4 flex-1">
-              {displayEvents.length > 0 ? displayEvents.map(evt => {
-                const userPart = evt.participations.find(p => p.employeeEmail === user?.email);
+              {displayEvents.length > 0 ? displayEvents.slice(0, 3).map(evt => {
+                const userPart = Array.isArray(evt.participations)
+                  ? evt.participations.find(p => p.employeeEmail === user?.email)
+                  : undefined;
                 return (
                   <div key={evt.id} className="p-5 bg-white border border-slate-100 rounded-2xl hover:border-indigo-200 transition-all group">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex flex-col items-center justify-center border border-slate-100 group-hover:bg-[#f5ede3] transition-colors" style={{color: '#c97a4c'}}>
-                        <span className="text-[8px] font-black uppercase leading-none text-black">{evt.startDate.split('-')[1]}</span>
-                        <span className="text-sm font-black leading-tight text-black">{evt.startDate.split('-')[2]}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-black text-black truncate group-hover:text-indigo-600 transition-colors">{evt.title}</h4>
-                        <p className="text-[10px] text-black font-bold uppercase tracking-tight">{evt.startTime} • {evt.isOnline ? 'Virtual' : 'On-Site'}</p>
+                    <div className="mb-3 text-[11px] text-black leading-relaxed">
+                      <div><span className="font-bold">Event ID:</span> {evt.id}</div>
+                      <div><span className="font-bold">Title:</span> {evt.title}</div>
+                      <div><span className="font-bold">Date:</span> {evt.startDate}</div>
+                      <div><span className="font-bold">Time:</span> {evt.startTime}</div>
+                      <div>
+                        <span className="font-bold">Meeting:</span> {
+                          evt.meetingLink && /^(https?:\/\/)/i.test(evt.meetingLink)
+                            ? <a href={evt.meetingLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{evt.meetingLink}</a>
+                            : (evt.meetingLink || 'N/A')
+                        }
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => handleToggleParticipation(evt.id, 'attending')}
-                        title="Mark as attending"
-                        className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${userPart?.status === 'attending' ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-black hover:bg-slate-100'}`}
-                      >Attending</button>
-                      <button
-                        onClick={() => handleToggleParticipation(evt.id, 'interested')}
-                        title="Mark as maybe attending"
-                        className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${userPart?.status === 'interested' ? 'bg-amber-500 text-white' : 'bg-slate-50 text-black hover:bg-slate-100'}`}
-                      >Maybe</button>
-                    </div>
+                    {/* Removed Attending and Maybe buttons as requested */}
                   </div>
                 );
               }) : (
                 <div className="py-12 text-center opacity-30">
                   <Icon name="Inbox" className="w-10 h-10 mx-auto mb-2 text-black" />
-                  <p className="text-xs font-bold uppercase text-black">No upcoming events</p>
+                  <p className="text-xs font-bold uppercase text-black">NO UPCOMING EVENTS</p>
                 </div>
               )}
               <button
@@ -583,36 +714,74 @@ const Dashboard: React.FC = () => {
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-black">Request Queue</h2>
-              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style={{backgroundColor: '#f5ede3', color: '#8b5a3c'}}>{pendingLeaves.length} NEW</span>
+              <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style={{backgroundColor: '#f5ede3', color: '#8b5a3c'}}>{requestQueue.length} NEW</span>
             </div>
             <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
-              {pendingLeaves.length > 0 ? pendingLeaves.map((item) => (
+              {requestQueue.length > 0 ? requestQueue.map((item) => (
                 <div key={item.id} className="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-indigo-200 hover:bg-white transition-all group">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center font-bold text-black text-xs shadow-sm">
-                        {item.employeeName.charAt(0)}
+                        {item.employeeName?.charAt(0) || '?'}
                       </div>
                       <div className="flex-1">
                         <p className="text-xs font-black text-black leading-none">{item.employeeName}</p>
-                        <p className="text-[10px] text-black font-bold uppercase tracking-tighter mt-1">{item.leaveType} REQUEST</p>
+                        <p className="text-[10px] text-black font-bold uppercase tracking-tighter mt-1">{item.displayType} {item.requestType === 'Leave' ? 'REQUEST' : 'TICKET'}</p>
                       </div>
                     </div>
                   </div>
-                  <p className="text-[11px] text-black mb-4 line-clamp-2 leading-relaxed italic">"{item.reason}"</p>
+                  {item.requestType === 'Support' ? (
+                    <div className="mb-4 text-[11px] text-black leading-relaxed">
+                      <div><span className="font-bold">Ticket ID:</span> {item.ticketId}</div>
+                      <div><span className="font-bold">Type:</span> {item.type}</div>
+                      <div><span className="font-bold">Subject:</span> {item.subject}</div>
+                      <div><span className="font-bold">Employee ID:</span> {item.employeeId}</div>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-black mb-4 line-clamp-2 leading-relaxed italic">"{item.displayReason}"</p>
+                  )}
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleUpdateLeaveStatus(item.leaveId || item.id, 'approved')}
-                      className="flex-1 py-2 text-white text-[10px] font-black rounded-xl shadow-lg transition-all uppercase tracking-widest" style={{backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(201, 122, 76, 0.2)'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleUpdateLeaveStatus(item.leaveId || item.id, 'rejected')}
-                      className="flex-1 py-2 bg-white border border-slate-200 text-black text-[10px] font-black rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest"
-                    >
-                      Ignore
-                    </button>
+                    {item.requestType === 'Leave' ? (
+                      <>
+                        <button
+                          onClick={() => handleUpdateLeaveStatus(item.leaveId || item.id, 'approved')}
+                          className="flex-1 py-2 text-white text-[10px] font-black rounded-xl shadow-lg transition-all uppercase tracking-widest" style={{backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(201, 122, 76, 0.2)'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleUpdateLeaveStatus(item.leaveId || item.id, 'rejected')}
+                          className="flex-1 py-2 bg-white border border-slate-200 text-black text-[10px] font-black rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest"
+                        >
+                          Ignore
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={async () => {
+                            await updateTicketStatus(item.ticketId || item.id, 'approved');
+                            setBackendTickets(prev => prev.filter(t => t.id !== item.id));
+                            notify('Ticket approved successfully', 'success');
+                            fetchTickets();
+                          }}
+                          className="flex-1 py-2 text-white text-[10px] font-black rounded-xl shadow-lg transition-all uppercase tracking-widest" style={{backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(201, 122, 76, 0.2)'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={async () => {
+                            await updateTicketStatus(item.ticketId || item.id, 'rejected');
+                            setBackendTickets(prev => prev.filter(t => t.id !== item.id));
+                            notify('Ticket rejected', 'success');
+                            fetchTickets();
+                          }}
+                          className="flex-1 py-2 bg-white border border-slate-200 text-black text-[10px] font-black rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest"
+                        >
+                          Ignore
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               )) : (
