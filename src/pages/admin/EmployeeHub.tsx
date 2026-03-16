@@ -958,7 +958,7 @@ const EmployeeHub: React.FC = () => {
               setAddModalOpen(true);
               setFormErrors({ email: '', employeeId: '', phone: '' });
             }}
-            className="flex items-center gap-2 px-6 py-3.5 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 transition-all active:scale-95"
+            className="flex items-center gap-2 px-6 py-3.5 bg-[#c97a4c] text-white rounded-2xl hover:bg-[#a56137] font-black text-xs uppercase tracking-widest shadow-xl shadow-amber-200 transition-all active:scale-95"
           >
             <Icon name="Plus" className="w-5 h-5 text-white" />New Staff Enrollment
           </button>
@@ -1476,7 +1476,7 @@ const EmployeeHub: React.FC = () => {
 
           <div className="pt-6 border-t border-slate-100 flex gap-4">
             <button type="button" onClick={handleCloseAddModal} className="flex-1 py-4 text-black font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all">Cancel</button>
-            <button type="submit" className="flex-1 py-4 bg-amber-700 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-amber-100 hover:bg-amber-800 transition-all">Add Employee</button>
+            <button type="submit" className="flex-1 py-4 bg-[#c97a4c] text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-amber-200 hover:bg-[#a56137] transition-all">Add Employee</button>
           </div>
         </form>
       </Modal>

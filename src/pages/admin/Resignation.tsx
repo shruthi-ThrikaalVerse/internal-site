@@ -406,10 +406,18 @@ const ResignationAdmin: React.FC = () => {
         <div className="flex justify-end items-center mb-4">
           {!showForm && (
             <button
-              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-lg font-semibold shadow hover:bg-indigo-700 transition"
+              className="px-6 py-3 bg-gradient-to-r from-[#c97a4c] to-[#a56137] text-white rounded-lg text-lg font-semibold shadow hover:opacity-90 transition"
               onClick={() => setShowForm(true)}
             >
               Show Resignation Form
+            </button>
+          )}
+          {showForm && (
+            <button
+              className="px-6 py-3 bg-white text-[#c97a4c] border-2 border-[#c97a4c] rounded-lg text-lg font-semibold shadow hover:bg-[#c97a4c] hover:text-white transition"
+              onClick={() => setShowForm(false)}
+            >
+              ← Back
             </button>
           )}
         </div>
@@ -451,7 +459,7 @@ const ResignationAdmin: React.FC = () => {
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
                       <button
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+                        className="px-4 py-2 bg-[#c97a4c] text-white rounded-lg hover:bg-[#a56137] transition font-medium"
                         onClick={() => handleApprove(req.id)}
                       >
                         Approve
@@ -582,7 +590,7 @@ const ResignationAdmin: React.FC = () => {
 
                 <div className="flex items-center gap-3">
                   <button type="button" onClick={handleCancel} className="px-4 py-2 bg-white border rounded-lg text-black">Cancel</button>
-                  <button type="submit" className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg">Submit Resignation</button>
+                  <button type="submit" className="px-4 py-2 bg-gradient-to-r from-[#c97a4c] to-[#a56137] text-white rounded-lg hover:opacity-90 transition">Submit Resignation</button>
                 </div>
               </div>
             </div>

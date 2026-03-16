@@ -383,6 +383,14 @@ export const ProjectsView = () => {
         onClose={() => setIsModalOpen(false)}
         title={isNew ? "Initiate New Project" : "Modify Project Core"}
         onSave={handleSave}
+        saveButtonProps={{
+          className: "bg-[#c97a4c] text-white font-bold rounded-xl px-5 py-2 shadow-lg hover:bg-[#a56137] transition-all active:scale-95",
+          children: "Confirm Changes"
+        }}
+        cancelButtonProps={{
+          className: "bg-[#c97a4c] text-white font-bold rounded-xl px-5 py-2 shadow-lg hover:bg-[#a56137] transition-all active:scale-95",
+          children: "Cancel"
+        }}
       >
         <div className="space-y-8 pb-4">
           <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-gradient-to-br from-amber-50 to-white rounded-[2rem] border border-gray-200 relative shadow-2xl overflow-hidden">
