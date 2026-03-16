@@ -425,7 +425,6 @@ const Leave: React.FC = () => {
           new Blob([JSON.stringify(payload)], { type: "application/json" })
         );
 
-
         // Attach medical file if exists
         if (medicalFile) {
           formDataObj.append("attachment", medicalFile);
@@ -456,16 +455,42 @@ const Leave: React.FC = () => {
 
         if (!response.ok) {
           let errorMessage = 'Failed to submit leave request';
-
+          let errorData = null;
           try {
-            const errorData = await response.json();
+            errorData = await response.json();
             console.error('Error response data:', errorData);
-            errorMessage = errorData.message || errorMessage;
+            errorMessage = errorData.message || errorData.error || errorMessage;
           } catch (parseError) {
             console.error('Failed to parse error response:', parseError);
           }
 
-          if (response.status === 401) {
+          // Custom handling for insufficient leave balance error - works for all leave types
+          if (errorData && typeof errorData.error === 'string') {
+            const errorLower = errorData.error.toLowerCase();
+            if (errorLower.includes('insufficient')) {
+              // Extract leave type from error message
+              let leaveType = 'leave';
+              if (errorLower.includes('casual')) leaveType = 'Casual Leave';
+              else if (errorLower.includes('sick')) leaveType = 'Sick Leave';
+              else if (errorLower.includes('annual')) leaveType = 'Annual Leave';
+              else if (errorLower.includes('maternity')) leaveType = 'Maternity Leave';
+              else if (errorLower.includes('paternity')) leaveType = 'Paternity Leave';
+
+              toast.error(`You do not have enough ${leaveType} balance to apply for this leave. Please check your available balance or contact HR.`);
+            } else {
+              if (response.status === 401) {
+                toast.error('Authentication failed. Please log in again.');
+              } else if (response.status === 403) {
+                toast.error('You do not have permission to perform this action.');
+              } else if (response.status === 400) {
+                toast.error('Invalid request. Please check your data.');
+              } else if (response.status === 500) {
+                toast.error('Server error. Please try again later.');
+              } else {
+                toast.error(`${errorMessage} (Status: ${response.status})`);
+              }
+            }
+          } else if (response.status === 401) {
             toast.error('Authentication failed. Please log in again.');
           } else if (response.status === 403) {
             toast.error('You do not have permission to perform this action.');
@@ -485,7 +510,25 @@ const Leave: React.FC = () => {
       } catch (err: any) {
         console.error('Leave request submission failed', err);
 
-        if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
+        // Also handle if error is thrown from above for insufficient leave
+        if (err?.response?.data?.error && typeof err.response.data.error === 'string') {
+          const errorLower = err.response.data.error.toLowerCase();
+          if (errorLower.includes('insufficient')) {
+            // Extract leave type from error message
+            let leaveType = 'leave';
+            if (errorLower.includes('casual')) leaveType = 'Casual Leave';
+            else if (errorLower.includes('sick')) leaveType = 'Sick Leave';
+            else if (errorLower.includes('annual')) leaveType = 'Annual Leave';
+            else if (errorLower.includes('maternity')) leaveType = 'Maternity Leave';
+            else if (errorLower.includes('paternity')) leaveType = 'Paternity Leave';
+
+            toast.error(`You do not have enough ${leaveType} balance to apply for this leave. Please check your available balance or contact HR.`);
+          } else if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
+            toast.error('Network error. Please check your connection or try again.');
+          } else if (err.message && !err.message.includes('HTTP error')) {
+            toast.error(`Failed to submit leave request: ${err.message}`);
+          }
+        } else if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
           toast.error('Network error. Please check your connection or try again.');
         } else if (err.message && !err.message.includes('HTTP error')) {
           toast.error(`Failed to submit leave request: ${err.message}`);
