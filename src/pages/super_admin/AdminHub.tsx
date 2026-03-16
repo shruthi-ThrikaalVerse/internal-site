@@ -732,7 +732,35 @@ export const AdminHub = () => {
 
     // Generate raw performance data with pie chart info
     const generatePerformanceData = () => {
-        // Generate random but consistent raw data
+        // If analytics data is available, use it
+        if (analytics) {
+            // Attendance data from backend
+            const attendanceData = [
+                { name: 'Present', value: analytics.attendanceAnayticsResponse?.presentDays || 0, fill: '#10b981' },
+                { name: 'Absent', value: analytics.attendanceAnayticsResponse?.absentDays || 0, fill: '#ef4444' }
+            ];
+
+            // Leave data from backend
+            const leaveData = [
+                { name: 'Leaves Taken', value: analytics.leaveAnalyticsResponse?.leavesTaken || 0, fill: '#ef4444' },
+                { name: 'Working Days', value: analytics.leaveAnalyticsResponse?.workingDays || 0, fill: '#10b981' }
+            ];
+
+            // Projects data from backend
+            const projectsData = [
+                { name: 'Completed', value: analytics.projectAnalyticsResponse?.completed || 0, fill: '#10b981' },
+                { name: 'In Progress', value: analytics.projectAnalyticsResponse?.inProgress || 0, fill: '#3b82f6' },
+                { name: 'Assigned', value: analytics.projectAnalyticsResponse?.assigned || 0, fill: '#f59e0b' }
+            ];
+
+            return {
+                attendance: attendanceData,
+                leave: leaveData,
+                projects: projectsData
+            };
+        }
+
+        // Fallback to generated data if no analytics available
         const seed = viewingUser?.id || 'default';
         const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
@@ -890,9 +918,10 @@ export const AdminHub = () => {
                 'yearly': 'YEARLY'
             };
 
-            // Submit the review to API with the correct employeeId
+            // Submit the review to API with the correct employeeId and name
             await submitReview({
                 employeeId: viewingUser.employeeId,
+                employeeName: viewingUser.name,
                 feedback: performanceFormData.feedback,
                 strengths: performanceFormData.strengths,
                 areasOfImprovement: performanceFormData.improvements,

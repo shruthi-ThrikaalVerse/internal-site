@@ -414,7 +414,7 @@ const EmployeeDetails: React.FC = () => {
                     </span>
                     {(selectedEmployee as any).role && (
                   <span className="px-4 py-2 text-white rounded-full text-xs font-black uppercase tracking-widest border" style={{backgroundColor: '#c97a4c', borderColor: '#c97a4c'}}>
-                        {(selectedEmployee as any).role}
+                        {(selectedEmployee as any).role.name || (selectedEmployee as any).role}
                       </span>
                     )}
                   </div>

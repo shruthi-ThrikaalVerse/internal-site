@@ -27,7 +27,7 @@ interface Task {
   id: string;
   title: string;
   project: string;
-  status: 'assigned' | 'in_progress' | 'completed';
+  status: 'assigned' | 'in_progress' | 'completed' | 'breached';
   priority: 'urgent' | 'high' | 'medium' | 'low';
   dueDate: string;
   estimatedHours: number;
@@ -71,7 +71,8 @@ const Tasks: React.FC = () => {
   const [showStatusSections, setShowStatusSections] = useState({
     assigned: true,
     in_progress: true,
-    completed: true
+    completed: true,
+    breached: true
   });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -129,7 +130,8 @@ const Tasks: React.FC = () => {
   const statuses = [
     { id: 'assigned', label: 'Assigned', color: 'bg-gray-100 text-gray-800', icon: Circle, iconColor: 'text-gray-600' },
     { id: 'in_progress', label: 'In Progress', color: 'bg-blue-100 text-blue-800', icon: Clock, iconColor: 'text-blue-600' },
-    { id: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800', icon: CheckCircle, iconColor: 'text-green-600' }
+    { id: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800', icon: CheckCircle, iconColor: 'text-green-600' },
+    { id: 'breached', label: 'Breached', color: 'bg-red-100 text-red-800', icon: AlertTriangle, iconColor: 'text-red-600' }
   ];
 
   const priorities = [
@@ -199,6 +201,7 @@ const Tasks: React.FC = () => {
       'REVIEW': 'in_progress',
       'COMPLETED': 'completed',
       'DONE': 'completed',
+      'BREACHED': 'breached',
     };
 
     // Determine taskType based on assigneeType from backend
