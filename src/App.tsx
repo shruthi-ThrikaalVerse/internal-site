@@ -58,7 +58,7 @@ const sectionToUrlMap: Record<string, string> = {
   [AppSection.AdminRequests]: '/super-admin/requests',
   [AppSection.AuditLogs]: '/super-admin/audit-logs',
   [AppSection.Payroll]: '/super-admin/payroll',
-  [AppSection.Performance]: '/super-admin/performance',
+
   [AppSection.Reviews]: '/super-admin/reviews',
   [AppSection.Events]: '/super-admin/events',
   [AppSection.PaymentUpdates]: '/super-admin/payments',
@@ -135,7 +135,7 @@ const AppContent: React.FC = () => {
       '/super-admin/requests': AppSection.AdminRequests,
       '/super-admin/audit-logs': AppSection.AuditLogs,
       '/super-admin/payroll': AppSection.Payroll,
-      '/super-admin/performance': AppSection.Performance,
+
       '/super-admin/reviews': AppSection.Reviews,
       '/super-admin/events': AppSection.Events,
       '/super-admin/payments': AppSection.PaymentUpdates,
@@ -233,17 +233,7 @@ const AppContent: React.FC = () => {
         return <PayrollView />;
       case AppSection.Projects:
         return <ProjectsView />;
-      case AppSection.Performance:
-        return (
-          <div className="space-y-6">
-            <SectionHeader title="Performance Analytics" description="Enterprise-wide high-level organization metrics." />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {MOCK_PERFORMANCE_METRICS.map((m, idx) => (
-                <StatCard key={idx} title={m.name} value={`${m.value}%`} icon={<Zap size={20} />} trend={m.trend as 'up' | 'down' | 'stable'} trendValue="+5%" />
-              ))}
-            </div>
-          </div>
-        );
+
       case AppSection.Reviews:
         return <ReviewsView />;
       case AppSection.Events:
