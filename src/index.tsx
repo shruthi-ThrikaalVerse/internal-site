@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import App from './App.tsx';
 import './index.css';
 import LoginSelection from './components/LoginSelection.tsx';
@@ -536,6 +538,17 @@ root.render(
       <ThemeProvider>
         <AuthProvider>
           <AppProvider>
+            <ToastContainer
+              position="top-right"
+              autoClose={4000}
+              hideProgressBar={false}
+              newestOnTop={true}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
             <Routes>
               {/* Default landing page */}
               <Route path="/" element={<LandingPage />} />

@@ -430,20 +430,84 @@ const AdminLeave: React.FC = () => {
         // console.log('Response Headers:', response.headers);
         if (!response.ok) {
           let errorMessage = 'Failed to submit leave request';
+          let errorData = null;
           try {
-            const errorData = await response.json();
+            errorData = await response.json();
             // console.log('Error Data:', errorData);
-            errorMessage = errorData.message || errorMessage;
+            errorMessage = errorData.message || errorData.error || errorMessage;
           } catch (err) {
             // console.error('Error parsing response JSON:', err);
           }
-          toast.error(`${errorMessage} (Status: ${response.status})`);
+
+          // Custom handling for insufficient leave balance error - works for all leave types
+          if (errorData && typeof errorData.error === 'string') {
+            const errorLower = errorData.error.toLowerCase();
+            if (errorLower.includes('insufficient')) {
+              // Extract leave type from error message
+              let leaveType = 'leave';
+              if (errorLower.includes('casual')) leaveType = 'Casual Leave';
+              else if (errorLower.includes('sick')) leaveType = 'Sick Leave';
+              else if (errorLower.includes('annual')) leaveType = 'Annual Leave';
+              else if (errorLower.includes('maternity')) leaveType = 'Maternity Leave';
+              else if (errorLower.includes('paternity')) leaveType = 'Paternity Leave';
+
+              toast.error(`You do not have enough ${leaveType} balance to apply for this leave. Please check your available balance or contact HR.`);
+            } else {
+              if (response.status === 401) {
+                toast.error('Authentication failed. Please log in again.');
+              } else if (response.status === 403) {
+                toast.error('You do not have permission to perform this action.');
+              } else if (response.status === 400) {
+                toast.error('Invalid request. Please check your data.');
+              } else if (response.status === 500) {
+                toast.error('Server error. Please try again later.');
+              } else {
+                toast.error(`${errorMessage} (Status: ${response.status})`);
+              }
+            }
+          } else if (response.status === 401) {
+            toast.error('Authentication failed. Please log in again.');
+          } else if (response.status === 403) {
+            toast.error('You do not have permission to perform this action.');
+          } else if (response.status === 400) {
+            toast.error('Invalid request. Please check your data.');
+          } else if (response.status === 500) {
+            toast.error('Server error. Please try again later.');
+          } else {
+            toast.error(`${errorMessage} (Status: ${response.status})`);
+          }
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         await response.json();
       } catch (err: any) {
-        toast.error('Failed to submit leave request');
+        console.error('Leave request submission failed', err);
+
+        // Handle insufficient leave balance errors
+        if (err?.response?.data?.error && typeof err.response.data.error === 'string') {
+          const errorLower = err.response.data.error.toLowerCase();
+          if (errorLower.includes('insufficient')) {
+            // Extract leave type from error message
+            let leaveType = 'leave';
+            if (errorLower.includes('casual')) leaveType = 'Casual Leave';
+            else if (errorLower.includes('sick')) leaveType = 'Sick Leave';
+            else if (errorLower.includes('annual')) leaveType = 'Annual Leave';
+            else if (errorLower.includes('maternity')) leaveType = 'Maternity Leave';
+            else if (errorLower.includes('paternity')) leaveType = 'Paternity Leave';
+
+            toast.error(`You do not have enough ${leaveType} balance to apply for this leave. Please check your available balance or contact HR.`);
+          } else if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
+            toast.error('Network error. Please check your connection or try again.');
+          } else if (err.message && !err.message.includes('HTTP error')) {
+            toast.error(`Failed to submit leave request: ${err.message}`);
+          }
+        } else if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
+          toast.error('Network error. Please check your connection or try again.');
+        } else if (err.message && !err.message.includes('HTTP error')) {
+          toast.error(`Failed to submit leave request: ${err.message}`);
+        } else {
+          toast.error('Failed to submit leave request');
+        }
         setIsSubmitting(false);
         return;
       }
@@ -528,7 +592,7 @@ const AdminLeave: React.FC = () => {
               setShowApplyModal(true);
             }}
             className="flex items-center justify-center gap-2 px-4 py-2.5 text-white rounded-lg transition-colors shadow-sm w-full sm:w-auto"
-            style={{backgroundColor: '#c97a4c'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
+            style={{ backgroundColor: '#c97a4c' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="font-medium text-sm sm:text-base">Apply for Leave</span>
@@ -590,10 +654,9 @@ const AdminLeave: React.FC = () => {
                 <button
                   key={status}
                   onClick={() => setFilter(status)}
-                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${
-                    filter === status ? 'text-white shadow-md' : 'bg-gray-100 text-black hover:bg-gray-200'
-                  }`}
-                  style={filter === status ? {backgroundColor: '#c97a4c', boxShadow: '0 0 0 0.25rem rgba(201, 122, 76, 0.1)'} : undefined}
+                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${filter === status ? 'text-white shadow-md' : 'bg-gray-100 text-black hover:bg-gray-200'
+                    }`}
+                  style={filter === status ? { backgroundColor: '#c97a4c', boxShadow: '0 0 0 0.25rem rgba(201, 122, 76, 0.1)' } : undefined}
                 >
                   {status === 'all' ? 'All' : status}
                 </button>
@@ -649,7 +712,7 @@ const AdminLeave: React.FC = () => {
                   "{request.reason}"
                 </div>
                 {request.type === 'Sick Leave' && request.medicalCertificate && (
-                  <div className="flex items-center gap-1 text-[10px] sm:text-xs" style={{color: '#c97a4c'}}>
+                  <div className="flex items-center gap-1 text-[10px] sm:text-xs" style={{ color: '#c97a4c' }}>
                     <FileText className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                     Medical certificate attached
                   </div>
@@ -702,7 +765,7 @@ const AdminLeave: React.FC = () => {
                       setActiveActionMenu(activeActionMenu === request.id ? null : request.id);
                     }}
                     className={`p-1.5 sm:p-2 rounded-lg transition-all ${activeActionMenu === request.id ? 'text-white' : 'hover:bg-gray-100 text-black'}`}
-                    style={{backgroundColor: activeActionMenu === request.id ? '#c97a4c' : ''}}
+                    style={{ backgroundColor: activeActionMenu === request.id ? '#c97a4c' : '' }}
                     title="More actions"
                     aria-label="More actions for this leave request"
                   >
@@ -765,7 +828,7 @@ const AdminLeave: React.FC = () => {
                       <button
                         onClick={() => handleEditRequest(request)}
                         className="w-full text-left px-4 py-2 flex items-center gap-2 transition-all"
-                        style={{color: '#c97a4c'}}
+                        style={{ color: '#c97a4c' }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5ede3'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
@@ -817,11 +880,11 @@ const AdminLeave: React.FC = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div className="p-4 border rounded-xl sm:rounded-2xl" style={{backgroundColor: '#f5ede3', borderColor: '#c97a4c'}} >
+                  <div className="p-4 border rounded-xl sm:rounded-2xl" style={{ backgroundColor: '#f5ede3', borderColor: '#c97a4c' }} >
                     <p className="text-[10px] font-black text-black uppercase tracking-widest">Category</p>
                     <p className="text-sm font-bold text-black">{viewingRequest.type}</p>
                   </div>
-                  <div className="p-4 border rounded-xl sm:rounded-2xl" style={{backgroundColor: '#f5ede3', borderColor: '#c97a4c'}} >
+                  <div className="p-4 border rounded-xl sm:rounded-2xl" style={{ backgroundColor: '#f5ede3', borderColor: '#c97a4c' }} >
                     <p className="text-[10px] font-black text-black uppercase tracking-widest">Days Consumed</p>
                     <p className="text-sm font-bold text-black">{viewingRequest.days} Business Days</p>
                   </div>
@@ -897,12 +960,11 @@ const AdminLeave: React.FC = () => {
                         key={type.id}
                         type="button"
                         onClick={() => handleLeaveTypeChange(type.label)}
-                        className={`px-3 py-2 sm:px-4 sm:py-3 border rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${
-                          formData.type === type.label
+                        className={`px-3 py-2 sm:px-4 sm:py-3 border rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${formData.type === type.label
                             ? 'border-2 bg-[#f5ede3] text-[#8b5a3c] shadow-sm'
                             : 'border-gray-200 bg-gray-50 text-black hover:border-gray-300'
-                        }`}
-                        style={formData.type === type.label ? {borderColor: '#c97a4c'} : undefined}
+                          }`}
+                        style={formData.type === type.label ? { borderColor: '#c97a4c' } : undefined}
                       >
                         {type.label}
                       </button>
@@ -1001,25 +1063,25 @@ const AdminLeave: React.FC = () => {
 
                 {/* Days Calculation */}
                 {formData.startDate && formData.endDate && !dateError && (
-                  <div className="rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" style={{backgroundColor: '#c97a4c', boxShadow: '0 0 0 0.25rem rgba(201, 122, 76, 0.1)'}}>
+                  <div className="rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" style={{ backgroundColor: '#c97a4c', boxShadow: '0 0 0 0.25rem rgba(201, 122, 76, 0.1)' }}>
                     <div className="flex items-center gap-3 sm:gap-4">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md flex-shrink-0">
                         <Calculator className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                       </div>
                       <div>
-                        <div className="text-[10px] font-black uppercase tracking-widest" style={{color: '#f0e6dc'}}>Duration</div>
+                        <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#f0e6dc' }}>Duration</div>
                         <div className="text-xl sm:text-2xl font-black text-white tabular-nums">
                           {calculateDays(formData.startDate, formData.endDate)} Days
                         </div>
                         {formData.type === 'Sick Leave' && new Date(formData.startDate) < new Date() && (
-                          <div className="text-xs font-bold mt-1" style={{color: '#f0e6dc'}}>
+                          <div className="text-xs font-bold mt-1" style={{ color: '#f0e6dc' }}>
                             • Retroactive application allowed for sick leave
                           </div>
                         )}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[10px] font-black uppercase tracking-widest" style={{color: '#f0e6dc'}}>Impact</div>
+                      <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#f0e6dc' }}>Impact</div>
                       <div className="text-sm font-bold text-white opacity-80">
                         {leaveBalance.available} → {Math.max(0, leaveBalance.available - calculateDays(formData.startDate, formData.endDate))}
                       </div>
@@ -1074,7 +1136,7 @@ const AdminLeave: React.FC = () => {
                     type="submit"
                     disabled={isSubmitting || !!dateError}
                     className="px-6 py-2.5 sm:px-8 sm:py-3 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all flex items-center justify-center gap-2"
-                    style={{backgroundColor: '#c97a4c', boxShadow: '0 20px 25px -5px rgba(201, 122, 76, 0.2)'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
+                    style={{ backgroundColor: '#c97a4c', boxShadow: '0 20px 25px -5px rgba(201, 122, 76, 0.2)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
                   >
                     {isSubmitting ? (
                       <>
@@ -1104,7 +1166,7 @@ const AdminLeave: React.FC = () => {
               key={request.id}
               className="bg-white border border-gray-200 rounded-xl sm:rounded-[2rem] p-4 sm:p-6 lg:p-8 hover:border-[#c97a4c] hover:shadow-xl transition-all group relative overflow-hidden text-left"
             >
-              <div className="absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12 group-hover:scale-110 transition-transform duration-500" style={{backgroundColor: '#f0e6dc'}}></div>
+              <div className="absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 rounded-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12 group-hover:scale-110 transition-transform duration-500" style={{ backgroundColor: '#f0e6dc' }}></div>
               <div className="flex items-center justify-between mb-4 sm:mb-6 relative z-10">
                 <span className="text-[10px] font-black text-black uppercase tracking-widest">{request.type}</span>
                 <span className="text-[9px] font-black text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 uppercase tracking-widest">
@@ -1116,7 +1178,7 @@ const AdminLeave: React.FC = () => {
                 {formatDate(request.startDate)} — {formatDate(request.endDate)}
               </div>
               <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-50 flex items-center gap-2">
-                <ArrowRight size={12} style={{color: '#c97a4c'}} />
+                <ArrowRight size={12} style={{ color: '#c97a4c' }} />
                 <div className="text-[9px] font-bold text-black uppercase truncate" title={request.reason}>
                   {request.reason}
                 </div>
