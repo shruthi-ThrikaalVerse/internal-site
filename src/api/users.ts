@@ -38,7 +38,7 @@ export const logoutUser = async () => {
 
 export const getAllEmployees = async () => {
   try {
-    const url = `${API_BASE}/employees`;
+    const url = `${API_BASE}/admin/employees`;
     console.log('Fetching employees from:', url);
     const resp = await fetch(url, {
       headers: { Accept: 'application/json' },
