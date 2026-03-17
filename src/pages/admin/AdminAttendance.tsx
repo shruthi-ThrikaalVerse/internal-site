@@ -282,6 +282,35 @@ const AdminAttendance: React.FC = () => {
     }
   }, []);
 
+  // Refresh today's attendance record from backend
+  const refreshTodayRecord = useCallback(async () => {
+    const today = getTodayString();
+    try {
+      const resp = await fetch('http://localhost:8085/api/employee_attend/attendance', {
+        credentials: 'include',
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        
+        if (Array.isArray(data) && data.length > 0) {
+          const todayRec = data.find((rec: any) => rec.date === today);
+          if (todayRec) {
+            setTodayRecord(todayRec);
+            setIsPunchedIn(!!todayRec.timeIn && !todayRec.timeOut);
+            setWorkDuration(todayRec.timeIn ? calculateDuration(todayRec.timeIn, todayRec.timeOut) : '00:00:00');
+            setCustomLocationName(todayRec.locationName || '');
+            setAttendanceRecords(data);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error refreshing attendance:', err);
+    }
+  }, [getTodayString, calculateDuration]);
+
   // Handle check-in
   const handleCheckIn = async () => {
     const now = new Date();
@@ -349,7 +378,7 @@ const AdminAttendance: React.FC = () => {
         setIsResolvingLocation(false);
         // Refresh attendance data from backend
         await new Promise(r => setTimeout(r, 500));
-        window.location.reload();
+        refreshTodayRecord();
         return;
       } else {
         triggerNotification('Check-In Failed', 'Could not check in. Please try again.', 'X', 'text-rose-500 bg-rose-50');
@@ -389,7 +418,7 @@ const AdminAttendance: React.FC = () => {
         setShowCheckoutConfirm(false);
         // Refresh attendance data from backend
         await new Promise(r => setTimeout(r, 500));
-        window.location.reload();
+        refreshTodayRecord();
         return;
       } else {
         triggerNotification('Check-Out Failed', 'Could not check out. Please try again.', 'X', 'text-rose-500 bg-rose-50');

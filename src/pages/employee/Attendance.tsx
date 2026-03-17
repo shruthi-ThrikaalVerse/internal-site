@@ -270,6 +270,41 @@ const Attendance: React.FC = () => {
     }
   }, []);
 
+  // Refresh today's attendance record from backend
+  const refreshTodayRecord = useCallback(async () => {
+    const today = getTodayString();
+    try {
+      const endpoints = [
+        `/api/employee_attend/attendance?date=${encodeURIComponent(today)}`,
+        `/api/employee_attend/today`,
+        `/api/employee_attend/get-today`,
+        `/api/employee_attend/record?date=${encodeURIComponent(today)}`
+      ];
+      let rec = null;
+      for (const ep of endpoints) {
+        try {
+          const resp = await fetch(`http://localhost:8085${ep}`, { credentials: 'include' });
+          if (!resp.ok) continue;
+          const data = await resp.json().catch(() => null);
+          if (!data) continue;
+          if (Array.isArray(data) && data.length > 0) rec = data[0];
+          else if (data.record) rec = data.record;
+          else if (data.date || data.timeIn || data.id) rec = data;
+          if (rec && rec.date === today) break;
+        } catch { }
+      }
+      if (rec) {
+        setTodayRecord(rec);
+        setIsPunchedIn(!!rec.timeIn && !rec.timeOut);
+        setWorkDuration(rec.timeIn ? calculateDuration(rec.timeIn, rec.timeOut) : '00:00:00');
+        setCustomLocationName(rec.locationName || '');
+        setAttendanceRecords([rec]);
+      }
+    } catch (err) {
+      console.error('Error refreshing attendance:', err);
+    }
+  }, [getTodayString, calculateDuration]);
+
   // Handle check-in
   const handleCheckIn = async () => {
     const now = new Date();
@@ -328,7 +363,7 @@ const Attendance: React.FC = () => {
         setIsResolvingLocation(false);
         // Refresh attendance data from backend
         await new Promise(r => setTimeout(r, 500));
-        window.location.reload();
+        refreshTodayRecord();
         return;
       } else {
         triggerNotification('Check-In Failed', 'Could not check in. Please try again.', 'X', 'text-rose-500 bg-rose-50');
@@ -368,7 +403,7 @@ const Attendance: React.FC = () => {
         setShowCheckoutConfirm(false);
         // Refresh attendance data from backend
         await new Promise(r => setTimeout(r, 500));
-        window.location.reload();
+        refreshTodayRecord();
         return;
       } else {
         triggerNotification('Check-Out Failed', 'Could not check out. Please try again.', 'X', 'text-rose-500 bg-rose-50');
@@ -502,8 +537,9 @@ const Attendance: React.FC = () => {
                     ? 'bg-gradient-to-r from-slate-300 to-slate-400 text-black cursor-not-allowed shadow-slate-200'
                     : todayRecord?.timeOut
                       ? 'bg-gradient-to-r from-green-300 to-green-400 text-black cursor-not-allowed shadow-green-200'
-                      : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-blue-200'
-                  } disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none`}
+                      : 'text-white rounded-lg text-sm px-4 py-2 font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none'
+                  }`}
+                style={!isPunchedIn && !isHoliday(getTodayString()) && !(isWeekend(new Date()) && !isWorkingSaturday(new Date())) && !todayRecord?.timeOut ? { background: 'linear-gradient(90deg, #c97a4c 0%, #a56137 100%)', ...(isResolvingLocation && { opacity: 0.5 }) } : undefined}
               >
                 {isResolvingLocation ? (
                   <Loader2 className="animate-spin" size={24} />
