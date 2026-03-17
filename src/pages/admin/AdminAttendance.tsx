@@ -213,7 +213,8 @@ const AdminAttendance: React.FC = () => {
 
             if (Array.isArray(data) && data.length > 0) {
               allRecs = data;
-              todayRec = data.find((rec: any) => rec.date === today);
+              const adminId = auth?.user?.employeeId || auth?.user?.id;
+              todayRec = data.find((rec: any) => rec.date === today && (rec.employeeId === adminId || rec.id === adminId));
             }
 
             if (todayRec) {

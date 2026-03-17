@@ -115,10 +115,16 @@ const Calendar: React.FC = () => {
     return WORKING_SATURDAYS.includes(dateStr);
   };
 
-  // Load calendar events from backend
+  // Load calendar events from localStorage
   const loadCalendarEvents = (): CalendarEvent[] => {
-    // Calendar events can be fetched from backend if available
-    // For now, return empty to rely on backend or session state
+    try {
+      const savedEvents = localStorage.getItem('employeeCalendarEvents');
+      if (savedEvents) {
+        return JSON.parse(savedEvents);
+      }
+    } catch (err) {
+      console.warn('Failed to load calendar events:', err);
+    }
     return [];
   };
 
