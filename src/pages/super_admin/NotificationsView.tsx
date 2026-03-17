@@ -48,7 +48,7 @@ export const NotificationsView = () => {
     message: '',
     targetSelection: 'GLOBAL',
     employeeIds: [],
-    departmentIds: [],
+    departments: [],
     priority: 'NORMAL',
   });
 
@@ -125,7 +125,7 @@ export const NotificationsView = () => {
       message: '',
       targetSelection: 'GLOBAL',
       employeeIds: [],
-      departmentIds: [],
+      departments: [],
       priority: 'NORMAL',
     });
     setEmpSearch('');
@@ -134,18 +134,26 @@ export const NotificationsView = () => {
   };
 
   const filteredEmployees = useMemo(() => {
-    return employees.filter(e =>
-      (e.fullName || '').toLowerCase().includes(empSearch.toLowerCase()) ||
-      (e.employeeId || '').toLowerCase().includes(empSearch.toLowerCase())
-    );
+    return employees
+      .filter(e => e.employeeId && String(e.employeeId).trim() !== '')
+      .filter(e => {
+        const searchLower = empSearch.toLowerCase();
+        return (e.fullName || '').toLowerCase().includes(searchLower) ||
+               String(e.employeeId || '').toLowerCase().includes(searchLower);
+      });
   }, [employees, empSearch]);
 
   const toggleEmployeeSelection = (employeeId: string) => {
+    const id = String(employeeId).trim();
+    if (!id) {
+      console.warn('Empty employeeId attempted to be selected');
+      return;
+    }
     setFormData(prev => {
       const current = prev.employeeIds || [];
-      const next = current.includes(employeeId)
-        ? current.filter(id => id !== employeeId)
-        : [...current, employeeId];
+      const next = current.includes(id)
+        ? current.filter(eId => eId !== id)
+        : [...current, id];
       return { ...prev, employeeIds: next };
     });
     if (formErrors.employeeSelection) {
@@ -155,11 +163,11 @@ export const NotificationsView = () => {
 
   const toggleDepartmentSelection = (dept: string) => {
     setFormData(prev => {
-      const current = prev.departmentIds || [];
+      const current = prev.departments || [];
       const next = current.includes(dept)
         ? current.filter(d => d !== dept)
         : [...current, dept];
-      return { ...prev, departmentIds: next };
+      return { ...prev, departments: next };
     });
     if (formErrors.departmentSelection) {
       setFormErrors(prev => ({ ...prev, departmentSelection: '' }));
@@ -173,7 +181,7 @@ export const NotificationsView = () => {
       message: '',
       targetSelection: 'GLOBAL',
       employeeIds: [],
-      departmentIds: [],
+      departments: [],
       priority: 'NORMAL',
     });
     setEmpSearch('');
@@ -189,7 +197,7 @@ export const NotificationsView = () => {
       message: notif.message,
       targetSelection: 'GLOBAL',
       employeeIds: [],
-      departmentIds: [],
+      departments: [],
       priority: notif.priority,
     });
     setIsModalOpen(true);
@@ -202,6 +210,16 @@ export const NotificationsView = () => {
       return;
     }
 
+    if (formData.targetSelection === 'TARGET' && (!formData.employeeIds || formData.employeeIds.length === 0)) {
+      setFormErrors({ employeeSelection: 'Please select at least one employee.', departmentSelection: '' });
+      return;
+    } else if (formData.targetSelection === 'DEPARTMENT' && (!formData.departments || formData.departments.length === 0)) {
+      setFormErrors({ employeeSelection: '', departmentSelection: 'Please select at least one department.' });
+      return;
+    } else {
+      setFormErrors({ employeeSelection: '', departmentSelection: '' });
+    }
+
     setIsLoading(true);
     try {
       const payload: any = {
@@ -211,11 +229,21 @@ export const NotificationsView = () => {
         targetSelection: formData.targetSelection,
       };
 
-      if (formData.targetSelection === 'TARGET') {
-        payload.employeeIds = formData.employeeIds;
-      } else if (formData.targetSelection === 'DEPARTMENT') {
-        payload.departmentIds = formData.departmentIds;
+      if (formData.targetSelection === 'TARGET' && formData.employeeIds?.length > 0) {
+        // Filter out any blank employee IDs
+        const validEmployeeIds = formData.employeeIds.filter((id: string) => id && id.trim() !== '');
+        if (validEmployeeIds.length === 0) {
+          setFormErrors({ employeeSelection: 'Please select valid employees.', departmentSelection: '' });
+          setIsLoading(false);
+          return;
+        }
+        payload.employeeIds = validEmployeeIds;
+      } 
+      if (formData.targetSelection === 'DEPARTMENT' && formData.departments?.length > 0) {
+        payload.departments = formData.departments;
       }
+
+      console.log('Sending payload:', JSON.stringify(payload, null, 2));
 
       if (editingId) {
         await notificationsApi.updateNotification(editingId, payload);
@@ -227,6 +255,7 @@ export const NotificationsView = () => {
       resetForm();
       await loadNotifications();
     } catch (err: any) {
+      console.error('Error details:', err);
       setError(err?.message || 'Failed to save notification');
     } finally {
       setIsLoading(false);
@@ -373,7 +402,7 @@ export const NotificationsView = () => {
                           key={type}
                           type="button"
                           onClick={() => {
-                            setFormData({ ...formData, targetSelection: type, employeeIds: [], departmentIds: [] });
+                            setFormData({ ...formData, targetSelection: type, employeeIds: [], departments: [] });
                             setFormErrors({ employeeSelection: '', departmentSelection: '' });
                           }}
                           className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.targetSelection === type ? 'bg-[#c97a4c] border-[#c97a4c] text-white shadow-lg' : 'bg-white border-slate-100 text-black hover:bg-slate-50'
@@ -421,7 +450,7 @@ export const NotificationsView = () => {
                     </div>
                     <div className="bg-slate-50 rounded-2xl border border-slate-100 max-h-[180px] overflow-y-auto custom-scrollbar divide-y divide-slate-100">
                       {filteredEmployees.length > 0 ? filteredEmployees.map(emp => {
-                        const isSelected = formData.employeeIds?.includes(emp.employeeId) || false;
+                        const isSelected = formData.employeeIds?.includes(String(emp.employeeId)) || false;
                         return (
                           <div
                             key={emp.employeeId}
@@ -456,7 +485,7 @@ export const NotificationsView = () => {
                     <div className="bg-slate-50 rounded-2xl border border-slate-100 max-h-[180px] overflow-y-auto custom-scrollbar divide-y divide-slate-100">
                       {departments.length > 0 ? (
                         departments.map(dept => {
-                          const isSelected = formData.departmentIds?.includes(dept);
+                          const isSelected = formData.departments?.includes(dept);
                           return (
                             <div
                               key={dept}

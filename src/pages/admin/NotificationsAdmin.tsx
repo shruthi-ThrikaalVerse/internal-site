@@ -66,7 +66,7 @@ const NotificationsAdmin: React.FC = () => {
     message: '',
     targetSelection: 'GLOBAL',
     employeeIds: [],
-    departmentIds: [],
+    departments: [],
     priority: 'NORMAL',
   });
 
@@ -129,10 +129,13 @@ const NotificationsAdmin: React.FC = () => {
   }, [notifications, searchTerm]);
 
   const filteredEmployees = useMemo(() => {
-    return employees.filter(e =>
-      (e.fullName || '').toLowerCase().includes(empSearch.toLowerCase()) ||
-      (e.employeeId || '').toLowerCase().includes(empSearch.toLowerCase())
-    );
+    return employees
+      .filter(e => e.employeeId && String(e.employeeId).trim() !== '')
+      .filter(e => {
+        const searchLower = empSearch.toLowerCase();
+        return (e.fullName || '').toLowerCase().includes(searchLower) ||
+               String(e.employeeId || '').toLowerCase().includes(searchLower);
+      });
   }, [employees, empSearch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -145,7 +148,7 @@ const NotificationsAdmin: React.FC = () => {
     if (formData.targetSelection === 'TARGET' && (!formData.employeeIds || formData.employeeIds.length === 0)) {
       setFormErrors({ employeeSelection: 'Please select at least one employee.', departmentSelection: '' });
       return;
-    } else if (formData.targetSelection === 'DEPARTMENT' && (!formData.departmentIds || formData.departmentIds.length === 0)) {
+    } else if (formData.targetSelection === 'DEPARTMENT' && (!formData.departments || formData.departments.length === 0)) {
       setFormErrors({ employeeSelection: '', departmentSelection: 'Please select at least one department.' });
       return;
     } else {
@@ -162,9 +165,16 @@ const NotificationsAdmin: React.FC = () => {
       };
 
       if (formData.targetSelection === 'TARGET') {
-        payload.employeeIds = formData.employeeIds;
+        // Filter out any blank employee IDs
+        const validEmployeeIds = formData.employeeIds.filter((id: string) => id && id.trim() !== '');
+        if (validEmployeeIds.length === 0) {
+          notify('Please select valid employees.', 'warning');
+          setIsLoading(false);
+          return;
+        }
+        payload.employeeIds = validEmployeeIds;
       } else if (formData.targetSelection === 'DEPARTMENT') {
-        payload.departmentIds = formData.departmentIds;
+        payload.departments = formData.departments;
       }
 
       if (editingId) {
@@ -190,7 +200,7 @@ const NotificationsAdmin: React.FC = () => {
       message: '',
       targetSelection: 'GLOBAL',
       employeeIds: [],
-      departmentIds: [],
+      departments: [],
       priority: 'NORMAL',
     });
     setEmpSearch('');
@@ -220,11 +230,16 @@ const NotificationsAdmin: React.FC = () => {
   };
 
   const toggleEmployeeSelection = (id: string) => {
+    const empId = String(id).trim();
+    if (!empId) {
+      console.warn('Empty employee ID attempted to be selected');
+      return;
+    }
     setFormData(prev => {
       const current = prev.employeeIds || [];
-      const next = current.includes(id)
-        ? current.filter(cid => cid !== id)
-        : [...current, id];
+      const next = current.includes(empId)
+        ? current.filter(cid => cid !== empId)
+        : [...current, empId];
       return { ...prev, employeeIds: next };
     });
     // Clear error when user makes a selection
@@ -235,11 +250,11 @@ const NotificationsAdmin: React.FC = () => {
 
   const toggleDepartmentSelection = (dept: string) => {
     setFormData(prev => {
-      const current = prev.departmentIds || [];
+      const current = prev.departments || [];
       const next = current.includes(dept)
         ? current.filter(d => d !== dept)
         : [...current, dept];
-      return { ...prev, departmentIds: next };
+      return { ...prev, departments: next };
     });
     // Clear error when user makes a selection
     if (formErrors.departmentSelection) {
@@ -385,7 +400,7 @@ const NotificationsAdmin: React.FC = () => {
                     key={type}
                     type="button"
                     onClick={() => {
-                      setFormData({ ...formData, targetSelection: type, employeeIds: [], departmentIds: [] });
+                      setFormData({ ...formData, targetSelection: type, employeeIds: [], departments: [] });
                       setFormErrors({ employeeSelection: '', departmentSelection: '' });
                     }}
                     className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.targetSelection === type ? 'bg-[#c97a4c] border-[#c97a4c] text-white shadow-lg' : 'bg-white border-slate-100 text-black hover:bg-slate-50'
@@ -433,11 +448,11 @@ const NotificationsAdmin: React.FC = () => {
               </div>
               <div className="bg-slate-50 rounded-2xl border border-slate-100 max-h-[180px] overflow-y-auto custom-scrollbar divide-y divide-slate-100">
                 {filteredEmployees.map(emp => {
-                  const isSelected = formData.employeeIds?.includes(emp.id);
+                  const isSelected = formData.employeeIds?.includes(String(emp.employeeId)) || false;
                   return (
                     <div
-                      key={emp.id}
-                      onClick={() => toggleEmployeeSelection(emp.id)}
+                      key={emp.employeeId}
+                      onClick={() => toggleEmployeeSelection(emp.employeeId)}
                       className="p-3 flex items-center justify-between cursor-pointer hover:bg-indigo-50 transition-colors group"
                     >
                       <div className="flex items-center gap-3">
@@ -466,7 +481,7 @@ const NotificationsAdmin: React.FC = () => {
               <div className="bg-slate-50 rounded-2xl border border-slate-100 max-h-[180px] overflow-y-auto custom-scrollbar divide-y divide-slate-100">
                 {departments.length > 0 ? (
                   departments.map(dept => {
-                    const isSelected = formData.departmentIds?.includes(dept);
+                    const isSelected = formData.departments?.includes(dept);
                     return (
                       <div
                         key={dept}
