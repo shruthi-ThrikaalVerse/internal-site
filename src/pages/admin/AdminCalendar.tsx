@@ -194,9 +194,17 @@ const AdminCalendar: React.FC = () => {
   };
 
   const refreshData = async () => {
-    // Fetch admin attendance records from backend
+    // Fetch CURRENT ADMIN's own attendance records from backend
     let recordsArray: CalendarAttendanceRecord[] = [];
     try {
+      // Get current admin's employee ID
+      const adminEmployeeId = user?.employeeId || user?.id;
+
+      if (!adminEmployeeId) {
+        console.warn('Admin employee ID not found');
+        return;
+      }
+
       const year = currentMonth.getFullYear();
       const month = currentMonth.getMonth() + 1;
       const from = `${year}-${String(month).padStart(2, '0')}-01`;
@@ -204,25 +212,28 @@ const AdminCalendar: React.FC = () => {
       const params = new URLSearchParams();
       params.set('from', from);
       params.set('to', to);
-      const url = `http://localhost:8085/api/employee_attend/admin/attendance?${params.toString()}`;
+      params.set('employeeId', String(adminEmployeeId)); // Filter for current admin only
+
+      const url = `http://localhost:8085/api/employee_attend/attendance?${params.toString()}`;
       const resp = await fetch(url, { method: 'GET', credentials: 'include' });
       if (resp.ok) {
         const data = await resp.json().catch(() => []);
-        // Flatten backend response: employees[] -> each has attendance[]
-        const arr = Array.isArray(data) ? data : (data?.data ?? []);
-        recordsArray = arr.flatMap((emp: any) => {
-          const attendanceArr = Array.isArray(emp?.attendance) ? emp.attendance : [];
-          return attendanceArr.map((a: any) => ({
-            ...a,
-            id: a.id || `${emp.employeeId}-${a.date}`,
-            date: a.date,
-            status: a.status || 'Absent',
-            timeIn: a.timeIn || null,
-            timeOut: a.timeOut || null,
-            workingHours: a.workingHours || 0,
-            isLate: a.isLate || false
-          }));
-        });
+        // Handle both array and object response formats
+        const arr = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : (data?.attendance ? [data] : []));
+
+        recordsArray = arr.map((record: any) => ({
+          id: record.id || `${adminEmployeeId}-${record.date}`,
+          date: record.date,
+          status: record.status || 'Absent',
+          timeIn: record.timeIn || null,
+          timeOut: record.timeOut || null,
+          workingHours: record.workingHours || 0,
+          isLate: record.isLate || false,
+          locationName: record.locationName || null,
+          sessions: record.sessions || []
+        }));
+
+        console.log(`Loaded ${recordsArray.length} attendance records for admin ${adminEmployeeId}`);
       }
     } catch (err) {
       console.warn('Failed to fetch admin attendance:', err);
