@@ -914,7 +914,6 @@ export const ReviewsView = () => {
                 </Modal>
             )}
 
-            {/* ...removed legacy review summary and mock data... */}
         </div>
     );
 };
