@@ -280,11 +280,10 @@ const AppContent: React.FC = () => {
               }
               setMobileSidebarOpen(false);
             }}
-            className={`w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-all ${
-              activeSection === item.id 
-                ? 'text-white font-semibold' 
-                : 'text-white/70 hover:text-white'
-            }`}
+            className={`w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-all ${activeSection === item.id
+              ? 'text-white font-semibold'
+              : 'text-white/70 hover:text-white'
+              }`}
             style={activeSection === item.id ? { backgroundColor: '#c97a4c' } : {}}
           >
             <span className="shrink-0">{iconMap[item.iconName] || <HelpCircle size={20} />}</span>
@@ -343,7 +342,7 @@ const AppContent: React.FC = () => {
           <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 ml-2 sm:ml-4 lg:ml-6 shrink-0">
             <div className="hidden md:flex items-center gap-2 px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 text-orange-400 rounded-lg border-0 whitespace-nowrap">
               <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(249,115,22,0.7)]"></div>
-              <span className="text-[9px] sm:text-[10px] lg:text-xs font-black uppercase tracking-widest">Production Node</span>
+              {/* <span className="text-[9px] sm:text-[10px] lg:text-xs font-black uppercase tracking-widest">Shruthi Frontend Team Lead</span> */}
             </div>
             <button
               onClick={() => navigate(sectionToUrlMap[AppSection.Notifications])}

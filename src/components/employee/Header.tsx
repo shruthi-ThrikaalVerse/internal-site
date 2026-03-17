@@ -361,7 +361,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               </div>
               <div className="px-1 md:px-2 space-y-1">
                 <Link
-                  to="/profile"
+                  to="/employee/profile"
                   onClick={() => setShowProfileMenu(false)}
                   className="w-full text-left px-4 md:px-5 py-2.5 md:py-3 text-sm font-bold text-black hover:bg-blue-50 hover:text-blue-600 rounded-xl flex items-center gap-3 transition-colors"
                 >
