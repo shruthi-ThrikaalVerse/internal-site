@@ -1,32 +1,60 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { SectionHeader, Badge } from './UI.tsx';
-import { Bell, Send, Clock, ShieldAlert, Info, Megaphone, Plus, Trash2, Edit2 } from 'lucide-react';
+import { Bell, Send, Clock, ShieldAlert, Info, Megaphone, Plus, Trash2, Edit2, X } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import * as notificationsApi from '../../api/notifications.ts';
+import { getAllEmployees } from '../../api/users.ts';
+
+const Icon = ({ name, className }: { name: string; className?: string }) => {
+  const LucideIcon = (LucideIcons as any)[name];
+  return LucideIcon ? <LucideIcon className={className} /> : null;
+};
 
 interface Notification {
   id: number | string;
   title: string;
   message: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: 'NORMAL' | 'HIGH' | 'URGENT';
   status: 'sent' | 'pending' | 'draft';
   date: string;
   recipient: string;
 }
 
 export const NotificationsView = () => {
+  interface Employee {
+    id: string;
+    employeeId: string;
+    fullName: string;
+    email?: string;
+    department?: string;
+    avatar?: string;
+  }
+
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [departments, setDepartments] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isNew, setIsNew] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
-  const [formData, setFormData] = useState({
+  const [empSearch, setEmpSearch] = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [formData, setFormData] = useState<any>({
     title: '',
     message: '',
-    priority: 'medium' as 'high' | 'medium' | 'low',
-    status: 'draft' as 'sent' | 'pending' | 'draft',
-    recipient: 'All Employees',
+    targetSelection: 'GLOBAL',
+    employeeIds: [],
+    departmentIds: [],
+    priority: 'NORMAL',
+  });
+
+  const [formErrors, setFormErrors] = useState({
+    employeeSelection: '',
+    departmentSelection: ''
   });
 
   const loadNotifications = async () => {
@@ -41,7 +69,7 @@ export const NotificationsView = () => {
           id: notif.id || notif.notificationId || String(Date.now()),
           title: String(notif.title || notif.subject || 'Notification'),
           message: String(notif.message || notif.description || ''),
-          priority: (notif.priority || 'medium').toLowerCase() as any,
+          priority: (notif.priority || 'NORMAL').toUpperCase() as any,
           status: (notif.status || 'draft').toLowerCase() as any,
           date: String(notif.date || notif.createdDate || new Date().toISOString().split('T')[0]),
           recipient: String(notif.recipient || notif.recipientType || 'All Employees'),
@@ -56,75 +84,152 @@ export const NotificationsView = () => {
     }
   };
 
+  const fetchEmployees = async () => {
+    try {
+      const data = await getAllEmployees();
+      setEmployees(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      console.error('Error fetching employees:', err);
+      setEmployees([]);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const resp = await fetch('http://localhost:8085/api/users/departments', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (!resp.ok) throw new Error('Failed to fetch departments');
+      const data = await resp.json();
+      setDepartments(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      console.error('Error fetching departments:', err);
+      setDepartments([]);
+    }
+  };
+
   useEffect(() => {
     loadNotifications();
+    fetchEmployees();
+    fetchDepartments();
   }, []);
 
   const handleAddNew = () => {
     setIsNew(true);
+    setEditingId(null);
     setSelectedNotification(null);
     setFormData({
       title: '',
       message: '',
-      priority: 'medium',
-      status: 'draft',
-      recipient: 'All Employees',
+      targetSelection: 'GLOBAL',
+      employeeIds: [],
+      departmentIds: [],
+      priority: 'NORMAL',
     });
+    setEmpSearch('');
+    setFormErrors({ employeeSelection: '', departmentSelection: '' });
     setIsModalOpen(true);
+  };
+
+  const filteredEmployees = useMemo(() => {
+    return employees.filter(e =>
+      (e.fullName || '').toLowerCase().includes(empSearch.toLowerCase()) ||
+      (e.employeeId || '').toLowerCase().includes(empSearch.toLowerCase())
+    );
+  }, [employees, empSearch]);
+
+  const toggleEmployeeSelection = (employeeId: string) => {
+    setFormData(prev => {
+      const current = prev.employeeIds || [];
+      const next = current.includes(employeeId)
+        ? current.filter(id => id !== employeeId)
+        : [...current, employeeId];
+      return { ...prev, employeeIds: next };
+    });
+    if (formErrors.employeeSelection) {
+      setFormErrors(prev => ({ ...prev, employeeSelection: '' }));
+    }
+  };
+
+  const toggleDepartmentSelection = (dept: string) => {
+    setFormData(prev => {
+      const current = prev.departmentIds || [];
+      const next = current.includes(dept)
+        ? current.filter(d => d !== dept)
+        : [...current, dept];
+      return { ...prev, departmentIds: next };
+    });
+    if (formErrors.departmentSelection) {
+      setFormErrors(prev => ({ ...prev, departmentSelection: '' }));
+    }
+  };
+
+  const resetForm = () => {
+    setEditingId(null);
+    setFormData({
+      title: '',
+      message: '',
+      targetSelection: 'GLOBAL',
+      employeeIds: [],
+      departmentIds: [],
+      priority: 'NORMAL',
+    });
+    setEmpSearch('');
+    setFormErrors({ employeeSelection: '', departmentSelection: '' });
   };
 
   const handleEdit = (notif: Notification) => {
     setIsNew(false);
+    setEditingId(notif.id as number);
     setSelectedNotification(notif);
     setFormData({
       title: notif.title,
       message: notif.message,
+      targetSelection: 'GLOBAL',
+      employeeIds: [],
+      departmentIds: [],
       priority: notif.priority,
-      status: notif.status,
-      recipient: notif.recipient,
     });
     setIsModalOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title?.trim() || !formData.message?.trim()) {
+      setError('Title and message are required.');
+      return;
+    }
+
+    setIsLoading(true);
     try {
-      setLoading(true);
-      const payload = {
+      const payload: any = {
         title: formData.title,
         message: formData.message,
         priority: formData.priority,
-        status: formData.status,
-        recipient: formData.recipient,
+        targetSelection: formData.targetSelection,
       };
 
-      if (isNew) {
-        const result = await notificationsApi.createNotification(payload);
-        console.log('Notification created:', result);
-        const newNotif: Notification = {
-          id: result?.id || result?.notificationId || String(Date.now()),
-          title: formData.title,
-          message: formData.message,
-          priority: formData.priority,
-          status: formData.status,
-          date: new Date().toISOString().split('T')[0],
-          recipient: formData.recipient,
-        };
-        setNotifications(prev => [newNotif, ...prev]);
-      } else if (selectedNotification) {
-        const result = await notificationsApi.updateNotification(Number(selectedNotification.id), payload);
-        console.log('Notification updated:', result);
-        setNotifications(prev => prev.map(n => n.id === selectedNotification.id ? {
-          ...n,
-          ...formData,
-        } : n));
+      if (formData.targetSelection === 'TARGET') {
+        payload.employeeIds = formData.employeeIds;
+      } else if (formData.targetSelection === 'DEPARTMENT') {
+        payload.departmentIds = formData.departmentIds;
       }
+
+      if (editingId) {
+        await notificationsApi.updateNotification(editingId, payload);
+      } else {
+        await notificationsApi.createNotification(payload);
+      }
+
       setIsModalOpen(false);
-      setFormData({ title: '', message: '', priority: 'medium' as 'high' | 'medium' | 'low', status: 'draft' as 'sent' | 'pending' | 'draft', recipient: 'All Employees' });
+      resetForm();
+      await loadNotifications();
     } catch (err: any) {
-      console.error('Error saving notification:', err);
       setError(err?.message || 'Failed to save notification');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -133,11 +238,9 @@ export const NotificationsView = () => {
 
     try {
       setLoading(true);
-      const result = await notificationsApi.deleteNotification(Number(notificationId));
-      console.log('Notification deleted:', result);
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      await notificationsApi.deleteNotification(Number(notificationId));
+      await loadNotifications();
     } catch (err: any) {
-      console.error('Error deleting notification:', err);
       setError(err?.message || 'Failed to delete notification');
     } finally {
       setLoading(false);
@@ -176,11 +279,11 @@ export const NotificationsView = () => {
           {notifications.map((notif) => (
             <div key={notif.id} className="bg-white border border-gray-200 rounded-2xl p-5 hover:border-amber-200 transition-all group">
               <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-xl border shrink-0 ${notif.priority === 'high' ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' :
-                  notif.priority === 'medium' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
-                    'bg-amber-500/10 border-amber-500/20 text-amber-500'
+                <div className={`p-3 rounded-xl border shrink-0 ${notif.priority === 'URGENT' ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' :
+                  notif.priority === 'HIGH' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
+                    'bg-blue-500/10 border-blue-500/20 text-blue-500'
                   }`}>
-                  {notif.priority === 'high' ? <ShieldAlert size={20} /> : <Info size={20} />}
+                  {notif.priority === 'URGENT' ? <ShieldAlert size={20} /> : <Info size={20} />}
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -228,93 +331,162 @@ export const NotificationsView = () => {
 
       {/* Notification Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-          <div className="relative bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">
-              {isNew ? 'Create Notification' : 'Edit Notification'}
-            </h3>
-
-            <div className="space-y-4 mb-6">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Title</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Notification title"
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-600 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Message</label>
-                <textarea
-                  value={formData.message}
-                  onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
-                  placeholder="Notification message..."
-                  rows={4}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-600 focus:border-transparent"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Priority</label>
-                  <select
-                    value={formData.priority}
-                    onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value as any }))}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-600 focus:border-transparent"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Status</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-600 focus:border-transparent"
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="pending">Pending</option>
-                    <option value="sent">Sent</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Recipient</label>
-                <select
-                  value={formData.recipient}
-                  onChange={(e) => setFormData(prev => ({ ...prev, recipient: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-600 focus:border-transparent"
-                >
-                  <option value="All Employees">All Employees</option>
-                  <option value="Admin Only">Admin Only</option>
-                  <option value="Department">Department</option>
-                  <option value="Team Lead">Team Lead</option>
-                </select>
-              </div>
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsModalOpen(false)}></div>
+          <div className={`bg-white rounded-[32px] w-full max-w-xl relative shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]`}>
+            <div className="p-8 border-b flex items-center justify-between bg-white sticky top-0 z-10">
+              <h2 className="text-2xl font-black text-black">{editingId ? "Update Directive" : "New Broadcast"}</h2>
+              <button aria-label="Close dialog" onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors">
+                <X className="w-6 h-6 text-black" />
+              </button>
             </div>
+            <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Announcement Header</label>
+                  <input
+                    required
+                    className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-black placeholder:text-slate-400 shadow-inner"
+                    placeholder="Brief summary of the update"
+                    value={formData.title}
+                    onChange={e => setFormData({ ...formData, title: e.target.value })}
+                  />
+                </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="flex-1 py-3 bg-gray-100 text-gray-900 rounded-xl font-bold hover:bg-gray-200 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={loading || !formData.title || !formData.message}
-                className="flex-1 py-3 bg-amber-700 text-white rounded-xl font-bold hover:bg-amber-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Saving...' : 'Save'}
-              </button>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Comprehensive Message</label>
+                  <textarea
+                    required
+                    className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-black min-h-[100px] placeholder:text-slate-400 shadow-inner"
+                    placeholder="Detailed description, instructions, or news..."
+                    value={formData.message}
+                    onChange={e => setFormData({ ...formData, message: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Deployment Scope</label>
+                    <div className="flex gap-2">
+                      {(['GLOBAL', 'TARGET', 'DEPARTMENT'] as const).map(type => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, targetSelection: type, employeeIds: [], departmentIds: [] });
+                            setFormErrors({ employeeSelection: '', departmentSelection: '' });
+                          }}
+                          className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.targetSelection === type ? 'bg-[#c97a4c] border-[#c97a4c] text-white shadow-lg' : 'bg-white border-slate-100 text-black hover:bg-slate-50'
+                            }`}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Criticality Level</label>
+                    <div className="flex gap-2">
+                      {(['NORMAL', 'HIGH', 'URGENT'] as const).map(p => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, priority: p })}
+                          className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.priority === p ? 'text-white shadow-lg' : 'bg-white border-slate-100 text-black hover:bg-slate-50'}`}
+                          style={formData.priority === p ? { backgroundColor: '#c97a4c', borderColor: '#c97a4c' } : {}}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {formData.targetSelection === 'TARGET' && (
+                  <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Audience Targeting</label>
+                      <span className="text-[10px] font-black text-indigo-600 uppercase bg-indigo-50 px-2 py-0.5 rounded-lg">{formData.employeeIds?.length} Selected</span>
+                    </div>
+                    <div className="relative group">
+                      <Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black" />
+                      <input
+                        type="text"
+                        placeholder="Search personal..."
+                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-black placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 outline-none"
+                        value={empSearch}
+                        onChange={(e) => setEmpSearch(e.target.value)}
+                      />
+                    </div>
+                    <div className="bg-slate-50 rounded-2xl border border-slate-100 max-h-[180px] overflow-y-auto custom-scrollbar divide-y divide-slate-100">
+                      {filteredEmployees.length > 0 ? filteredEmployees.map(emp => {
+                        const isSelected = formData.employeeIds?.includes(emp.employeeId) || false;
+                        return (
+                          <div
+                            key={emp.employeeId}
+                            onClick={() => toggleEmployeeSelection(emp.employeeId)}
+                            className="p-3 flex items-center justify-between cursor-pointer hover:bg-indigo-50 transition-colors group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <img src={emp.avatar} className="w-8 h-8 rounded-lg shadow-sm border border-white" alt={`${emp.fullName} avatar`} />
+                              <div>
+                                <p className="text-xs font-black text-black leading-none">{emp.fullName}</p>
+                                <p className="text-[9px] font-bold text-black uppercase tracking-tighter mt-1">{emp.employeeId} • {emp.department}</p>
+                              </div>
+                            </div>
+                            <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-transparent group-hover:border-indigo-200'}`}>
+                              <Icon name="Check" className="w-3 h-3 text-white" />
+                            </div>
+                          </div>
+                        );
+                      }) : (
+                        <div className="p-4 text-center text-slate-400 font-bold text-xs">No employees found</div>
+                      )}
+                    </div>
+                    {formErrors.employeeSelection && (
+                      <p className="text-xs text-red-500 font-medium">{formErrors.employeeSelection}</p>
+                    )}
+                  </div>
+                )}
+
+                {formData.targetSelection === 'DEPARTMENT' && (
+                  <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+                    <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Select Departments</label>
+                    <div className="bg-slate-50 rounded-2xl border border-slate-100 max-h-[180px] overflow-y-auto custom-scrollbar divide-y divide-slate-100">
+                      {departments.length > 0 ? (
+                        departments.map(dept => {
+                          const isSelected = formData.departmentIds?.includes(dept);
+                          return (
+                            <div
+                              key={dept}
+                              onClick={() => toggleDepartmentSelection(dept)}
+                              className="p-3 flex items-center justify-between cursor-pointer hover:bg-indigo-50 transition-colors group"
+                            >
+                              <span className="text-xs font-black text-black">{dept}</span>
+                              <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-transparent group-hover:border-indigo-200'}`}>
+                                <Icon name="Check" className="w-3 h-3 text-white" />
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="p-4 text-center text-slate-400 font-bold text-xs">No departments available</div>
+                      )}
+                    </div>
+                    {formErrors.departmentSelection && (
+                      <p className="text-xs text-red-500 font-medium">{formErrors.departmentSelection}</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="pt-6 border-t border-slate-100 flex gap-4">
+                  <button type="button" onClick={() => setIsModalOpen(false)} disabled={isLoading} className="flex-1 py-4 text-black font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all disabled:opacity-50">Discard</button>
+                  <button type="submit" disabled={isLoading} className="flex-1 py-4 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all active:scale-95 disabled:opacity-50" style={{backgroundColor: '#c97a4c', boxShadow: 'rgba(201, 122, 76, 0.2) 0px 20px 25px -5px'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}>
+                    {isLoading ? 'Saving...' : editingId ? "Update System Alert" : "Commit Announcement"}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
