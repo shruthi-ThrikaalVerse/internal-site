@@ -69,6 +69,7 @@ import { AppProvider } from './context/AppContext.tsx';
 import { AuthProvider, useAuth } from './context/AuthContext.tsx';
 import { LeaveProvider } from './context/LeaveContext.tsx';
 import { HRMSProvider } from './context/HRMSContext.tsx';
+import { CalendarEventsProvider } from './context/CalendarEventsContext.tsx';
 
 
 // Landing Page Component
@@ -538,82 +539,84 @@ root.render(
       <ThemeProvider>
         <AuthProvider>
           <AppProvider>
-            <ToastContainer
-              position="top-right"
-              autoClose={4000}
-              hideProgressBar={false}
-              newestOnTop={true}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-            />
-            <Routes>
-              {/* Default landing page */}
-              <Route path="/" element={<LandingPage />} />
+            <CalendarEventsProvider>
+              <ToastContainer
+                position="top-right"
+                autoClose={4000}
+                hideProgressBar={false}
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+              />
+              <Routes>
+                {/* Default landing page */}
+                <Route path="/" element={<LandingPage />} />
 
-              {/* Login selection page */}
-              <Route path="/login-selection" element={<LoginSelectionGuard />} />
+                {/* Login selection page */}
+                <Route path="/login-selection" element={<LoginSelectionGuard />} />
 
-              {/* Employee routes */}
-              <Route path="/employee/login" element={<EmployeeLoginGuard />} />
-              <Route path="/employee/dashboard" element={<EmployeeDashboardWithContext />} />
-              <Route path="/employee/attendance" element={<EmployeeAttendancePage />} />
-              <Route path="/employee/calendar" element={<EmployeeCalendarPage />} />
-              <Route path="/employee/leave" element={<EmployeeLeavePage />} />
-              <Route path="/employee/payroll" element={<EmployeePayrollPage />} />
-              <Route path="/employee/tasks" element={<EmployeeTasksPage />} />
-              <Route path="/employee/performance" element={<EmployeePerformancePage />} />
-              <Route path="/employee/documents" element={<EmployeeDocumentsPage />} />
-              <Route path="/employee/requests" element={<EmployeeRequestsPage />} />
-              <Route path="/employee/events" element={<EmployeeEventsPage />} />
-              <Route path="/employee/notifications" element={<EmployeeNotificationsPage />} />
-              <Route path="/employee/notifications/:id" element={<EmployeeNotificationsPage />} />
-              <Route path="/employee/resignation" element={<EmployeeResignationPage />} />
-              <Route path="/employee/profile" element={<EmployeeProfilePage />} />
+                {/* Employee routes */}
+                <Route path="/employee/login" element={<EmployeeLoginGuard />} />
+                <Route path="/employee/dashboard" element={<EmployeeDashboardWithContext />} />
+                <Route path="/employee/attendance" element={<EmployeeAttendancePage />} />
+                <Route path="/employee/calendar" element={<EmployeeCalendarPage />} />
+                <Route path="/employee/leave" element={<EmployeeLeavePage />} />
+                <Route path="/employee/payroll" element={<EmployeePayrollPage />} />
+                <Route path="/employee/tasks" element={<EmployeeTasksPage />} />
+                <Route path="/employee/performance" element={<EmployeePerformancePage />} />
+                <Route path="/employee/documents" element={<EmployeeDocumentsPage />} />
+                <Route path="/employee/requests" element={<EmployeeRequestsPage />} />
+                <Route path="/employee/events" element={<EmployeeEventsPage />} />
+                <Route path="/employee/notifications" element={<EmployeeNotificationsPage />} />
+                <Route path="/employee/notifications/:id" element={<EmployeeNotificationsPage />} />
+                <Route path="/employee/resignation" element={<EmployeeResignationPage />} />
+                <Route path="/employee/profile" element={<EmployeeProfilePage />} />
 
 
 
-              {/* Admin routes */}
-              <Route path="/admin/login" element={<AdminLoginGuard />} />
-              <Route path="/admin/dashboard" element={<AdminDashboardWithContext />} />
-              <Route path="/admin/attendance" element={<AdminAttendancePageDirect />} />
-              <Route path="/admin/adminattendance" element={<AdminAttendance />} />
-              <Route path="/admin/calendar" element={<AdminCalendarPage />} />
-              <Route path="/admin/attendance-monitor" element={<AdminAttendanceMonitorPage />} />
-              <Route path="/admin/audit-logs" element={<AdminAuditLogsPage />} />
-              <Route path="/admin/document-management" element={<AdminDocumentManagementPage />} />
+                {/* Admin routes */}
+                <Route path="/admin/login" element={<AdminLoginGuard />} />
+                <Route path="/admin/dashboard" element={<AdminDashboardWithContext />} />
+                <Route path="/admin/attendance" element={<AdminAttendancePageDirect />} />
+                <Route path="/admin/adminattendance" element={<AdminAttendance />} />
+                <Route path="/admin/calendar" element={<AdminCalendarPage />} />
+                <Route path="/admin/attendance-monitor" element={<AdminAttendanceMonitorPage />} />
+                <Route path="/admin/audit-logs" element={<AdminAuditLogsPage />} />
+                <Route path="/admin/document-management" element={<AdminDocumentManagementPage />} />
 
-              {/* Admin Documents page with My Documents button/modal */}
-              <Route path="/admin/documents" element={<AdminPageWithLogout><HRMSProvider><AdminDocuments /></HRMSProvider></AdminPageWithLogout>} />
-              <Route path="/admin/employee-hub" element={<AdminEmployeeHubPage />} />
-              <Route path="/admin/employee-hub/:id" element={<AdminEmployeeDetailsPage />} />
-              <Route path="/admin/events" element={<AdminEventPage />} />
-              <Route path="/admin/leave-center" element={<AdminLeaveCenterPage />} />
-              <Route path="/admin/leave" element={<AdminPageWithLogout><LeaveProvider><AdminLeave /></LeaveProvider></AdminPageWithLogout>} />
-              <Route path="/admin/leave-requests" element={<AdminLeaveRequestsPage />} />
-              <Route path="/admin/projects" element={<AdminPageWithLogout><AdminProjects /></AdminPageWithLogout>} />
-              <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
-              <Route path="/admin/payroll" element={<AdminPayrollPage />} />
-              <Route path="/admin/payroll-processing" element={<AdminPayrollProcessingPage />} />
-              <Route path="/admin/payslips" element={<AdminPayslipsPage />} />
-              <Route path="/admin/performance" element={<AdminPerformancePage />} />
-              <Route path="/admin/performance-management" element={<AdminPerformanceManagementPage />} />
-              <Route path="/admin/performance-reviews" element={<AdminPerformanceReviewsPage />} />
-              <Route path="/admin/profile" element={<AdminProfilePage />} />
-              <Route path="/admin/requests" element={<AdminRequestsPage />} />
-              <Route path="/admin/tasks" element={<AdminTasksPage />} />
-              <Route path="/admin/resignation" element={<AdminResignationPage />} />
+                {/* Admin Documents page with My Documents button/modal */}
+                <Route path="/admin/documents" element={<AdminPageWithLogout><HRMSProvider><AdminDocuments /></HRMSProvider></AdminPageWithLogout>} />
+                <Route path="/admin/employee-hub" element={<AdminEmployeeHubPage />} />
+                <Route path="/admin/employee-hub/:id" element={<AdminEmployeeDetailsPage />} />
+                <Route path="/admin/events" element={<AdminEventPage />} />
+                <Route path="/admin/leave-center" element={<AdminLeaveCenterPage />} />
+                <Route path="/admin/leave" element={<AdminPageWithLogout><LeaveProvider><AdminLeave /></LeaveProvider></AdminPageWithLogout>} />
+                <Route path="/admin/leave-requests" element={<AdminLeaveRequestsPage />} />
+                <Route path="/admin/projects" element={<AdminPageWithLogout><AdminProjects /></AdminPageWithLogout>} />
+                <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
+                <Route path="/admin/payroll" element={<AdminPayrollPage />} />
+                <Route path="/admin/payroll-processing" element={<AdminPayrollProcessingPage />} />
+                <Route path="/admin/payslips" element={<AdminPayslipsPage />} />
+                <Route path="/admin/performance" element={<AdminPerformancePage />} />
+                <Route path="/admin/performance-management" element={<AdminPerformanceManagementPage />} />
+                <Route path="/admin/performance-reviews" element={<AdminPerformanceReviewsPage />} />
+                <Route path="/admin/profile" element={<AdminProfilePage />} />
+                <Route path="/admin/requests" element={<AdminRequestsPage />} />
+                <Route path="/admin/tasks" element={<AdminTasksPage />} />
+                <Route path="/admin/resignation" element={<AdminResignationPage />} />
 
-              {/* Super Admin */}
-              <Route path="/super-admin/login" element={<SuperAdminLogin />} />
-              <Route path="/super-admin/attendance-monitor" element={<HRMSProvider><AppProvider><App /></AppProvider></HRMSProvider>} />
-              <Route path="/super-admin/*" element={<HRMSProvider><App /></HRMSProvider>} />
+                {/* Super Admin */}
+                <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+                <Route path="/super-admin/attendance-monitor" element={<HRMSProvider><AppProvider><App /></AppProvider></HRMSProvider>} />
+                <Route path="/super-admin/*" element={<HRMSProvider><App /></HRMSProvider>} />
 
-              {/* Catch all - redirect to home */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+                {/* Catch all - redirect to home */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </CalendarEventsProvider>
           </AppProvider>
         </AuthProvider>
       </ThemeProvider>
