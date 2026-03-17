@@ -61,6 +61,14 @@ export const Modal = ({ isOpen, onClose, title, children, onSave, isLoading, max
             >
               {cancelButtonProps?.children || "Cancel"}
             </button>
+            <button
+              onClick={onSave}
+              disabled={isLoading}
+              className={saveButtonProps?.className || "w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all focus:ring-4 focus:ring-blue-500/50 disabled:opacity-50 flex items-center justify-center gap-2"}
+            >
+              {isLoading && <Loader2 size={16} className="animate-spin" />}
+              {saveButtonProps?.children || "Save Changes"}
+            </button>
           </div>
         )}
       </div>
