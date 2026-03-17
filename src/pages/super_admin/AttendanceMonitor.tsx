@@ -509,5 +509,4 @@ const AttendanceMonitor: React.FC = () => {
         </div>
     );
 };
-
 export default AttendanceMonitor;

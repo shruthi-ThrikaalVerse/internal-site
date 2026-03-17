@@ -196,40 +196,49 @@ const AdminAttendance: React.FC = () => {
       const today = getTodayString();
       if (auth?.isAuthenticated) {
         try {
-          // Try likely endpoints - backend may expose one of these
-          const endpoints = [
-            `/api/employee_attend/attendance?date=${encodeURIComponent(today)}`,
-            `/api/employee_attend/today`,
-            `/api/employee_attend/get-today`,
-            `/api/employee_attend/record?date=${encodeURIComponent(today)}`
-          ];
-          let rec = null;
-          for (const ep of endpoints) {
-            try {
-              const resp = await fetch(`http://localhost:8085${ep}`, { credentials: 'include' });
-              if (!resp.ok) continue;
-              const data = await resp.json().catch(() => null);
-              if (!data) continue;
-              if (Array.isArray(data) && data.length > 0) rec = data[0];
-              else if (data.record) rec = data.record;
-              else if (data.date || data.timeIn || data.id) rec = data;
-              if (rec && rec.date === today) break;
-            } catch { }
-          }
-          if (rec) {
-            setTodayRecord(rec);
-            setIsPunchedIn(!!rec.timeIn && !rec.timeOut);
-            setWorkDuration(rec.timeIn ? calculateDuration(rec.timeIn, rec.timeOut) : '00:00:00');
-            setCustomLocationName(rec.locationName || '');
-            setAttendanceRecords([rec]);
+          // Fetch all attendance records using the correct endpoint
+          const resp = await fetch('http://localhost:8085/api/employee_attend/attendance', {
+            credentials: 'include',
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          if (resp.ok) {
+            const data = await resp.json();
+            console.log('Attendance records:', data);
+
+            // Find today's record from the list
+            let todayRec = null;
+            let allRecs = [];
+
+            if (Array.isArray(data) && data.length > 0) {
+              allRecs = data;
+              todayRec = data.find((rec: any) => rec.date === today);
+            }
+
+            if (todayRec) {
+              setTodayRecord(todayRec);
+              setIsPunchedIn(!!todayRec.timeIn && !todayRec.timeOut);
+              setWorkDuration(todayRec.timeIn ? calculateDuration(todayRec.timeIn, todayRec.timeOut) : '00:00:00');
+              setCustomLocationName(todayRec.locationName || '');
+              setAttendanceRecords(allRecs);
+            } else {
+              setTodayRecord(null);
+              setIsPunchedIn(false);
+              setWorkDuration('00:00:00');
+              setCustomLocationName('');
+              setAttendanceRecords(allRecs || []);
+            }
           } else {
+            console.error('Failed to fetch attendance:', resp.status);
+            setAttendanceRecords([]);
             setTodayRecord(null);
             setIsPunchedIn(false);
             setWorkDuration('00:00:00');
             setCustomLocationName('');
-            setAttendanceRecords([]);
           }
         } catch (err) {
+          console.error('Error fetching attendance:', err);
           setAttendanceRecords([]);
           setTodayRecord(null);
           setIsPunchedIn(false);
@@ -513,7 +522,7 @@ const AdminAttendance: React.FC = () => {
                     : todayRecord?.timeOut
                       ? 'bg-gradient-to-r from-green-300 to-green-400 text-black cursor-not-allowed shadow-green-200'
                       : 'text-white rounded-lg text-sm px-4 py-2 font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none'
-                }`}
+                  }`}
                 style={!isPunchedIn && !isHoliday(getTodayString()) && !(isWeekend(new Date()) && !isWorkingSaturday(new Date())) && !todayRecord?.timeOut ? { background: 'linear-gradient(90deg, #c97a4c 0%, #a56137 100%)', ...(isResolvingLocation && { opacity: 0.5 }) } : undefined}
               >
                 {isResolvingLocation ? (
@@ -577,7 +586,7 @@ const AdminAttendance: React.FC = () => {
                         title="Edit location name"
                         value={customLocationName}
                         onChange={(e) => setCustomLocationName(e.target.value)}
-                        className="bg-white border-2 rounded px-2 py-1 text-xs font-bold w-full outline-none text-black" style={{borderColor: '#c97a4c'}} onFocus={(e) => (e.target.style.boxShadow = '0 0 0 3px rgba(201, 122, 76, 0.1)')} onBlur={(e) => (e.target.style.boxShadow = '')}
+                        className="bg-white border-2 rounded px-2 py-1 text-xs font-bold w-full outline-none text-black" style={{ borderColor: '#c97a4c' }} onFocus={(e) => (e.target.style.boxShadow = '0 0 0 3px rgba(201, 122, 76, 0.1)')} onBlur={(e) => (e.target.style.boxShadow = '')}
                         autoFocus
                       />
                     ) : (
@@ -726,7 +735,7 @@ const AdminAttendance: React.FC = () => {
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                   title="Filter by attendance status"
-                  className="text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 px-3 py-2 rounded-lg outline-none focus:ring-4 transition-all w-full text-black" style={{outlineColor: '#c97a4c'}}
+                  className="text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 px-3 py-2 rounded-lg outline-none focus:ring-4 transition-all w-full text-black" style={{ outlineColor: '#c97a4c' }}
                 >
                   <option className="text-black">All</option>
                   <option className="text-black">Present</option>
