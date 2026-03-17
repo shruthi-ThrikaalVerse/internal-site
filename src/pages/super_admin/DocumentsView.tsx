@@ -120,6 +120,7 @@ const DocumentsView: React.FC = () => {
                             id: d.id,
                             type: apiToDisplayType(d.documentType),
                             status: d.status || 'pending',
+                            verified: d.verified || false,
                             uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0],
                             fileName: d.fileName || 'document.pdf'
                         }));
@@ -158,7 +159,7 @@ const DocumentsView: React.FC = () => {
                 if (statusFilter === 'Has Documents') {
                     matchesStatus = empDocs.length > 0;
                 } else if (statusFilter === 'Verified') {
-                    matchesStatus = empDocs.some((doc: any) => doc.status === 'verified');
+                    matchesStatus = empDocs.some((doc: any) => doc.verified === true);
                 } else if (statusFilter === 'Pending') {
                     matchesStatus = empDocs.some((doc: any) => doc.status === 'pending') || empDocs.length === 0;
                 } else if (statusFilter === 'Uploaded') {
@@ -184,6 +185,7 @@ const DocumentsView: React.FC = () => {
 
     const getDocStatus = (emp: any, type: string): 'uploaded' | 'pending' | 'verified' => {
         const doc = getDocData(emp, type);
+        if (doc?.verified === true) return 'verified';
         return doc?.status || 'pending';
     };
 
@@ -207,6 +209,7 @@ const DocumentsView: React.FC = () => {
                 id: d.id,
                 type: apiToDisplayType(d.documentType),
                 status: d.status || 'pending',
+                verified: d.verified || false,
                 uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0],
                 fileName: d.fileName || 'document.pdf'
             }));
@@ -692,6 +695,7 @@ const DocumentsView: React.FC = () => {
                                                                             id: d.id,
                                                                             type: apiToDisplayType(d.documentType),
                                                                             status: d.status || 'uploaded',
+                                                                            verified: d.verified || false,
                                                                             uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0],
                                                                             fileName: d.fileName || 'document.pdf'
                                                                         }));

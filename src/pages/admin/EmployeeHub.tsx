@@ -1077,6 +1077,9 @@ const EmployeeHub: React.FC = () => {
                           <button onClick={(e) => { e.stopPropagation(); navigate(`/admin/employee-hub/${emp.id}`); }} aria-label="View details" className="p-2 text-black hover:text-amber-700 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-amber-100">
                             <Icon name="Eye" className="w-4 h-4" />
                           </button>
+                          <button onClick={(e) => { e.stopPropagation(); navigate(`/admin/employee-hub/${emp.id}/edit`); }} aria-label="Edit employee" className="p-2 text-black hover:text-amber-600 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-amber-100">
+                            <Icon name="Edit2" className="w-4 h-4" />
+                          </button>
                           <button onClick={(e) => { e.stopPropagation(); setEmployeeToDelete(emp); }} aria-label="Delete employee" className="p-2 text-black hover:text-rose-600 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-rose-100">
                             <Icon name="Trash2" className="w-4 h-4" />
                           </button>
@@ -1107,6 +1110,13 @@ const EmployeeHub: React.FC = () => {
                         {emp.leaveBalance}d Bal
                       </div>
                     </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigate(`/admin/employee-hub/${emp.id}/edit`); }}
+                      aria-label="Edit employee"
+                      className="p-2.5 text-black hover:text-amber-600 opacity-0 group-hover:opacity-100 transition-all hover:bg-amber-50 rounded-xl"
+                    >
+                      <Icon name="Edit2" className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setEmployeeToDelete(emp); }}
                       aria-label="Delete employee"
