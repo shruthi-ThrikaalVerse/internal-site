@@ -5,7 +5,7 @@ import {
   AlertTriangle, CheckCircle2, TrendingUp, Briefcase,
   CalendarDays, MapPin, Users, MoreHorizontal
 } from 'lucide-react';
-import { CalendarAttendanceRecord } from '../../types.ts';
+import { CalendarAttendanceRecord, User } from '../../types.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
 
 const SYSTEM_HOLIDAYS = [
@@ -45,7 +45,7 @@ interface CalendarEvent {
 
 
 const AdminCalendar: React.FC = () => {
-  const { user } = useAuth();
+  const { user }: { user: User | null } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [attendanceRecords, setAttendanceRecords] = useState<CalendarAttendanceRecord[]>([]);
   const [selectedRecord, setSelectedRecord] = useState<CalendarAttendanceRecord | null>(null);

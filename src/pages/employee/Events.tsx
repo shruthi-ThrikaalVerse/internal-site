@@ -39,6 +39,16 @@ const Events: React.FC = () => {
     const [showCalendarSection, setShowCalendarSection] = useState(false);
 
     useEffect(() => {
+        // Load calendar events from localStorage on mount
+        const savedCalendarEvents = localStorage.getItem('employeeCalendarEvents');
+        if (savedCalendarEvents) {
+            try {
+                setCalendarEvents(JSON.parse(savedCalendarEvents));
+            } catch (err) {
+                console.warn('Failed to parse calendar events:', err);
+            }
+        }
+
         // Fetch all events created by admin from API
         (async () => {
             try {
@@ -192,7 +202,7 @@ const Events: React.FC = () => {
         return calendarEvents.some((calEvent: CalendarEvent) => String(calEvent.eventId) === String(eventId));
     };
 
-    // Add event to calendar - Session-only (not persisted)
+    // Add event to calendar - Persisted to localStorage
     const addToCalendar = (event: Event) => {
         if (isEventInCalendar(event.id)) return;
 
@@ -208,9 +218,10 @@ const Events: React.FC = () => {
             addedAt: new Date().toISOString()
         };
 
-        // Update state only (session-only)
+        // Update state and persist to localStorage
         const updatedEvents = [...calendarEvents, calendarEvent];
         setCalendarEvents(updatedEvents);
+        localStorage.setItem('employeeCalendarEvents', JSON.stringify(updatedEvents));
         setShowCalendarSection(true);
     };
 
@@ -218,11 +229,13 @@ const Events: React.FC = () => {
     const removeFromCalendar = (eventId: string | number) => {
         const updatedEvents = calendarEvents.filter((event: CalendarEvent) => String(event.eventId) !== String(eventId));
         setCalendarEvents(updatedEvents);
+        localStorage.setItem('employeeCalendarEvents', JSON.stringify(updatedEvents));
     };
 
     // Clear all calendar events
     const clearAllCalendarEvents = () => {
         setCalendarEvents([]);
+        localStorage.removeItem('employeeCalendarEvents');
     };
 
     // Filter events
