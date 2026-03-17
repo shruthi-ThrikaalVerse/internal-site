@@ -36,7 +36,7 @@ const NotificationsAdmin: React.FC = () => {
     id: number;
     title: string;
     message: string;
-    targetSelection: 'ALL' | 'EMPLOYEE' | 'DEPARTMENT';
+    targetSelection: 'GLOBAL' | 'TARGET' | 'DEPARTMENT';
     priority: 'NORMAL' | 'HIGH' | 'URGENT';
     active: boolean;
     createdAt: string;
@@ -64,7 +64,7 @@ const NotificationsAdmin: React.FC = () => {
   const [formData, setFormData] = useState<any>({
     title: '',
     message: '',
-    targetSelection: 'ALL',
+    targetSelection: 'GLOBAL',
     employeeIds: [],
     departmentIds: [],
     priority: 'NORMAL',
@@ -142,7 +142,7 @@ const NotificationsAdmin: React.FC = () => {
       return;
     }
 
-    if (formData.targetSelection === 'EMPLOYEE' && (!formData.employeeIds || formData.employeeIds.length === 0)) {
+    if (formData.targetSelection === 'TARGET' && (!formData.employeeIds || formData.employeeIds.length === 0)) {
       setFormErrors({ employeeSelection: 'Please select at least one employee.', departmentSelection: '' });
       return;
     } else if (formData.targetSelection === 'DEPARTMENT' && (!formData.departmentIds || formData.departmentIds.length === 0)) {
@@ -161,7 +161,7 @@ const NotificationsAdmin: React.FC = () => {
         targetSelection: formData.targetSelection,
       };
 
-      if (formData.targetSelection === 'EMPLOYEE') {
+      if (formData.targetSelection === 'TARGET') {
         payload.employeeIds = formData.employeeIds;
       } else if (formData.targetSelection === 'DEPARTMENT') {
         payload.departmentIds = formData.departmentIds;
@@ -188,7 +188,7 @@ const NotificationsAdmin: React.FC = () => {
     setFormData({
       title: '',
       message: '',
-      targetSelection: 'ALL',
+      targetSelection: 'GLOBAL',
       employeeIds: [],
       departmentIds: [],
       priority: 'NORMAL',
@@ -246,6 +246,8 @@ const NotificationsAdmin: React.FC = () => {
       setFormErrors(prev => ({ ...prev, departmentSelection: '' }));
     }
   };
+
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -307,9 +309,9 @@ const NotificationsAdmin: React.FC = () => {
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${n.targetSelection === 'ALL' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${n.targetSelection === 'GLOBAL' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-blue-50 text-blue-600 border-blue-100'
                           }`}>
-                          {n.targetSelection === 'ALL' ? 'Global' : 'Selected'}
+                          {n.targetSelection}
                         </span>
                       </div>
                     </td>
@@ -323,7 +325,7 @@ const NotificationsAdmin: React.FC = () => {
                     </td>
                     <td className="px-8 py-6 text-center">
                       <div className="flex flex-col items-center">
-                        <span className="text-xs font-black text-black">{n.targetSelection === 'ALL' ? 'All Staff' : `${n.employeeCount} Targeted`}</span>
+                        <span className="text-xs font-black text-black">{n.targetSelection === 'GLOBAL' ? 'All Staff' : `${n.employeeCount} Targeted`}</span>
                         <span className="text-[9px] font-bold text-black uppercase tracking-tighter">{n.active ? 'Active' : 'Inactive'}</span>
                       </div>
                     </td>
@@ -378,7 +380,7 @@ const NotificationsAdmin: React.FC = () => {
             <div className="space-y-4">
               <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Deployment Scope</label>
               <div className="flex gap-2">
-                {(['ALL', 'EMPLOYEE', 'DEPARTMENT'] as const).map(type => (
+                {(['GLOBAL', 'TARGET', 'DEPARTMENT'] as const).map(type => (
                   <button
                     key={type}
                     type="button"
@@ -413,7 +415,7 @@ const NotificationsAdmin: React.FC = () => {
             </div>
           </div>
 
-          {formData.targetSelection === 'EMPLOYEE' && (
+          {formData.targetSelection === 'TARGET' && (
             <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Audience Targeting</label>
