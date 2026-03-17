@@ -11,45 +11,25 @@ import {
 import { Event, EventType } from '../../types.ts';
 import { getAllEvents } from '../../api/events.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
+import { useCalendarEvents, CalendarEvent } from '../../context/CalendarEventsContext.tsx';
 
 const EVENTS_PER_PAGE = 6;
-
-interface CalendarEvent {
-    id: number;
-    eventId: string | number;
-    title: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    location: string;
-    type: EventType;
-    addedAt: string;
-}
 
 const Events: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { calendarEvents, addToCalendar, removeFromCalendar, isEventInCalendar, clearAllCalendarEvents } = useCalendarEvents();
     const [events, setEvents] = useState<Event[]>([]);
     const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedType, setSelectedType] = useState<EventType | 'all'>('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
     const [showCalendarSection, setShowCalendarSection] = useState(false);
 
     useEffect(() => {
-        // Load calendar events from localStorage on mount
-        const savedCalendarEvents = localStorage.getItem('employeeCalendarEvents');
-        if (savedCalendarEvents) {
-            try {
-                setCalendarEvents(JSON.parse(savedCalendarEvents));
-            } catch (err) {
-                console.warn('Failed to parse calendar events:', err);
-            }
-        }
-
         // Fetch all events created by admin from API
+        // calendarEvents are managed globally via Context
         (async () => {
             try {
                 const data = await getAllEvents();
@@ -85,9 +65,6 @@ const Events: React.FC = () => {
             }
         })();
     }, []);
-
-    // Calendar events are session-only (not persisted to localStorage)
-    // If backend endpoint becomes available, integrate it here
 
     // Get icon for event type
     const getEventTypeIcon = (type: EventType) => {
@@ -197,13 +174,8 @@ const Events: React.FC = () => {
         return '';
     };
 
-    // Check if event is in calendar - Accept string or number ids
-    const isEventInCalendar = (eventId: string | number) => {
-        return calendarEvents.some((calEvent: CalendarEvent) => String(calEvent.eventId) === String(eventId));
-    };
-
-    // Add event to calendar - Persisted to localStorage
-    const addToCalendar = (event: Event) => {
+    // Handle adding event to calendar
+    const handleAddToCalendar = (event: Event) => {
         if (isEventInCalendar(event.id)) return;
 
         const calendarEvent: CalendarEvent = {
@@ -218,24 +190,8 @@ const Events: React.FC = () => {
             addedAt: new Date().toISOString()
         };
 
-        // Update state and persist to localStorage
-        const updatedEvents = [...calendarEvents, calendarEvent];
-        setCalendarEvents(updatedEvents);
-        localStorage.setItem('employeeCalendarEvents', JSON.stringify(updatedEvents));
+        addToCalendar(calendarEvent);
         setShowCalendarSection(true);
-    };
-
-    // Remove event from calendar - Accept string or number ids
-    const removeFromCalendar = (eventId: string | number) => {
-        const updatedEvents = calendarEvents.filter((event: CalendarEvent) => String(event.eventId) !== String(eventId));
-        setCalendarEvents(updatedEvents);
-        localStorage.setItem('employeeCalendarEvents', JSON.stringify(updatedEvents));
-    };
-
-    // Clear all calendar events
-    const clearAllCalendarEvents = () => {
-        setCalendarEvents([]);
-        localStorage.removeItem('employeeCalendarEvents');
     };
 
     // Filter events
@@ -489,7 +445,7 @@ const Events: React.FC = () => {
                                             >
                                                 {/* Calendar Button - Shows X when in calendar */}
                                                 <button
-                                                    onClick={() => inCalendar ? removeFromCalendar(event.id) : addToCalendar(event)}
+                                                    onClick={() => inCalendar ? removeFromCalendar(event.id) : handleAddToCalendar(event)}
                                                     className={`absolute top-4 right-4 p-2 rounded-full transition-colors ${inCalendar
                                                         ? 'bg-red-100 text-red-600 hover:bg-red-200'
                                                         : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
@@ -583,7 +539,7 @@ const Events: React.FC = () => {
                                             >
                                                 {/* Calendar Button for List View */}
                                                 <button
-                                                    onClick={() => inCalendar ? removeFromCalendar(event.id) : addToCalendar(event)}
+                                                    onClick={() => inCalendar ? removeFromCalendar(event.id) : handleAddToCalendar(event)}
                                                     className={`absolute top-5 right-5 p-2 rounded-lg transition-colors ${inCalendar
                                                         ? 'bg-red-100 text-red-600 hover:bg-red-200'
                                                         : 'bg-blue-100 text-blue-600 hover:bg-blue-200'

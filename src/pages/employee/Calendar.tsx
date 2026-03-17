@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { CalendarAttendanceRecord } from '../../types.ts';
 import { useAuth } from '../../context/AuthContext.tsx';
+import { useCalendarEvents } from '../../context/CalendarEventsContext.tsx';
 
 const SYSTEM_HOLIDAYS = [
   { date: '2026-01-15', name: 'Makara Sankranti/ Pongal' },
@@ -43,7 +44,7 @@ const WORKING_SATURDAYS = [
 // Interface for Calendar Event
 interface CalendarEvent {
   id: number;
-  eventId: number;
+  eventId: string | number;
   title: string;
   date: string;
   startTime: string;
@@ -55,6 +56,7 @@ interface CalendarEvent {
 
 const Calendar: React.FC = () => {
   const { user } = useAuth();
+  const { calendarEvents } = useCalendarEvents();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [attendanceRecords, setAttendanceRecords] = useState<CalendarAttendanceRecord[]>([]);
   const [selectedRecord, setSelectedRecord] = useState<CalendarAttendanceRecord | null>(null);
@@ -113,19 +115,6 @@ const Calendar: React.FC = () => {
   // Check if a date is a working Saturday
   const isWorkingSaturday = (dateStr: string) => {
     return WORKING_SATURDAYS.includes(dateStr);
-  };
-
-  // Load calendar events from localStorage
-  const loadCalendarEvents = (): CalendarEvent[] => {
-    try {
-      const savedEvents = localStorage.getItem('employeeCalendarEvents');
-      if (savedEvents) {
-        return JSON.parse(savedEvents);
-      }
-    } catch (err) {
-      console.warn('Failed to load calendar events:', err);
-    }
-    return [];
   };
 
   // ✅ sessions helper (works for old + new attendance shape)
@@ -294,7 +283,6 @@ const Calendar: React.FC = () => {
     setIsTodayPresent(todayActive);
 
     const recordsArray = Array.from(mergedMap.values());
-    const calendarEvents = loadCalendarEvents();
     setAttendanceRecords(recordsArray);
     calculateMonthlyStats(recordsArray, calendarEvents);
   };
@@ -381,9 +369,7 @@ const Calendar: React.FC = () => {
     const days: any[] = [];
     const todayStr = formatDateString(new Date());
 
-    // Load calendar events for current month
-    const calendarEvents = loadCalendarEvents();
-
+    // Calendar events managed via Context
     for (let i = firstDay - 1; i >= 0; i--) {
       days.push({
         date: new Date(year, month, -i),
