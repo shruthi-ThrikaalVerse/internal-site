@@ -520,7 +520,7 @@ const AdminCalendar: React.FC = () => {
           <button
             onClick={() => setCurrentMonth(new Date())}
             className="px-3 sm:px-4 py-1.5 sm:py-2 text-white text-xs font-black rounded-xl sm:rounded-2xl uppercase tracking-wider shadow active:scale-95 transition-all w-full sm:w-auto"
-            style={{backgroundColor: '#c97a4c'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
+            style={{ backgroundColor: '#c97a4c' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
           >
             Today
           </button>
@@ -539,13 +539,13 @@ const AdminCalendar: React.FC = () => {
             {monthlyStats.workDays} work day{monthlyStats.workDays !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="bg-[#f5ede3] border-2 rounded-xl sm:rounded-2xl lg:rounded-[2rem] p-3 sm:p-4 lg:p-6 shadow-sm" style={{borderColor: '#c97a4c'}}>
+        <div className="bg-[#f5ede3] border-2 rounded-xl sm:rounded-2xl lg:rounded-[2rem] p-3 sm:p-4 lg:p-6 shadow-sm" style={{ borderColor: '#c97a4c' }}>
           <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
-            <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8" style={{color: '#c97a4c'}} />
-            <span className="text-[8px] sm:text-[9px] lg:text-[10px] font-black uppercase tracking-wider" style={{color: '#c97a4c'}}>Work Days</span>
+            <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8" style={{ color: '#c97a4c' }} />
+            <span className="text-[8px] sm:text-[9px] lg:text-[10px] font-black uppercase tracking-wider" style={{ color: '#c97a4c' }}>Work Days</span>
           </div>
-          <p className="text-base sm:text-lg lg:text-xl xl:text-2xl font-black" style={{color: '#8b5a3c'}}>{monthlyStats.workDays}</p>
-          <p className="text-[9px] sm:text-xs mt-1 font-medium truncate" style={{color: '#c97a4c'}}>Days recorded</p>
+          <p className="text-base sm:text-lg lg:text-xl xl:text-2xl font-black" style={{ color: '#8b5a3c' }}>{monthlyStats.workDays}</p>
+          <p className="text-[9px] sm:text-xs mt-1 font-medium truncate" style={{ color: '#c97a4c' }}>Days recorded</p>
         </div>
         <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 rounded-xl sm:rounded-2xl lg:rounded-[2rem] p-3 sm:p-4 lg:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
@@ -586,9 +586,9 @@ const AdminCalendar: React.FC = () => {
         {/* Fixed Day Headers */}
         <div className="sticky top-0 z-10 bg-white border-b border-slate-200">
           <div className="grid grid-cols-7 bg-slate-50">
-            {dayNames.map(d => (
+            {dayNames.map((d, idx) => (
               <div
-                key={d}
+                key={`day-${idx}`}
                 className="py-2 sm:py-3 lg:py-4 xl:py-5 text-center text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wider"
               >
                 {d}
