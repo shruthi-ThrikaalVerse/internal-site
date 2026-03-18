@@ -326,7 +326,6 @@ const AppContent: React.FC = () => {
       <main className={`flex-1 flex flex-col min-w-0 transition-all duration-300 pt-16 sm:pt-20 lg:pt-20 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
         <header className={`h-16 sm:h-20 flex items-center px-3 sm:px-6 lg:px-8 justify-between fixed top-0 left-0 right-0 z-30 transition-all duration-300 ${sidebarOpen ? 'lg:left-64' : 'lg:left-20'}`} style={{ backgroundColor: '#2c3e50', borderBottom: '1px solid #1a252f' }}>
           <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 flex-1 min-w-0">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle sidebar" className="hidden lg:flex p-2 hover:bg-gray-100 rounded-xl text-gray-600 transition-colors shrink-0">{sidebarOpen ? <X size={20} /> : <Menu size={20} />}</button>
             <button onClick={() => setMobileSidebarOpen(true)} title="Open sidebar" className="lg:hidden p-2 hover:bg-[#1f2937] rounded-xl text-[#9aa8bd] transition-colors shrink-0"><Menu size={20} /></button>
             <div className="flex items-center gap-2 sm:gap-3 bg-slate-100 border-0 px-2 sm:px-4 lg:px-5 py-2 sm:py-2.5 rounded-xl flex-1 min-w-0 max-w-xs sm:max-w-lg lg:max-w-3xl focus-within:ring-4 focus-within:ring-blue-500/50 transition-all">
               <Search size={16} className="text-slate-400 shrink-0 sm:w-[18px] lg:w-5" />
@@ -340,10 +339,7 @@ const AppContent: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 ml-2 sm:ml-4 lg:ml-6 shrink-0">
-            <div className="hidden md:flex items-center gap-2 px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 text-orange-400 rounded-lg border-0 whitespace-nowrap">
-              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(249,115,22,0.7)]"></div>
-              {/* <span className="text-[9px] sm:text-[10px] lg:text-xs font-black uppercase tracking-widest">Shruthi Frontend Team Lead</span> */}
-            </div>
+            
             <button
               onClick={() => navigate(sectionToUrlMap[AppSection.Notifications])}
               title="View notifications"
@@ -366,7 +362,7 @@ const AppContent: React.FC = () => {
                     <p className="text-[10px] lg:text-xs text-slate-300 font-black uppercase tracking-widest">Active</p>
                   </div>
                 </div>
-                <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 overflow-hidden border border-orange-400" style={{ backgroundColor: '#c97a4c' }}>
+                <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-full flex items-center justify-center text-2xl font-bold text-black shrink-0 overflow-hidden border border-orange-400" style={{ backgroundColor: '#ffffff' }}>
                   {currentUser?.avatar ? (
                     <img
                       src={currentUser.avatar}

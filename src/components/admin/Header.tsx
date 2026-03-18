@@ -338,7 +338,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               <span className="text-xs font-bold text-white leading-none">{displayName}</span>
               <span className="text-[10px] text-slate-300 font-medium uppercase tracking-wider mt-0.5">{displayRole}</span>
             </div>
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ backgroundColor: '#c97a4c' }}>
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-2xl font-bold text-black flex-shrink-0" style={{ backgroundColor: '#ffffff' }}>
               {profileImage ? (
                 <img
                   src={formatBase64Image(profileImage)}

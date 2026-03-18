@@ -425,11 +425,30 @@ const EmployeeHub: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [deptFilter, setDeptFilter] = useState('All');
   const [isAddModalOpen, setAddModalOpen] = useState(false);
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<EmployeeSummary | null>(null);
   const [terminationReason, setTerminationReason] = useState('');
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+  const [editingEmployee, setEditingEmployee] = useState<EmployeeSummary | null>(null);
+  const [editProfileImage, setEditProfileImage] = useState<File | null>(null);
+  const [editProfileImagePreview, setEditProfileImagePreview] = useState<string | null>(null);
+  const [editFormState, setEditFormState] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    dateOfBirth: '',
+    dateOfJoining: '',
+    designation: '',
+    department: '',
+    employmentType: '',
+    username: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
   const initializeRef = useRef(false); // Track if we've already fetched from API
 
   const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Internship'];
@@ -498,6 +517,29 @@ const EmployeeHub: React.FC = () => {
           status = 'inactive';
         }
 
+        // Normalize avatar URL
+        let avatarUrl = '';
+        if (emp.profileImage && typeof emp.profileImage === 'string') {
+          if (emp.profileImage.startsWith('/9j/')) {
+            avatarUrl = `data:image/jpeg;base64,${emp.profileImage}`;
+          } else if (emp.profileImage.startsWith('/')) {
+            avatarUrl = `http://localhost:8085${emp.profileImage}`;
+          } else if (emp.profileImage.startsWith('http')) {
+            avatarUrl = emp.profileImage;
+          } else {
+            // Assume it's base64 data
+            avatarUrl = `data:image/jpeg;base64,${emp.profileImage}`;
+          }
+        } else if (emp.avatar && typeof emp.avatar === 'string') {
+          if (emp.avatar.startsWith('/')) {
+            avatarUrl = `http://localhost:8085${emp.avatar}`;
+          } else {
+            avatarUrl = emp.avatar;
+          }
+        } else {
+          avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.fullName || emp.name || emp.username || emp.email || 'User')}`;
+        }
+
         return {
           id: emp.id || emp._id || emp.employeeId || emp.email,
           employeeId: emp.employeeId || emp.id || emp._id || emp.email,
@@ -505,12 +547,13 @@ const EmployeeHub: React.FC = () => {
           email: emp.email || '',
           designation: emp.designation || '',
           department: emp.department || '',
-          avatar: emp.profileImage || emp.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.fullName || emp.name || emp.username || emp.email || 'User')}`,
+          avatar: avatarUrl,
           status,
           dateOfJoining: emp.dateOfJoining || '',
           location: emp.locationName || emp.location || '',
           reportingManager: emp.reportingManager || emp.createdByName || 'Unassigned',
           phone: emp.phone || emp.phoneNumber || '',
+          address: emp.address || '',
           leaveBalance: emp.totalLeaveBalance || emp.leaveBalance || 20,
           tags: [],
           password: emp.password,
@@ -578,8 +621,36 @@ const EmployeeHub: React.FC = () => {
     }
   };
 
+  const handleEditProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        notify('File size should be less than 5MB', 'error');
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        notify('Please upload an image file', 'error');
+        return;
+      }
+
+      setEditProfileImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditProfileImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const triggerFileInput = () => {
     fileInputRef.current?.click();
+  };
+
+  const triggerEditFileInput = () => {
+    editFileInputRef.current?.click();
   };
 
   const validateEmployeeData = () => {
@@ -859,7 +930,157 @@ const EmployeeHub: React.FC = () => {
     }
   };
 
+  // Handle Edit - Open modal with employee data
+  const handleEdit = (emp: EmployeeSummary) => {
+    setEditingEmployee(emp);
+    setEditFormState({
+      firstName: emp.fullName?.split(' ')[0] || '',
+      lastName: emp.fullName?.split(' ').slice(1).join(' ') || '',
+      email: emp.email,
+      phone: emp.phone || '',
+      address: (emp as any).address || '',
+      dateOfBirth: emp.dateOfBirth || '',
+      dateOfJoining: emp.dateOfJoining || '',
+      designation: emp.designation || '',
+      department: emp.department || '',
+      employmentType: emp.employmentType || emp.userType || '',
+      username: emp.username || ''
+    });
+    // Set initial profile image preview
+    setEditProfileImagePreview(emp.avatar || emp.profileImage || null);
+    setEditProfileImage(null); // Reset any previous file selection
+    setEditModalOpen(true);
+  };
 
+  // Handle Submit Edit - Call update API
+  const handleSubmitEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!editingEmployee) {
+      notify('No employee selected for edit', 'error');
+      return;
+    }
+
+    // Basic validation
+    if (!editFormState.firstName.trim() || !editFormState.lastName.trim()) {
+      notify('First name and last name are required', 'error');
+      return;
+    }
+
+    if (!editFormState.email.trim()) {
+      notify('Email is required', 'error');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Prepare payload
+      const payload = {
+        firstName: editFormState.firstName,
+        lastName: editFormState.lastName,
+        email: editFormState.email,
+        phoneNumber: editFormState.phone,
+        address: editFormState.address,
+        dateOfBirth: editFormState.dateOfBirth,
+        dateOfJoining: editFormState.dateOfJoining,
+        designation: editFormState.designation,
+        department: editFormState.department,
+        userType: editFormState.employmentType,
+        username: editFormState.username
+      };
+
+      // Get the employee ID
+      const employeeId = editingEmployee.employeeId || editingEmployee.id;
+
+      const url = `http://localhost:8085/api/users/super_admin/update/${encodeURIComponent(employeeId)}`;
+
+      let res: Response;
+
+      if (editProfileImage) {
+        // Use FormData for file upload
+        const form = new FormData();
+        form.append('data', JSON.stringify(payload));
+        form.append('image', editProfileImage);
+
+        res = await fetch(url, {
+          method: 'PUT',
+          credentials: 'include',
+          body: form
+        });
+      } else {
+        // Use JSON for regular update
+        res = await fetch(url, {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+      }
+
+      if (res.ok) {
+        const updatedData = await res.json();
+
+        // Update local state with the updated employee data
+        const updatedEmployee: EmployeeSummary = {
+          ...editingEmployee,
+          fullName: `${editFormState.firstName} ${editFormState.lastName}`,
+          email: editFormState.email,
+          phone: editFormState.phone,
+          designation: editFormState.designation,
+          department: editFormState.department,
+          employmentType: editFormState.employmentType,
+          username: editFormState.username,
+          dateOfBirth: editFormState.dateOfBirth,
+          dateOfJoining: editFormState.dateOfJoining,
+          address: editFormState.address,
+          avatar: editProfileImagePreview || editingEmployee.avatar,
+          profileImage: editProfileImagePreview || editingEmployee.profileImage
+        };
+
+        updateEmployee(editingEmployee.id, updatedEmployee);
+
+        notify(`Employee ${editFormState.firstName} ${editFormState.lastName} updated successfully!`, 'success');
+        addLog('Update', 'Employee', `Updated employee ${editFormState.firstName} ${editFormState.lastName}`);
+
+        // Close modal
+        setEditModalOpen(false);
+        setEditingEmployee(null);
+        setEditProfileImage(null);
+        setEditProfileImagePreview(null);
+        setEditFormState({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          address: '',
+          dateOfBirth: '',
+          dateOfJoining: '',
+          designation: '',
+          department: '',
+          employmentType: '',
+          username: ''
+        });
+
+        // Refresh from backend to ensure consistency
+        try {
+          await fetchEmployees();
+        } catch (err) {
+          console.error('Background refetch failed:', err);
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        notify(errData.message || `Failed to update employee (${res.status})`, 'error');
+      }
+    } catch (err) {
+      console.error('Update error:', err);
+      notify('Network error while updating employee', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Get the password for the selected employee
   const getEmployeePassword = (emp: EmployeeSummary | null) => {
@@ -1038,9 +1259,7 @@ const EmployeeHub: React.FC = () => {
                       <td className="py-6 px-8">
                         <div className="flex items-center gap-4">
                           <img
-                            src={emp.profileImage && typeof emp.profileImage === 'string' && emp.profileImage.startsWith('/9j/')
-                              ? `data:image/jpeg;base64,${emp.profileImage}`
-                              : emp.avatar}
+                            src={emp.avatar}
                             className="w-12 h-12 rounded-2xl border-4 border-white shadow-sm transition-transform group-hover:scale-110" alt="" />
                           <div>
                             <p className="font-black text-black leading-none mb-1.5">{emp.fullName}</p>
@@ -1077,7 +1296,7 @@ const EmployeeHub: React.FC = () => {
                           <button onClick={(e) => { e.stopPropagation(); navigate(`/admin/employee-hub/${emp.id}`); }} aria-label="View details" className="p-2 text-black hover:text-amber-700 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-amber-100">
                             <Icon name="Eye" className="w-4 h-4" />
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); navigate(`/admin/employee-hub/${emp.id}/edit`); }} aria-label="Edit employee" className="p-2 text-black hover:text-amber-600 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-amber-100">
+                          <button onClick={(e) => { e.stopPropagation(); handleEdit(emp); }} aria-label="Edit employee" className="p-2 text-black hover:text-amber-600 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-amber-100">
                             <Icon name="Edit2" className="w-4 h-4" />
                           </button>
                           <button onClick={(e) => { e.stopPropagation(); setEmployeeToDelete(emp); }} aria-label="Delete employee" className="p-2 text-black hover:text-rose-600 hover:bg-white rounded-xl shadow-sm transition-all border border-transparent hover:border-rose-100">
@@ -1101,9 +1320,7 @@ const EmployeeHub: React.FC = () => {
                   <div className="flex items-start justify-between mb-6">
                     <div className="relative">
                       <img
-                        src={emp.profileImage && typeof emp.profileImage === 'string' && emp.profileImage.startsWith('/9j/')
-                          ? `data:image/jpeg;base64,${emp.profileImage}`
-                          : emp.avatar}
+                        src={emp.avatar}
                         className="w-16 h-16 rounded-[20px] object-cover border-4 border-slate-50 shadow-md group-hover:scale-105 transition-transform"
                         alt="" />
                       <div className={`absolute -top-2 -right-2 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm ${emp.leaveBalance < 5 ? 'bg-rose-500 text-white' : 'bg-white text-black border border-slate-100'}`}>
@@ -1111,7 +1328,7 @@ const EmployeeHub: React.FC = () => {
                       </div>
                     </div>
                     <button
-                      onClick={(e) => { e.stopPropagation(); navigate(`/admin/employee-hub/${emp.id}/edit`); }}
+                      onClick={(e) => { e.stopPropagation(); handleEdit(emp); }}
                       aria-label="Edit employee"
                       className="p-2.5 text-black hover:text-amber-600 opacity-0 group-hover:opacity-100 transition-all hover:bg-amber-50 rounded-xl"
                     >
@@ -1227,6 +1444,212 @@ const EmployeeHub: React.FC = () => {
               </button>
             </div>
           </div>
+        )}
+      </Modal>
+
+      {/* Edit Employee Modal */}
+      <Modal isOpen={isEditModalOpen} onClose={() => {
+        setEditModalOpen(false);
+        setEditingEmployee(null);
+        setEditProfileImage(null);
+        setEditProfileImagePreview(null);
+      }} title="Edit Employee Details">
+        {editingEmployee && (
+          <form onSubmit={handleSubmitEdit} className="space-y-6">
+            {/* Profile Photo Upload */}
+            <div className="flex flex-col items-center">
+              <div className="relative mb-4">
+                <div className="w-32 h-32 rounded-3xl border-4 border-slate-100 overflow-hidden bg-slate-50 flex items-center justify-center">
+                  {editProfileImagePreview ? (
+                    <img src={editProfileImagePreview} alt="Profile preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <Icon name="User" className="w-16 h-16 text-black" />
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={triggerEditFileInput}
+                  className="absolute bottom-2 right-2 p-3 bg-amber-700 text-white rounded-full shadow-lg hover:bg-amber-800 transition-colors"
+                  title="Upload profile image"
+                >
+                  <Icon name="Camera" className="w-5 h-5 text-white" />
+                </button>
+              </div>
+              <input
+                type="file"
+                ref={editFileInputRef}
+                onChange={handleEditProfileImageChange}
+                title="Upload profile image"
+                placeholder="Upload profile image"
+                accept="image/*"
+                className="hidden"
+              />
+              <p className="text-[10px] text-black text-center">
+                Click the camera icon to upload profile photo<br />
+                (Recommended: 400x400px, JPG or PNG, max 5MB)
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label htmlFor="editFirstName" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">First Name *</label>
+                <input
+                  id="editFirstName"
+                  type="text"
+                  required
+                  className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400"
+                  placeholder="First Name"
+                  value={editFormState.firstName}
+                  onChange={(e) => setEditFormState({ ...editFormState, firstName: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="editLastName" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Last Name *</label>
+                <input
+                  id="editLastName"
+                  type="text"
+                  required
+                  className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400"
+                  placeholder="Last Name"
+                  value={editFormState.lastName}
+                  onChange={(e) => setEditFormState({ ...editFormState, lastName: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="editEmail" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Email *</label>
+              <input
+                id="editEmail"
+                type="email"
+                required
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400"
+                placeholder="email@company.com"
+                value={editFormState.email}
+                onChange={(e) => setEditFormState({ ...editFormState, email: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="editUsername" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Username</label>
+              <input
+                id="editUsername"
+                type="text"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400"
+                placeholder="username"
+                value={editFormState.username}
+                onChange={(e) => setEditFormState({ ...editFormState, username: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label htmlFor="editPhone" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Phone Number</label>
+                <input
+                  id="editPhone"
+                  type="tel"
+                  className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400"
+                  placeholder="Phone number"
+                  value={editFormState.phone}
+                  onChange={(e) => setEditFormState({ ...editFormState, phone: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="editDesignation" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Designation</label>
+                <input
+                  id="editDesignation"
+                  type="text"
+                  className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400"
+                  placeholder="Job title"
+                  value={editFormState.designation}
+                  onChange={(e) => setEditFormState({ ...editFormState, designation: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label htmlFor="editDepartment" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Department</label>
+                <select
+                  id="editDepartment"
+                  className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-black text-[10px] uppercase tracking-widest text-black"
+                  value={editFormState.department}
+                  onChange={(e) => setEditFormState({ ...editFormState, department: e.target.value })}
+                >
+                  <option value="">Select Department</option>
+                  {DEPARTMENTS.map(d => <option key={d} value={d} className="text-black">{d}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="editEmploymentType" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Employment Type</label>
+                <select
+                  id="editEmploymentType"
+                  className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-black text-[10px] uppercase tracking-widest text-black"
+                  value={editFormState.employmentType}
+                  onChange={(e) => setEditFormState({ ...editFormState, employmentType: e.target.value })}
+                >
+                  <option value="">Select Type</option>
+                  {EMPLOYMENT_TYPES.map(type => <option key={type} value={type} className="text-black">{type}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="editAddress" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Address</label>
+              <textarea
+                id="editAddress"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black placeholder:text-slate-400 min-h-[80px]"
+                placeholder="Address"
+                value={editFormState.address}
+                onChange={(e) => setEditFormState({ ...editFormState, address: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label htmlFor="editDateOfBirth" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Date of Birth</label>
+                <input
+                  id="editDateOfBirth"
+                  type="date"
+                  className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black"
+                  value={editFormState.dateOfBirth}
+                  onChange={(e) => setEditFormState({ ...editFormState, dateOfBirth: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="editDateOfJoining" className="text-[10px] font-black text-black uppercase tracking-widest ml-1">Date of Joining</label>
+                <input
+                  id="editDateOfJoining"
+                  type="date"
+                  className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-amber-600 font-medium text-black"
+                  value={editFormState.dateOfJoining}
+                  onChange={(e) => setEditFormState({ ...editFormState, dateOfJoining: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-slate-100 flex gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditModalOpen(false);
+                  setEditingEmployee(null);
+                  setEditProfileImage(null);
+                  setEditProfileImagePreview(null);
+                }}
+                className="flex-1 py-4 text-black font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 py-4 bg-[#c97a4c] text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-amber-200 hover:bg-[#a56137] transition-all disabled:bg-amber-400 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Updating...' : 'Update Employee'}
+              </button>
+            </div>
+          </form>
         )}
       </Modal>
 
