@@ -10,9 +10,10 @@ interface FormInputProps {
   min?: number;
   max?: number;
   step?: number;
+  disabled?: boolean;
 }
 
-export const FormInput = ({ label, value, onChange, type = "text", placeholder, min, max, step }: FormInputProps) => (
+export const FormInput = ({ label, value, onChange, type = "text", placeholder, min, max, step, disabled }: FormInputProps) => (
   <div className="space-y-2 group w-full">
     {label && (
       <div className="flex justify-between items-center">
@@ -28,7 +29,8 @@ export const FormInput = ({ label, value, onChange, type = "text", placeholder, 
       min={min}
       max={max}
       step={step}
-      className={`w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:ring-4 focus:ring-blue-500/50 focus:border-blue-300 outline-none transition-all placeholder-gray-400 font-medium ${type === 'range' ? 'accent-blue-600 h-2 cursor-pointer p-0 border-none' : ''} ${type === 'file' ? 'file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-100 file:text-blue-600 hover:file:bg-blue-200 cursor-pointer' : ''}`}
+      disabled={disabled}
+      className={`w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 focus:ring-4 focus:ring-blue-500/50 focus:border-blue-300 outline-none transition-all placeholder-gray-400 font-medium ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${type === 'range' ? 'accent-blue-600 h-2 cursor-pointer p-0 border-none' : ''} ${type === 'file' ? 'file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-100 file:text-blue-600 hover:file:bg-blue-200 cursor-pointer' : ''}`}
     />
   </div>
 );
