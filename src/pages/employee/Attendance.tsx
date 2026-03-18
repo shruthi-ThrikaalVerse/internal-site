@@ -198,32 +198,42 @@ const Attendance: React.FC = () => {
             `/api/employee_attend/attendance?date=${encodeURIComponent(today)}`,
             `/api/employee_attend/attendance`
           ];
-          let rec = null;
+
+          let allRecords: AttendanceRecord[] = [];
+
+          const extractRecords = (data: any): AttendanceRecord[] => {
+            if (!data) return [];
+            if (Array.isArray(data)) return data;
+            if (data.record) return [data.record];
+            if (data.date || data.timeIn || data.id) return [data];
+            return [];
+          };
+
           for (const ep of endpoints) {
             try {
               const resp = await fetch(`http://localhost:8085${ep}`, { credentials: 'include' });
               if (!resp.ok) continue;
               const data = await resp.json().catch(() => null);
-              if (!data) continue;
-              if (Array.isArray(data) && data.length > 0) rec = data[0];
-              else if (data.record) rec = data.record;
-              else if (data.date || data.timeIn || data.id) rec = data;
-              if (rec && rec.date === today) break;
-            } catch { }
+              const candidates = extractRecords(data);
+              if (candidates.length > 0) {
+                allRecords = candidates;
+                break;
+              }
+            } catch {
+              // ignore and try next endpoint
+            }
           }
-          if (rec) {
-            setTodayRecord(rec);
-            setIsPunchedIn(!!rec.timeIn && !rec.timeOut);
-            setWorkDuration(rec.timeIn ? calculateDuration(rec.timeIn, rec.timeOut) : '00:00:00');
-            setCustomLocationName(rec.locationName || '');
-            setAttendanceRecords([rec]);
-          } else {
-            setTodayRecord(null);
-            setIsPunchedIn(false);
-            setWorkDuration('00:00:00');
-            setCustomLocationName('');
-            setAttendanceRecords([]);
-          }
+
+          // Ensure we only show records for the past year but include missing days as "Absent"
+          const normalizedRecords = generateAbsentRecords(allRecords);
+          setAttendanceRecords(normalizedRecords);
+
+          // Today record is used for the check-in/check-out status and active timer
+          const todayRecord = allRecords.find((r) => r.date === today) || null;
+          setTodayRecord(todayRecord);
+          setIsPunchedIn(!!todayRecord?.timeIn && !todayRecord?.timeOut);
+          setWorkDuration(todayRecord?.timeIn ? calculateDuration(todayRecord.timeIn, todayRecord.timeOut) : '00:00:00');
+          setCustomLocationName(todayRecord?.locationName || '');
         } catch (err) {
           setAttendanceRecords([]);
           setTodayRecord(null);
@@ -276,19 +286,31 @@ const Attendance: React.FC = () => {
         `/api/employee_attend/attendance?date=${encodeURIComponent(today)}`,
         `/api/employee_attend/attendance`
       ];
-      let rec = null;
+      let rec: AttendanceRecord | null = null;
+
+      const extractRecords = (data: any): AttendanceRecord[] => {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        if (data.record) return [data.record];
+        if (data.date || data.timeIn || data.id) return [data];
+        return [];
+      };
+
       for (const ep of endpoints) {
         try {
           const resp = await fetch(`http://localhost:8085${ep}`, { credentials: 'include' });
           if (!resp.ok) continue;
           const data = await resp.json().catch(() => null);
-          if (!data) continue;
-          if (Array.isArray(data) && data.length > 0) rec = data[0];
-          else if (data.record) rec = data.record;
-          else if (data.date || data.timeIn || data.id) rec = data;
-          if (rec && rec.date === today) break;
-        } catch { }
+          const candidates = extractRecords(data).filter((r) => r?.date === today);
+          if (candidates.length > 0) {
+            rec = candidates[0];
+            break;
+          }
+        } catch {
+          // ignore and try next endpoint
+        }
       }
+
       if (rec) {
         setTodayRecord(rec);
         setIsPunchedIn(!!rec.timeIn && !rec.timeOut);
