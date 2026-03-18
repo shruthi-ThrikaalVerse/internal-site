@@ -17,8 +17,18 @@ import { apiClient } from '../../utils/apiClient.js';
 import * as usersApi from '../../api/users.js';
 
 const EMPLOYMENT_TYPES = ['FULL_TIME', 'PART_TIME', 'CONTRACT'];
-const DEPARTMENTS = ['IT', 'HR', 'Finance', 'Operations', 'Sales', 'Marketing'];
+const DEPARTMENTS = ['IT', 'Research and Development', 'Full Stack Developers'];
 const ADMIN_TIERS = ['ADMIN', 'PROJECT_MANAGER', 'HR', 'OPERATIONAL_MANAGER', 'SECURITY_ADMIN'];
+
+const normalizeDepartment = (dept?: string): string => {
+    const raw = (dept || '').trim();
+    const lower = raw.toLowerCase();
+    if (!raw) return '';
+    if (lower.includes('research')) return 'Research and Development';
+    if (lower === 'it' || lower === 'information technology') return 'IT';
+    if (lower.includes('full') || lower.includes('stack')) return 'Full Stack Developers';
+    return raw;
+};
 
 const EMPTY_ADMIN_STATE = {
     firstName: '',
@@ -149,15 +159,24 @@ export const AdminHub = () => {
                                 name: `${String(emp.firstName || '')} ${String(emp.lastName || '')}`.trim(),
                                 firstName: String(emp.firstName || ''),
                                 lastName: String(emp.lastName || ''),
+                                username: String(emp.username || emp.email || ''),
                                 email: String(emp.email || ''),
                                 role: (ADMIN_TIERS.includes(roleVal) ? roleVal : 'ADMIN') as any,
                                 status: statusValue,
-                                department: String(emp.department || 'IT'),
+                                department: normalizeDepartment(String(emp.department || 'IT')),
                                 avatar: formatBase64Image(String(emp.profileImage || emp.avatar || '')),
                                 employmentType: String(emp.userType || 'FULL_TIME'),
                                 dateOfJoining: String(emp.dateOfJoining || new Date().toISOString().split('T')[0]),
+                                dateOfBirth: String(emp.dateOfBirth || ''),
                                 employeeId: String(emp.employeeId || ''),
                                 designation: String(emp.designation || 'Admin'),
+                                phoneNumber: String(emp.phoneNumber || ''),
+                                address: String(emp.address || ''),
+                                createdByEmployeeId: String(emp.createdByEmployeeId || ''),
+                                createdByRole: String(emp.createdByRole || ''),
+                                createdByName: String(emp.createdByName || ''),
+                                hrEmployeeId: String(emp.hrEmployeeId || ''),
+                                profileImage: String(emp.profileImage || ''),
                             };
                         });
                     setAdmins(formattedAdmins);
@@ -207,12 +226,16 @@ export const AdminHub = () => {
             userType: (admin.employmentType || 'FULL_TIME') as any,
             username: (admin.username || admin.firstName?.toUpperCase()) || '',
             designation: (admin.designation || '') as any,
-            department: (admin.department || 'IT') as any,
+            department: normalizeDepartment(admin.department || 'IT'),
             phoneNumber: (admin.phoneNumber || '') as any,
             address: (admin.address || '') as any,
             dateOfJoining: admin.dateOfJoining || new Date().toISOString().split('T')[0],
             dateOfBirth: (admin.dateOfBirth || '') as any,
-        });
+            createdByEmployeeId: admin.createdByEmployeeId || '',
+            createdByRole: admin.createdByRole || '',
+            createdByName: admin.createdByName || '',
+            hrEmployeeId: admin.hrEmployeeId || '',
+        } as any);
         // Handle base64 image for preview
         setImagePreview(formatBase64Image(admin.profileImage || admin.avatar) || '');
         setSelectedImage(null);
@@ -1061,7 +1084,6 @@ export const AdminHub = () => {
                                 const cleanedValue = val.replace(/\D/g, '').slice(0, 6);
                                 updateField('employeeId', cleanedValue);
                             }} placeholder="202501" />
-                            <p className="text-xs text-gray-500 font-medium">Maximum 6 digits, numbers only</p>
                             {validationErrors.employeeId && (
                                 <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
                                     <span>⚠️</span> {validationErrors.employeeId}
@@ -1084,7 +1106,6 @@ export const AdminHub = () => {
                                 const cleanedValue = val.replace(/\D/g, '').slice(0, 10);
                                 updateField('phoneNumber', cleanedValue);
                             }} placeholder="9876543210" />
-                            <p className="text-xs text-gray-500 font-medium">10 digit Indian number (6-9 start)</p>
                             {validationErrors.phoneNumber && (
                                 <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
                                     <span>⚠️</span> {validationErrors.phoneNumber}
@@ -1103,6 +1124,22 @@ export const AdminHub = () => {
                         <FormInput label="Date of Joining" type="date" value={formState.dateOfJoining} onChange={(val) => updateField('dateOfJoining', val)} />
                         <FormInput label="Password" type="password" value={formState.password} onChange={(val) => updateField('password', val)} placeholder="••••••••••••" />
                     </div>
+
+                    {/* System & Audit Information (Read-Only) */}
+                    {!isNew && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                            <div className="md:col-span-2">
+                                <h5 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
+                                    <span className="w-8 h-px bg-blue-200"></span>
+                                    System & Audit Information
+                                </h5>
+                            </div>
+                            <FormInput label="Created By Employee ID" value={(formState as any).createdByEmployeeId || ''} onChange={() => { }} disabled placeholder="N/A" />
+                            <FormInput label="Created By Name" value={(formState as any).createdByName || ''} onChange={() => { }} disabled placeholder="N/A" />
+                            <FormInput label="Creator Role" value={(formState as any).createdByRole || ''} onChange={() => { }} disabled placeholder="N/A" />
+                            <FormInput label="HR Employee ID" value={(formState as any).hrEmployeeId || ''} onChange={() => { }} disabled placeholder="N/A" />
+                        </div>
+                    )}
 
                     {isNew && (
                         <div className="md:col-span-2 mt-4">
