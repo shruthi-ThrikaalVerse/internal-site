@@ -17,8 +17,18 @@ import { useApp } from '../../context/AppContext.tsx';
 import { apiClient } from '../../utils/apiClient.js';
 import * as usersApi from '../../api/users.ts';
 
-const DEPARTMENTS = ['Engineering', 'Design', 'Marketing', 'People', 'Infrastructure', 'Quality', 'Data'];
+const DEPARTMENTS = ['Research and Development', 'IT', 'Full Stack Developers'];
 const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Internship'];
+
+const normalizeDepartment = (dept?: string): string => {
+  const raw = (dept || '').trim();
+  const lower = raw.toLowerCase();
+  if (!raw) return '';
+  if (lower.includes('research')) return 'Research and Development';
+  if (lower === 'it' || lower === 'information technology' || lower.includes(' it')) return 'IT';
+  if (lower.includes('full') || lower.includes('stack')) return 'Full Stack Developers';
+  return raw;
+};
 const ADMIN_TIERS = ['ADMIN', 'PROJECT_MANAGER', 'HR', 'OPERATIONAL_MANAGER', 'SECURITY_ADMIN'];
 
 export const EmployeeHub = () => {
@@ -139,14 +149,17 @@ export const EmployeeHub = () => {
               return {
                 id: String(u.employeeId || u.id || ''),
                 email: String(u.email || u.username || ''),
+                username: String(u.username || u.email || u.firstName || ''),
+                userType: String(u.userType || u.employmentType || ''),
                 firstName: String(u.firstName || ''),
                 lastName: String(u.lastName || ''),
                 name: `${String(u.firstName || '')} ${String(u.lastName || '')}`.trim(),
-                department: String(u.department || ''),
+                department: normalizeDepartment(String(u.department || '')),
                 designation: String(u.designation || ''),
                 role: roleValue as any,
                 status: statusValue,
                 dateOfJoining: String(u.dateOfJoining || ''),
+                dateOfBirth: String(u.dateOfBirth || ''),
                 phone: String(u.phoneNumber || ''),
                 address: String(u.address || ''),
                 avatar: formatBase64Image(avatarData),
@@ -154,6 +167,10 @@ export const EmployeeHub = () => {
                 location: String(u.location || ''),
                 joiningDate: String(u.dateOfJoining || ''),
                 employeeId: String(u.employeeId || u.id || ''),
+                createdByEmployeeId: String(u.createdByEmployeeId || ''),
+                createdByRole: String(u.createdByRole || ''),
+                createdByName: String(u.createdByName || ''),
+                hrEmployeeId: String(u.hrEmployeeId || ''),
                 profileImage: String(u.profileImage || ''),
               };
             })
@@ -207,8 +224,14 @@ export const EmployeeHub = () => {
       firstName: employee.firstName || nameParts[0] || '',
       lastName: employee.lastName || nameParts.slice(1).join(' ') || '',
       employeeId: employee.employeeId || employee.id || '',
-      username: employee.username || '',
+      username: employee.username || (employee as any).userName || employee.email || '',
       email: employee.email || '',
+      userType: (employee as any).userType || '',
+      role: employee.role || '',
+      createdByEmployeeId: employee.createdByEmployeeId || '',
+      createdByRole: employee.createdByRole || '',
+      createdByName: employee.createdByName || '',
+      hrEmployeeId: employee.hrEmployeeId || '',
       phone: employee.phone || employee.phoneNumber || '',
       address: employee.address || '',
       dateOfBirth: employee.dateOfBirth || '',
@@ -217,7 +240,6 @@ export const EmployeeHub = () => {
       department: employee.department || '',
       location: employee.location || '',
       employmentType: employee.employmentType || '',
-      role: employee.role || '',
       password: employee.password || '',
       avatar: employee.avatar || ''
     });
@@ -1083,8 +1105,13 @@ export const EmployeeHub = () => {
               </div>
               <FormInput label="First Name" value={formState.firstName} onChange={(val) => updateField('firstName', val)} />
               <FormInput label="Last Name" value={formState.lastName} onChange={(val) => updateField('lastName', val)} />
-              <FormInput label="Username" value={formState.username} onChange={(val) => updateField('username', val)} />
-              <FormInput label="Employee ID" value={formState.employeeId} onChange={(val) => updateField('employeeId', val)} />
+              <FormInput label="Username" value={formState.username || ''} onChange={(val) => updateField('username', val)} />
+              <FormInput label="Employee ID" value={formState.employeeId || ''} onChange={(val) => updateField('employeeId', val)} />
+              <FormInput label="User Type" value={(formState as any).userType || ''} onChange={(val) => updateField('userType', val)} disabled />
+              <FormInput label="Role" value={formState.role || ''} onChange={(val) => updateField('role', val)} disabled />
+              <FormInput label="Created By" value={(formState as any).createdByName || ''} onChange={(val) => updateField('createdByName', val)} disabled />
+              <FormInput label="Creator Role" value={(formState as any).createdByRole || ''} onChange={(val) => updateField('createdByRole', val)} disabled />
+              <FormInput label="Creator Employee ID" value={(formState as any).createdByEmployeeId || ''} onChange={(val) => updateField('createdByEmployeeId', val)} disabled />
 
               <div className="md:col-span-2 mt-4">
                 <h5 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
