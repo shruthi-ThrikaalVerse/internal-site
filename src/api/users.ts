@@ -14,7 +14,7 @@ const throwIfError = async (resp: Response) => {
     const body = await resp.text();
     const err = new Error(`HTTP ${resp.status}: ${body}`);
     throw err;
-  }
+  } 
 };
 
 export const logoutUser = async () => {
