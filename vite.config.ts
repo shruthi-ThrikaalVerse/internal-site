@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 3000,
     host: '0.0.0.0',
+    maxHeaderSize: 524288,
     proxy: {
       '/api/projects': {
         target: 'http://localhost:8080',

@@ -125,6 +125,7 @@ export interface EmployeeSummary {
   role?: string;
   password?: string;
   phone?: string;
+  address?: string;
   status: EmployeeStatus;
   dateOfJoining: string;
   dateOfBirth?: string;
