@@ -123,7 +123,7 @@ const DocumentManagement: React.FC = () => {
         if (statusFilter === 'Has Documents') {
           matchesStatus = empDocs.length > 0;
         } else if (statusFilter === 'Verified') {
-          matchesStatus = empDocs.some((doc: any) => doc.status === 'verified');
+          matchesStatus = empDocs.some((doc: any) => doc.verified === true);
         } else if (statusFilter === 'Pending') {
           matchesStatus = empDocs.some((doc: any) => doc.status === 'pending') || empDocs.length === 0;
         } else if (statusFilter === 'Uploaded') {
@@ -149,6 +149,7 @@ const DocumentManagement: React.FC = () => {
 
   const getDocStatus = (emp: any, type: string): 'uploaded' | 'pending' | 'verified' => {
     const doc = getDocData(emp, type);
+    if (doc?.verified === true) return 'verified';
     return doc?.status || 'pending';
   };
 
@@ -224,6 +225,7 @@ const DocumentManagement: React.FC = () => {
               ...d,
               type: apiToDisplayType(d.documentType),
               status: d.status || 'uploaded',
+              verified: d.verified || false,
               uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0]
             }));
             setSelectedEmployeeDocs(mapped);
@@ -282,8 +284,7 @@ const DocumentManagement: React.FC = () => {
         const mapped = (Array.isArray(docs) ? docs : []).map((d: any) => ({
           ...d,
           type: apiToDisplayType(d.documentType),
-          status: d.status || 'uploaded',
-          uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0]
+          status: d.status || 'uploaded', verified: d.verified || false, uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0]
         }));
         setSelectedEmployeeDocs(mapped);
         const updatedEmployee = { ...selectedEmployee, documents: mapped };
@@ -342,6 +343,7 @@ const DocumentManagement: React.FC = () => {
         ...d,
         type: apiToDisplayType(d.documentType),
         status: d.status || 'uploaded',
+        verified: d.verified || false,
         uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0]
       }));
       setSelectedEmployeeDocs(mapped);
@@ -414,6 +416,7 @@ const DocumentManagement: React.FC = () => {
           ...d,
           type: apiToDisplayType(d.documentType),
           status: d.status || 'uploaded',
+          verified: d.verified || false,
           uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0]
         }));
         setSelectedEmployeeDocs(mapped);
@@ -607,7 +610,7 @@ const DocumentManagement: React.FC = () => {
                           aria-label={`Manage ${type} document for ${emp.fullName}`}
                           onClick={() => setSelectedEmployee(emp)}
                           className={`p-2 rounded-xl transition-all mx-auto ${status === 'verified' ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' :
-                            status === 'uploaded' ? 'bg-[#f5ede3] text-[#8b5a3c]' : 
+                            status === 'uploaded' ? 'bg-[#f5ede3] text-[#8b5a3c]' :
                               'bg-slate-50 text-slate-400 hover:bg-slate-100'
                             }`}
                           title={`${type}: ${status}`}
@@ -620,7 +623,7 @@ const DocumentManagement: React.FC = () => {
                   <td className="py-6 pr-8 pl-4 text-right">
                     <button
                       onClick={() => setSelectedEmployee(emp)}
-                      className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm whitespace-nowrap" style={{backgroundColor: '#f5ede3', color: '#8b5a3c'}} onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#c97a4c'; e.currentTarget.style.color = 'white';}} onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#f5ede3'; e.currentTarget.style.color = '#8b5a3c';}}
+                      className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm whitespace-nowrap" style={{ backgroundColor: '#f5ede3', color: '#8b5a3c' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#c97a4c'; e.currentTarget.style.color = 'white'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#f5ede3'; e.currentTarget.style.color = '#8b5a3c'; }}
                     >
                       Manage
                     </button>
@@ -668,7 +671,7 @@ const DocumentManagement: React.FC = () => {
                     <div key={type} className="bg-white border border-slate-100 p-5 rounded-3xl flex items-center justify-between group hover:shadow-lg hover:shadow-indigo-500/5 transition-all">
                       <div className="flex items-center gap-4 min-w-0 flex-1">
                         <div className={`p-3 rounded-2xl transition-colors flex-shrink-0 ${status === 'verified' ? 'bg-emerald-50 text-emerald-600' :
-                          status === 'uploaded' ? 'bg-[#f5ede3] text-[#8b5a3c]' : 
+                          status === 'uploaded' ? 'bg-[#f5ede3] text-[#8b5a3c]' :
                             'bg-slate-50 text-slate-400'
                           }`}>
                           <Icon name={type === 'Educational Certificate' ? 'GraduationCap' : 'FileText'} className="w-6 h-6" />
@@ -679,7 +682,7 @@ const DocumentManagement: React.FC = () => {
                             <p className="text-[9px] font-bold text-indigo-600 truncate max-w-[200px]">{doc.fileName}</p>
                           ) : (
                             <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${status === 'verified' ? 'text-emerald-600' :
-                              status === 'uploaded' ? 'text-[#8b5a3c]' : 
+                              status === 'uploaded' ? 'text-[#8b5a3c]' :
                                 'text-slate-400'
                               }`}>
                               {status.toUpperCase()}
@@ -694,7 +697,7 @@ const DocumentManagement: React.FC = () => {
                             <button
                               aria-label="View document"
                               onClick={() => viewDocument(doc!)}
-                              className="px-3 py-2 text-white rounded-lg transition-colors border-none flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-md whitespace-nowrap" style={{backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(201, 122, 76, 0.2)'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
+                              className="px-3 py-2 text-white rounded-lg transition-colors border-none flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-md whitespace-nowrap" style={{ backgroundColor: '#c97a4c', boxShadow: '0 10px 15px -3px rgba(201, 122, 76, 0.2)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
                               title="View Document"
                             >
                               <Icon name="Eye" className="w-4 h-4" />
@@ -719,6 +722,7 @@ const DocumentManagement: React.FC = () => {
                                       ...d,
                                       type: apiToDisplayType(d.documentType),
                                       status: d.status || 'uploaded',
+                                      verified: d.verified || false,
                                       uploadedDate: d.uploadedAt || d.uploadedDate || new Date().toISOString().split('T')[0]
                                     }));
                                     setSelectedEmployeeDocs(mapped);
@@ -818,7 +822,7 @@ const DocumentManagement: React.FC = () => {
           </div>
 
           <div className="flex gap-2 justify-end">
-            <button onClick={handleUploadSubmit} className="px-4 py-2 text-white rounded-xl" style={{backgroundColor: '#c97a4c'}}>Upload</button>
+            <button onClick={handleUploadSubmit} className="px-4 py-2 text-white rounded-xl" style={{ backgroundColor: '#c97a4c' }}>Upload</button>
             <button onClick={closeUploadModal} className="px-4 py-2 bg-white border rounded-xl text-black">Cancel</button>
           </div>
         </div>
@@ -833,7 +837,7 @@ const DocumentManagement: React.FC = () => {
       >
         {viewingDoc && (
           <div className="space-y-6">
-            <div className="p-4 border rounded-2xl flex items-center justify-between" style={{backgroundColor: '#f5ede3', borderColor: '#c97a4c', borderWidth: '2px'}}>
+            <div className="p-4 border rounded-2xl flex items-center justify-between" style={{ backgroundColor: '#f5ede3', borderColor: '#c97a4c', borderWidth: '2px' }}>
               <div className="flex items-center gap-3 min-w-0">
                 <Icon name="FileText" className="w-5 h-5 text-indigo-600 flex-shrink-0" />
                 <span className="text-sm font-black text-indigo-900 truncate">{viewingDoc.fileName || 'document.pdf'}</span>
@@ -887,7 +891,7 @@ const DocumentManagement: React.FC = () => {
             <div className="flex gap-4">
               <button
                 onClick={() => handleDownloadSingle(viewingDoc)}
-                className="flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95 whitespace-nowrap" style={{backgroundColor: '#c97a4c', boxShadow: '0 20px 25px -5px rgba(201, 122, 76, 0.2)'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
+                className="flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95 whitespace-nowrap" style={{ backgroundColor: '#c97a4c', boxShadow: '0 20px 25px -5px rgba(201, 122, 76, 0.2)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a56137'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c97a4c'}
               >
                 <Icon name="Download" className="w-4 h-4 text-white" /> Download Original File
               </button>

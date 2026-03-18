@@ -6,7 +6,7 @@ import {
   Shield, Clock, Smartphone, Hash, Lock,
   CircleOff, RotateCcw, ShieldAlert, Camera, Upload,
   Trash2, TrendingUp, UserCircle, X, CheckCircle2, ChevronRight,
-  FileWarning
+  FileWarning, Briefcase
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { User } from '../../types.tsx';
@@ -124,7 +124,7 @@ export const EmployeeHub = () => {
     const load = async () => {
       try {
         console.log('Loading employees from API...');
-        const data = await usersApi.getEmployees();
+        const data = await usersApi.getAdminEmployees();
         console.log('Raw employees API response:', data);
 
         if (Array.isArray(data)) {
@@ -730,15 +730,17 @@ export const EmployeeHub = () => {
           title="Identity Dossier"
           onSave={() => setViewingUser(null)}
         >
-          <div className="space-y-8">
-            <div className="relative p-8 rounded-[2rem] bg-gradient-to-br from-gray-100 to-white border border-blue-100 overflow-hidden shadow-2xl">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -mr-32 -mt-32 blur-[100px]"></div>
-              <div className="flex flex-col items-center text-center">
-                <div className="relative mb-6">
+          <div className="space-y-6">
+            {/* Header Section */}
+            <div className="relative p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-blue-100 rounded-full -mr-20 -mt-20 blur-3xl opacity-40"></div>
+              <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                {/* Profile Image */}
+                <div className="relative shrink-0">
                   {(viewingUser.profileImage || viewingUser.avatar) ? (
                     <img
                       src={formatBase64Image(viewingUser.profileImage || viewingUser.avatar)}
-                      className="w-32 h-32 rounded-[2.5rem] border-4 border-gray-200 shadow-2xl object-cover"
+                      className="w-24 h-24 rounded-2xl border-4 border-white shadow-lg object-cover"
                       alt={viewingUser.name}
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
@@ -746,123 +748,160 @@ export const EmployeeHub = () => {
                         const parent = target.parentElement;
                         if (parent) {
                           const fallback = document.createElement('div');
-                          fallback.className = 'w-32 h-32 rounded-[2.5rem] border-4 border-gray-200 shadow-2xl bg-gray-200 flex items-center justify-center absolute top-0 left-0';
+                          fallback.className = 'w-24 h-24 rounded-2xl border-4 border-white shadow-lg bg-blue-200 flex items-center justify-center';
                           parent.appendChild(fallback);
                         }
                       }}
                     />
                   ) : (
-                    <div className="w-32 h-32 rounded-[2.5rem] border-4 border-gray-200 shadow-2xl bg-gray-200 flex items-center justify-center">
-                      <UserCircle size={64} className="text-gray-400" />
+                    <div className="w-24 h-24 rounded-2xl border-4 border-white shadow-lg bg-blue-200 flex items-center justify-center">
+                      <span className="text-white font-black text-xl">{viewingUser.name.charAt(0).toUpperCase()}</span>
                     </div>
                   )}
-                  <div className={`absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl flex items-center justify-center border-4 border-white ${viewingUser.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500 shadow-lg'}`}>
-                    <CheckCircle2 size={20} className="text-white" />
-                  </div>
+                  <div className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full border-4 border-white ${viewingUser.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
                 </div>
-                <h3 className="text-3xl font-black text-gray-900 tracking-tight">{viewingUser.name}</h3>
-                <p className="text-blue-600 font-bold uppercase tracking-widest text-sm mt-1 mb-4">{viewingUser.designation}</p>
-                <div className="flex gap-2">
-                  <Badge color="blue">{viewingUser.department}</Badge>
-                  <Badge color="slate">{viewingUser.role}</Badge>
+
+                {/* Info Section */}
+                <div className="flex-1 text-center sm:text-left">
+                  <h2 className="text-2xl font-black text-gray-900 tracking-tight mb-1">{viewingUser.name}</h2>
+                  <p className="text-blue-600 font-bold uppercase text-xs tracking-widest mb-3">{viewingUser.designation || 'N/A'}</p>
+                  <div className="flex flex-wrap gap-2 sm:justify-start justify-center">
+                    <Badge color="blue">{viewingUser.department?.toUpperCase() || 'N/A'}</Badge>
+                    <Badge color={viewingUser.status === 'active' ? 'green' : 'red'}>
+                      {viewingUser.status?.toUpperCase() || 'N/A'}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Promote Action Box (Only for Super Admin) */}
             {isSuperAdmin && viewingUser.role !== 'SUPER_ADMIN' && (
-              <div className="p-6 rounded-[1.5rem] bg-blue-50 border border-blue-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
-                    <TrendingUp size={24} />
+              <div className="p-5 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                    <TrendingUp size={20} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-black text-gray-900 tracking-tight">Administrative Elevation</h4>
-                    <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Promotion tier: Employee → Admin</p>
+                    <h4 className="text-sm font-bold text-gray-900">Promote to Admin</h4>
+                    <p className="text-xs text-gray-600">Elevate employee privileges</p>
                   </div>
                 </div>
                 <button
                   onClick={() => handlePromoteFromModal(viewingUser.id)}
-                  className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-200 active:scale-95 focus:ring-4 focus:ring-blue-500/50"
+                  className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-all whitespace-nowrap"
                 >
-                  Promote Record <ChevronRight size={14} />
+                  Promote
                 </button>
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
-              <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
-                <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                  <Smartphone size={14} className="text-blue-600" /> Communication Channels
-                </h4>
-                <div className="space-y-3 text-xs">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Work Email</span>
-                    <span className="text-gray-900 font-semibold">{viewingUser.email}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Mobile</span>
-                    <span className="text-gray-900 font-semibold">{viewingUser.phone || viewingUser.phoneNumber || ''}</span>
-                  </div>
-                  {(viewingUser.address) && (
-                    <div className="pt-2 border-t border-gray-200">
-                      <span className="text-gray-500 block mb-1">Address</span>
-                      <span className="text-gray-900 font-medium text-[9px] leading-tight">{viewingUser.address}</span>
+            {/* Two Column Info Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Left Column */}
+              <div className="space-y-4">
+                {/* Identity Information */}
+                <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                  <h4 className="text-xs font-black text-gray-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Hash size={14} className="text-blue-600" />
+                    Identity
+                  </h4>
+                  <div className="space-y-2.5 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 font-medium">Employee ID</span>
+                      <span className="text-gray-900 font-bold font-mono">{viewingUser.employeeId || viewingUser.id}</span>
                     </div>
-                  )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 font-medium">Email</span>
+                      <span className="text-gray-900 font-semibold truncate max-w-xs">{viewingUser.email}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 font-medium">Role</span>
+                      <span className="text-blue-600 font-bold">{viewingUser.role || 'Employee'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                  <h4 className="text-xs font-black text-gray-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Smartphone size={14} className="text-blue-600" />
+                    Contact
+                  </h4>
+                  <div className="space-y-2.5 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 font-medium">Phone</span>
+                      <span className="text-gray-900 font-semibold">{viewingUser.phone || viewingUser.phoneNumber || 'N/A'}</span>
+                    </div>
+                    {viewingUser.address && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-medium">Address</span>
+                        <span className="text-gray-900 font-semibold text-right max-w-xs text-xs">{viewingUser.address}</span>
+                      </div>
+                    )}
+                    {viewingUser.location && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-medium">Location</span>
+                        <span className="text-gray-900 font-semibold">{viewingUser.location}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
-                <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                  <Calendar size={14} className="text-blue-600" /> Deployment Context
-                </h4>
-                <div className="space-y-3 text-xs">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Registry UID</span>
-                    <span className="text-blue-600 font-mono font-bold tracking-tighter">{viewingUser.employeeId || viewingUser.id}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Onboarding Date</span>
-                    <span className="text-gray-900 font-semibold">{viewingUser.dateOfJoining}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Tier Classification</span>
-                    <span className="text-emerald-400 font-black tracking-tight">{viewingUser.status.toUpperCase()}</span>
+              {/* Right Column */}
+              <div className="space-y-4">
+                {/* Employment Information */}
+                <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                  <h4 className="text-xs font-black text-gray-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Briefcase size={14} className="text-blue-600" />
+                    Employment
+                  </h4>
+                  <div className="space-y-2.5 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 font-medium">Department</span>
+                      <span className="text-gray-900 font-bold">{viewingUser.department || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 font-medium">Employment Type</span>
+                      <span className="text-gray-900 font-semibold">{viewingUser.employmentType || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 font-medium">Joining Date</span>
+                      <span className="text-gray-900 font-semibold">{viewingUser.dateOfJoining || 'N/A'}</span>
+                    </div>
+                    {viewingUser.dateOfBirth && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-medium">DOB</span>
+                        <span className="text-gray-900 font-semibold">{viewingUser.dateOfBirth}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-4 p-6 rounded-2xl bg-white border border-gray-200">
-                <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                  <Shield size={14} className="text-blue-600" /> Audit & Origin
-                </h4>
-                <div className="space-y-3 text-xs">
-                  {(viewingUser as any).createdByName && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Created By</span>
-                      <span className="text-gray-900 font-semibold">{(viewingUser as any).createdByName}</span>
+                {/* Audit Information */}
+                {((viewingUser as any).createdByName || (viewingUser as any).createdByRole) && (
+                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                    <h4 className="text-xs font-black text-gray-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <Shield size={14} className="text-blue-600" />
+                      Audit
+                    </h4>
+                    <div className="space-y-2.5 text-sm">
+                      {(viewingUser as any).createdByName && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 font-medium">Created By</span>
+                          <span className="text-gray-900 font-semibold">{(viewingUser as any).createdByName}</span>
+                        </div>
+                      )}
+                      {(viewingUser as any).createdByRole && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 font-medium">Creator Role</span>
+                          <span className="text-blue-600 font-bold text-xs">{(viewingUser as any).createdByRole}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {(viewingUser as any).createdByRole && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Creator Role</span>
-                      <span className="text-blue-600 font-bold text-[9px]">{(viewingUser as any).createdByRole}</span>
-                    </div>
-                  )}
-                  {(viewingUser as any).createdByEmployeeId && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Creator ID</span>
-                      <span className="text-gray-900 font-mono text-[9px]">{(viewingUser as any).createdByEmployeeId}</span>
-                    </div>
-                  )}
-                  {(viewingUser as any).hrEmployeeId && (
-                    <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                      <span className="text-gray-500">HR Officer</span>
-                      <span className="text-gray-900 font-mono text-[9px]">{(viewingUser as any).hrEmployeeId}</span>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

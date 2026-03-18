@@ -19,7 +19,6 @@ export const COLORS = {
 export const DEPARTMENTS = [
   'RESEARCH AND DEVELOPMENT',
   'FULL STACK DEVELOPER',
-  'Chennai'
 ];
 
 export const NAV_ITEMS = [

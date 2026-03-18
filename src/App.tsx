@@ -366,8 +366,20 @@ const AppContent: React.FC = () => {
                     <p className="text-[10px] lg:text-xs text-slate-300 font-black uppercase tracking-widest">Active</p>
                   </div>
                 </div>
-                <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ backgroundColor: '#c97a4c' }}>
-                  {(currentUser?.name || 'Super Admin').charAt(0).toUpperCase()}
+                <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 overflow-hidden border border-orange-400" style={{ backgroundColor: '#c97a4c' }}>
+                  {currentUser?.avatar ? (
+                    <img
+                      src={currentUser.avatar}
+                      alt={currentUser?.name || 'Super Admin'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : null}
+                  {!currentUser?.avatar ? (
+                    <span>{(currentUser?.name || 'Super Admin').charAt(0).toUpperCase()}</span>
+                  ) : null}
                 </div>
               </button>
 
