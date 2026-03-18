@@ -326,7 +326,6 @@ const AppContent: React.FC = () => {
       <main className={`flex-1 flex flex-col min-w-0 transition-all duration-300 pt-16 sm:pt-20 lg:pt-20 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
         <header className={`h-16 sm:h-20 flex items-center px-3 sm:px-6 lg:px-8 justify-between fixed top-0 left-0 right-0 z-30 transition-all duration-300 ${sidebarOpen ? 'lg:left-64' : 'lg:left-20'}`} style={{ backgroundColor: '#2c3e50', borderBottom: '1px solid #1a252f' }}>
           <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 flex-1 min-w-0">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} title="Toggle sidebar" className="hidden lg:flex p-2 hover:bg-gray-100 rounded-xl text-gray-600 transition-colors shrink-0">{sidebarOpen ? <X size={20} /> : <Menu size={20} />}</button>
             <button onClick={() => setMobileSidebarOpen(true)} title="Open sidebar" className="lg:hidden p-2 hover:bg-[#1f2937] rounded-xl text-[#9aa8bd] transition-colors shrink-0"><Menu size={20} /></button>
             <div className="flex items-center gap-2 sm:gap-3 bg-slate-100 border-0 px-2 sm:px-4 lg:px-5 py-2 sm:py-2.5 rounded-xl flex-1 min-w-0 max-w-xs sm:max-w-lg lg:max-w-3xl focus-within:ring-4 focus-within:ring-blue-500/50 transition-all">
               <Search size={16} className="text-slate-400 shrink-0 sm:w-[18px] lg:w-5" />

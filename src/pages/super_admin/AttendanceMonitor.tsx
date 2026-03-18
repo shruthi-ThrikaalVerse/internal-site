@@ -229,7 +229,7 @@ const AttendanceMonitor: React.FC = () => {
 
     // 3. Header Stats calculation
     const statsSummary = useMemo(() => {
-        const total = employees.length;
+        const total = dailyMasterFeed.length;
         const presentCount = dailyMasterFeed.filter((a: any) => a.status === 'present').length;
         const lateCount = dailyMasterFeed.filter((a: any) => a.status === 'late').length;
         const onLeaveCount = dailyMasterFeed.filter((a: any) => a.status === 'on-leave').length;
@@ -242,7 +242,7 @@ const AttendanceMonitor: React.FC = () => {
             { id: 'late', label: 'Late', count: lateCount, color: 'yellow' },
             { id: 'on-leave', label: 'On Leave', count: onLeaveCount, color: 'purple' }
         ];
-    }, [dailyMasterFeed, employees.length]);
+    }, [dailyMasterFeed]);
 
     const downloadReport = () => {
         const headers = ['Employee ID', 'Name', 'Date', 'Check-In', 'Check-Out', 'Total Hours', 'Status', 'Location'];
@@ -273,7 +273,6 @@ const AttendanceMonitor: React.FC = () => {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-sans font-bold text-black tracking-tight">Attendance Monitor</h1>
-                    <p className="text-black text-sm font-medium">Tracking system for {employees.length} Persons.</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -321,7 +320,7 @@ const AttendanceMonitor: React.FC = () => {
 
                     <button
                         onClick={() => setSelectedDate(new Date())}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
+                        className="px-4 py-2 bg-amber-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
                     >
                         Today
                     </button>
@@ -399,7 +398,7 @@ const AttendanceMonitor: React.FC = () => {
                             <button
                                 key={f}
                                 onClick={() => setStatusFilter(f)}
-                                className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === f ? 'bg-indigo-600 text-white shadow-md' : 'text-black hover:text-indigo-600 hover:bg-gray-50'
+                                className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${statusFilter === f ? 'bg-amber-600 text-white shadow-md' : 'text-black hover:text-indigo-600 hover:bg-gray-50'
                                     }`}
                             >
                                 {f}

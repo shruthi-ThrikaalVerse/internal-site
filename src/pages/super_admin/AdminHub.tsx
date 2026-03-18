@@ -17,7 +17,7 @@ import { apiClient } from '../../utils/apiClient.js';
 import * as usersApi from '../../api/users.js';
 
 const EMPLOYMENT_TYPES = ['FULL_TIME', 'PART_TIME', 'CONTRACT'];
-const DEPARTMENTS = ['IT', 'HR', 'Finance', 'Operations', 'Sales', 'Marketing'];
+const DEPARTMENTS = ['Research and Development', 'IT', 'Full Stack Developers'];
 const ADMIN_TIERS = ['ADMIN', 'PROJECT_MANAGER', 'HR', 'OPERATIONAL_MANAGER', 'SECURITY_ADMIN'];
 
 const EMPTY_ADMIN_STATE = {
@@ -1084,7 +1084,7 @@ export const AdminHub = () => {
                                 const cleanedValue = val.replace(/\D/g, '').slice(0, 10);
                                 updateField('phoneNumber', cleanedValue);
                             }} placeholder="9876543210" />
-                            <p className="text-xs text-gray-500 font-medium">10 digit Indian number (6-9 start)</p>
+                            <p className="text-xs text-gray-500 font-medium">10 digit Indian number</p>
                             {validationErrors.phoneNumber && (
                                 <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
                                     <span>⚠️</span> {validationErrors.phoneNumber}
