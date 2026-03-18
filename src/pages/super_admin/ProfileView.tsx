@@ -35,6 +35,7 @@ export const ProfileView = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editForm, setEditForm] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'personal' | 'security' | 'notifications' | 'localization'>('personal');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Helper function to format base64 image data
@@ -279,176 +280,404 @@ export const ProfileView = () => {
           </div>
 
           <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-1">
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-amber-50 text-amber-700 font-bold text-sm focus:ring-4 focus:ring-amber-600/50">
+            <button onClick={() => setActiveTab('personal')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'personal' ? 'bg-amber-50 text-amber-700 focus:ring-4 focus:ring-amber-600/50' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
               <User size={18} /> Personal Info
             </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-all font-medium text-sm">
+            <button onClick={() => setActiveTab('security')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'security' ? 'bg-amber-50 text-amber-700 focus:ring-4 focus:ring-amber-600/50' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
               <Key size={18} /> Password & Security
             </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-all font-medium text-sm">
+            <button onClick={() => setActiveTab('notifications')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'notifications' ? 'bg-amber-50 text-amber-700 focus:ring-4 focus:ring-amber-600/50' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
               <Bell size={18} /> Notification Settings
             </button>
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-all font-medium text-sm">
+            <button onClick={() => setActiveTab('localization')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'localization' ? 'bg-amber-50 text-amber-700 focus:ring-4 focus:ring-amber-600/50' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
               <Globe size={18} /> Localization
             </button>
           </div>
         </div>
 
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8">
-            <h4 className="font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <User size={18} className="text-amber-700" /> Account Details
-            </h4>
+          {activeTab === 'personal' && (
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8">
+              <h4 className="font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <User size={18} className="text-amber-700" /> Account Details
+              </h4>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">First Name</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editForm?.firstName || ''}
-                    onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-amber-600 focus:border-amber-600"
-                  />
-                ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">First Name</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editForm?.firstName || ''}
+                      onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-amber-600 focus:border-amber-600"
+                    />
+                  ) : (
+                    <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
+                      {profile.firstName}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Last Name</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editForm?.lastName || ''}
+                      onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-amber-600 focus:border-amber-600"
+                    />
+                  ) : (
+                    <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
+                      {profile.lastName}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Email Address</label>
                   <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
-                    {profile.firstName}
+                    {profile.email}
                   </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Last Name</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editForm?.lastName || ''}
-                    onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-amber-600 focus:border-amber-600"
-                  />
-                ) : (
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Phone Number</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editForm?.phoneNumber || ''}
+                      onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-amber-600 focus:border-amber-600"
+                    />
+                  ) : (
+                    <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
+                      {profile.phoneNumber || '-'}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Job Title</label>
                   <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
-                    {profile.lastName}
+                    {profile.designation}
                   </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Email Address</label>
-                <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
-                  {profile.email}
                 </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Phone Number</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editForm?.phoneNumber || ''}
-                    onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-amber-600 focus:border-amber-600"
-                  />
-                ) : (
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Department</label>
                   <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
-                    {profile.phoneNumber || '-'}
+                    {profile.department}
                   </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Job Title</label>
-                <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
-                  {profile.designation}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Employee ID</label>
+                  <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium font-mono">
+                    {profile.employeeId}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">User Type</label>
+                  <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
+                    {profile.userType}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Role</label>
+                  <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
+                    {profile.role}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Date of Joining</label>
+                  <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
+                    {new Date(profile.dateOfJoining).toLocaleDateString()}
+                  </div>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Department</label>
-                <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
-                  {profile.department}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Employee ID</label>
-                <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium font-mono">
-                  {profile.employeeId}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">User Type</label>
-                <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
-                  {profile.userType}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Role</label>
-                <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
-                  {profile.role}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Date of Joining</label>
-                <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
-                  {new Date(profile.dateOfJoining).toLocaleDateString()}
-                </div>
-              </div>
-            </div>
 
-            {profile.address !== null && (
-              <div className="mt-4">
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Address</label>
-                {isEditing ? (
-                  <textarea
-                    value={editForm?.address || ''}
-                    onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-amber-600 focus:border-amber-600 resize-none"
-                    rows={3}
-                  />
-                ) : (
-                  <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
-                    {profile.address || '-'}
-                  </div>
-                )}
+              {profile.address !== null && (
+                <div className="mt-4">
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Address</label>
+                  {isEditing ? (
+                    <textarea
+                      value={editForm?.address || ''}
+                      onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-amber-600 focus:border-amber-600 resize-none"
+                      rows={3}
+                    />
+                  ) : (
+                    <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
+                      {profile.address || '-'}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-4 p-4 bg-amber-500/5 border border-amber-500/10 rounded-xl mb-6">
+                <p className="text-xs text-amber-500 leading-relaxed font-medium">
+                  Job Title, Employee ID, User Type, Role, and Date of Joining cannot be modified. Please contact your HR administrator for changes.
+                </p>
               </div>
-            )}
 
-            <div className="mt-4 p-4 bg-amber-500/5 border border-amber-500/10 rounded-xl mb-6">
-              <p className="text-xs text-amber-500 leading-relaxed font-medium">
-                Job Title, Employee ID, User Type, Role, and Date of Joining cannot be modified. Please contact your HR administrator for changes.
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-2">
-              {isEditing ? (
-                <>
+              <div className="flex justify-end gap-2">
+                {isEditing ? (
+                  <>
+                    <button
+                      onClick={handleCancel}
+                      disabled={isSaving}
+                      className="px-6 py-2 border border-gray-300 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveProfile}
+                      disabled={isSaving}
+                      className="px-8 py-3 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all focus:ring-4 focus:ring-green-500/50 disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader size={16} className="animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Changes'
+                      )}
+                    </button>
+                  </>
+                ) : (
                   <button
-                    onClick={handleCancel}
-                    disabled={isSaving}
-                    className="px-6 py-2 border border-gray-300 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all disabled:opacity-50"
+                    onClick={handleEditClick}
+                    className="px-8 py-3 bg-amber-700 text-white rounded-xl font-bold shadow-lg shadow-amber-200 hover:bg-amber-800 transition-all focus:ring-4 focus:ring-amber-600/50"
                   >
+                    Edit Profile
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'security' && (
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8">
+              <h4 className="font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <Key size={18} className="text-amber-700" /> Password & Security
+              </h4>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Current Password</label>
+                  <input
+                    type="password"
+                    placeholder="Enter your current password"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">New Password</label>
+                    <input
+                      type="password"
+                      placeholder="Enter new password"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Confirm Password</label>
+                    <input
+                      type="password"
+                      placeholder="Confirm new password"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-700 font-medium mb-2">Password Requirements:</p>
+                  <ul className="text-xs text-blue-600 space-y-1">
+                    <li>✓ At least 8 characters long</li>
+                    <li>✓ Contains uppercase letters (A-Z)</li>
+                    <li>✓ Contains lowercase letters (a-z)</li>
+                    <li>✓ Contains numbers (0-9)</li>
+                    <li>✓ Contains special characters (!@#$%^&*)</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-3">Two-Factor Authentication</label>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div>
+                      <p className="font-semibold text-gray-900 text-sm">Enable 2FA</p>
+                      <p className="text-xs text-gray-500">Add an extra layer of security</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" defaultChecked={false} />
+                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-700"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <button className="px-6 py-2 border border-gray-300 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all">
                     Cancel
                   </button>
-                  <button
-                    onClick={handleSaveProfile}
-                    disabled={isSaving}
-                    className="px-8 py-3 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all focus:ring-4 focus:ring-green-500/50 disabled:opacity-50 flex items-center gap-2"
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader size={16} className="animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      'Save Changes'
-                    )}
+                  <button className="px-8 py-3 bg-amber-700 text-white rounded-xl font-bold shadow-lg shadow-amber-200 hover:bg-amber-800 transition-all focus:ring-4 focus:ring-amber-600/50">
+                    Update Security
                   </button>
-                </>
-              ) : (
-                <button
-                  onClick={handleEditClick}
-                  className="px-8 py-3 bg-amber-700 text-white rounded-xl font-bold shadow-lg shadow-amber-200 hover:bg-amber-800 transition-all focus:ring-4 focus:ring-amber-600/50"
-                >
-                  Edit Profile
-                </button>
-              )}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {activeTab === 'notifications' && (
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8">
+              <h4 className="font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <Bell size={18} className="text-amber-700" /> Notification Settings
+              </h4>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-all">
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">Email Notifications</p>
+                    <p className="text-xs text-gray-500">Receive updates via email</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" defaultChecked={true} />
+                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-700"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-all">
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">Leave Approvals</p>
+                    <p className="text-xs text-gray-500">Notify when leave requests need review</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" defaultChecked={true} />
+                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-700"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-all">
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">Performance Reviews</p>
+                    <p className="text-xs text-gray-500">Notify about performance review cycles</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" defaultChecked={true} />
+                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-700"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-all">
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">System Updates</p>
+                    <p className="text-xs text-gray-500">Important system and security alerts</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" defaultChecked={true} />
+                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-700"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-all">
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">Daily Digest</p>
+                    <p className="text-xs text-gray-500">Summary of daily activities</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" defaultChecked={false} />
+                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-700"></div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <button className="px-6 py-2 border border-gray-300 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all">
+                  Reset to Defaults
+                </button>
+                <button className="px-8 py-3 bg-amber-700 text-white rounded-xl font-bold shadow-lg shadow-amber-200 hover:bg-amber-800 transition-all focus:ring-4 focus:ring-amber-600/50">
+                  Save Preferences
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'localization' && (
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8">
+              <h4 className="font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <Globe size={18} className="text-amber-700" /> Localization Settings
+              </h4>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Language</label>
+                  <select className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-600 focus:border-transparent bg-white">
+                    <option value="en">English (US)</option>
+                    <option value="en-gb">English (UK)</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                    <option value="zh">中文</option>
+                    <option value="ja">日本語</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Date Format</label>
+                  <select className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-600 focus:border-transparent bg-white">
+                    <option value="mm/dd/yyyy">MM/DD/YYYY (12/17/2026)</option>
+                    <option value="dd/mm/yyyy">DD/MM/YYYY (17/12/2026)</option>
+                    <option value="yyyy-mm-dd">YYYY-MM-DD (2026-12-17)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Time Format</label>
+                  <select className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-600 focus:border-transparent bg-white">
+                    <option value="12h">12-Hour (2:30 PM)</option>
+                    <option value="24h">24-Hour (14:30)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Timezone</label>
+                  <select className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-600 focus:border-transparent bg-white">
+                    <option value="utc">UTC (Coordinated Universal Time)</option>
+                    <option value="est">EST (Eastern Standard Time)</option>
+                    <option value="cst">CST (Central Standard Time)</option>
+                    <option value="mst">MST (Mountain Standard Time)</option>
+                    <option value="pst">PST (Pacific Standard Time)</option>
+                    <option value="gmt">GMT (Greenwich Mean Time)</option>
+                    <option value="ist">IST (Indian Standard Time)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Currency</label>
+                  <select className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-600 focus:border-transparent bg-white">
+                    <option value="usd">USD - US Dollar ($)</option>
+                    <option value="eur">EUR - Euro (€)</option>
+                    <option value="gbp">GBP - British Pound (£)</option>
+                    <option value="jpy">JPY - Japanese Yen (¥)</option>
+                    <option value="cad">CAD - Canadian Dollar (C$)</option>
+                    <option value="inr">INR - Indian Rupee (₹)</option>
+                  </select>
+                </div>
+
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-700 font-medium">
+                    These localization settings will be applied across the entire platform to personalize your experience.
+                  </p>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <button className="px-6 py-2 border border-gray-300 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all">
+                    Cancel
+                  </button>
+                  <button className="px-8 py-3 bg-amber-700 text-white rounded-xl font-bold shadow-lg shadow-amber-200 hover:bg-amber-800 transition-all focus:ring-4 focus:ring-amber-600/50">
+                    Save Settings
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="bg-rose-500/5 border border-rose-500/10 rounded-2xl p-6">
             <h4 className="font-bold text-rose-500 mb-2">Danger Zone</h4>
