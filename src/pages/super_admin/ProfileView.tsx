@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SectionHeader } from './UI.tsx';
 import { FormInput } from '../../components/super_admin/FormFields.tsx';
-import { User, Shield, Key, Bell, Globe, Camera, Loader, X } from 'lucide-react';
+import { User, Shield, Key, Bell, Globe, Camera, Loader, X, Eye, EyeOff } from 'lucide-react';
 import { apiClient } from '../../utils/apiClient.js';
 import { useApp } from '../../context/AppContext.tsx';
 
@@ -36,6 +36,17 @@ export const ProfileView = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [editForm, setEditForm] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'personal' | 'security' | 'notifications' | 'localization'>('personal');
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Helper function to format base64 image data
@@ -180,6 +191,44 @@ export const ProfileView = () => {
       alert('Error updating profile');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      alert('Please fill in all password fields');
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      alert('New password and confirm password do not match');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 8) {
+      alert('New password must be at least 8 characters long');
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      await apiClient.post('/api/users/change-password', {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+        confirmPassword: passwordForm.confirmPassword
+      });
+
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      alert('Password updated successfully!');
+    } catch (err: any) {
+      console.error('Error changing password:', err);
+      alert(err?.message || 'Error changing password');
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -462,29 +511,62 @@ export const ProfileView = () => {
               <div className="space-y-6">
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Current Password</label>
-                  <input
-                    type="password"
-                    placeholder="Enter your current password"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-600 focus:border-transparent"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPasswords.current ? "text" : "password"}
+                      placeholder="Enter your current password"
+                      value={passwordForm.currentPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                      className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                    >
+                      {showPasswords.current ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">New Password</label>
-                    <input
-                      type="password"
-                      placeholder="Enter new password"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-600 focus:border-transparent"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPasswords.new ? "text" : "password"}
+                        placeholder="Enter new password"
+                        value={passwordForm.newPassword}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                        className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                      >
+                        {showPasswords.new ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Confirm Password</label>
-                    <input
-                      type="password"
-                      placeholder="Confirm new password"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-600 focus:border-transparent"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPasswords.confirm ? "text" : "password"}
+                        placeholder="Confirm new password"
+                        value={passwordForm.confirmPassword}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                        className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                      >
+                        {showPasswords.confirm ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -514,11 +596,26 @@ export const ProfileView = () => {
                 </div>
 
                 <div className="flex justify-end gap-2">
-                  <button className="px-6 py-2 border border-gray-300 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all">
+                  <button
+                    onClick={() => setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })}
+                    className="px-6 py-2 border border-gray-300 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all"
+                    disabled={changingPassword}
+                  >
                     Cancel
                   </button>
-                  <button className="px-8 py-3 bg-amber-700 text-white rounded-xl font-bold shadow-lg shadow-amber-200 hover:bg-amber-800 transition-all focus:ring-4 focus:ring-amber-600/50">
-                    Update Security
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={changingPassword}
+                    className="px-8 py-3 bg-amber-700 text-white rounded-xl font-bold shadow-lg shadow-amber-200 hover:bg-amber-800 transition-all focus:ring-4 focus:ring-amber-600/50 flex items-center gap-2"
+                  >
+                    {changingPassword ? (
+                      <>
+                        <Loader size={16} className="animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      'Update Security'
+                    )}
                   </button>
                 </div>
               </div>
