@@ -27,7 +27,7 @@ const Modal = ({ isOpen, onClose, title, children }: any) => {
         <div className="p-8 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-[32px] z-10">
           <h2 className="text-2xl font-black text-black">{title}</h2>
           <button
-            onClick={onClose}
+            onClick={onClose} 
             aria-label="Close"
             title="Close"
             className="p-3 hover:bg-slate-50 rounded-2xl transition-colors"
